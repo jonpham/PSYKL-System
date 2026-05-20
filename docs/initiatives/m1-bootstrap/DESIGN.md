@@ -35,7 +35,7 @@ status_qualifier: APPROVED PENDING DECISIONS — six Open Questions block spec w
 PSYKL-System has a product brief ([`docs/PRODUCT.md`](../../PRODUCT.md)) and three empty scaffolded components (`components/ios_client`, `components/web_client`, `components/service-task`). Before any product feature can be discovered or validated, the project needs:
 
 - A working repository setup with end-to-end wiring across the chosen surfaces and the backend.
-- A test pyramid established at four layers (unit, integration, component, E2E) plus shared TypeScript type-checking, so TDD is the working norm from day one.
+- A test pyramid established at five layers (Static Analysis, Unit, Integration, Component, E2E — see AGENTS.md → Test Discipline), so TDD is the working norm from day one.
 - A trained agentic workflow loop — gstack for initiative planning, superpowers for spec planning, executor for atomic commits, feature-doc consolidation on merge — exercised on a real (if minimal) feature.
 - Infrastructure (Docker Compose plus a CI pipeline) standing so M2+ doesn't have to revisit it.
 
@@ -45,7 +45,7 @@ M1 explicitly is **not** about discovering the product. That work belongs to M3+
 
 ## What Makes This Cool
 
-The "whoa" of PSYKL-System lives downstream (energy-aware retrospectives, adaptive PSYKL-boundary coaching, time-independent planning), but M1 has its own quiet win: **shipping a real vertical slice with a complete test pyramid from the first PR**, on a monorepo, with the agentic workflow loop trained against real (not throwaway) domain code. That foundation is what lets M2+ move fast without the usual "we'll add tests later" decay.
+The "whoa" of PSYKL-System lives downstream (energy-aware retrospectives, adaptive PSYKL-boundary coaching, time-independent planning), but M1 has its own quiet win: **shipping a real vertical slice with a complete 5-layer test pyramid from the first PR**, on a monorepo, with the agentic workflow loop trained against real (not throwaway) domain code. That foundation is what lets M2+ move fast without the usual "we'll add tests later" decay.
 
 ## Constraints
 
@@ -81,7 +81,7 @@ A minimal `Ping` record with `(id, user_id, created_at)` traveling PWA → API �
 
 The same vertical slice as A, but the resource is `Task` from day one. M1 ships Create + Read on `Task` with a `title`; M2 extends the same table with Update + Delete + `completed_at`. No throwaway code; the data model evolves incrementally.
 
-**Effort:** **XL (human: ~3-5 weeks / Claude Code: ~4-7 days of focused work).** Sources of effort: framework selection and scaffolding; schema migration tooling integration; browser CI for E2E tests against a Docker Compose stack (Playwright in CI commonly burns half a day on browser install caching, headless flake, and container networking alone); container image publishing to a registry; helm chart authoring; subtree-sync GitHub Action; tagged release workflow; ~10-11 atomic PRs each with TDD across four runtime layers + type-check.
+**Effort:** **XL (human: ~3-5 weeks / Claude Code: ~4-7 days of focused work).** Sources of effort: framework selection and scaffolding; schema migration tooling integration; browser CI for E2E tests against a Docker Compose stack (Playwright in CI commonly burns half a day on browser install caching, headless flake, and container networking alone); container image publishing to a registry; helm chart authoring; subtree-sync GitHub Action; tagged release workflow; ~11 atomic PRs each with TDD across the full 5-layer pyramid (Static Analysis → Unit → Integration → Component → E2E).
 **Risk:** Low-medium. Scope is small and well-bounded; the line between M1 and M2 is "Create+Read" vs "Create+Read+Update+Delete + status." Risk concentrates in framework choices (see Open Questions).
 
 ### Approach C — Pure infrastructure, no feature (rejected)
@@ -129,21 +129,21 @@ Task {
 **Security Posture (M1 baseline, expanded in M4+):**
 
 - The `user_id` middleware is applied **globally**, not per-route. Adding a route without going through the middleware should be impossible by construction (framework-level guard — the chosen API framework MUST support this; see Open Question 2).
-- A negative-path integration test asserts that an unguarded route (one added without the middleware) returns 401 or 403.
-- A second negative-path test asserts that a request with a missing or malformed `user_id` header is rejected with HTTP 401 or 403.
+- A Component-layer contract test asserts that an unguarded route (one added without the middleware) returns 401 or 403.
+- A second Component-layer contract test asserts that a request with a missing or malformed `user_id` header is rejected with HTTP 401 or 403.
 - **Wire format in M1:** the PWA sends the user identity via an `X-User-Id: local` HTTP header on every request. The middleware reads that header, rejects requests without it, and stamps the value into `Task.user_id` on writes. This format is intentionally trivial in M1 and gets replaced by a real authentication token at M4+ without changing the data model.
 
-**Test pyramid (four runtime layers + one static check, all green before M1 closes):**
+**Test pyramid (five layers, ordered fastest-at-base to slowest-at-top per AGENTS.md → Test Discipline). All five green before M1 closes:**
 
-| Layer | Tooling (proposed; final choice in spec) | M1 acceptance example |
-|-------|-----------------------------------------|----------------------|
-| Unit | Vitest | `formatTaskTimestamp(date)` returns expected ISO 8601 string format |
-| Integration | Vitest + in-memory SQLite | `POST /tasks` writes row; `GET /tasks` returns user's tasks only; default-deny middleware rejects un-guarded routes; missing/malformed `user_id` rejected |
-| Component | Testing Library (Storybook deferred to M2; Testing Library covers the component layer in M1, narrowing PRODUCT.md's "Storybook Integration Tests" suggestion) | `<TaskList tasks={[...]} />` renders titles + timestamps in isolation |
-| End-to-end (E2E) | Playwright running against the Docker Compose stack in CI | PWA loads in headless browser, user types a title, clicks create, sees the task appear in the list |
-| Static type-check | TypeScript compiler (`tsc`) across the whole monorepo | Shared types in `packages/shared-types` consumed by PWA and API; breaking changes fail CI |
+| # | Layer | Tooling (proposed; final choice in spec) | M1 acceptance example |
+|---|-------|-----------------------------------------|----------------------|
+| 1 | Static Analysis | ESLint + Prettier + `tsc` (TypeScript components); equivalents added later for Swift in M3 | Lint clean; format clean; whole monorepo type-checks; shared types in `packages/shared-types` consumed by PWA and API without breakage |
+| 2 | Unit | Vitest (TypeScript) | `formatTaskTimestamp(date)` returns expected ISO 8601 string; `<TaskList tasks={[...]} />` widget renders titles + timestamps in isolation |
+| 3 | Integration | Vitest + in-memory SQLite | `POST /tasks` handler + migration tool + in-memory SQLite together: a write lands in the row store, and `GET /tasks` returns it |
+| 4 | Component | API contract tests for `service-task` (driving the real HTTP layer in-process against an in-memory database); PWA component tests via Testing Library / Playwright Component Testing driving the real UI against a stubbed `service-task` client | `service-task`: contract test asserts `POST /tasks` returns 201 with the new task body; default-deny contract tests reject un-guarded routes and missing/malformed `user_id`. `web_client`: PWA component test creates a task with the API client stubbed, verifies the new task renders in the list |
+| 5 | End-to-End (E2E) | Playwright driving a real Chromium against the running Docker Compose stack (M1 client is the PWA; iOS-native E2E driver added in M3 per AGENTS.md) | PWA loads, user types a title, clicks create, sees the task appear in the list after page refresh |
 
-Note on terminology: the static type-check layer is NOT contract testing. True contract testing (Pact, schema diffing) is a materially larger investment and is deferred. M1 ships type-checking only; the pyramid has four runtime layers plus type-check.
+Note on naming: the **Component** layer here is the system-component-isolation test per AGENTS.md, not "UI component in isolation." UI widget tests collapse into the Unit layer. True cross-process contract testing (Pact, schema-diff tooling) is a heavier investment than M1 needs; the Component layer in M1 uses in-process HTTP testing for the API contract.
 
 **Documentation & workflow training:**
 - The full gstack → superpowers loop is exercised on M1:
@@ -217,7 +217,7 @@ M1 is **done** when:
 
 - `docker compose up` from a fresh clone produces a running PWA at a local URL with a working API and persistent SQLite.
 - A user can create a Task with a title via the PWA and see it appear in the list after a refresh.
-- All four runtime test pyramid layers plus static type-check have at least one passing test exercising real behavior (not stubs), including the `user_id` default-deny negative-path tests.
+- All five test pyramid layers (Static Analysis, Unit, Integration, Component, E2E) have at least one passing test exercising real behavior, including the `user_id` default-deny Component-layer contract tests.
 - CI pipeline runs the full pyramid on every PR and blocks merge on failure.
 - E2E suite runs against the Docker Compose stack in CI on every PR.
 - The repo has a `README.md`, a chosen `LICENSE` file, and an `Unreleased` `CHANGELOG.md` entry.

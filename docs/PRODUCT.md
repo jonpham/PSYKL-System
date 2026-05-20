@@ -75,7 +75,7 @@ Surface order is intentional: the PWA exists for cross-device dogfood and produc
 - All changes happen in this monorepo. The monorepo is the source of truth.
 - Components (`components/web_client`, `components/service-task`, `components/ios_client`) are pushed to standalone upstream repositories as **downstream mirrors** via `git subtree split`. Never edit the mirrors directly.
 - The monorepo hosts shared packages (`packages/`), system-level end-to-end tests, infrastructure (Docker Compose, helm charts), and project documentation (`docs/`).
-- **Every component carries a Test-Driven Development (TDD) test pyramid from M1**: unit, integration, component, end-to-end, plus TypeScript static type-check. See [`AGENTS.md` → Test Discipline](../AGENTS.md).
+- **Every component carries a Test-Driven Development (TDD) 5-layer test pyramid from M1**: Static Analysis → Unit → Integration → Component (system-component-isolation) → End-to-End. See [`AGENTS.md` → Test Discipline](../AGENTS.md).
 - The PWA is offline-first from M2 onward (M1 ships an online-required PWA shell).
 - A self-hosted Docker Compose deployment is supported.
 - Architecture should permit scaling to ~100,000 concurrent users in a future production environment. Initial milestones do not optimize for that scale; they avoid choices that would actively preclude it.

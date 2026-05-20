@@ -6,7 +6,7 @@
 
 ## Description
 
-Establish the repository foundation and the development style PSYKL-System will use for every subsequent milestone. Ship a minimal vertical slice (Create + Read on a `Task` with a `title`) that travels through `web_client` (PWA) → `service-task` (API) → SQLite → back, with a full test pyramid (unit, integration, component, end-to-end, plus TypeScript type-check) green on every Pull Request. Stand up Continuous Integration plus Continuous Deployment: container images published to a registry, components subtree-synced to upstream mirrors, helm chart packaged, and a tagged-release workflow ready to fire on `v*.*.*`.
+Establish the repository foundation and the development style PSYKL-System will use for every subsequent milestone. Ship a minimal vertical slice (Create + Read on a `Task` with a `title`) that travels through `web_client` (PWA) → `service-task` (API) → SQLite → back, with a full 5-layer test pyramid (Static Analysis → Unit → Integration → Component → End-to-End, per AGENTS.md → Test Discipline) green on every Pull Request. Stand up Continuous Integration plus Continuous Deployment: container images published to a registry, components subtree-synced to upstream mirrors, helm chart packaged, and a tagged-release workflow ready to fire on `v*.*.*`.
 
 M1 is explicitly NOT product discovery. M1 proves the architecture and trains the gstack → superpowers → execute agentic workflow loop on real (not throwaway) domain code. The MVP loop described in `docs/PRODUCT.md` (backlog → daily plan → PSYKL execution) lands across M2 and M3.
 
@@ -14,7 +14,7 @@ M1 is explicitly NOT product discovery. M1 proves the architecture and trains th
 
 - `docker compose up` from a fresh clone produces a running PWA at a local URL with a working API and persistent SQLite.
 - A user can create a Task with a title via the PWA and see it appear in the list after a refresh.
-- All four runtime test pyramid layers plus static type-check have at least one passing test exercising real behavior, including `user_id` default-deny negative-path tests.
+- All five test pyramid layers (Static Analysis, Unit, Integration, Component, E2E) have at least one passing test exercising real behavior, including `user_id` default-deny Component-layer contract tests.
 - CI runs the full pyramid on every PR; merge is blocked on failure.
 - End-to-end suite runs against the Docker Compose stack in CI on every PR.
 - On merge to `main`: CD publishes `service-task` and `web_client` container images to the registry, subtree-syncs to upstream mirrors, and packages the helm chart.

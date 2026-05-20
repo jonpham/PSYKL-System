@@ -74,15 +74,22 @@ Output the following before stopping:
 ### Test Discipline (TDD + Full Test Pyramid)
 
 - **Test-Driven Development (TDD = writing failing tests before implementation) is mandatory.** Every spec orders steps as: failing test(s) → implementation → green → refactor. Never the reverse.
-- **The full test pyramid is established from Milestone 1 and maintained throughout the project's life.** Five layers, each with at least one passing test on every Pull Request:
-  - **Unit** — pure functions, components in isolation.
-  - **Integration** — multi-module interactions, API + database, middleware.
-  - **Component** — UI components rendered in isolation against a Document Object Model (DOM) testing library.
-  - **End-to-End (E2E)** — full stack via a real headless browser against the running Docker Compose stack.
-  - **Static type-check** — TypeScript compiler (`tsc`) across the monorepo; shared types in `packages/` consumed by both ends.
+- **The full test pyramid is established from Milestone 1 and maintained throughout the project's life.** Five layers, ordered fastest-at-base to slowest-at-top. Every Pull Request runs the full pyramid in CI:
+
+  1. **Static Analysis** — language- and framework-specific tools for linting, formatting, code-style enforcement, compilation, and type-checking. Examples by component: TypeScript components use ESLint + Prettier + `tsc`; Swift components use SwiftLint + swift-format + the Swift compiler; other languages bring their equivalents. Runs FIRST in every Pull Request; failure blocks every other test layer from running.
+  2. **Unit** — pure functions, classes, and small UI widgets tested in isolation (e.g. a single React component or a single SwiftUI view). No I/O, no network. Fast.
+  3. **Integration** — multi-module interactions within ONE system component: API handler + database, middleware + handler, store + reducer. In-process dependencies are real (in-memory SQLite is fine); external services not yet involved. Also includes Multi UI Component storybook tests.
+  4. **Component** — the SYSTEM component tested as a black box against its boundaries.
+     - For a service (`service-task`): API contract testing — status codes, response shapes, header enforcement (including the `user_id` default-deny posture).
+     - For a UI application (`web_client` PWA, `ios_client` native): drive the UI against mocked / faked / stubbed back-end services. The component is exercised end-to-end within itself, with its dependencies controlled.
+  5. **End-to-End (E2E)** — the entire stack running together (the Docker Compose deployment, or its equivalent for native clients), driven by the actual client. **Client-specific tooling**:
+     - PWA → browser driver (e.g. Playwright).
+     - iOS / iPadOS / macOS native → simulator or real-device driver (e.g. XCUITest or a Swift Testing harness).
+     - Future client surfaces use whichever driver matches the platform.
+
 - **Tests live in the same Pull Request as the implementation they cover.** A spec proposing implementation without corresponding tests is a violation of the working agreement and must be rejected at review.
-- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-memory SQLite for speed); E2E tests run against the real Docker Compose stack; mocks are reserved for external services not in the project's control.
-- **Negative-path tests are required where the design calls for default-deny behavior** (e.g., the `user_id` middleware in Milestone 1 must have integration tests proving requests are rejected without proper headers).
+- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-memory SQLite for speed); E2E tests run against the real Docker Compose stack (or equivalent); mocks at Component boundaries are explicit and intentional (services not in the project's control, or back-ends being faked for UI component tests). Mocking core domain logic is a smell.
+- **Negative-path tests are required where the design calls for default-deny behavior** (e.g., the `user_id` middleware in Milestone 1 must have Component-layer contract tests proving requests without proper headers are rejected).
 
 ### Design Doc Discipline
 
