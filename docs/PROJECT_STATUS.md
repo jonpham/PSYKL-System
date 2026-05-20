@@ -2,15 +2,28 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Feature).
 
-**Last completed plan & task:** `/office-hours` produced `docs/initiatives/m1-bootstrap/DESIGN.md`
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`)
-**Active spec:** _none yet — six framework/tool Open Questions block spec writing_
-**Active plan:** Run `/plan-eng-review` to close M1 Open Questions, then `superpowers:writing-plans` for the 11 specs
-**Active skill:** _between skills — paused after `/office-hours` close-out_
+**Last completed plan & task:** `/plan-eng-review` closed all six M1 architectural Open Questions
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED, ready for spec writing
+**Active spec:** _none yet — about to run `superpowers:writing-plans` to produce 11 specs_
+**Active plan:** `superpowers:writing-plans` against M1 design doc → atomic ≤10-file specs in `docs/specs/m1-bootstrap/`
+**Active skill:** _between skills — paused after `/plan-eng-review` close-out_
 **Branch:** `feat/plan-and-bootstrap`
-**Current step:** Closing out `/office-hours` artifacts (MILESTONE.md files, AGENTS.md TDD rule, PRODUCT.md reconciliation, PROJECT_STATUS.md update)
-**Known blockers:** Six Open Questions in `docs/initiatives/m1-bootstrap/DESIGN.md` (package manager, API framework, PWA framework, schema migration tool, LICENSE, toolchain pins).
-**Next action:** Run `/plan-eng-review` against `docs/initiatives/m1-bootstrap/DESIGN.md` to close the Open Questions.
+**Current step:** Committing `/plan-eng-review` artifacts (DESIGN.md decisions, PROJECT_STATUS update).
+**Known blockers:** None.
+**Next action:** Invoke `superpowers:writing-plans` against `docs/initiatives/m1-bootstrap/DESIGN.md` to break M1 into the 11 specs.
+
+## M1 Locked-in Stack
+
+| Layer | Choice |
+|-------|--------|
+| Package manager | pnpm + pnpm-workspace.yaml |
+| Node runtime | Node 24 LTS (pinned via .nvmrc + engines) |
+| pnpm version | 10.x (pinned via packageManager field) |
+| API framework | NestJS, REST + spec-first OpenAPI 3.x, multi-transport-ready |
+| PWA framework | Vite + React (SPA mode) + vite-plugin-pwa |
+| ORM + migrations | Drizzle ORM + drizzle-kit |
+| Database (M1) | SQLite (Postgres path at M4+) |
+| LICENSE | MIT |
 
 ## Initiative Summary
 

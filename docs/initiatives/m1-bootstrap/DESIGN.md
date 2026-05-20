@@ -4,10 +4,11 @@ generated_by: /office-hours (gstack)
 generated_on: 2026-05-20
 branch: feat/plan-and-bootstrap
 repo: jonpham/PSYKL-System
-status: DRAFT
+status: APPROVED
 mode: Builder, dogfood-first
 milestone: M1
-status_qualifier: APPROVED PENDING DECISIONS — six Open Questions block spec writing; see below
+status_qualifier: APPROVED — all six Open Questions closed via /plan-eng-review 2026-05-20; ready for superpowers:writing-plans
+reviewed_by: /plan-eng-review (gstack) 2026-05-20
 ---
 
 # Design: M1 Bootstrap — Vertical Slice + Test Pyramid
@@ -108,11 +109,11 @@ Task {
 ### M1 deliverables
 
 **Repository foundation:**
-- Monorepo workspace set up (package manager and workspace tool — see Open Questions; must be decided BEFORE specs are written).
+- Monorepo workspace set up with **pnpm + pnpm-workspace.yaml**, Node 24 LTS pinned via `.nvmrc`, pnpm 10.x pinned via `package.json`'s `packageManager` field.
 - `packages/shared-types` package exporting `Task`, `TaskInput`, `TaskResponse` TypeScript types. Consumed by both PWA and API via the workspace protocol (e.g. `"shared-types": "workspace:*"` in dependent `package.json` files) — never via published npm registry.
-- `components/web_client/`: minimal PWA shell — installable via Web App Manifest, no service worker yet, no offline cache. Calls the API over HTTP when online.
-- `components/service-task/`: minimal API with `POST /tasks` and `GET /tasks`. SQLite persistence. Globally-applied `user_id` middleware with default-deny posture (see *Security Posture* below).
-- Schema migration tool integrated and used for the initial `Task` table (tool choice deferred to spec, but a tool MUST be used — no hand-edited Data Definition Language).
+- `components/web_client/`: **Vite + React (SPA mode)** minimal PWA shell — installable via Web App Manifest (`vite-plugin-pwa`), no service worker yet, no offline cache. Calls the API over HTTP when online via `openapi-fetch` (types from `openapi-typescript` generated against `service-task`'s OpenAPI document).
+- `components/service-task/`: **NestJS** API exposing `POST /tasks` and `GET /tasks` via REST (spec-first OpenAPI 3.x produced via `@nestjs/swagger`). SQLite persistence via **Drizzle ORM**. `user_id` enforcement via a global **NestJS guard** registered at app boot (default-deny posture — see *Security Posture* below).
+- **drizzle-kit** integrated for schema migrations. Initial migration creates the `Task` table (`id`, `user_id`, `title`, `created_at`). Schema lives as `.ts` files; migrations are generated SQL files checked into git.
 - Docker Compose for local stack (PWA + API + DB in one `docker compose up`). SQLite persists to a named Docker volume (not a bind mount) so a `compose down` does not destroy local data. The named volume's name is included in the compose file under a project-scoped prefix.
 - CI pipeline running lint + test + build + full test pyramid on every PR.
 - CD pipeline that, on merge to `main`: builds container images for `service-task` and `web_client`, publishes them to a chosen container registry, and runs the subtree-sync action to push each component to its upstream mirror.
@@ -128,7 +129,7 @@ Task {
 
 **Security Posture (M1 baseline, expanded in M4+):**
 
-- The `user_id` middleware is applied **globally**, not per-route. Adding a route without going through the middleware should be impossible by construction (framework-level guard — the chosen API framework MUST support this; see Open Question 2).
+- The `user_id` check is applied **globally** via a NestJS guard registered at app boot (`app.useGlobalGuards(new UserIdGuard())` or equivalent). Every route inherits it by default; bypassing requires explicit decorator (e.g., `@SkipUserId()`) which would be reviewed as a security exception.
 - A Component-layer contract test asserts that an unguarded route (one added without the middleware) returns 401 or 403.
 - A second Component-layer contract test asserts that a request with a missing or malformed `user_id` header is rejected with HTTP 401 or 403.
 - **Wire format in M1:** the PWA sends the user identity via an `X-User-Id: local` HTTP header on every request. The middleware reads that header, rejects requests without it, and stamps the value into `Task.user_id` on writes. This format is intentionally trivial in M1 and gets replaced by a real authentication token at M4+ without changing the data model.
@@ -161,12 +162,12 @@ M1 breaks into 8 specs sized to fit AGENTS.md's ≤10-files-per-PR rule (exempti
 
 | # | Spec | Approx file count |
 |---|------|-------------------|
-| 1 | **Workspace scaffolding** — root `package.json`, workspace config, `tsconfig.base.json`, `.gitignore`, `.editorconfig`, `README.md` top-level, LICENSE | ~7 |
-| 2 | **`packages/shared-types`** — package scaffold + `Task` / `TaskInput` / `TaskResponse` types + unit tests + tsconfig | ~6 |
-| 3 | **`components/service-task` minimal API** — server scaffold, `POST /tasks` + `GET /tasks` handlers, `user_id` middleware, integration tests | ~9 |
-| 4 | **`components/service-task` schema + migration tool** — migration tool config, initial migration creating `Task` table, integration test confirming schema applied | ~6 |
-| 5 | **`components/web_client` PWA shell** — Vite (or chosen framework) scaffold, app shell, Web App Manifest, component tests | ~9 |
-| 6 | **`components/web_client` Task UI** — create input + list view, API client, component tests | ~7 |
+| 1 | **Workspace scaffolding** — root `package.json` (with `packageManager: pnpm@10.x.x`), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc`, `.gitignore`, `.editorconfig`, `README.md`, MIT `LICENSE` | ~7 |
+| 2 | **`packages/shared-types`** — package scaffold + `Task` / `TaskInput` / `TaskResponse` types (consumed via `workspace:*`) + unit tests + tsconfig | ~6 |
+| 3 | **`components/service-task` minimal NestJS API** — `AppModule`, `TaskModule`, `TaskController` with `POST /tasks` + `GET /tasks`, `TaskService`, global `UserIdGuard`, `@nestjs/swagger` setup, integration tests | ~9 |
+| 4 | **`components/service-task` schema + Drizzle migration** — Drizzle schema (`schema.ts`), `drizzle.config.ts`, initial migration creating `Task` table, integration test confirming schema applied | ~6 |
+| 5 | **`components/web_client` PWA shell** — Vite + React (SPA mode) scaffold, app shell, `vite-plugin-pwa` Web App Manifest, base component tests | ~9 |
+| 6 | **`components/web_client` Task UI** — create input + list view, `openapi-fetch` API client + generated types from `openapi-typescript`, component tests | ~7 |
 | 7 | **Docker Compose stack** — `docker-compose.yml`, Dockerfile for API, Dockerfile for PWA, healthchecks, named volume for SQLite | ~5 |
 | 8 | **CI pipeline + E2E run** — GitHub Actions workflow for lint+test+build; Playwright E2E job that brings up Docker Compose, resets the SQLite database to empty between test files via a teardown fixture, runs the suite, and tears the stack down | ~4 |
 | 9 | **CD pipeline: container registry publish** — GitHub Actions workflow that builds and publishes `service-task` and `web_client` images to the chosen container registry on merge to `main` | ~4 |
@@ -244,23 +245,61 @@ Before Spec 1 can start:
 2. Confirm `jonpham/PSYKL-System` GitHub repo exists, is public, has `main` as the default branch, and accepts the configured CI tokens.
 3. AGENTS.md updated with the TDD + test pyramid rule. **Owner:** this edit lands as a chore commit on `feat/plan-and-bootstrap` (the current branch) before Spec 1 begins, NOT inside Spec 1 itself. It is a working-agreement change, not part of M1's deliverables.
 
-## Decisions (filled in once Open Questions are closed)
+## Decisions
+
+Resolved via `/plan-eng-review` on 2026-05-20.
 
 | # | Question | Decision | Rationale |
 |---|----------|----------|-----------|
-| 1 | Package manager | _pending_ | _pending_ |
-| 2 | API framework | _pending_ | _pending_ |
-| 3 | PWA framework | _pending_ | _pending_ |
-| 4 | Schema migration tool | _pending_ | _pending_ |
-| 5 | LICENSE | _pending_ | _pending_ |
-| 6 | Toolchain pins (Node, pnpm) | _pending_ | _pending_ |
+| 1 | Package manager + workspace tool | **pnpm + pnpm-workspace.yaml** | AGENTS.md already exempts `pnpm-lock.yaml` and `pnpm-workspace.yaml` from the ≤10-files PR rule; pnpm install is ~2x npm; strict node_modules layout catches undeclared dependency bugs early. |
+| 2 | API framework + paradigm + spec discipline | **NestJS, REST initially via spec-first OpenAPI 3.x, multi-transport-ready** | NestJS treats transport as a separate concern from business logic — REST controllers, GraphQL resolvers (Apollo driver or Apollo Federation driver), and gRPC controllers can all coexist in one app, calling the same `TaskService`. Migration to gRPC or GraphQL later costs ~3-5 days each (vs ~3-5 weeks for a non-multi-transport framework). Spec-first OpenAPI via `@nestjs/swagger`. Global guards make the `user_id` default-deny posture impossible to bypass. Container weight (~50-80 MB) mitigated by a registry-cleanup GitHub Action. |
+| 3 | PWA framework | **Vite + React (SPA mode) + vite-plugin-pwa** | Largest TypeScript ecosystem; cleanest spec-first REST consumption via `openapi-typescript` + `openapi-fetch`; Apollo Client maturity in React if GraphQL lands later; SPA mode keeps it a clean PWA (no server-component-blended rendering per Premise 4). |
+| 4 | Schema migration tool / ORM | **Drizzle ORM + drizzle-kit** | TypeScript-first (schema as `.ts` code, types derive automatically); SQLite and Postgres dialects both first-class with the same API (clean SQLite → Postgres path at M4+); lightweight runtime (~10 KB, no Rust binary); drizzle-kit migration workflow is straightforward. |
+| 5 | LICENSE | **MIT** | Simplest permissive license; universally recognized; no patent-grant ceremony needed during dogfood phase. Apache-2.0 considered and rejected as overkill for a planning tool with no enterprise-adoption pressure yet. |
+| 6 | Toolchain version pins | **Node 24 LTS via `.nvmrc` + `engines.node: '>=24.0.0 <25'`; pnpm 10.x via `packageManager: 'pnpm@10.x.x'`** | Node 24 went LTS October 2025 — most current LTS as of May 2026, security patches for ~30 months. pnpm 10 is current major with native Corepack support. Pinning eliminates "works on my machine" drift across collaborators and CI. |
+
+### Architecture Evolution Roadmap (informational, not committed)
+
+```
+M1-M3:    Clients ──► NestJS service-task                          (no gateway)
+                       (REST + OpenAPI; SQLite via Drizzle)
+
+M4-M5 if:  Clients ──► NestJS service-task                          (gateway when
+            decompose ── uses other services internally              multiple services
+                         via HTTP or gRPC                             warrant a gateway)
+
+M6+ if:    Clients ──► Apollo Router ──► NestJS service-task        (federation when
+           multiple                  ──► NestJS service-X            multiple subgraphs
+           GraphQL                   ──► NestJS service-Y            justify a router)
+           subgraphs
+
+           OR
+           Clients ──► Traefik       ──► NestJS service-task        (non-GraphQL path:
+                       (API gateway) ──► NestJS service-X            API gateway over
+                                     ──► NestJS service-Y            REST services)
+```
+
+Side-quest: at some point, add ONE model via gRPC inside the existing NestJS app (`@GrpcMethod`) for personal learning. Not architecturally needed; cost ~1-3 days; uses Buf toolchain (`buf build`, `buf generate`, `buf breaking`). Out of M1 scope.
 
 ## Next Steps
 
-The concrete handoff after this design doc is approved:
+All six blocking Open Questions are resolved (see Decisions above). Concrete handoff:
 
-1. **Close the six blocking Open Questions above** via `/plan-eng-review` (gstack) — the structured architecture-lock-in skill. Outcomes recorded in the Decisions appendix.
-2. Optionally run `/plan-devex-review` for developer-onboarding sanity (the README-first-time-clone experience). Skip if scope is clear.
+1. ~~Close the six blocking Open Questions~~ — **DONE** via `/plan-eng-review` 2026-05-20.
+2. (Optional) `/plan-devex-review` for the developer-onboarding sanity check (README-first-time-clone experience).
 3. Use `superpowers:writing-plans` to break M1 into the 11 specs above under `docs/specs/m1-bootstrap/`. Each spec at ≤10 files.
 4. Execute specs atomically per AGENTS.md, one task per PR.
 5. Close M1 with the feature-doc summary and a workflow retrospective.
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 0 | — | not run (optional; product brief already in `docs/PRODUCT.md`) |
+| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | not run (optional; adversarial review during /office-hours covered this role) |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | CLEAR (PLAN) | 6 architectural Open Questions closed; 0 critical gaps; scope narrowed to architecture-level review per "match plan-review scope to artifact" principle |
+| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | not run (no UI scope in M1 beyond shell; defer to M2 when UX work begins) |
+| DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | not run (optional next step) |
+
+- **UNRESOLVED:** 0
+- **VERDICT:** **ENG CLEARED** — M1 architecture is locked. Ready for `superpowers:writing-plans` to produce the 11 specs.
