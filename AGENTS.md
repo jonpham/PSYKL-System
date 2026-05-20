@@ -182,8 +182,16 @@ Read current status and progress from @docs/PROJECT_STATUS.md
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
 
+Two skill ecosystems are in use:
+
+- **gstack** — product/design/strategy skills. Examples: `/office-hours` (socratic ideation), `/plan-ceo-review`, `/plan-design-review`, `/plan-eng-review`, `/plan-devex-review`, `/design-consultation`, `/design-shotgun`, `/autoplan`.
+- **superpowers** — implementation/execution skills. Examples: `superpowers:brainstorming`, `superpowers:writing-plans`, `superpowers:executing-plans`, `superpowers:test-driven-development`.
+
+> Not gstack: anything prefixed `gsd-*` (e.g. `/gsd-explore`) is from the **GSD (get-shit-done)** ecosystem and is **not** part of this project's planning routing.
+
 Key routing rules:
 
-- Product ideas and initiative planning → use gstack
-- Strategy, scope, architecture, design, and developer-experience review → use gstack and write *.md files under `docs/initiatives/{initiative}/`
-- Implementation planning and design → use superpowers and write specs under `docs/specs/{initiative}/`
+- Socratic ideation / "I have an idea, help me think it through" → `/office-hours` (gstack)
+- Product ideas and initiative planning → use gstack; write *.md files under `docs/initiatives/{initiative}/`
+- Strategy, scope, architecture, design, and developer-experience review → use gstack plan-review skills; outputs under `docs/initiatives/{initiative}/`
+- Implementation planning and design → use superpowers; write specs under `docs/specs/{initiative}/`
