@@ -71,6 +71,24 @@ Output the following before stopping:
 
 - After completing an initiative, ask the user if there is anything about the AI Agentic development workflow that they would like changed and update this or other documents accordingly.
 
+### Test Discipline (TDD + Full Test Pyramid)
+
+- **Test-Driven Development (TDD = writing failing tests before implementation) is mandatory.** Every spec orders steps as: failing test(s) → implementation → green → refactor. Never the reverse.
+- **The full test pyramid is established from Milestone 1 and maintained throughout the project's life.** Five layers, each with at least one passing test on every Pull Request:
+  - **Unit** — pure functions, components in isolation.
+  - **Integration** — multi-module interactions, API + database, middleware.
+  - **Component** — UI components rendered in isolation against a Document Object Model (DOM) testing library.
+  - **End-to-End (E2E)** — full stack via a real headless browser against the running Docker Compose stack.
+  - **Static type-check** — TypeScript compiler (`tsc`) across the monorepo; shared types in `packages/` consumed by both ends.
+- **Tests live in the same Pull Request as the implementation they cover.** A spec proposing implementation without corresponding tests is a violation of the working agreement and must be rejected at review.
+- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-memory SQLite for speed); E2E tests run against the real Docker Compose stack; mocks are reserved for external services not in the project's control.
+- **Negative-path tests are required where the design calls for default-deny behavior** (e.g., the `user_id` middleware in Milestone 1 must have integration tests proving requests are rejected without proper headers).
+
+### Design Doc Discipline
+
+- **Candidate lists in initiative/design docs are constraints-first, not options-first.** A design doc must NOT pre-narrow framework, tool, or library choices unless those choices were explicitly discussed during the design session. Carry the constraint set; let candidates surface during the answer pass (typically `/plan-eng-review` or spec drafting).
+- **Acronyms are defined on first use within a doc**, even if defined elsewhere in the project. Each doc is read independently; the glossary travels with the doc or appears inline.
+
 ---
 
 ## Project Overview
