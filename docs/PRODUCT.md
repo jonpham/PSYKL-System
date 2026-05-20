@@ -6,7 +6,8 @@
 
 A time-independent planning tool for accomplishing and building / expending (PSY) energy in PSYKL (self-defined period or work (minutes)), Earth (day), Moon (month), HelioArc (season/quarter), Sun (year) cycles.
 
-For those who want to build on their accomplishments to best suit their own needs by using repetition and energy levels rather than standardized hours and periods.
+For those who want to build on their accomplishments to best 
+suit their own needs by using repetition and energy levels rather than standardized hours and periods.
 
 ## Hypothesis
 
