@@ -1,4 +1,6 @@
-# PSKL - Life Tracker
+# PSYKL-System — Product Brief
+
+> Canonical product brief for PSYKL-System. Sits alongside the working agreement in [`AGENTS.md`](../AGENTS.md). When initiatives are planned with `gstack`, they should trace back to the premise, MVP, and constraints described here.
 
 ## Premise
 
@@ -19,7 +21,7 @@ The hypothesis here is that certain individuals suffer from planning paralysis t
 - Able to make a backlog of tasks
 - Able to trigger a daily plan on first pickup & open of the day.
 - Able to make a daily plan from backlog of tasks
-- Able to execute on tasks in 25 minute cycles.
+- Able to execute on tasks in user-defined PSYKL cycles (default: a 25-minute pomodoro).
 
 ## Future features
 - Recurring Tasks prevent daily/regular recreation of similar tasks
@@ -44,7 +46,7 @@ The hypothesis here is that certain individuals suffer from planning paralysis t
 - iPhone App Apple iOS 
 - Mac OS App Apple
 
-## Engineering Contraints
+## Engineering Constraints
 - All software changes should be made in a single Monorepo
 - Software system components should be subtree repositories that are pushed to individually to act as standalone archives.
 - The monorepo will host shared packages, E2E System Tests, infrastructure deployment, local system (docker-compose)deployments, and documentation.

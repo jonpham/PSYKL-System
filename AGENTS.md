@@ -75,7 +75,7 @@ Output the following before stopping:
 
 ## Project Overview
 
-**Project Name:** PSKYL-System
+**Project Name:** PSYKL-System
 
 **Purpose:** A time-independent planning tool for accomplishing and building / expending (PSY) energy in PSYKL (self-defined period or work (minutes)), Earth (day), Moon (month), HelioArc (season/quarter), Sun (year) cycles.
 
@@ -83,9 +83,9 @@ For those who want to build on their accomplishments to best suit their own need
 
 **Type:** Monorepo with Various System Components with individualized Tech Stacks. Component repos are Git Subtrees used as downstream mirrors — the monorepo is the source of truth.
 
-**GitHub Repo:** [jonpham/PSKL-System](https://github.com/jonpham/PSKL-System)
-**GitHub Project:** [PSKL-System Project & Roadmap](https://github.com/users/jonpham/projects/6/)
-**GitHub Milestones:** [PSKL-System/milestones](https://github.com/jonpham/PSKL-System/milestones)
+**GitHub Repo:** [jonpham/PSYKL-System](https://github.com/jonpham/PSYKL-System)
+**GitHub Project:** [PSYKL-System Project & Roadmap](https://github.com/users/jonpham/projects/6/)
+**GitHub Milestones:** [PSYKL-System/milestones](https://github.com/jonpham/PSYKL-System/milestones)
 ---
 
 ## Project Documentation
@@ -146,15 +146,19 @@ _Rules for writing and updating feature documents that summarize what has been c
 - If one does not exist, create one using the [template](docs/templates/FEATURE.md) as an example
 - If one exists, expand on the feature to include whats changed in the process of executing on a completed spec.
 - If the completed spec is the last expected change of an initiative, review the feature doc against the initiative document and its associated spec documents to ensure all important high-level information has been captured
-- Afterwards 
+- Afterwards, if the consolidated feature docs fully capture the initiative's outcomes, delete the now-redundant initiative and spec files to minimize doc sprawl (see the rule in "Project Documentation" above)
 
 ### Naming Convention
 
 ```
 [{YYYYMMDD}]{ISSUE_REF}_{feature-slug}.md
+
+[20260520]P1_energy-cycle-spec.md          # Planned, no GitHub Issue yet
+[20260520]GH12_energy-cycle-spec.md        # GitHub Issue created
 ```
-- `STATUS`: `TODO` | `IN-PROGRESS` | `DONE` | `BLOCKED`
+- `YYYYMMDD`: the date the feature doc was first created (does not change as status moves)
 - `ISSUE_REF`: `P{n}` local plan, `GH{n}` only when a manually created GitHub Issue exists
+- Status (`TODO` | `IN-PROGRESS` | `DONE` | `BLOCKED`) lives in the doc's frontmatter, **not** in the filename, so files don't need renames as status changes
 
 ---
 

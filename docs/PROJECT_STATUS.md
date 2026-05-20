@@ -1,18 +1,21 @@
 # Project and Feature Status
 
-**Last completed plan & task:** 
-**Active initiative:** `
-**Active spec:** 
-**Active plan:** 
-**Active skill:** 
-**Branch:** 
-**Current step:** 
+> Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for the terminology (Initiative / Spec / Task / Feature).
+
+**Last completed plan & task:** _none_
+**Active initiative:** _none_
+**Active spec:** _none_
+**Active plan:** _none_
+**Active skill:** _none_
+**Branch:** `main`
+**Current step:** _none_
 **Known blockers:** None.
-**Next action:**
+**Next action:** Plan the first initiative with `gstack` and write outputs to `docs/initiatives/{initiative}/`.
 
-## Phase Summary (from Initiative Doc)
+## Initiative Summary
 
-| Phase                                     | Initiative Doc                                  | Status             |
-| ----------------------------------------- | -------------------------------------------- | ------------------ |
-| Phase 1 — Monorepo Setup                  | `[DONE]GH1_monorepo-setup.md`                | ✅ Done            |
-| Phase 10 — K8s/Helm Deploy (W4)           | `[TODO]GH47_k8s-helm-deploy.md`              | 🔲 Todo (parallel) |
+_No initiatives planned yet. This table will list each initiative with a link to its planning doc and current status once work begins._
+
+| Initiative | Initiative Doc | Status |
+| ---------- | -------------- | ------ |
+| _tbd_      | _tbd_          | _tbd_  |
