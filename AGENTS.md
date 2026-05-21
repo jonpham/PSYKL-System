@@ -23,9 +23,9 @@ These rules govern every session. Follow them without exception.
 
 ## For Execution on Specs
 - During execution, complete exactly **one DevTask** at a time, then STOP and wait for explicit approval. (Applies AFTER `superpowers:writing-plans` has produced all specs. Does NOT apply during the planning skill itself — that skill writes multiple specs in a single session.)
-- A step is one checklist item in the active feature doc's `## Steps` section, and ends with a commit.
-- Exception: if the active feature doc has `step_gating: false` in its frontmatter,
-  complete all steps in the spec before stopping — but still stop at the phase boundary
+- A Step is one checklist item in the **active spec doc's `## DevTasks` section** (inside a DevTask block), and ends with a commit. Feature docs (`docs/features/`) do NOT contain Steps — they are post-implementation summaries written once per Spec at the final DevTask's merge.
+- Exception: if the active spec doc has `step_gating: false` in its frontmatter,
+  complete all Steps within a DevTask before stopping — but still stop at the DevTask boundary
 - During execution, never begin the next Spec without starting a new AI assistant session. (Applies AFTER specs are written. Does NOT apply during `superpowers:writing-plans` itself — that skill produces multiple specs in one run.)
 
 ### Before Implementing Anything
@@ -64,7 +64,7 @@ Output the following before stopping:
 
 ### File & Status Discipline
 
-- After completing a step, update the corresponding checklist item in the feature doc
+- After completing a Step, update the corresponding checkbox in the active spec doc's `## DevTasks` section (NOT the feature doc — feature docs are written once at Spec completion)
 - After completing a spec, update frontmatter: `status`, `branch`, `pr`, `completed_at`
 - After completing a spec, summarize changes implemented, significant design decisions, and architectural decisions (ADR) into the spec's associated feature document.
 - Commit feature doc changes as part of the same PR as the implementation. CHANGELOG.md should be updated to include a change log for each feature implemented.
@@ -245,7 +245,8 @@ Docs live in `docs/`:
 - **Each DevTask branches off `main` and PRs into `main`.** No stacking on prior DevTask branches; no stacking on the initiative planning branch. Initiative planning branches (e.g., `feat/plan-and-bootstrap`) carry only doc-changes and merge to `main` independently before or after DevTasks land.
 - Commit messages: Conventional Commits — `feat:`, `fix:`, `chore:`, `docs:`, `test:`
 - NEVER commit directly to `main`; NEVER force push to `main`
-- NEVER force push, if necessary STOP and provide command for user to do destructive actions manually with precautions
+- NEVER force push to `main` or any feature branch tracked by an open PR. If a force-push seems necessary, STOP and provide the command for the user to run manually with precautions.
+- **Exception:** the subtree-sync GitHub Action (per M1 DESIGN.md DevTask 10) force-pushes to the downstream mirror repositories (`jonpham/psykl-{web_client,service-task}`) on every merge to `main`. This is the documented exception — mirror repos are downstream-only and the force-push is the canonical pattern for `git subtree split`. No other force-push is permitted.
 - Always use a feature branch + pull request
 - A feature doc in `docs/features/` is created once **per Spec, not per DevTask** — it consolidates the Spec's outcome and lands with the final DevTask PR of that Spec. Earlier DevTask PRs within the same Spec do NOT need to create or touch a feature doc; they update the spec doc's `## Tasks` checklist instead. The "every PR" rule from older AGENTS.md text is superseded by this per-Spec-completion rule.
 - **Hard limit: ≤10 files changed per PR.** Exemptions: `pnpm-lock.yaml`,

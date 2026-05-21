@@ -153,7 +153,8 @@ This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 files (
 > DevTasks are numbered **globally** across the initiative (e.g., DevTask 3 always refers to the 3rd DevTask in M1 regardless of which Spec contains it), matching the numbering in the initiative DESIGN.md's Spec/DevTask Breakdown table.
 
 **Files:** ~{count}
-**Branch:** `(feat|bug|infra|chore)/{slug}`
+**Branch:** `(feat|bug|infra|chore)/{slug}` (e.g., `infra/workspace-bootstrap` for DevTask 1; `feat/nestjs-task-api-handlers` for DevTask 3a)
+**PR:** _filled once the PR is opened; format `https://github.com/jonpham/PSYKL-System/pull/N`_
 **Affected:** list of file paths to create or modify
 
 **Steps:**
