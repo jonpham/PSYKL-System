@@ -1,7 +1,7 @@
 # Milestone M1 — Bootstrap (Vertical Slice + Test Pyramid + Infra)
 
-**Status:** Open
-**Design doc:** [`DESIGN.md`](./DESIGN.md) (APPROVED PENDING DECISIONS — six framework/tool decisions block spec writing)
+**Status:** Open (ready for spec writing)
+**Design doc:** [`DESIGN.md`](./DESIGN.md) (APPROVED — all architecture decisions closed via `/plan-eng-review` + adversarial-review sweep on 2026-05-20)
 **Effort:** XL (~3-5 weeks human / ~4-7 days Claude Code)
 
 ## Description
@@ -32,4 +32,4 @@ M1 is explicitly NOT product discovery. M1 proves the architecture and trains th
 
 ## Specs
 
-M1 decomposes into **6 Specs containing 11 Tasks total** (one Task = one PR, each ≤10 files). Spec/Task breakdown in [`DESIGN.md`](./DESIGN.md#spec--task-breakdown-mapped-to-agentsmd-hierarchy).
+M1 decomposes into **6 Specs containing approximately 11-14 DevTasks total** (one DevTask = one PR, each ≤10 files). The 11-DevTask count is a target; `superpowers:writing-plans` may split DevTasks per the AGENTS.md trilemma resolution rule (tests-in-same-PR + ≤10-files-per-PR collide when a DevTask's implementation needs >7 files). Spec/DevTask breakdown in [`DESIGN.md`](./DESIGN.md#spec--devtask-breakdown-mapped-to-agentsmd-hierarchy).

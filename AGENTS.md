@@ -8,12 +8,12 @@ These rules govern every session. Follow them without exception.
 ## Key Stages, Documents, and Terms
 1. **Project** — The monorepo repository and its system is the project, it shares a common overarching goal and status, and should be mapped to an associated GitHub Project.
 2. **Initiative** — A milestone that aims to deliver a new or set of new associated features that expand the system's use cases for its users. Written using `gstack`, and is represented by a design and associated test/eng plans. (Mirrored to GitHub Milestone)
-3. **Spec** — An implementation design and plan for delivering a use case feature identified in an Initiative, can be described by a User Story; Written by `superpowers` based on an Initiative's workstream or phase. A Spec may contain one or more Tasks. (Mirrored to GitHub Issue)
-4. **Task** — A portion of implementation in a Spec that can be delivered in an atomic Pull Request. One Task = one PR. A Task contains one or more Steps. (Mirrored to GitHub Sub-Issue)
-5. **Step** — One checklist item in a Task's `## Steps` section. Each Step ends with a commit. Multiple Steps make up one Task.
+3. **Spec** — An implementation design and plan for delivering a use case feature identified in an Initiative, can be described by a User Story; Written by `superpowers` based on an Initiative's workstream or phase. A Spec may contain one or more DevTasks. (Mirrored to GitHub Issue)
+4. **DevTask** — A portion of implementation in a Spec that can be delivered in an atomic Pull Request. One DevTask = one PR. A DevTask contains one or more Steps. (Mirrored to GitHub Sub-Issue)
+5. **Step** — One checklist item in a DevTask's `## Steps` section. Each Step ends with a commit. Multiple Steps make up one DevTask.
 6. **Feature** — An implemented feature of the system, the result of completion of one or more Specs.
 
-> **Vocabulary collision warning for agents:** The workflow term `Task` (an atomic-PR-sized unit of work in a Spec) is unrelated to PSYKL's data-model entity `Task` (the `id, user_id, title, created_at` record stored in `service-task`'s database). When writing or reviewing specs and code, disambiguate by context. In doc prose, prefer phrases like *"the PSYKL Task entity"* or *"the `Task` data model"* vs *"a workflow Task"* or *"a PR-sized Task"* when ambiguity could arise.
+> **Why "DevTask" and not "Task":** PSYKL's data model has an entity literally named `Task` (`id, user_id, title, created_at`). To eliminate the collision between workflow-level vocabulary and product-domain vocabulary, this project uses **DevTask** for the workflow concept (a PR-sized unit of work) and reserves bare `Task` for the PSYKL data-model entity. When you see `Task` in code, schemas, API paths, or PSYKL-domain prose, it means the data record. When you see `DevTask`, it means the workflow concept.
 
 ### Phase-Gating (Default)
 ## For Planning Designs
@@ -22,7 +22,7 @@ These rules govern every session. Follow them without exception.
 - Stop and request user review of a design (*.md) file before moving onto planning next phase or spec.
 
 ## For Execution on Specs
-- Complete exactly **one Task** at a time, then STOP and wait for explicit approval
+- Complete exactly **one DevTask** at a time, then STOP and wait for explicit approval
 - A step is one checklist item in the active feature doc's `## Steps` section, and ends with a commit.
 - Exception: if the active feature doc has `step_gating: false` in its frontmatter,
   complete all steps in the spec before stopping — but still stop at the phase boundary
@@ -30,7 +30,7 @@ These rules govern every session. Follow them without exception.
 
 ### Before Implementing Anything
 
-- Identify the current spec and initiative and its position amongst all specs. Something like `Currently on: {Initiative Slug} Spec 4/6 and Task 4/5`
+- Identify the current spec and initiative and its position amongst all specs. Something like `Currently on: {Initiative Slug} Spec 4/6 and DevTask 4/5`
 - Review overall design and walk through expected user verification case.
 - State your assumptions explicitly
 - If a decision has meaningful tradeoffs, present options and ask which to take
@@ -94,12 +94,53 @@ Output the following before stopping:
 - **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-memory SQLite for speed); E2E tests run against the real Docker Compose stack (or equivalent); mocks at Component boundaries are explicit and intentional (services not in the project's control, or back-ends being faked for UI component tests). Mocking core domain logic is a smell.
 - **Negative-path tests are required where the design calls for default-deny behavior** (e.g., the `user_id` middleware in Milestone 1 must have Component-layer contract tests proving requests without proper headers are rejected).
 
+#### Test File Location Convention
+
+Every test file lives in a predictable place so a single CI glob catches each layer cleanly. **Convention applies to every component**:
+
+| Layer | Location | Filename pattern |
+|-------|----------|------------------|
+| Static Analysis | Configured at component root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents). | n/a — runs against all source |
+| Unit | **Colocated** next to the source it tests, inside `src/`. | `*.unit.test.ts` / `*.unit.test.tsx` |
+| Integration | Per-component, in a top-level `tests/integration/` directory. | `*.integration.test.ts` |
+| Component | **Colocated** next to the boundary it verifies (e.g., contract test next to the controller). | `*.contract.test.ts` (services) / `*.component.test.tsx` (UI apps) |
+| End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs. | `*.e2e.spec.ts` |
+
+Concrete example:
+
+```
+components/service-task/
+  src/
+    task/
+      task.controller.ts
+      task.controller.contract.test.ts         ← Component (contract)
+      task.service.ts
+      task.service.unit.test.ts                ← Unit
+    auth/
+      user-id.guard.ts
+      user-id.guard.contract.test.ts           ← Component (negative-path default-deny)
+  tests/
+    integration/
+      task-crud.integration.test.ts            ← Integration
+
+components/web_client/
+  src/
+    components/
+      TaskList.tsx
+      TaskList.unit.test.tsx                   ← Unit (UI widget)
+      TaskList.component.test.tsx              ← Component (UI driven with stubbed backend)
+
+e2e/
+  m1-task-crud.e2e.spec.ts                     ← End-to-End
+```
+
 ### Design Doc Discipline
 
 - **Candidate lists in initiative/design docs are constraints-first, not options-first.** A design doc must NOT pre-narrow framework, tool, or library choices unless those choices were explicitly discussed during the design session. Carry the constraint set; let candidates surface during the answer pass (typically `/plan-eng-review` or spec drafting).
 - **Acronyms are defined on first use within a doc**, even if defined elsewhere in the project. Each doc is read independently; the glossary travels with the doc or appears inline.
 - **A design doc's Decisions appendix is normative once status is `APPROVED`.** Subsequent skills (`superpowers:writing-plans`, spec authors, executors) MUST treat those decisions as locked. Re-opening a closed decision requires explicit user permission and a new `/plan-eng-review` pass against the affected design doc.
-- **A design doc's Spec Breakdown is an authoritative starting suggestion, not a rigid contract.** `superpowers:writing-plans` may adjust grouping or split a Task into multiple Steps, but MUST NOT exceed the ≤10-files-per-PR rule and MUST cover everything the breakdown enumerates.
+- **A design doc's Spec / DevTask Breakdown is an authoritative starting suggestion, not a rigid contract.** `superpowers:writing-plans` may adjust DevTask grouping, split a DevTask into more DevTasks, or split a DevTask into multiple Steps — but MUST cover everything the breakdown enumerates and MUST honor the trilemma resolution rule below.
+- **Trilemma resolution (≤10 files per PR vs tests-in-same-PR vs DevTask count):** When three constraints collide, prefer **(C) splitting DevTasks** over (A) bending the ≤10-files rule, and never give on (B) tests-in-same-PR. A design doc's DevTask count is a target, not a ceiling. If a planned DevTask needs >10 files including required test files, split it. The TDD discipline is sacred.
 
 ### API Decision Discipline
 
@@ -136,7 +177,7 @@ At the close of every skill workflow, STOP. Do not auto-invoke or auto-suggest t
 2. Offer a retrospective beat — what worked, what didn't, anything to refine in AGENTS.md or the working agreement before continuing.
 3. Suggest which skill is appropriate next, justified by AGENTS.md routing rules and the current project state — but wait for the user to say "go" before invoking it.
 
-Skill boundaries are STOP points, same as Task boundaries during execution. Never silently transition between `/office-hours` → `/plan-ceo-review` → `/plan-eng-review` → `superpowers:writing-plans`. Each handoff is a conversation.
+Skill boundaries are STOP points, same as DevTask boundaries during execution. Never silently transition between `/office-hours` → `/plan-ceo-review` → `/plan-eng-review` → `superpowers:writing-plans`. Each handoff is a conversation.
 
 ### Right tool for the job beats stretching
 
@@ -201,6 +242,7 @@ Docs live in `docs/`:
 ### Git Conventions
 
 - Branch naming: `(feat|bug|infra|chore)/short-description`
+- **Each DevTask branches off `main` and PRs into `main`.** No stacking on prior DevTask branches; no stacking on the initiative planning branch. Initiative planning branches (e.g., `feat/plan-and-bootstrap`) carry only doc-changes and merge to `main` independently before or after DevTasks land.
 - Commit messages: Conventional Commits — `feat:`, `fix:`, `chore:`, `docs:`, `test:`
 - NEVER commit directly to `main`; NEVER force push to `main`
 - NEVER force push, if necessary STOP and provide command for user to do destructive actions manually with precautions
@@ -237,15 +279,30 @@ _Rules for writing and updating feature documents that summarize what has been c
 
 ### Naming Convention
 
+**Feature docs (`docs/features/`):**
 ```
 [{YYYYMMDD}]{ISSUE_REF}_{feature-slug}.md
 
 [20260520]P1_energy-cycle-spec.md          # Planned, no GitHub Issue yet
 [20260520]GH12_energy-cycle-spec.md        # GitHub Issue created
 ```
-- `YYYYMMDD`: the date the feature doc was first created (does not change as status moves)
-- `ISSUE_REF`: `P{n}` local plan, `GH{n}` only when a manually created GitHub Issue exists
-- Status (`TODO` | `IN-PROGRESS` | `DONE` | `BLOCKED`) lives in the doc's frontmatter, **not** in the filename, so files don't need renames as status changes
+
+**Spec docs (`docs/specs/{initiative}/`):**
+```
+{YYYYMMDD}-S{N}-{spec-slug}.md
+
+20260521-S1-workspace-bootstrap.md         # Spec 1 of the initiative
+20260521-S2-service-task-minimal-api.md    # Spec 2 of the initiative
+```
+- `YYYYMMDD`: spec creation date (does not change)
+- `S{N}`: Spec number within the parent initiative, matching the initiative's DESIGN.md Spec/DevTask Breakdown table.
+- `spec-slug`: kebab-case slug derived from the Spec's User Story / title.
+- DevTask-level work is tracked inside the spec doc's `## Tasks` section (one heading per DevTask), not as separate spec files.
+
+**Universal rules:**
+- `YYYYMMDD`: the date the doc was first created (does not change as status moves).
+- `ISSUE_REF`: `P{n}` local plan, `GH{n}` only when a manually created GitHub Issue exists (feature docs only).
+- Status (`TODO` | `IN-PROGRESS` | `DONE` | `BLOCKED`) lives in the doc's frontmatter, **not** in the filename, so files don't need renames as status changes.
 
 ---
 

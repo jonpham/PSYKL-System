@@ -20,7 +20,7 @@
 
 One paragraph: what this Spec delivers end-to-end. Reference the User Story in plain language. State which PSYKL-System components are touched (e.g., `components/service-task`, `components/web_client`, `packages/shared-types`) and how the deliverable connects to the broader initiative.
 
-> Vocabulary reminder: "Task" in this doc means a workflow Task (one PR), per AGENTS.md. The PSYKL data-model entity `Task { id, user_id, title, created_at }` is unrelated. Disambiguate by context.
+> Vocabulary reminder: "DevTask" in this doc means a workflow DevTask (one PR), per AGENTS.md. The PSYKL data-model entity `DevTask { id, user_id, title, created_at }` is unrelated. Disambiguate by context.
 
 ---
 
@@ -81,7 +81,7 @@ Break down what's added or modified, grouped by component (`service-task`, `web_
 
 ## Test Plan
 
-All 5 pyramid layers per AGENTS.md → Test Discipline. Every Task lists tests in **TDD order** (failing test → implementation → green → refactor).
+All 5 pyramid layers per AGENTS.md → Test Discipline. Every DevTask lists tests in **TDD order** (failing test → implementation → green → refactor).
 
 ### Static Analysis
 
@@ -128,11 +128,15 @@ Number the order in which tests get written:
 
 ---
 
-## Tasks
+## DevTasks
 
-This Spec contains {N} Tasks. Each Task is one Pull Request, ≤10 files (lockfile exempt). Each Task contains multiple Steps; each Step ends with one commit.
+This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 files (lockfile exempt). Each DevTask **branches off `main` and PRs into `main`** (per AGENTS.md → Git Conventions). Each DevTask contains multiple Steps; each Step ends with one commit.
 
-### Task {N.1}: {short imperative title}
+**Trilemma rule (AGENTS.md → Design Doc Discipline):** if a planned DevTask's implementation files + required test files exceed 10, split the DevTask. Never defer tests to a later PR.
+
+### DevTask {GLOBAL_NUMBER}: {short imperative title}
+
+> DevTasks are numbered **globally** across the initiative (e.g., DevTask 3 always refers to the 3rd DevTask in M1 regardless of which Spec contains it), matching the numbering in the initiative DESIGN.md's Spec/DevTask Breakdown table.
 
 **Files:** ~{count}
 **Branch:** `(feat|bug|infra|chore)/{slug}`
@@ -145,7 +149,7 @@ This Spec contains {N} Tasks. Each Task is one Pull Request, ≤10 files (lockfi
 - [ ] Step 3: Refactor / add edge-case tests (commit: `test: add edge-case coverage for X`)
 - [ ] Step 4: Update feature doc + status (commit: included in the same PR, body bullet per AGENTS.md commit-message rule)
 
-### Task {N.2}: {short imperative title}
+### DevTask {GLOBAL_NUMBER + 1}: {short imperative title}
 
 (repeat structure)
 
@@ -153,7 +157,7 @@ This Spec contains {N} Tasks. Each Task is one Pull Request, ≤10 files (lockfi
 
 ## Verification (manual)
 
-How to confirm the Spec is delivered end-to-end after all Tasks merge:
+How to confirm the Spec is delivered end-to-end after all DevTasks merge:
 
 1. `git pull` and run `pnpm install`
 2. `docker compose up` (or `pnpm dev`)
@@ -197,14 +201,14 @@ When this Spec is checked into `docs/specs/{initiative}/`, the file should have 
 ---
 status: TODO            # TODO | IN-PROGRESS | DONE | BLOCKED
 issue:                  # P{n} for local plan, GH{n} once a GitHub Issue exists
-branch:                 # (feat|bug|infra|chore)/short-description (Task-level branch)
+branch:                 # (feat|bug|infra|chore)/short-description (DevTask-level branch)
 pr:                     # PR URL once opened
 completed_at:           # YYYY-MM-DD when merged
 created_at: YYYY-MM-DD
 initiative:             # m1-bootstrap, m2-pwa-crud-offline, etc.
-tasks_total: N          # number of Tasks in this Spec
-tasks_complete: 0       # update as Tasks merge
+tasks_total: N          # number of DevTasks in this Spec
+tasks_complete: 0       # update as DevTasks merge
 ---
 ```
 
-This frontmatter is the spec-level status. Per-Task / per-Step status lives in the Tasks checklist above.
+This frontmatter is the spec-level status. Per-DevTask / per-Step status lives in the DevTasks checklist above.

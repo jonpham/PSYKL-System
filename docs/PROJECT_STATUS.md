@@ -2,27 +2,33 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed plan & task:** `/plan-eng-review` closed all six M1 architectural Open Questions
+**Last completed plan & task:** `/plan-eng-review` + adversarial-review doc-sweep closed all M1 architectural decisions
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED, ready for spec writing
-**Active spec:** _none yet — about to run `superpowers:writing-plans` to produce the 6 Specs / 11 Tasks_
-**Active plan:** `superpowers:writing-plans` against M1 design doc → atomic ≤10-file Tasks under `docs/specs/m1-bootstrap/`
-**Active skill:** _between skills — paused after `/plan-eng-review` close-out_
+**Active spec:** _none yet — about to run `superpowers:writing-plans` to produce the 6 Specs / ~11-14 DevTasks_
+**Active plan:** `superpowers:writing-plans` against M1 design doc → atomic ≤10-file DevTasks under `docs/specs/m1-bootstrap/`
+**Active skill:** _between skills — paused after `/plan-eng-review` + adversarial-review sweep_
 **Branch:** `feat/plan-and-bootstrap`
-**Current step:** Pre-`superpowers` doc sweep — promoting cross-agent rules to AGENTS.md, reframing DESIGN.md hierarchy, adding SPEC template + BACKLOG_IDEAS.
+**Current step:** Pre-`superpowers` doc sweep complete (vocabulary collision Task→DevTask, trilemma resolution rule, spec filename convention, test file location convention, branching convention, GHCR registry lock, database revisit pglite, deploy/helm/ path, OpenAPI artifact path, Drizzle directory layout, Zod schema-first discipline).
 **Known blockers:** None.
-**Next action:** Invoke `superpowers:writing-plans` against `docs/initiatives/m1-bootstrap/DESIGN.md`. The skill should produce 6 Spec docs under `docs/specs/m1-bootstrap/`, following `docs/templates/SPEC.md`.
+**Next action:** Invoke `superpowers:writing-plans` against `docs/initiatives/m1-bootstrap/DESIGN.md`. The skill should produce 6 Spec docs under `docs/specs/m1-bootstrap/` following `docs/templates/SPEC.md` (filename pattern `YYYYMMDD-S{N}-{spec-slug}.md`).
 
 ## M1 Locked-in Stack
 
 | Layer | Choice |
 |-------|--------|
 | Package manager | pnpm + pnpm-workspace.yaml |
-| Node runtime | Node 24 LTS (pinned via .nvmrc + engines) |
-| pnpm version | 10.x (pinned via packageManager field) |
-| API framework | NestJS, REST + spec-first OpenAPI 3.x, multi-transport-ready |
-| PWA framework | Vite + React (SPA mode) + vite-plugin-pwa |
-| ORM + migrations | Drizzle ORM + drizzle-kit |
-| Database (M1) | SQLite (Postgres path at M4+) |
+| Node runtime | Node 24 LTS (pinned via `.nvmrc` + `engines`) |
+| pnpm version | 10.x (pinned via `packageManager` field) |
+| API framework | NestJS, REST, multi-transport-ready (gRPC + GraphQL deferrable into the same app) |
+| API spec / schema discipline | Schema-first via Zod in `packages/shared-types/src/schemas/` + `nestjs-zod` DTOs + `zod-to-openapi` emitted document |
+| OpenAPI artifact | `components/service-task/openapi.json` (gitignored, emitted at build) consumed by clients via `openapi-typescript` + `openapi-fetch` |
+| PWA framework | Vite + React (SPA mode) + `vite-plugin-pwa` |
+| ORM + migrations | Drizzle ORM + drizzle-kit; schema at `components/service-task/src/db/schema/`; migrations at `components/service-task/drizzle/migrations/` |
+| Database (M1) | pglite (in-process PostgreSQL via WebAssembly) — Postgres-shaped from day one for clean M4+ networked migration |
+| Container registry | GitHub Container Registry (`ghcr.io/jonpham/psykl-system-*`) |
+| Helm chart location | `deploy/helm/` |
+| Branching convention | Each DevTask branches off `main`, PRs into `main` |
+| Test file locations | Unit + Component colocated next to source; Integration in per-component `tests/integration/`; E2E in repo-root `e2e/` |
 | LICENSE | MIT |
 
 ## Initiative Summary
