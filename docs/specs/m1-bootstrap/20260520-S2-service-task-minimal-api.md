@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN-PROGRESS
 issue: P2
 pr:
 completed_at:
@@ -7,7 +7,7 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 2
 devtasks_total: 3
-devtasks_complete: 0
+devtasks_complete: 1
 honors_decisions: [2, 2b, 4, 8, 13, 19, 20, 24, 25, 29, 31, 32]
 ---
 
@@ -72,7 +72,7 @@ honors_decisions: [2, 2b, 4, 8, 13, 19, 20, 24, 25, 29, 31, 32]
 
 Start DevTask 4 on a fresh branch off `main`: `git checkout main && git pull && git checkout -b infra/service-task-drizzle-schema`.
 
-- [ ] **Step 1: Create `package.json`**
+- [x] **Step 1: Create `package.json`**
 
 Write to `components/service-task/package.json`:
 
@@ -113,7 +113,7 @@ Write to `components/service-task/package.json`:
 }
 ```
 
-- [ ] **Step 2: Create `tsconfig.json`**
+- [x] **Step 2: Create `tsconfig.json`**
 
 ```json
 {
@@ -132,7 +132,7 @@ Write to `components/service-task/package.json`:
 
 (Note: `verbatimModuleSyntax: false` overrides the base for NestJS decorator compat; `experimentalDecorators` + `emitDecoratorMetadata` are required by NestJS.)
 
-- [ ] **Step 3: Create `vitest.config.ts`**
+- [x] **Step 3: Create `vitest.config.ts`**
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -150,7 +150,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Create `drizzle.config.ts`**
+- [x] **Step 4: Create `drizzle.config.ts`**
 
 ```ts
 import { defineConfig } from 'drizzle-kit';
@@ -163,12 +163,12 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 5: Install dependencies**
+- [x] **Step 5: Install dependencies**
 
 Run from repo root: `pnpm install`
 Expected: installs all deps under `components/service-task/node_modules`.
 
-- [ ] **Step 6: Create the Drizzle schema files**
+- [x] **Step 6: Create the Drizzle schema files**
 
 Write `components/service-task/src/db/schema/task.ts`:
 
@@ -201,7 +201,7 @@ Write `components/service-task/src/db/schema/index.ts`:
 export * from './task';
 ```
 
-- [ ] **Step 7: Create the Drizzle client factory**
+- [x] **Step 7: Create the Drizzle client factory**
 
 Write `components/service-task/src/db/index.ts`:
 
@@ -234,14 +234,14 @@ export async function createDb(): Promise<Db> {
 export { schema };
 ```
 
-- [ ] **Step 8: Generate the initial migration**
+- [x] **Step 8: Generate the initial migration**
 
 Run: `pnpm --filter @psykl/service-task db:generate`
 Expected: drizzle-kit produces `drizzle/migrations/0000_<random_slug>.sql` and updates `drizzle/migrations/meta/_journal.json`. Inspect the SQL — it should create a `tasks` table with `id text PRIMARY KEY`, `user_id text NOT NULL`, `title text NOT NULL`, `created_at timestamp with time zone NOT NULL DEFAULT now()`.
 
 If the migration filename uses a non-deterministic suffix, rename to `0000_initial.sql` for stability (and update `_journal.json` accordingly).
 
-- [ ] **Step 9: Write failing integration test**
+- [x] **Step 9: Write failing integration test**
 
 Write `components/service-task/tests/integration/task-crud.integration.test.ts`:
 
@@ -302,19 +302,19 @@ describe('Drizzle + pglite Task CRUD', () => {
 });
 ```
 
-- [ ] **Step 10: Run the integration test to verify it fails (or passes if Drizzle infra is correct)**
+- [x] **Step 10: Run the integration test to verify it fails (or passes if Drizzle infra is correct)**
 
 Run: `pnpm --filter @psykl/service-task test:integration`
 Expected: PASS — if migration is correctly checked into `drizzle/migrations`, the test will boot pglite in memory, apply migrations, and the CRUD tests will pass.
 
 If it FAILS with "relation 'tasks' does not exist": the migration generated in Step 8 wasn't applied; check `drizzle/migrations/_journal.json` references the right file and the SQL contents are correct. Fix and re-run.
 
-- [ ] **Step 11: Verify typecheck**
+- [x] **Step 11: Verify typecheck**
 
 Run: `pnpm --filter @psykl/service-task typecheck`
 Expected: PASS — zero TypeScript errors.
 
-- [ ] **Step 12: Commit DevTask 4**
+- [x] **Step 12: Commit DevTask 4**
 
 ```bash
 git add components/service-task/ pnpm-lock.yaml
