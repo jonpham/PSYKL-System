@@ -7,7 +7,7 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 1
 devtasks_total: 2
-devtasks_complete: 1
+devtasks_complete: 2
 honors_decisions: [1, 5, 6, 18, 24, 2b, 26]
 ---
 
@@ -294,7 +294,7 @@ Expected: commit lands on the DevTask 1 branch. Push the branch and open PR for 
 
 Start DevTask 2 on a fresh branch off `main`: `git checkout main && git pull && git checkout -b chore/shared-types-zod-schemas`.
 
-- [ ] **Step 1: Create `packages/shared-types/package.json`**
+- [x] **Step 1: Create `packages/shared-types/package.json`**
 
 Write:
 
@@ -339,7 +339,7 @@ Write:
 }
 ```
 
-- [ ] **Step 2: Create `packages/shared-types/tsconfig.json`**
+- [x] **Step 2: Create `packages/shared-types/tsconfig.json`**
 
 Write:
 
@@ -356,7 +356,7 @@ Write:
 }
 ```
 
-- [ ] **Step 3: Create `packages/shared-types/vitest.config.ts`**
+- [x] **Step 3: Create `packages/shared-types/vitest.config.ts`**
 
 Write:
 
@@ -375,12 +375,12 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Install dependencies**
+- [x] **Step 4: Install dependencies**
 
 Run from repo root: `pnpm install --filter @psykl/shared-types`
 Expected: installs `zod`, `@asteasolutions/zod-to-openapi`, `vitest`, `typescript` under `packages/shared-types/node_modules` (with hard links via the pnpm store).
 
-- [ ] **Step 5: Write failing test for `TaskSchema`**
+- [x] **Step 5: Write failing test for `TaskSchema`**
 
 Write to `packages/shared-types/src/schemas/task.unit.test.ts`:
 
@@ -460,12 +460,12 @@ describe('TaskResponseSchema', () => {
 });
 ```
 
-- [ ] **Step 6: Run the test to verify it fails**
+- [x] **Step 6: Run the test to verify it fails**
 
 Run: `pnpm --filter @psykl/shared-types test:unit`
 Expected: FAIL with "Cannot find module './task'" or similar import error. (Implementation does not exist yet.)
 
-- [ ] **Step 7: Implement `task.ts` to make tests pass**
+- [x] **Step 7: Implement `task.ts` to make tests pass**
 
 Write to `packages/shared-types/src/schemas/task.ts`:
 
@@ -515,12 +515,12 @@ export const TaskResponseSchema = TaskSchema;
 export type TaskResponse = z.infer<typeof TaskResponseSchema>;
 ```
 
-- [ ] **Step 8: Run the test to verify it passes**
+- [x] **Step 8: Run the test to verify it passes**
 
 Run: `pnpm --filter @psykl/shared-types test:unit`
 Expected: PASS — all 9 test cases green.
 
-- [ ] **Step 9: Create the barrel `index.ts`**
+- [x] **Step 9: Create the barrel `index.ts`**
 
 Write to `packages/shared-types/src/index.ts`:
 
@@ -529,7 +529,7 @@ export * from './schemas/task';
 export { buildOpenApiDocument } from './openapi';
 ```
 
-- [ ] **Step 10: Implement the OpenAPI builder**
+- [x] **Step 10: Implement the OpenAPI builder**
 
 Write to `packages/shared-types/src/openapi.ts`:
 
@@ -605,7 +605,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
 }
 ```
 
-- [ ] **Step 11: Add a test that the OpenAPI document builds cleanly**
+- [x] **Step 11: Add a test that the OpenAPI document builds cleanly**
 
 Append to `packages/shared-types/src/schemas/task.unit.test.ts` (or create `src/openapi.unit.test.ts`):
 
@@ -636,22 +636,22 @@ describe('buildOpenApiDocument', () => {
 
 If the file path differs, place this in `packages/shared-types/src/openapi.unit.test.ts`.
 
-- [ ] **Step 12: Run all unit tests**
+- [x] **Step 12: Run all unit tests**
 
 Run: `pnpm --filter @psykl/shared-types test:unit`
 Expected: PASS — all schema tests plus both OpenAPI tests green.
 
-- [ ] **Step 13: Run typecheck**
+- [x] **Step 13: Run typecheck**
 
 Run: `pnpm --filter @psykl/shared-types typecheck`
 Expected: PASS — no TypeScript errors.
 
-- [ ] **Step 14: Verify package builds**
+- [x] **Step 14: Verify package builds**
 
 Run: `pnpm --filter @psykl/shared-types build`
 Expected: PASS — `dist/` directory created with `index.js`, `schemas/task.js`, `openapi.js`, and corresponding `.d.ts` files.
 
-- [ ] **Step 15: Commit DevTask 2**
+- [x] **Step 15: Commit DevTask 2**
 
 ```bash
 git add packages/shared-types/ pnpm-lock.yaml

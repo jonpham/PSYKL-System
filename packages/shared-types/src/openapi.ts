@@ -1,0 +1,76 @@
+import { extendZodWithOpenApi, OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
+import { z } from 'zod';
+import { TaskInputSchema, TaskResponseSchema } from './schemas/task.js';
+
+extendZodWithOpenApi(z);
+
+/**
+ * Build the OpenAPI 3.1 document for service-task.
+ * service-task runs this at build time and writes the result to openapi.json.
+ *
+ * Adding a new schema:
+ *   1. Define it in src/schemas/.
+ *   2. Register it here via registry.register(...).
+ *   3. Register any paths that use it via registry.registerPath(...).
+ *
+ * Routes are defined in this builder so the spec is the single source of truth
+ * for the public HTTP Application Programming Interface shape.
+ */
+export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generateDocument']> {
+  const registry = new OpenAPIRegistry();
+
+  const taskInput = registry.register('TaskInput', TaskInputSchema);
+  const taskResponse = registry.register('Task', TaskResponseSchema);
+  const userIdHeader = z.object({
+    'X-User-Id': z.string().openapi({
+      param: {
+        name: 'X-User-Id',
+        in: 'header',
+      },
+    }),
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/tasks',
+    summary: 'Create a Task',
+    request: {
+      headers: userIdHeader,
+      body: { content: { 'application/json': { schema: taskInput } } },
+    },
+    responses: {
+      201: { description: 'Created', content: { 'application/json': { schema: taskResponse } } },
+      400: { description: 'Bad request - body fails TaskInput validation' },
+      401: { description: 'Missing X-User-Id header' },
+      403: { description: 'Malformed X-User-Id header' },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/tasks',
+    summary: 'List Tasks for the current user',
+    request: {
+      headers: userIdHeader,
+    },
+    responses: {
+      200: {
+        description: 'OK',
+        content: { 'application/json': { schema: z.array(taskResponse) } },
+      },
+      401: { description: 'Missing X-User-Id header' },
+      403: { description: 'Malformed X-User-Id header' },
+    },
+  });
+
+  const generator = new OpenApiGeneratorV31(registry.definitions);
+  return generator.generateDocument({
+    openapi: '3.1.0',
+    info: {
+      title: 'PSYKL service-task API',
+      version: '0.0.0',
+      description: 'PSYKL-System service-task REST API. Generated from Zod schemas.',
+    },
+    servers: [{ url: 'http://localhost:3000', description: 'Local dev' }],
+  });
+}
