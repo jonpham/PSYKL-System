@@ -413,6 +413,19 @@ All six blocking Open Questions are resolved (see Decisions above). Concrete han
 4. Execute specs atomically per AGENTS.md, one task per PR.
 5. Close M1 with the feature-doc summary and a workflow retrospective.
 
+## Issue-shaped Spec Briefs
+
+For each of the 6 Specs, a feature-doc-shaped Markdown file exists at `docs/initiatives/m1-bootstrap/issues/`. These follow the AGENTS.md feature-doc template + filename convention (`[YYYYMMDD]P{N}_m1-{slug}.md`) and contain: User Story, DevTasks composing the Spec, Verification Steps (manual + acceptance criteria), Affected Components, Design Decisions cross-referenced to the appendix above, Architecture Decisions (ADRs), and an empty Change Log. They're suitable for direct paste into GitHub Issue bodies and serve as supplementary context for `superpowers:writing-plans`.
+
+| Spec | Issue Brief |
+|------|-------------|
+| S1 Workspace Bootstrap | [`issues/[20260520]P1_m1-workspace-bootstrap.md`](./issues/%5B20260520%5DP1_m1-workspace-bootstrap.md) |
+| S2 service-task minimal API | [`issues/[20260520]P2_m1-service-task-minimal-api.md`](./issues/%5B20260520%5DP2_m1-service-task-minimal-api.md) |
+| S3 web_client minimal PWA | [`issues/[20260520]P3_m1-web-client-minimal-pwa.md`](./issues/%5B20260520%5DP3_m1-web-client-minimal-pwa.md) |
+| S4 Local dev stack | [`issues/[20260520]P4_m1-local-dev-stack.md`](./issues/%5B20260520%5DP4_m1-local-dev-stack.md) |
+| S5 CI test pipeline | [`issues/[20260520]P5_m1-ci-test-pipeline.md`](./issues/%5B20260520%5DP5_m1-ci-test-pipeline.md) |
+| S6 CD release pipeline | [`issues/[20260520]P6_m1-cd-release-pipeline.md`](./issues/%5B20260520%5DP6_m1-cd-release-pipeline.md) |
+
 ## GSTACK REVIEW REPORT
 
 | Review | Trigger | Why | Runs | Status | Findings |
