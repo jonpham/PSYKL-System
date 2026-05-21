@@ -2,15 +2,34 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed plan & task:** `/plan-eng-review` + adversarial-review doc-sweep closed all M1 architectural decisions
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED, ready for spec writing
-**Active spec:** _none yet — about to run `superpowers:writing-plans` to produce the 6 Specs / ~11-14 DevTasks_
-**Active plan:** `superpowers:writing-plans` against M1 design doc → atomic ≤10-file DevTasks under `docs/specs/m1-bootstrap/`
-**Active skill:** _between skills — paused after `/plan-eng-review` + adversarial-review sweep_
-**Branch:** `feat/plan-and-bootstrap`
-**Current step:** Pre-`superpowers` doc sweep complete after THREE adversarial-review iterations. Iteration 1 promoted cross-agent rules; Iteration 2 caught residual SQLite/swagger references + AGENTS.md "or stacked branches" contradiction + missing ports/CORS/mirror-URLs/branch-protection/engine-strict; Iteration 3 caught the L153 vocabulary residue ("Tasks" not "DevTasks"), S2/S3 dependency-graph contradiction (DevTask 6 consumes DevTask 3's openapi.json), missing decisions on PSYKL Task id generation strategy + `created_at` column shape + web_client Docker production runtime + pnpm script contract + Vitest workspace config + pglite persistence init + LICENSE filename, GHCR/mirror naming inconsistency (`psykl-system-*` vs `psykl-*` resolved to `psykl-*`), DevTask 3 mandatory split into 3a + 3b, single-user-multi-device sync model premise added.
-**Known blockers:** None.
-**Next action:** Invoke `superpowers:writing-plans` against `docs/initiatives/m1-bootstrap/DESIGN.md`. The skill should produce 6 Spec docs under `docs/specs/m1-bootstrap/` following `docs/templates/SPEC.md` (filename pattern `YYYYMMDD-S{N}-{spec-slug}.md`).
+**Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, awaiting execution
+**Active spec:** _none in progress — paused here. The 6 plans are written; execution has NOT started._
+**Active plan:** Awaiting user to manually create GitHub Issues from the 6 briefs at `docs/initiatives/m1-bootstrap/issues/`, then resume execution (possibly with a different AI agent).
+**Active skill:** _between skills — `superpowers:writing-plans` complete; next skill (`superpowers:subagent-driven-development` or `superpowers:executing-plans`, OR an equivalent on a different AI agent) not yet invoked_
+**Branch:** `feat/plan-and-bootstrap` (planning-only branch; merges to `main` as the doc-only planning PR. Each subsequent DevTask gets its own branch off `main` per AGENTS.md.)
+**Current step:** Handoff to GitHub-issue creation + execution-later. All design + planning artifacts committed; nothing in-flight.
+**Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
+**Next action (for the next agent or you):**
+  1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).
+  2. Pick a Spec to execute first (Spec 1 is the foundation — start there unless you have a reason to skip).
+  3. Open the corresponding plan at `docs/specs/m1-bootstrap/20260520-S{N}-{slug}.md` and execute task-by-task using `superpowers:subagent-driven-development` (Claude Code), `superpowers:executing-plans`, or the equivalent on whatever agent you're driving.
+  4. Each DevTask = one branch off `main`, one PR into `main`, ≤10 files per PR (lockfile exempt), tests-in-same-PR per AGENTS.md.
+
+## How to Pick Up This Project (for any AI agent, mid-2026 or later)
+
+1. **Read in this order:**
+   - `CLAUDE.md` → sources `AGENTS.md`
+   - `AGENTS.md` — working agreement, vocabulary (Project / Initiative / Spec / DevTask / Step / Feature), Test Discipline (5-layer pyramid, TDD mandatory), Git Conventions (each DevTask off `main`, no stacking), naming conventions, skill routing
+   - `docs/PRODUCT.md` — product brief, the Sync and Sharing Model (single-user multi-device, no collaboration ever)
+   - `docs/PROJECT_STATUS.md` — this file
+   - `docs/initiatives/m1-bootstrap/DESIGN.md` — the M1 design, especially the 33-entry Decisions appendix
+   - `docs/initiatives/m1-bootstrap/issues/` — six issue briefs, one per Spec
+   - `docs/specs/m1-bootstrap/` — six implementation plans, one per Spec, task-by-task
+2. **Vocabulary to memorize:** `DevTask` = workflow concept (PR-sized unit). `Task` = PSYKL data-model entity (the `id, user_id, title, created_at` record). They are unrelated.
+3. **The Decisions appendix is normative.** If a decision looks wrong, surface it for user discussion — do not silently rework.
+4. **TDD ordering is mandatory:** failing test → implementation → green → refactor → commit. Tests live in the same PR as the implementation.
+5. **Each DevTask = one PR, ≤10 files (lockfile exempt). If a DevTask grows past 10 files, SPLIT it (trilemma rule).**
 
 ## M1 Locked-in Stack
 
