@@ -1,14 +1,15 @@
 ---
 status: TODO            # TODO | IN-PROGRESS | DONE | BLOCKED
 issue:                  # P{n} for local plan, GH{n} once a GitHub Issue exists
-branch:                 # filled per-DevTask in the DevTask sections below; this top-level field is the Spec's "umbrella" branch IF stacking; otherwise leave empty
-pr:                     # PR URL once opened (filled for single-DevTask Specs; multi-DevTask Specs leave blank and use per-DevTask `pr:` below)
-completed_at:           # YYYY-MM-DD when merged
+pr:                     # PR URL — only set for single-DevTask Specs; multi-DevTask Specs leave blank and track per-DevTask `pr:` in the DevTasks section below
+completed_at:           # YYYY-MM-DD when the final DevTask of this Spec merges
 created_at: YYYY-MM-DD
 initiative:             # m1-bootstrap, m2-pwa-crud-offline, etc.
 spec_number: N          # matches docs/initiatives/{initiative}/DESIGN.md Spec/DevTask Breakdown
-devtasks_total: N       # number of DevTasks in this Spec
+devtasks_total: N       # number of DevTasks in this Spec (post any trilemma-driven splits)
 devtasks_complete: 0    # update as DevTasks merge
+honors_decisions:       # YAML list of decision IDs from the initiative DESIGN.md that this Spec touches/depends on (e.g. [1, 2, 2b, 6, 18])
+  - 0
 ---
 
 # {Spec Name} — Implementation Spec
@@ -157,10 +158,10 @@ This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 files (
 
 **Steps:**
 
-- [ ] Step 1: Write failing test for X (commit: `test: add failing test for X`)
+- [ ] Step 1: Write failing test for X at the appropriate pyramid layer (commit: `test: add failing test for X`)
 - [ ] Step 2: Implement X to make test pass (commit: `feat: implement X`)
 - [ ] Step 3: Refactor / add edge-case tests (commit: `test: add edge-case coverage for X`)
-- [ ] Step 4: Update feature doc + status (commit: included in the same PR, body bullet per AGENTS.md commit-message rule)
+- [ ] Step 4 (FINAL DevTask of this Spec only): create or update `docs/features/[YYYYMMDD]{ISSUE_REF}_{feature-slug}.md` consolidating the Spec's outcome (commit: included in the final-DevTask PR, body bullet per AGENTS.md commit-message rule). Earlier DevTasks within the same Spec do NOT touch the feature doc; they only update this spec doc's `## DevTasks` checkboxes.
 
 ### DevTask {GLOBAL_NUMBER + 1}: {short imperative title}
 

@@ -8,7 +8,7 @@
 **Active plan:** `superpowers:writing-plans` against M1 design doc → atomic ≤10-file DevTasks under `docs/specs/m1-bootstrap/`
 **Active skill:** _between skills — paused after `/plan-eng-review` + adversarial-review sweep_
 **Branch:** `feat/plan-and-bootstrap`
-**Current step:** Pre-`superpowers` doc sweep complete after TWO adversarial-review iterations. First sweep promoted cross-agent rules (vocabulary Task→DevTask, trilemma resolution, spec filename convention, test file locations, branching, GHCR, pglite database revisit, deploy/helm/, OpenAPI artifact, Drizzle directory layout, Zod schema-first). Second sweep caught residual SQLite mentions, SPEC.md rename inversion, `@nestjs/swagger` in template, AGENTS.md "or stacked branches" contradiction, missing port assignments, CORS posture, subtree mirror URLs, branch-protection scoping, engine-strict, feature-doc-per-Spec rule, planning-vs-execution session rule, DevTask dependency graph.
+**Current step:** Pre-`superpowers` doc sweep complete after THREE adversarial-review iterations. Iteration 1 promoted cross-agent rules; Iteration 2 caught residual SQLite/swagger references + AGENTS.md "or stacked branches" contradiction + missing ports/CORS/mirror-URLs/branch-protection/engine-strict; Iteration 3 caught the L153 vocabulary residue ("Tasks" not "DevTasks"), S2/S3 dependency-graph contradiction (DevTask 6 consumes DevTask 3's openapi.json), missing decisions on PSYKL Task id generation strategy + `created_at` column shape + web_client Docker production runtime + pnpm script contract + Vitest workspace config + pglite persistence init + LICENSE filename, GHCR/mirror naming inconsistency (`psykl-system-*` vs `psykl-*` resolved to `psykl-*`), DevTask 3 mandatory split into 3a + 3b, single-user-multi-device sync model premise added.
 **Known blockers:** None.
 **Next action:** Invoke `superpowers:writing-plans` against `docs/initiatives/m1-bootstrap/DESIGN.md`. The skill should produce 6 Spec docs under `docs/specs/m1-bootstrap/` following `docs/templates/SPEC.md` (filename pattern `YYYYMMDD-S{N}-{spec-slug}.md`).
 
@@ -25,7 +25,11 @@
 | PWA framework | Vite + React (SPA mode) + `vite-plugin-pwa` |
 | ORM + migrations | Drizzle ORM + drizzle-kit; schema at `components/service-task/src/db/schema/`; migrations at `components/service-task/drizzle/migrations/` |
 | Database (M1) | pglite (in-process PostgreSQL via WebAssembly) — Postgres-shaped from day one for clean M4+ networked migration |
-| Container registry | GitHub Container Registry (`ghcr.io/jonpham/psykl-system-*`) |
+| PSYKL Task id | UUID v7 (RFC 9562, time-ordered), generated app-side in NestJS `TaskService` via `uuid` package |
+| `created_at` column | `timestamptz` with DB default `now()` (Drizzle: `timestamp('created_at', { withTimezone: true }).notNull().defaultNow()`) |
+| Web client prod runtime | nginx serving built `dist/` (multi-stage Dockerfile, nginx:alpine + SPA-fallback config) |
+| pglite persistence path | Production: `/var/lib/psykl/pglite` (Docker volume `psykl-pglite-data`). Dev: `./.pglite-dev` (gitignored). Tests: in-memory (no path). Env var: `PGLITE_DATA_DIR`. |
+| Container registry | GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`) |
 | Helm chart location | `deploy/helm/` |
 | Branching convention | Each DevTask branches off `main`, PRs into `main` (no stacking) |
 | Test file locations | Unit + Component colocated next to source; Integration in per-component `tests/integration/`; E2E in repo-root `e2e/` |
@@ -65,7 +69,7 @@ Not blocking anything today; documented so they don't get lost.
 | Surface | Parked at | Owning milestone |
 |---------|-----------|------------------|
 | Offline-first sync engine architecture (Service Worker scope, IndexedDB shape, sync queue, last-write-wins implementation) | `/office-hours` | M2 |
-| Conflict resolution if/when last-write-wins is insufficient (Conflict-free Replicated Data Type = CRDT) | `/office-hours` | M4+ if surfaced |
+| ~~Conflict resolution via CRDT~~ — **CLOSED, out of scope.** Per the single-user-multi-device sync model (PRODUCT.md → Sync and Sharing Model, DESIGN.md Premise 8), last-write-wins is sufficient for the lifetime of the project; CRDTs solve a multi-actor problem PSYKL doesn't have. | Permanently closed 2026-05-20 | — |
 | Server-side vs client-side retrospective aggregation | `/office-hours` parked for post-M3 | M3 or M4 |
 | Configurable term-map / UI theme architecture (default celestial: PSYKL/Earth/Moon/HelioArc/Sun) | `/office-hours` | M3+ |
 | Multi-user auth scheme (OAuth provider vs magic-link vs password+session) | `/office-hours` | M4 |

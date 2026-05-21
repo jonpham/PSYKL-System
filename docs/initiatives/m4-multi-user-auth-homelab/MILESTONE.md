@@ -6,7 +6,7 @@
 
 ## Description
 
-Replace the hardcoded `user_id = "local"` value (single-user assumption from M1) with real authentication and multi-user support. Make `service-task` deployable on someone else's homelab as a multi-user instance where each user has their own isolated data.
+Replace the hardcoded `user_id = "local"` value (single-user assumption from M1) with real authentication and **multi-tenant** support. Make `service-task` deployable on someone else's homelab as a multi-tenant instance where each user has their own **siloed** data. **No multi-user collaboration** — each user's data remains private; this milestone is about TENANT SEPARATION on shared infrastructure, not shared data access. (See `docs/PRODUCT.md` → Sync and Sharing Model.)
 
 This is the milestone that turns PSYKL-System from a single-user dogfood tool into something other people can self-host. Per the `/office-hours` Premise 6 (OSS adoption is downstream of dogfood), this lands only after the dogfood-validation period demonstrates the product is worth others adopting.
 

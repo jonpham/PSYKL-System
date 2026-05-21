@@ -25,6 +25,18 @@ What makes PSYKL-System distinct from the dozens of existing pomodoro timers and
 
 3. **Selective time-independence.** Countdown timers exist because they help users stick to their chosen PSYKL length. Calendar-grid views exist because they're the familiar way to visualize completed work over a week or month. What's intentionally absent is **clock-time scheduling of future tasks** — no "9am: write report" entries. The anti-clock stance shows up in the planning UI, not the execution UI.
 
+## Sync and Sharing Model
+
+PSYKL-System is **single-user, multi-device, siloed**. The model:
+
+- **"Sync"** means a single user's multiple devices (iPhone, iPad, Mac, PWA) share that user's data.
+- **Each user's data is private and siloed.** No other user has read or write access unless the owning user explicitly shares.
+- **Sharing is one-way, via export-generated artifacts** — markdown files, calendar exports, ZIP archives. The recipient sees a snapshot, NOT a live link into the original data.
+- **No real-time multi-user collaboration.** Ever. Not in M4, not in M10.
+- **Multi-user auth at M4** means many users each have their OWN siloed instance on the same server (e.g., homelab self-hosters running PSYKL for themselves and family members, each with separate isolated data). It does NOT mean shared tasks, shared cycles, or shared retrospectives.
+
+This is a deliberate scope constraint. PSYKL exists to support one human's focused work; it is not Notion, Linear, or any collaborative tool.
+
 ## Aesthetic Naming
 
 PSYKL-System uses celestial names (PSYKL, Earth, Moon, HelioArc, Sun) as **optional UI flavor**, not as architectural concepts. Code and data model use neutral terms (`cycle`, `task`, `period`). A configurable term-map at the UI layer can swap the celestial theme for a plain theme or any future theme without code churn. The celestial naming is fun, not load-bearing.

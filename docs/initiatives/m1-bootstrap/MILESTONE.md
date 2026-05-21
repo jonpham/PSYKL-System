@@ -32,4 +32,4 @@ M1 is explicitly NOT product discovery. M1 proves the architecture and trains th
 
 ## Specs
 
-M1 decomposes into **6 Specs containing approximately 11-14 DevTasks total** (one DevTask = one PR, each ≤10 files). The 11-DevTask count is a target; `superpowers:writing-plans` may split DevTasks per the AGENTS.md trilemma resolution rule (tests-in-same-PR + ≤10-files-per-PR collide when a DevTask's implementation needs >7 files). Spec/DevTask breakdown in [`DESIGN.md`](./DESIGN.md#spec--devtask-breakdown-mapped-to-agentsmd-hierarchy).
+M1 decomposes into **6 Specs containing approximately 11-14 DevTasks total** (one DevTask = one PR, each ≤10 files). 11 DevTasks are enumerated in DESIGN.md; the post-split count may grow to ~14 if `superpowers:writing-plans` applies the AGENTS.md trilemma resolution rule (implementation files + required test files exceed 10 → split the DevTask). DevTask 3 is already pre-split into 3a + 3b in the DESIGN.md breakdown. Spec/DevTask breakdown in [`DESIGN.md`](./DESIGN.md#spec--devtask-breakdown-mapped-to-agentsmd-hierarchy).

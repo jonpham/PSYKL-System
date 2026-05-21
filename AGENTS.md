@@ -22,7 +22,7 @@ These rules govern every session. Follow them without exception.
 - Stop and request user review of a design (*.md) file before moving onto planning next phase or spec.
 
 ## For Execution on Specs
-- Complete exactly **one DevTask** at a time, then STOP and wait for explicit approval
+- During execution, complete exactly **one DevTask** at a time, then STOP and wait for explicit approval. (Applies AFTER `superpowers:writing-plans` has produced all specs. Does NOT apply during the planning skill itself — that skill writes multiple specs in a single session.)
 - A step is one checklist item in the active feature doc's `## Steps` section, and ends with a commit.
 - Exception: if the active feature doc has `step_gating: false` in its frontmatter,
   complete all steps in the spec before stopping — but still stop at the phase boundary

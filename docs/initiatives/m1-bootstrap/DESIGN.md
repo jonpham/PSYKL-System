@@ -17,16 +17,32 @@ reviewed_by: /plan-eng-review (gstack) 2026-05-20
 > This document captures the M1 initiative scope. M2 and M3+ are sketched as roadmap context only.
 >
 > **Glossary of acronyms used in this doc** (defined here once, used freely below):
+> - ACL = Access Control List (per-row permission scheme)
 > - API = Application Programming Interface
+> - CD = Continuous Deployment (automated build-publish-release pipeline triggered by merge/tag)
 > - CI = Continuous Integration (build-test-lint pipeline on every Pull Request)
-> - E2E = End-to-End (test type that exercises the full stack via a real browser)
+> - CORS = Cross-Origin Resource Sharing (browser security rules for cross-origin HTTP requests)
+> - CRDT = Conflict-free Replicated Data Type (data structure for multi-actor concurrent edits — out of scope for PSYKL per Premise 8)
+> - DTO = Data Transfer Object (typed shape for request/response bodies)
+> - E2E = End-to-End (test type that exercises the full stack via the actual client)
+> - GHCR = GitHub Container Registry
+> - GraphQL = Graph Query Language (API paradigm with client-driven query shapes)
+> - gRPC = general-purpose Remote Procedure Call framework using Protocol Buffers over HTTP/2
 > - HTTP = HyperText Transfer Protocol
 > - ISO 8601 = international standard datetime format (e.g. `2026-05-20T11:58:19Z`)
+> - JSONB = Postgres binary-JSON column type (indexable, queryable JSON)
+> - LTS = Long-Term Support (Node.js release line with ~30 months of security patches)
+> - ORM = Object-Relational Mapper (TypeScript-side query builder + type generation)
 > - OSS = Open Source Software
 > - PR = Pull Request
 > - PWA = Progressive Web App (web app installable to the home screen, capable of running offline once the offline engine ships)
+> - REST = Representational State Transfer (API paradigm built on HTTP verbs + JSON bodies)
+> - RPC = Remote Procedure Call (API paradigm where the client invokes named server methods)
+> - SDL = Schema Definition Language (the language GraphQL schemas are written in)
+> - SPA = Single-Page Application (web app that loads once and updates the page via JavaScript)
 > - TDD = Test-Driven Development (writing failing tests before implementation)
 > - UUID = Universally Unique Identifier
+> - WASM = WebAssembly (binary instruction format that runs in browsers and Node)
 > - YAGNI = "You Aren't Gonna Need It" — the principle of not building features until they're actually needed
 > - i18n = internationalization (designing software so locale-specific text can be swapped without code changes)
 > - 401 / 403 = HTTP status codes for missing or insufficient credentials
@@ -69,6 +85,7 @@ The following premises were established during the `/office-hours` session. They
 5. **Aesthetic naming is decoupled from the data model.** Code uses neutral terms (`cycle`, `task`, `period`); the UI has a configurable term-map (default theme: celestial — PSYKL, Earth, Moon, HelioArc, Sun). Theme can change without code churn.
 6. **OSS adoption is downstream of dogfood.** Public repo + decent README + an explicitly chosen LICENSE in M1. No roadmap voting, no contribution funnel until the user has used PSYKL daily for a month.
 7. **Every persisted record carries `user_id` from the first schema migration.** PWA and API enforce `user_id` matching on every request. In M1 and M2 the value is hardcoded to a single local user (`"local"`). Real authentication slots in at M4+ without a data migration.
+8. **Single-user, multi-device, siloed sync — no multi-user collaboration ever.** "Sync" means one user's multiple devices share their data. Each user's data is private and siloed; sharing happens only via export-generated artifacts (one-way snapshots), never via direct multi-user editing. M4 multi-user-auth means tenant separation on shared infrastructure, NOT shared data access. Consequence: last-write-wins is sufficient for the lifetime of the project; Conflict-free Replicated Data Type (CRDT = data structure designed for multi-actor concurrent edits) frameworks are unnecessary and out of scope; per-task Access Control Lists (ACL = per-row permission scheme) are unnecessary because `user_id` ownership IS the entire authorization model. See `docs/PRODUCT.md` → Sync and Sharing Model for the full statement.
 
 ## Approaches Considered
 
@@ -78,7 +95,7 @@ A minimal `Ping` record with `(id, user_id, created_at)` traveling PWA → API �
 
 **Rejected because:** the schema is structurally identical to a minimal `Task`. Calling it `Ping` and throwing it away wastes the test patterns and forces a rewrite in M2.
 
-### Approach B — Minimal Task vertical slice (RECOMMENDED, locked in via D6)
+### Approach B — Minimal Task vertical slice (RECOMMENDED, locked during `/office-hours` Phase 4)
 
 The same vertical slice as A, but the resource is `Task` from day one. M1 ships Create + Read on `Task` with a `title`; M2 extends the same table with Update + Delete + `completed_at`. No throwaway code; the data model evolves incrementally.
 
@@ -99,11 +116,25 @@ CI + Docker + monorepo + docs templates + agentic harness only. Placeholder rout
 
 ```
 Task {
-  id          UUID
-  user_id     string     (= "local" in M1)
-  title       string     (required, 1..200 chars)
-  created_at  timestamp  (ISO 8601)
+  id          UUID v7    (app-generated in NestJS TaskService; see Decision #19)
+  user_id     text       (= "local" in M1; see Premise 7)
+  title       text       (required, 1..200 chars)
+  created_at  timestamptz with default now()  (see Decision #20)
 }
+```
+
+**Drizzle column shapes** (concrete):
+
+```ts
+// components/service-task/src/db/schema/task.ts
+export const tasks = pgTable('tasks', {
+  id: text('id').primaryKey(),                              // UUID v7, app-generated
+  userId: text('user_id').notNull(),
+  title: text('title').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 ```
 
 ### M1 deliverables
@@ -118,7 +149,7 @@ Task {
 - CI pipeline running lint + test + build + full test pyramid on every PR.
 - CD pipeline that, on merge to `main`: builds container images for `service-task` and `web_client`, publishes them to a chosen container registry, and runs the subtree-sync action to push each component to its upstream mirror.
 - Container registry account/repo configured (GitHub Container Registry is the obvious default — colocated with the source repo, no extra account needed).
-- Helm chart skeleton (`chart/` or `deploy/helm/`) producing a deployable artifact for a Kubernetes cluster, even if no cluster is targeted in M1. The chart packages the same images CD publishes. This gives M2+ a working deployment artifact without revisiting infra.
+- Helm chart skeleton at `deploy/helm/` (per Decision #9) producing a deployable artifact for a Kubernetes cluster, even if no cluster is targeted in M1. The chart packages the same images CD publishes. This gives M2+ a working deployment artifact without revisiting infra.
 - Subtree-sync GitHub Action wired up to push `components/*` to their upstream mirrors after every merge to `main`.
 - Tagged release workflow: a Git tag matching `v*.*.*` triggers a release CD action (the M1 closing tag is `v0.1.0`).
 - README.md and a chosen LICENSE file at repo root.
@@ -150,7 +181,7 @@ Note on naming: the **Component** layer here is the system-component-isolation t
 - The full gstack → superpowers loop is exercised on M1:
   - `/office-hours` produced this design doc.
   - gstack initiative artifacts retained under `docs/initiatives/m1-bootstrap/`.
-  - `superpowers:writing-plans` writes specs under `docs/specs/m1-bootstrap/` using the AGENTS.md vocabulary (Spec → Tasks → Steps).
+  - `superpowers:writing-plans` writes specs under `docs/specs/m1-bootstrap/` using the AGENTS.md vocabulary (Spec → DevTasks → Steps).
   - Executor commits each Step atomically per AGENTS.md (one Step = one commit; one DevTask = one PR).
   - On completion, a feature doc is written to `docs/features/` consolidating the M1 outcome.
 - README updated with quickstart (`docker compose up`).
@@ -172,14 +203,15 @@ File-count estimates below assume **implementation files only**. Test files at t
 
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
-| 1 | **Workspace scaffolding** — root `package.json` (with `packageManager: pnpm@10.x.x`), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc` (Node 24), `.gitignore`, `.editorconfig`, `README.md`, MIT `LICENSE` | ~7 |
+| 1 | **Workspace scaffolding** — root `package.json` (with `packageManager` pinned to a concrete pnpm 10.x version), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc` (Node 24), `.npmrc` (with `engine-strict=true` per Decision #18), `.gitignore`, `.editorconfig`, MIT `LICENSE`, `CHANGELOG.md` with an `Unreleased` heading | ~9 |
 | 2 | **`packages/shared-types`** — package scaffold + **Zod schemas** for `Task` / `TaskInput` / `TaskResponse` in `src/schemas/`, deriving TypeScript types via `z.infer`. Configured for consumption via `workspace:*` by `service-task` and `web_client`. Includes `zod-to-openapi` plumbing exporting an `openapi.json` builder helper. Unit tests for each schema's parsing. | ~6 |
 
 **Spec 2: service-task minimal API** — *As a developer, I can `POST /tasks` and `GET /tasks` against a locally-running NestJS service that persists to pglite.*
 
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
-| 3 | **NestJS minimal API** — `AppModule`, `TaskModule`, `TaskController` with `POST /tasks` + `GET /tasks`, `TaskService`, global `UserIdGuard`. Uses `nestjs-zod` to wire Zod schemas from `packages/shared-types` as DTOs. Emits `openapi.json` at build via `zod-to-openapi`. Component-layer contract tests included in this DevTask; if implementation files + test files exceed 10, split per the trilemma rule (e.g., DevTask 3a = handlers + module wiring, DevTask 3b = global guard + contract tests). | ~9 (impl) + tests |
+| 3a | **NestJS handlers + module wiring** — `main.ts`, `AppModule`, `TaskModule`, `TaskController` (`POST /tasks` + `GET /tasks`), `TaskService` (uses `uuid` v7 for IDs per Decision #19, inserts via Drizzle), `nestjs-zod` DTO wiring from `packages/shared-types`. Plus Unit tests for `TaskService` (id generation, validation). | ~6 impl + ~2 unit tests |
+| 3b | **Global `UserIdGuard` + OpenAPI emission + Component contract tests** — `UserIdGuard` registered globally via `app.useGlobalGuards()`, `build:openapi` script using `zod-to-openapi`, package.json scripts wiring. Component-layer contract tests: positive path (POST/GET works) + default-deny negative paths (missing header → 401, malformed header → 403, route missing guard → 401/403). | ~3 impl + ~3 contract tests |
 | 4 | **Drizzle schema + initial migration (pglite)** — Drizzle schema files in `components/service-task/src/db/schema/` defining the PSYKL `Task` table (Postgres-shaped via `drizzle-orm/pglite`), `drizzle.config.ts`, initial migration SQL generated to `components/service-task/drizzle/migrations/`, integration test confirming schema applied against an in-process pglite instance. | ~6 |
 
 **Spec 3: web_client minimal PWA** — *As a user, I can open the PWA, type a task title, click create, and see the new task appear in the list.*
@@ -193,7 +225,7 @@ File-count estimates below assume **implementation files only**. Test files at t
 
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
-| 7 | **Docker Compose stack** — `docker-compose.yml`, Dockerfile for `service-task`, Dockerfile for `web_client`, healthchecks, named volume for the pglite data file. (No separate database container — pglite runs in-process inside `service-task`.) | ~5 |
+| 7 | **Docker Compose stack** — `docker-compose.yml`, multi-stage Dockerfile for `service-task` (node:24-alpine + pglite mount at `/var/lib/psykl/pglite`), multi-stage Dockerfile for `web_client` (node:24-alpine build stage → nginx:alpine runtime stage with SPA-fallback nginx.conf, per Decision #21), healthchecks, named volume `psykl-pglite-data`. Ports: service-task 3000→3000, web_client nginx 80→5173. CORS env wiring. | ~6 |
 
 **Spec 5: CI test pipeline** — *As a developer, every PR runs the full 5-layer test pyramid before merge.*
 
@@ -205,9 +237,9 @@ File-count estimates below assume **implementation files only**. Test files at t
 
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
-| 9 | **Container registry publish (GHCR)** — GitHub Actions workflow that builds and publishes `service-task` and `web_client` images to GitHub Container Registry (`ghcr.io/jonpham/psykl-system-{service-task,web_client}`) on merge to `main`. Tags: commit SHA + `latest`. | ~4 |
+| 9 | **Container registry publish (GHCR)** — GitHub Actions workflow that builds and publishes `service-task` and `web_client` images to GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`) on merge to `main`. Tags: commit SHA + `latest`. | ~4 |
 | 10 | **Subtree-sync GitHub Action (web_client + service-task only)** — workflow that runs `git subtree split` for `components/web_client` and `components/service-task` and force-pushes to upstream mirrors `jonpham/psykl-web_client` and `jonpham/psykl-service-task` (per Decision #16) after merge to `main`, using the `SUBTREE_PUSH_TOKEN` GitHub Actions secret. `components/ios_client` is intentionally excluded until M3 introduces real iOS code worth mirroring. **Blocker:** mirror repos must exist before this DevTask can be implemented. | ~3 |
-| 11 | **Helm chart at `deploy/helm/` + tagged-release workflow** — helm chart at `deploy/helm/` packaging the GHCR-published images + a release workflow triggered by `v*.*.*` tags that runs image build + `helm package` + creates a GitHub Release with the packaged `.tgz` attached. | ~8 |
+| 11 | **Helm chart at `deploy/helm/` + tagged-release workflow** — helm chart contents: `Chart.yaml`, `values.yaml`, `templates/service-task-deployment.yaml`, `templates/service-task-service.yaml`, `templates/web-client-deployment.yaml`, `templates/web-client-service.yaml`, optional `templates/ingress.yaml` (commented placeholder for M4+). Release workflow triggered by `v*.*.*` tags runs image build + `helm package` + creates GitHub Release with the packaged `.tgz` attached. `permissions: { contents: write, packages: write }` set on the release workflow. | ~8 |
 
 **Total:** 6 Specs, ~11-14 DevTasks (post-split), ~70-100 files spread across 11-14 PRs. Counts grow if the spec writer splits DevTasks to honor the trilemma rule above.
 
@@ -292,40 +324,54 @@ Resolved via `/plan-eng-review` on 2026-05-20.
 | 4 | Schema migration tool / Object-Relational Mapper (ORM) | **Drizzle ORM + drizzle-kit** | TypeScript-first (schema as `.ts` code, types derive automatically); pglite and Postgres dialects both supported with the same API; lightweight runtime (~10 KB, no Rust binary); drizzle-kit migration workflow is straightforward. |
 | 5 | LICENSE | **MIT** | Simplest permissive license; universally recognized; no patent-grant ceremony needed during dogfood phase. Apache-2.0 considered and rejected as overkill for a planning tool with no enterprise-adoption pressure yet. |
 | 6 | Toolchain version pins | **Node 24 LTS via `.nvmrc` + `engines.node: '>=24.0.0 <25'`; pnpm 10.x via `packageManager: 'pnpm@10.x.x'`** | Node 24 went LTS October 2025 — most current LTS as of May 2026, security patches for ~30 months. pnpm 10 is current major with native Corepack support. Pinning eliminates "works on my machine" drift across collaborators and CI. |
-| 7 | Container image registry | **GitHub Container Registry (GHCR) at `ghcr.io/jonpham/psykl-system-*`** | Colocated with the source repo, no extra account or credential management; free for public repos; integrated with GitHub Actions (`GITHUB_TOKEN` has push scope by default). Docker Hub and Harbor considered; rejected because they add a separate registry account/credential burden with no upside for a solo dogfood project. |
+| 7 | Container image registry | **GitHub Container Registry (GHCR) at `ghcr.io/jonpham/psykl-*`** | Colocated with the source repo, no extra account or credential management; free for public repos; integrated with GitHub Actions (`GITHUB_TOKEN` has push scope by default). Docker Hub and Harbor considered; rejected because they add a separate registry account/credential burden with no upside for a solo dogfood project. |
 | 8 | Database for M1 | **pglite (in-process PostgreSQL via WebAssembly)** | Reopened from the original "SQLite obvious M1 pick" because pglite gives Postgres SQL semantics (JSONB, arrays, full-text search, real BOOLEAN, etc.) without a server. M4+ migration to networked Postgres is a connection-string change, not a query rewrite. Drizzle's `drizzle-orm/pglite` dialect is production-quality. Ecosystem-maturity gap with SQLite is small at PSYKL's solo-dogfood scale. |
 | 9 | Helm chart location | **`deploy/helm/`** at repo root | Explicit and conventional; sister to `components/` and `packages/`. Earlier "chart/ or deploy/helm/" wording resolved to the longer, more obvious path. |
 | 10 | Branching convention during a milestone | **Each DevTask branches off `main` and PRs into `main`** | Per AGENTS.md → Git Conventions. No stacking. Initiative planning branches (e.g., `feat/plan-and-bootstrap`) carry only doc changes and merge to `main` as their own PR. Enables DevTask parallelism and avoids rebase cascades. |
 | 11 | Test file location convention | **Per AGENTS.md → Test Discipline → Test File Location Convention** | Unit + Component layers colocated with source; Integration in `tests/integration/`; E2E in repo-root `e2e/`. Filename suffixes (`*.unit.test.ts`, `*.contract.test.ts`, `*.integration.test.ts`, `*.e2e.spec.ts`) make per-layer CI globs trivial. |
-| 12 | OpenAPI artifact path + build order | **Emitted to `components/service-task/openapi.json` (gitignored).** Generated by a `pnpm --filter service-task build:openapi` script that imports Zod schemas from `packages/shared-types` and writes the JSON. `web_client` runs `openapi-typescript components/service-task/openapi.json --output src/api/types.ts` as a build step (output also gitignored; regenerated on every install/build). CI orchestrates the order: `pnpm -r build` builds `packages/shared-types` first, then runs `build:openapi` in `service-task`, then builds `web_client`. Local dev: a Vite plugin or `pnpm dev` orchestrator regenerates the types on schema-file change. | The Zod source-of-truth lives in `packages/shared-types/src/schemas/`. The emitted artifact is a derived deliverable, never the source. Gitignoring both `openapi.json` and `web_client/src/api/types.ts` prevents churn-y diffs; CI regenerates on every PR for validation. |
+| 12 | OpenAPI artifact path + build order | **Source of truth:** Zod schemas in `packages/shared-types/src/schemas/`. **Emitted artifact:** `components/service-task/openapi.json` (gitignored). **Generator:** `pnpm --filter service-task build:openapi` script imports Zod schemas and writes the JSON via `zod-to-openapi`. **Web client consumption:** `pnpm --filter web_client codegen` runs `openapi-typescript components/service-task/openapi.json --output src/api/types.ts` (also gitignored). **Build order in CI:** `shared-types` builds first, then `service-task build:openapi`, then `web_client codegen`, then `web_client build`. **Local dev:** `pnpm dev` at repo root runs all three components in watch mode with a chokidar watcher rebuilding `openapi.json` on schema changes; no Vite plugin needed. | The emitted artifact is a derived deliverable, regenerable from `packages/shared-types/src/schemas/`. Gitignoring both `openapi.json` and `types.ts` prevents churn-y diffs; CI regenerates on every PR for validation. |
 | 13 | Drizzle directory layout in `service-task` | Schema: **`components/service-task/src/db/schema/`** (one `.ts` per table). Migrations: **`components/service-task/drizzle/migrations/`** (generated SQL files, checked into git). Config: **`components/service-task/drizzle.config.ts`**. | Convention matches Drizzle community defaults. Schema in `src/db/schema/` means the runtime code imports it directly without leaving `src/`. Migrations live outside `src/` because they're not source code — they're generated artifacts checked in for replay. |
-| 14 | Service ports (local dev) | `service-task` listens on `:3000`. `web_client` Vite dev server listens on `:5173`. Production container images expose the same ports. | Conventional NestJS + Vite defaults; no reason to deviate. |
+| 14 | Service ports | `service-task` listens on `:3000` in dev, `:3000` inside the production container. `web_client` Vite dev server listens on `:5173` in dev; the production container's nginx listens on `:80` inside the container and is mapped to host `:5173` by Docker Compose. | NestJS default for the API; Vite default for dev. Nginx defaults to :80 so the container internal port stays conventional; the host-port mapping keeps the dev URL stable. |
 | 15 | Cross-Origin Resource Sharing (CORS) posture | `service-task` allows `Origin: http://localhost:5173` in dev (configurable via `CORS_ORIGIN` env var). No reverse proxy in M1 — PWA → API is direct cross-origin. PWA reads API base URL from `VITE_API_URL` env var (default `http://localhost:3000`). | Reverse proxy adds infra without payoff at M1 scale. Direct CORS is simpler and reverse-proxy-compatible later. |
-| 16 | Subtree mirror upstream URLs | **TBD — blocker for DevTask 10 only.** Repo URLs for `web_client` and `service-task` mirrors must be created before DevTask 10 runs. Stored secrets: `SUBTREE_PUSH_TOKEN` (a personal access token or fine-grained PAT with push scope on both mirror repos) in GitHub Actions secrets. Naming convention: `jonpham/psykl-web_client` and `jonpham/psykl-service-task`. | Mirror repos are downstream-only; the monorepo is canonical. Per-component-named mirrors are clearer than `psykl-system-{component}`. |
+| 16 | Subtree mirror upstream URLs | **TBD — blocker for DevTask 10 only.** Repo URLs for `web_client` and `service-task` mirrors must be created before DevTask 10 runs. Stored secrets: `SUBTREE_PUSH_TOKEN` (a personal access token or fine-grained PAT with push scope on both mirror repos) in GitHub Actions secrets. Naming convention: `jonpham/psykl-web_client` and `jonpham/psykl-service-task`. | Mirror repos are downstream-only; the monorepo is canonical. Naming aligned with Decision #7's GHCR prefix (resolved across both rows on 2026-05-20). |
 | 17 | GitHub branch protection on `main` | Configured **once at the repo settings level (not by code)**: require PR review (1+ reviewer), require status checks to pass (the CI job names from DevTask 8), require linear history (no merge commits), block force-pushes. Not a DevTask deliverable — it's a manual repo-settings change to be performed before DevTask 8's CI starts being relied on as a merge gate. | Branch-protection rules live in GitHub UI / API, not the codebase. Mentioning here so the spec writer doesn't waste a DevTask trying to encode this in YAML. |
 | 18 | `engine-strict` enforcement | `.npmrc` at repo root contains `engine-strict=true` so the Node 24 / pnpm 10 pins from Decision #6 are enforced as hard errors at install time, not soft warnings. | Without this, `pnpm install` only warns on engine mismatch. Strict mode makes mismatch fail-fast, catching environment drift early. |
+| 19 | PSYKL `Task` `id` generation strategy | **UUID v7 (RFC 9562, time-ordered), generated app-side in NestJS `TaskService` before insert.** Drizzle column shape: `text('id').primaryKey()`. Generator: `uuid` npm package's `v7()` function. | Time-ordered IDs give good database-index locality (rows sort by creation time without an extra column). App-generated keeps the M2 offline-first sync option open (client can pre-generate an ID and queue the write). No reliance on Postgres extensions (`pgcrypto`) that may not be available in pglite. |
+| 20 | `created_at` column shape | **`timestamptz with default now()`.** Drizzle column shape: `timestamp('created_at', { withTimezone: true }).notNull().defaultNow()`. App code does NOT set `created_at` on insert; the database stamps it. | One user's devices may roam timezones (per Premise 8). Timezone-aware storage prevents ambiguity when the user views their history from a different timezone than where the task was created. DB default keeps test setup deterministic (use SQL `now()` rather than mocking JS clocks). |
+| 21 | `web_client` Docker production runtime | **nginx serving built `dist/`.** Multi-stage Dockerfile: stage 1 is `node:24-alpine` running `pnpm build` to produce `dist/`; stage 2 is `nginx:alpine` with `COPY --from=stage1` + an nginx.conf containing a `try_files $uri $uri/ /index.html` SPA fallback rule. Container listens on `:80`; mapped to host `:5173` via Docker Compose port map. | Vite's own docs warn against using `vite preview` as a production server. Nginx is ~5 lines of config, infinitely battle-tested, and the standard pattern for Helm-deployed static SPAs. Cost is one extra Dockerfile stage; benefit is no production-runtime risk. |
+| 22 | `web_client` Integration test layer | **N/A in M1.** The PWA has no in-process database or middleware boundary that warrants an Integration layer test. `web_client` ships Unit + Component + E2E only. | Integration tests exercise multi-module interactions within ONE component. `web_client` consumes the API across a network boundary — that's Component-layer (with stubbed back-end) and E2E (against the real stack). |
+| 23 | Vitest workspace + per-component config | **Vitest workspace mode at repo root via `vitest.workspace.ts`.** Each component AND each package under `packages/` has its own `vitest.config.ts` defining environment-specific config (e.g. `web_client` uses `jsdom`; `service-task` uses `node`). Root-level `pnpm test:unit`, `test:integration`, `test:component` commands invoke Vitest workspace mode. | Workspace mode lets the root commands fan out without each component duplicating runner config. Per-component `vitest.config.ts` keeps environment-specific concerns local. |
+| 24 | pnpm script contract for every component and package | Every `package.json` under `components/*/` and `packages/*/` MUST define these scripts: `dev`, `build`, `lint`, `format:check`, `typecheck`, `test:unit`, `test:component`. Components only (not packages) additionally MUST define: `test:integration`. The repo root `package.json` defines: `pnpm dev` (runs all components in watch mode), `pnpm build`, `pnpm test:e2e`, plus the recursive `pnpm -r lint`, `pnpm -r typecheck`, etc. Scripts that are not applicable to a particular component (e.g., `test:integration` in `packages/shared-types`) are still defined with the body `echo "no integration tests" && exit 0` so the recursive runners don't fail. | Without a script contract, `pnpm -r test:unit` either fails on packages that don't define the script (older pnpm) or skips silently (newer pnpm). Explicit no-op scripts make every layer's CI step deterministic. |
+| 25 | pglite persistence initialization | **NestJS app boot calls `new PGlite('/var/lib/psykl/pglite')` in production (the path matches Decision #5's Docker volume mount).** Local dev (host machine) uses `new PGlite('./.pglite-dev')` (gitignored), letting `pnpm dev` work without Docker. Integration tests pass no path — `new PGlite()` uses the in-memory-only mode. The init path comes from a `PGLITE_DATA_DIR` env var with the in-memory mode being the default-empty case. | pglite supports three modes: filesystem-backed, IndexedDB-backed (browser), and memory-only. The Docker volume only helps if the Node-side init points to the mount path. Env-var driven means dev/test/prod paths diverge without code changes. |
+| 26 | LICENSE filename | **`LICENSE` (no extension)** at repo root, containing the standard MIT license text with `Copyright (c) 2026 Jonathan Pham`. | GitHub's "Detect license" feature reads `LICENSE` (no extension) preferentially; `LICENSE.md` and `LICENSE.txt` also work but `LICENSE` is the convention. Matches `LICENSE` naming used by 95% of public OSS repos. |
 
 ### DevTask Dependency Graph
 
-Specs do not all run independently. The minimal dependency order is:
+Specs and DevTasks do not all run independently. The corrected dependency order is:
 
 ```
-S1 (Workspace Bootstrap)            ──┐
-                                       ├──► S4 (Local dev stack)
-S2 (service-task minimal API)       ──┤        │
-                                       ├──► S5 (CI test pipeline)
-S3 (web_client minimal PWA)         ──┤        │
-                                       │        ▼
-                                       └──► S6 (CD release pipeline)
-
-S1 must merge first (everything depends on it).
-S2 and S3 can merge in parallel after S1 (their workpieces don't overlap).
-S4 needs S2 + S3 (compose stack references both component containers).
-S5 needs S4 (CI runs E2E against the compose stack).
-S6 needs S5 (CD release depends on CI passing).
+S1 (Workspace Bootstrap)
+  └──► S2 (service-task minimal API)
+        │     └──► DevTask 3 (NestJS minimal API, includes openapi.json emission)
+        │           └──► DevTask 6 of S3 (web_client Task UI consumes openapi.json)
+        ├──► S3 (web_client minimal PWA)
+        │     ├──► DevTask 5 (PWA shell — independent of S2)
+        │     └──► DevTask 6 (Task UI — depends on S2.DevTask3 for types)
+        ├──► S4 (Local dev stack)            [needs S2 + S3 containers]
+        │     └──► S5 (CI test pipeline)     [runs E2E against S4 stack]
+        │           └──► S6 (CD release pipeline)
 ```
 
-DevTask numbering uses **global ordering across all Specs**. Splits add letter suffixes (e.g., DevTask 3a, 3b) without renumbering downstream DevTasks. The 11-DevTask target stays as the framing; the post-split count may land at 11-14 depending on file-count requirements.
+**Concrete merge order rules:**
+
+1. S1 must merge first.
+2. S2 can start in parallel with S3.DevTask5 (PWA shell, no API contract dependency yet).
+3. S3.DevTask6 (Task UI) depends on S2.DevTask3 having merged, because DevTask 6 consumes the emitted `openapi.json` for client type generation. Spec writer for S3 may write DevTask 6 against hand-written stub types as a transient measure, but final merge of DevTask 6 must follow DevTask 3.
+4. S4 needs both S2 and S3 to have at least one merged DevTask producing buildable container images.
+5. S5 needs S4 (the CI E2E job brings up the Docker Compose stack from S4).
+6. S6 needs S5 (release pipeline depends on CI passing).
+
+**Renumbering protocol on splits:** DevTask numbering uses global ordering across all Specs. Splits add letter suffixes (e.g., DevTask 3 → 3a + 3b) WITHOUT renumbering downstream DevTasks 4-11. The 11-DevTask target stays as the framing; the post-split count may land at 11-14 depending on file-count requirements.
 
 ### Architecture Evolution Roadmap (informational, not committed)
 
@@ -371,4 +417,4 @@ All six blocking Open Questions are resolved (see Decisions above). Concrete han
 | DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | not run (optional next step) |
 
 - **UNRESOLVED:** 0
-- **VERDICT:** **ENG CLEARED** — M1 architecture is locked across all 18 decisions (1, 2, 2b, 3-18) plus the DevTask Dependency Graph. Two adversarial cold-read reviews on 2026-05-20 caught a total of ~40 gap-class issues, all addressed in successive sweeps: vocabulary collision (Task→DevTask), trilemma resolution rule, spec filename convention, test file location convention, branching convention, registry choice (GHCR), database revisit (pglite), helm path (deploy/helm/), OpenAPI artifact path + build order, Drizzle directory layout, Zod schema-first discipline, ports + CORS posture, subtree mirror URLs, branch protection scope, engine-strict enforcement, feature-doc-per-Spec rule, planning-vs-execution session rule. Ready for `superpowers:writing-plans` to produce the 6 Specs / ~11-14 DevTasks under `docs/specs/m1-bootstrap/`.
+- **VERDICT:** **ENG CLEARED** — M1 architecture is locked across all 26 decisions (1, 2, 2b, 3-26), Premise 8 (sync model), and the corrected DevTask Dependency Graph. **Three** adversarial cold-read reviews on 2026-05-20 caught a total of ~60+ gap-class issues, all addressed in successive sweeps: (Iter 1) vocabulary collision Task→DevTask, trilemma resolution, spec filename convention, test file locations, branching convention, GHCR registry, pglite database, deploy/helm/ path, OpenAPI artifact + build order, Drizzle directory layout, Zod schema-first. (Iter 2) Residual SQLite refs, SPEC.md rename inversion, @nestjs/swagger in template, stacked-branches contradiction, ports + CORS, subtree mirror URLs, branch-protection scope, engine-strict, feature-doc-per-Spec, planning-vs-execution session rule. (Iter 3) L153 vocabulary residue, S2/S3 dependency-graph contradiction, PSYKL Task id strategy (UUID v7 app-generated), `created_at` column shape (timestamptz + DB default), web_client prod runtime (nginx), pnpm script contract, Vitest workspace, pglite persistence init, LICENSE filename, GHCR/mirror naming alignment to `psykl-*`, DevTask 3 mandatory pre-split (3a + 3b), acronym backfill, single-user-multi-device sync model premise. Ready for `superpowers:writing-plans` to produce the 6 Specs / ~12-14 DevTasks under `docs/specs/m1-bootstrap/`.
