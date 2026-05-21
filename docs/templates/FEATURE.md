@@ -1,8 +1,10 @@
 ---
 status: TODO            # TODO | IN-PROGRESS | DONE | BLOCKED
 issue:                  # P{n} for local plan, GH{n} once a GitHub Issue exists
-branch:                 # (feat|bug|infra|chore)/short-description
-pr:                     # PR URL once opened
+branches:               # YAML list of all branches that contributed to this feature (one per DevTask)
+  - # (feat|bug|infra|chore)/short-description
+prs:                    # YAML list of all PR URLs that contributed to this feature (one per DevTask)
+  - # PR URL once opened
 completed_at:           # YYYY-MM-DD when merged
 created_at: YYYY-MM-DD
 initiative:             # link/slug of the parent initiative
