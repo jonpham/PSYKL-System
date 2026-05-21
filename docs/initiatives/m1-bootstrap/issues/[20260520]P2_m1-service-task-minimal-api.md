@@ -1,6 +1,6 @@
 ---
 status: TODO
-issue: P2
+issue: [GH#3](https://github.com/jonpham/PSYKL-System/issues/3)
 branches:
   -
 prs:

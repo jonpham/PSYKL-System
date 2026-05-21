@@ -1,6 +1,6 @@
 ---
 status: TODO            # TODO | IN-PROGRESS | DONE | BLOCKED
-issue: P1               # local plan; replace with GH{n} once a GitHub Issue exists
+issue: [GH#2](https://github.com/jonpham/PSYKL-System/issues/2)
 branches:               # one entry per DevTask once branches are cut
   -
 prs:                    # one entry per DevTask once PRs are opened
@@ -23,8 +23,8 @@ As a **developer**, I want to be able to **clone the PSYKL-System monorepo and r
 
 ## Features (DevTasks composing this Spec)
 
-1. **DevTask 1 — Workspace scaffolding.** Root `package.json` (with `packageManager` pinned to a concrete pnpm 10.x), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc` (Node 24), `.npmrc` (with `engine-strict=true` per DESIGN.md Decision #18), `.gitignore`, `.editorconfig`, MIT `LICENSE` (no extension), `CHANGELOG.md` with an `Unreleased` heading. ~9 files. [DevTask 1 GitHub Sub-Issue link TBD]
-2. **DevTask 2 — `packages/shared-types`.** Package scaffold + Zod schemas for `Task`, `TaskInput`, `TaskResponse` in `src/schemas/`, deriving TypeScript types via `z.infer`. Configured for consumption via `workspace:*` by `service-task` and `web_client`. Includes `zod-to-openapi` plumbing exporting an `openapi.json` builder helper. Unit tests for each schema's parsing. ~6 files. [DevTask 2 GitHub Sub-Issue link TBD]
+1. **[DevTask 1](https://github.com/jonpham/PSYKL-System/issues/8) — Workspace scaffolding.** Root `package.json` (with `packageManager` pinned to a concrete pnpm 10.x), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc` (Node 24), `.npmrc` (with `engine-strict=true` per DESIGN.md Decision #18), `.gitignore`, `.editorconfig`, MIT `LICENSE` (no extension), `CHANGELOG.md` with an `Unreleased` heading. ~9 files. [DevTask 1 GitHub Sub-Issue link TBD]
+2. **[DevTask 2](https://github.com/jonpham/PSYKL-System/issues/9) — `packages/shared-types`.** Package scaffold + Zod schemas for `Task`, `TaskInput`, `TaskResponse` in `src/schemas/`, deriving TypeScript types via `z.infer`. Configured for consumption via `workspace:*` by `service-task` and `web_client`. Includes `zod-to-openapi` plumbing exporting an `openapi.json` builder helper. Unit tests for each schema's parsing. ~6 files. [DevTask 2 GitHub Sub-Issue link TBD]
 
 ## Verification Steps
 
