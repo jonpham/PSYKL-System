@@ -32,4 +32,4 @@ M1 is explicitly NOT product discovery. M1 proves the architecture and trains th
 
 ## Specs
 
-M1 breaks into 11 atomic Pull Requests, each ≤10 files (lockfile exempt). Spec breakdown in [`DESIGN.md`](./DESIGN.md#spec-breakdown-atomic-pr-sized-fits-10-files-each).
+M1 decomposes into **6 Specs containing 11 Tasks total** (one Task = one PR, each ≤10 files). Spec/Task breakdown in [`DESIGN.md`](./DESIGN.md#spec--task-breakdown-mapped-to-agentsmd-hierarchy).

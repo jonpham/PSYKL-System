@@ -82,7 +82,7 @@ A minimal `Ping` record with `(id, user_id, created_at)` traveling PWA → API �
 
 The same vertical slice as A, but the resource is `Task` from day one. M1 ships Create + Read on `Task` with a `title`; M2 extends the same table with Update + Delete + `completed_at`. No throwaway code; the data model evolves incrementally.
 
-**Effort:** **XL (human: ~3-5 weeks / Claude Code: ~4-7 days of focused work).** Sources of effort: framework selection and scaffolding; schema migration tooling integration; browser CI for E2E tests against a Docker Compose stack (Playwright in CI commonly burns half a day on browser install caching, headless flake, and container networking alone); container image publishing to a registry; helm chart authoring; subtree-sync GitHub Action; tagged release workflow; ~11 atomic PRs each with TDD across the full 5-layer pyramid (Static Analysis → Unit → Integration → Component → E2E).
+**Effort:** **XL (human: ~3-5 weeks / Claude Code: ~4-7 days of focused work).** Sources of effort: framework selection and scaffolding; schema migration tooling integration; browser CI for E2E tests against a Docker Compose stack (Playwright in CI commonly burns half a day on browser install caching, headless flake, and container networking alone); container image publishing to a registry; helm chart authoring; subtree-sync GitHub Action; tagged release workflow; 11 Tasks across 6 Specs, each Task one ≤10-file PR with TDD across the full 5-layer pyramid (Static Analysis → Unit → Integration → Component → E2E).
 **Risk:** Low-medium. Scope is small and well-bounded; the line between M1 and M2 is "Create+Read" vs "Create+Read+Update+Delete + status." Risk concentrates in framework choices (see Open Questions).
 
 ### Approach C — Pure infrastructure, no feature (rejected)
@@ -150,31 +150,60 @@ Note on naming: the **Component** layer here is the system-component-isolation t
 - The full gstack → superpowers loop is exercised on M1:
   - `/office-hours` produced this design doc.
   - gstack initiative artifacts retained under `docs/initiatives/m1-bootstrap/`.
-  - superpowers writes specs under `docs/specs/m1-bootstrap/` (one per atomic-PR-sized slice).
-  - Executor commits each task atomically per AGENTS.md.
+  - `superpowers:writing-plans` writes specs under `docs/specs/m1-bootstrap/` using the AGENTS.md vocabulary (Spec → Tasks → Steps).
+  - Executor commits each Step atomically per AGENTS.md (one Step = one commit; one Task = one PR).
   - On completion, a feature doc is written to `docs/features/` consolidating the M1 outcome.
 - README updated with quickstart (`docker compose up`).
 - `CHANGELOG.md` opened with an `Unreleased` heading. No version tag yet.
 
-### Spec Breakdown (atomic-PR-sized, fits ≤10 files each)
+### Spec / Task Breakdown (mapped to AGENTS.md hierarchy)
 
-M1 breaks into 8 specs sized to fit AGENTS.md's ≤10-files-per-PR rule (exempting `pnpm-lock.yaml` and `pnpm-workspace.yaml`):
+M1 decomposes into **6 Specs containing 11 Tasks total** (one Task per Pull Request, sized ≤10 files per AGENTS.md). Each Spec corresponds to a single User Story; each Task is one atomic, mergeable PR. `superpowers:writing-plans` may adjust intra-Spec Task ordering or split a Task's Steps further, but MUST cover everything enumerated here.
 
-| # | Spec | Approx file count |
-|---|------|-------------------|
-| 1 | **Workspace scaffolding** — root `package.json` (with `packageManager: pnpm@10.x.x`), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc`, `.gitignore`, `.editorconfig`, `README.md`, MIT `LICENSE` | ~7 |
-| 2 | **`packages/shared-types`** — package scaffold + `Task` / `TaskInput` / `TaskResponse` types (consumed via `workspace:*`) + unit tests + tsconfig | ~6 |
-| 3 | **`components/service-task` minimal NestJS API** — `AppModule`, `TaskModule`, `TaskController` with `POST /tasks` + `GET /tasks`, `TaskService`, global `UserIdGuard`, `@nestjs/swagger` setup, integration tests | ~9 |
-| 4 | **`components/service-task` schema + Drizzle migration** — Drizzle schema (`schema.ts`), `drizzle.config.ts`, initial migration creating `Task` table, integration test confirming schema applied | ~6 |
-| 5 | **`components/web_client` PWA shell** — Vite + React (SPA mode) scaffold, app shell, `vite-plugin-pwa` Web App Manifest, base component tests | ~9 |
-| 6 | **`components/web_client` Task UI** — create input + list view, `openapi-fetch` API client + generated types from `openapi-typescript`, component tests | ~7 |
-| 7 | **Docker Compose stack** — `docker-compose.yml`, Dockerfile for API, Dockerfile for PWA, healthchecks, named volume for SQLite | ~5 |
-| 8 | **CI pipeline + E2E run** — GitHub Actions workflow for lint+test+build; Playwright E2E job that brings up Docker Compose, resets the SQLite database to empty between test files via a teardown fixture, runs the suite, and tears the stack down | ~4 |
-| 9 | **CD pipeline: container registry publish** — GitHub Actions workflow that builds and publishes `service-task` and `web_client` images to the chosen container registry on merge to `main` | ~4 |
+> Vocabulary reminder: "Task" in this section means a workflow Task (one PR), per AGENTS.md. The PSYKL data-model entity `Task { id, user_id, title, created_at }` is unrelated.
+
+**Spec 1: Workspace Bootstrap** — *As a developer, I can clone the monorepo and run `pnpm install` from a fresh checkout.*
+
+| # | Task | Files |
+|---|------|-------|
+| 1 | **Workspace scaffolding** — root `package.json` (with `packageManager: pnpm@10.x.x`), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc` (Node 24), `.gitignore`, `.editorconfig`, `README.md`, MIT `LICENSE` | ~7 |
+| 2 | **`packages/shared-types`** — package scaffold + `Task` / `TaskInput` / `TaskResponse` types (consumed by other packages via `workspace:*`) + unit tests + tsconfig | ~6 |
+
+**Spec 2: service-task minimal API** — *As a developer, I can `POST /tasks` and `GET /tasks` against a locally-running NestJS service that persists to SQLite.*
+
+| # | Task | Files |
+|---|------|-------|
+| 3 | **NestJS minimal API** — `AppModule`, `TaskModule`, `TaskController` with `POST /tasks` + `GET /tasks`, `TaskService`, global `UserIdGuard`, `@nestjs/swagger` for OpenAPI generation, Component-layer contract tests | ~9 |
+| 4 | **Drizzle schema + initial migration** — Drizzle schema (`schema.ts`) defining the PSYKL `Task` table, `drizzle.config.ts`, initial migration SQL, Integration test confirming schema applied | ~6 |
+
+**Spec 3: web_client minimal PWA** — *As a user, I can open the PWA, type a task title, click create, and see the new task appear in the list.*
+
+| # | Task | Files |
+|---|------|-------|
+| 5 | **PWA shell** — Vite + React (SPA mode) scaffold, app shell, `vite-plugin-pwa` Web App Manifest, base Unit-layer tests for the shell | ~9 |
+| 6 | **Task UI** — create input + list view, `openapi-fetch` API client + generated types from `openapi-typescript`, Component-layer tests with stubbed `service-task` client | ~7 |
+
+**Spec 4: Local dev stack** — *As a developer, I can run `docker compose up` from a fresh clone and see the full stack running.*
+
+| # | Task | Files |
+|---|------|-------|
+| 7 | **Docker Compose stack** — `docker-compose.yml`, Dockerfile for `service-task`, Dockerfile for `web_client`, healthchecks, named volume for SQLite | ~5 |
+
+**Spec 5: CI test pipeline** — *As a developer, every PR runs the full 5-layer test pyramid before merge.*
+
+| # | Task | Files |
+|---|------|-------|
+| 8 | **CI pipeline + E2E** — GitHub Actions workflow for Static Analysis + Unit + Integration + Component + E2E (Playwright against Docker Compose, with SQLite reset between test files) | ~4 |
+
+**Spec 6: CD release pipeline** — *As an operator, merging to `main` publishes container images, syncs subtree mirrors, and a `v*.*.*` tag triggers the full release workflow.*
+
+| # | Task | Files |
+|---|------|-------|
+| 9 | **Container registry publish** — GitHub Actions workflow that builds and publishes `service-task` and `web_client` images to the chosen container registry on merge to `main` | ~4 |
 | 10 | **Subtree-sync GitHub Action** — workflow that runs `git subtree split` for each component and force-pushes to the configured upstream mirrors after merge to `main` | ~3 |
-| 11 | **Helm chart skeleton + tagged-release workflow** — helm chart packaging the published images, plus a release workflow triggered by `v*.*.*` tags that runs the full release pipeline (image build, helm-chart package, GitHub Release) | ~8 |
+| 11 | **Helm chart + tagged-release workflow** — helm chart packaging the published images + a release workflow triggered by `v*.*.*` tags that runs image build + helm-chart package + GitHub Release notes | ~8 |
 
-Eleven specs at ≤10 files each. Total file change across M1: ~70-85 files spread across 11 PRs.
+**Total:** 6 Specs, 11 Tasks, ~70-85 files spread across 11 PRs.
 
 ## What gets deferred to M2
 
@@ -287,7 +316,7 @@ All six blocking Open Questions are resolved (see Decisions above). Concrete han
 
 1. ~~Close the six blocking Open Questions~~ — **DONE** via `/plan-eng-review` 2026-05-20.
 2. (Optional) `/plan-devex-review` for the developer-onboarding sanity check (README-first-time-clone experience).
-3. Use `superpowers:writing-plans` to break M1 into the 11 specs above under `docs/specs/m1-bootstrap/`. Each spec at ≤10 files.
+3. Use `superpowers:writing-plans` to break M1 into the **6 Specs / 11 Tasks** enumerated above under `docs/specs/m1-bootstrap/`. Follow `docs/templates/SPEC.md`. Each Task at ≤10 files.
 4. Execute specs atomically per AGENTS.md, one task per PR.
 5. Close M1 with the feature-doc summary and a workflow retrospective.
 
@@ -302,4 +331,4 @@ All six blocking Open Questions are resolved (see Decisions above). Concrete han
 | DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | not run (optional next step) |
 
 - **UNRESOLVED:** 0
-- **VERDICT:** **ENG CLEARED** — M1 architecture is locked. Ready for `superpowers:writing-plans` to produce the 11 specs.
+- **VERDICT:** **ENG CLEARED** — M1 architecture is locked. Ready for `superpowers:writing-plans` to produce the 6 Specs / 11 Tasks under `docs/specs/m1-bootstrap/`.

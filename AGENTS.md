@@ -6,11 +6,14 @@ These rules govern every session. Follow them without exception.
 
 
 ## Key Stages, Documents, and Terms
-1. Project - The monorepo repository and its system is the project, it shares a common overarching goal and status, and should be mapped to an associated GitHub Project.
-2. Initiative - A milestone that aims to deliver a new or set of new associated features that expand the system's use cases for its users. Written using `gstack`, and is represented by a design and associated test/eng plans. (Mirrored to Github Milestone)
-3. Spec - An implementation design and plan for delivering a use case feature identified in an Initiative, can be described by a User Story; Written by `superpowers` based on an Initiative's workstream or phase. (Mirrored to Github Issue)
-4. Task - A portion of implementation in a spec that can be delivered in an atomic Pull Request. (Mirrored to Github Sub-Issue)
-5. Feature - an implemented feature of the system, the result of completion of one or more specs.
+1. **Project** — The monorepo repository and its system is the project, it shares a common overarching goal and status, and should be mapped to an associated GitHub Project.
+2. **Initiative** — A milestone that aims to deliver a new or set of new associated features that expand the system's use cases for its users. Written using `gstack`, and is represented by a design and associated test/eng plans. (Mirrored to GitHub Milestone)
+3. **Spec** — An implementation design and plan for delivering a use case feature identified in an Initiative, can be described by a User Story; Written by `superpowers` based on an Initiative's workstream or phase. A Spec may contain one or more Tasks. (Mirrored to GitHub Issue)
+4. **Task** — A portion of implementation in a Spec that can be delivered in an atomic Pull Request. One Task = one PR. A Task contains one or more Steps. (Mirrored to GitHub Sub-Issue)
+5. **Step** — One checklist item in a Task's `## Steps` section. Each Step ends with a commit. Multiple Steps make up one Task.
+6. **Feature** — An implemented feature of the system, the result of completion of one or more Specs.
+
+> **Vocabulary collision warning for agents:** The workflow term `Task` (an atomic-PR-sized unit of work in a Spec) is unrelated to PSYKL's data-model entity `Task` (the `id, user_id, title, created_at` record stored in `service-task`'s database). When writing or reviewing specs and code, disambiguate by context. In doc prose, prefer phrases like *"the PSYKL Task entity"* or *"the `Task` data model"* vs *"a workflow Task"* or *"a PR-sized Task"* when ambiguity could arise.
 
 ### Phase-Gating (Default)
 ## For Planning Designs
@@ -95,6 +98,60 @@ Output the following before stopping:
 
 - **Candidate lists in initiative/design docs are constraints-first, not options-first.** A design doc must NOT pre-narrow framework, tool, or library choices unless those choices were explicitly discussed during the design session. Carry the constraint set; let candidates surface during the answer pass (typically `/plan-eng-review` or spec drafting).
 - **Acronyms are defined on first use within a doc**, even if defined elsewhere in the project. Each doc is read independently; the glossary travels with the doc or appears inline.
+- **A design doc's Decisions appendix is normative once status is `APPROVED`.** Subsequent skills (`superpowers:writing-plans`, spec authors, executors) MUST treat those decisions as locked. Re-opening a closed decision requires explicit user permission and a new `/plan-eng-review` pass against the affected design doc.
+- **A design doc's Spec Breakdown is an authoritative starting suggestion, not a rigid contract.** `superpowers:writing-plans` may adjust grouping or split a Task into multiple Steps, but MUST NOT exceed the ≤10-files-per-PR rule and MUST cover everything the breakdown enumerates.
+
+### API Decision Discipline
+
+For any API-shaped decision in this project (a service, a client, an integration point), resolve three questions in order before naming a framework:
+
+1. **Paradigm** evaluated against ALL planned downstream clients across all milestones — REST, GraphQL, gRPC, typed-RPC (e.g. tRPC), or hybrid. Disqualify paradigms that lock out planned clients (e.g. TypeScript-only RPC when iOS Swift consumption is on the roadmap).
+2. **Spec/schema discipline** — spec-first (write the OpenAPI / GraphQL SDL / .proto first, generate handlers and clients), schema-first (derive runtime validation + types from code-level schema objects), or code-first (handlers first, spec generated as an artifact).
+3. **Framework** — only narrow candidates after the above two are decided.
+
+Skipping ahead to a framework recommendation before paradigm + discipline are settled produces throwaway work when iOS or another client surface later finds the chosen wire format inadequate.
+
+### Plan Review Scoping
+
+`/plan-eng-review`, `/plan-design-review`, and `/plan-devex-review` are built for **spec-sized** plans (single PR, single feature). When invoked against a **milestone-sized** initiative design doc (a `/office-hours` output spanning multiple Specs and ~50+ files):
+
+- Narrow the review to architectural decisions still open at the design level (e.g., the doc's "Open Questions" or "Decisions Pending" section).
+- Skip Sections 2 (Code Quality) and 4 (Performance) on zero-code design docs.
+- Skip Section 3 (Test Review) unless the test strategy itself is contested.
+- Run a fresh `/plan-eng-review` per Spec AFTER `superpowers:writing-plans` produces the spec docs, where the skill's full structure naturally fits.
+
+State the scoping decision up front before walking any review section so the user can correct if the skill is the wrong fit.
+
+---
+
+## Skill Transition Discipline
+
+These rules govern how agents move between skills (`/office-hours`, `/plan-eng-review`, `superpowers:writing-plans`, etc.) during a session.
+
+### Pause between skill transitions
+
+At the close of every skill workflow, STOP. Do not auto-invoke or auto-suggest the next skill mid-flow. Instead:
+
+1. Surface that the skill is finishing and what its last produced artifact is (path + 1-line summary).
+2. Offer a retrospective beat — what worked, what didn't, anything to refine in AGENTS.md or the working agreement before continuing.
+3. Suggest which skill is appropriate next, justified by AGENTS.md routing rules and the current project state — but wait for the user to say "go" before invoking it.
+
+Skill boundaries are STOP points, same as Task boundaries during execution. Never silently transition between `/office-hours` → `/plan-ceo-review` → `/plan-eng-review` → `superpowers:writing-plans`. Each handoff is a conversation.
+
+### Right tool for the job beats stretching
+
+When recommending the next step, evaluate tool fit on its own merits. Do NOT treat "this would invoke a new skill" as a con if that skill is genuinely the right tool for the task. The pause rule above is about transparency and retrospective, not about avoiding skill transitions when warranted. Recommend the structured workflow that best matches the work — `/plan-eng-review` for architecture lock-in, `/plan-devex-review` for onboarding, `superpowers:writing-plans` for spec breakdown — instead of trying to keep work inside the currently-loaded skill.
+
+### Commit artifacts after every skill workflow
+
+At the close of every skill workflow, commit all documents and artifacts produced or modified during that workflow as ONE atomic commit before suggesting the next skill.
+
+- Run `git status` and stage every new/modified file produced by the workflow.
+- Group all skill outputs into one commit. Don't split into per-file commits.
+- Subject describes the artifact (e.g., `docs(office-hours): M1 bootstrap initiative design`); body lists every file changed with a one-line "why".
+- Follow Conventional Commits per the Git Conventions section.
+- After committing, mention the commit hash in the close-out summary.
+- Confirm before pushing — committing is local-and-safe; pushing is a separate action that needs explicit user approval.
 
 ---
 
@@ -119,9 +176,15 @@ Docs live in `docs/`:
 
 | Path                                               | Purpose                                                                     |
 | -------------------------------------------------- | --------------------------------------------------------------------------- |
+| `docs/PRODUCT.md`                                  | Canonical product brief (premise, differentiator, MVP, future features, surfaces, constraints, milestone roadmap) |
+| `docs/PROJECT_STATUS.md`                           | Live status — active initiative / spec / task, locked-in stack, open design surfaces, future review areas |
+| `docs/BACKLOG_IDEAS.md`                            | Someday/maybe learning experiments and side-quests outside the milestone roadmap |
 | `docs/features/`                                   | Completed features describing system behavior with GitHub issue & PR links  |
-| `docs/initiatives/{initiative}/`                   | gstack initiative planning, discovery, and design review artifacts          |
+| `docs/initiatives/{initiative}/`                   | gstack initiative planning, discovery, and design review artifacts (DESIGN.md + MILESTONE.md per initiative) |
 | `docs/specs/{initiative}/`                         | Active superpowers implementation plans and specs for that initiative       |
+| `docs/templates/FEATURE.md`                        | Post-implementation feature-summary template                                |
+| `docs/templates/SPEC.md`                           | Pre-implementation spec template for `superpowers:writing-plans` to write into |
+| `docs/superpowers/specs/`                          | Reference examples of well-shaped specs (not active work)                   |
 | `docs/STACK.md`, `ARCHITECTURE.md`, `CHANGELOG.md` | Reference docs                                                              |
 
 **No automated GitHub issue sync.** Repository plan documents are the source of truth during development. GitHub Issues may be written manually from planning outputs and referenced as part of feature completion and document consolidation. After development, feature docs represent consolidated plan documents while GitHub becomes the source of truth for released work.
