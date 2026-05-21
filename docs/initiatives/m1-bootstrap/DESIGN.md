@@ -114,7 +114,7 @@ Task {
 - `components/web_client/`: **Vite + React (SPA mode)** minimal PWA shell — installable via Web App Manifest (`vite-plugin-pwa`), no service worker yet, no offline cache. Calls the API over HTTP when online via `openapi-fetch` (types from `openapi-typescript` generated against the emitted `openapi.json`).
 - `components/service-task/`: **NestJS** API exposing `POST /tasks` and `GET /tasks` via REST. Uses **`nestjs-zod`** to wire Zod schemas from `packages/shared-types` as request/response DTOs (runtime validation + types). The OpenAPI document is **emitted** at build via **`zod-to-openapi`** to `components/service-task/openapi.json` (gitignored; CI generates fresh). Persistence via **Drizzle ORM** against **pglite** (in-process PostgreSQL via WebAssembly). `user_id` enforcement via a global **NestJS guard** registered at app boot (default-deny posture — see *Security Posture* below).
 - **drizzle-kit** integrated for schema migrations. Initial migration creates the `Task` table (`id`, `user_id`, `title`, `created_at`). Schema files live at `components/service-task/src/db/schema/`; generated SQL migrations at `components/service-task/drizzle/migrations/` are checked into git for replay.
-- Docker Compose for local stack (PWA + API + DB in one `docker compose up`). SQLite persists to a named Docker volume (not a bind mount) so a `compose down` does not destroy local data. The named volume's name is included in the compose file under a project-scoped prefix.
+- Docker Compose for local stack (PWA + API in one `docker compose up`). pglite runs in-process inside the `service-task` container — there is no separate database container. The pglite data directory mounts at `/var/lib/psykl/pglite` inside the `service-task` container via a project-scoped named Docker volume (`psykl-pglite-data`, not a bind mount) so `compose down` does not destroy local data.
 - CI pipeline running lint + test + build + full test pyramid on every PR.
 - CD pipeline that, on merge to `main`: builds container images for `service-task` and `web_client`, publishes them to a chosen container registry, and runs the subtree-sync action to push each component to its upstream mirror.
 - Container registry account/repo configured (GitHub Container Registry is the obvious default — colocated with the source repo, no extra account needed).
@@ -141,7 +141,7 @@ Task {
 | 1 | Static Analysis | ESLint + Prettier + `tsc` (TypeScript components); equivalents added later for Swift in M3 | Lint clean; format clean; whole monorepo type-checks; shared types in `packages/shared-types` consumed by PWA and API without breakage |
 | 2 | Unit | Vitest (TypeScript) | `formatTaskTimestamp(date)` returns expected ISO 8601 string; `<TaskList tasks={[...]} />` widget renders titles + timestamps in isolation |
 | 3 | Integration | Vitest + in-process pglite (fresh PGlite instance per test file) | `POST /tasks` handler + Drizzle + pglite together: a write lands in the row store, `GET /tasks` returns it; `user_id` ownership enforced at the query layer |
-| 4 | Component | API contract tests for `service-task` (driving the real HTTP layer in-process against an in-memory database); PWA component tests via Testing Library / Playwright Component Testing driving the real UI against a stubbed `service-task` client | `service-task`: contract test asserts `POST /tasks` returns 201 with the new task body; default-deny contract tests reject un-guarded routes and missing/malformed `user_id`. `web_client`: PWA component test creates a task with the API client stubbed, verifies the new task renders in the list |
+| 4 | Component | API contract tests for `service-task` (driving the real HTTP layer in-process against an in-process pglite); PWA component tests via **Vitest + Testing Library** driving the real UI against a stubbed `service-task` client (see AGENTS.md → Test File Location Convention) | `service-task`: contract test asserts `POST /tasks` returns 201 with the new task body; default-deny contract tests reject un-guarded routes and missing/malformed `user_id`. `web_client`: PWA component test creates a task with the API client stubbed, verifies the new task renders in the list |
 | 5 | End-to-End (E2E) | Playwright driving a real Chromium against the running Docker Compose stack (M1 client is the PWA; iOS-native E2E driver added in M3 per AGENTS.md) | PWA loads, user types a title, clicks create, sees the task appear in the list after page refresh |
 
 Note on naming: the **Component** layer here is the system-component-isolation test per AGENTS.md, not "UI component in isolation." UI widget tests collapse into the Unit layer. True cross-process contract testing (Pact, schema-diff tooling) is a heavier investment than M1 needs; the Component layer in M1 uses in-process HTTP testing for the API contract.
@@ -168,16 +168,18 @@ File-count estimates below assume **implementation files only**. Test files at t
 
 **Spec 1: Workspace Bootstrap** — *As a developer, I can clone the monorepo and run `pnpm install` from a fresh checkout.*
 
+> **Existing repo state (relevant to Spec 1):** The repository already contains empty directory placeholders for `components/{ios_client,service-task,web_client}/` (each with an empty `README.md`) and an empty `packages/` directory. Spec 1 honors these — it adds `pnpm-workspace.yaml` glob patterns that pick them up, but does NOT delete or rename them. `ios_client` stays empty until M3. The empty `e2e/` directory at repo root (if present) is also kept and populated in DevTask 8 (E2E setup).
+
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
 | 1 | **Workspace scaffolding** — root `package.json` (with `packageManager: pnpm@10.x.x`), `pnpm-workspace.yaml`, `tsconfig.base.json`, `.nvmrc` (Node 24), `.gitignore`, `.editorconfig`, `README.md`, MIT `LICENSE` | ~7 |
 | 2 | **`packages/shared-types`** — package scaffold + **Zod schemas** for `Task` / `TaskInput` / `TaskResponse` in `src/schemas/`, deriving TypeScript types via `z.infer`. Configured for consumption via `workspace:*` by `service-task` and `web_client`. Includes `zod-to-openapi` plumbing exporting an `openapi.json` builder helper. Unit tests for each schema's parsing. | ~6 |
 
-**Spec 2: service-task minimal API** — *As a developer, I can `POST /tasks` and `GET /tasks` against a locally-running NestJS service that persists to SQLite.*
+**Spec 2: service-task minimal API** — *As a developer, I can `POST /tasks` and `GET /tasks` against a locally-running NestJS service that persists to pglite.*
 
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
-| 3 | **NestJS minimal API** — `AppModule`, `TaskModule`, `TaskController` with `POST /tasks` + `GET /tasks`, `TaskService`, global `UserIdGuard`. Uses `nestjs-zod` to wire Zod schemas from `packages/shared-types` as DTOs. Emits `openapi.json` at build via `zod-to-openapi`. (Plus Component-layer contract tests in additive PR scope per trilemma rule.) | ~9 |
+| 3 | **NestJS minimal API** — `AppModule`, `TaskModule`, `TaskController` with `POST /tasks` + `GET /tasks`, `TaskService`, global `UserIdGuard`. Uses `nestjs-zod` to wire Zod schemas from `packages/shared-types` as DTOs. Emits `openapi.json` at build via `zod-to-openapi`. Component-layer contract tests included in this DevTask; if implementation files + test files exceed 10, split per the trilemma rule (e.g., DevTask 3a = handlers + module wiring, DevTask 3b = global guard + contract tests). | ~9 (impl) + tests |
 | 4 | **Drizzle schema + initial migration (pglite)** — Drizzle schema files in `components/service-task/src/db/schema/` defining the PSYKL `Task` table (Postgres-shaped via `drizzle-orm/pglite`), `drizzle.config.ts`, initial migration SQL generated to `components/service-task/drizzle/migrations/`, integration test confirming schema applied against an in-process pglite instance. | ~6 |
 
 **Spec 3: web_client minimal PWA** — *As a user, I can open the PWA, type a task title, click create, and see the new task appear in the list.*
@@ -204,7 +206,7 @@ File-count estimates below assume **implementation files only**. Test files at t
 | # | DevTask (impl files only; tests additive) | Files |
 |---|------|-------|
 | 9 | **Container registry publish (GHCR)** — GitHub Actions workflow that builds and publishes `service-task` and `web_client` images to GitHub Container Registry (`ghcr.io/jonpham/psykl-system-{service-task,web_client}`) on merge to `main`. Tags: commit SHA + `latest`. | ~4 |
-| 10 | **Subtree-sync GitHub Action (web_client + service-task only)** — workflow that runs `git subtree split` for `components/web_client` and `components/service-task` and force-pushes to their configured upstream mirrors after merge to `main`. `components/ios_client` is intentionally excluded until M3 introduces real iOS code worth mirroring. | ~3 |
+| 10 | **Subtree-sync GitHub Action (web_client + service-task only)** — workflow that runs `git subtree split` for `components/web_client` and `components/service-task` and force-pushes to upstream mirrors `jonpham/psykl-web_client` and `jonpham/psykl-service-task` (per Decision #16) after merge to `main`, using the `SUBTREE_PUSH_TOKEN` GitHub Actions secret. `components/ios_client` is intentionally excluded until M3 introduces real iOS code worth mirroring. **Blocker:** mirror repos must exist before this DevTask can be implemented. | ~3 |
 | 11 | **Helm chart at `deploy/helm/` + tagged-release workflow** — helm chart at `deploy/helm/` packaging the GHCR-published images + a release workflow triggered by `v*.*.*` tags that runs image build + `helm package` + creates a GitHub Release with the packaged `.tgz` attached. | ~8 |
 
 **Total:** 6 Specs, ~11-14 DevTasks (post-split), ~70-100 files spread across 11-14 PRs. Counts grow if the spec writer splits DevTasks to honor the trilemma rule above.
@@ -227,29 +229,28 @@ For clarity (M2 will get its own design doc from a future `/office-hours` sessio
 - Multi-user authentication, login, homelab multi-instance support (M4+).
 - Server-side vs client-side retro aggregation decision (post-M3 — parked).
 
-## Open Questions (MUST close before specs are written)
+## Open Questions
 
-The following six decisions blocked spec writing during the design phase. They were resolved via `/plan-eng-review` on 2026-05-20 and recorded in the Decisions appendix below. The doc's `status_qualifier` in the frontmatter is now **APPROVED**.
+All design-phase Open Questions are **CLOSED**. See the Decisions appendix below for resolutions:
 
-Candidate lists are intentionally NOT pre-populated here — framework/tool selection was not discussed during the `/office-hours` session that produced this doc, so this doc must not narrow the field on the user's behalf. Each question carries only its constraint set. Candidates and trade-offs surface during the answer pass (recommended path: `/plan-eng-review`).
+| Original question | Resolved by |
+|-------------------|-------------|
+| #1 Package manager + workspace tool | Decision #1 (pnpm) |
+| #2 API framework | Decision #2 (NestJS) + #2b (Zod schema-first) |
+| #3 PWA framework | Decision #3 (Vite + React) |
+| #4 Schema migration tool | Decision #4 (Drizzle) |
+| #5 LICENSE | Decision #5 (MIT) |
+| #6 Toolchain version pins | Decision #6 (Node 24 LTS + pnpm 10.x) |
+| #7 Database for M1 | Decision #8 (pglite) |
+| #8 Term-map / theme architecture | Deferred to M3+ |
 
-1. **Package manager and workspace tool.** Constraint: must support monorepo workspaces; must produce a lockfile that AGENTS.md exempts from the ≤10-files-per-PR rule (currently `pnpm-lock.yaml`, `pnpm-workspace.yaml`). If a non-pnpm tool is chosen, AGENTS.md must be updated to exempt the corresponding lockfile. Decided before Spec 1.
-2. **API framework for `service-task`.** Constraint: must make it hard to register a route outside the globally-applied `user_id` middleware (security posture, Premise 7); must integrate cleanly with the chosen migration tool; must produce a container image small enough to publish on every merge without burning CI minutes. Decided before Spec 3.
-3. **PWA framework for `web_client`.** Constraint: must produce a clean PWA without server-component-blended rendering (per Premise 4); must integrate with Vitest + Testing Library + Playwright. Decided before Spec 5.
-4. **Schema migration tool.** Constraint: works with SQLite for M1; the same tool (or a clean migration path) must work with whatever database we move to if/when multi-device sync requires it. Decided before Spec 4.
-5. **LICENSE choice.** Constraint: a permissive OSS license consistent with Premise 6's dogfood-now-community-later posture. Decided before Spec 1.
-6. **Toolchain version pins.** Constraint: Node.js major version pinned via `.nvmrc` or `engines` field; package-manager version pinned. Prevents "works on my machine" drift between collaborators and CI. Decided before Spec 1.
-
-Resolvable during or after spec writing (do not block):
-
-7. **Database choice.** SQLite is the obvious M1 pick (zero-ops, in-process). Migration story for M3+ multi-device sync is a future-Jonathan problem.
-8. **Term-map / theme architecture.** Decoupling neutral data-model terms from UI labels can be done with a simple translation function or a full i18n library. M3+ decision; just note the seam now.
+No outstanding questions block spec writing.
 
 ## Success Criteria
 
 M1 is **done** when:
 
-- `docker compose up` from a fresh clone produces a running PWA at a local URL with a working API and persistent SQLite.
+- `docker compose up` from a fresh clone produces a running PWA at `http://localhost:5173` (Vite dev preview) with a working API at `http://localhost:3000` and persistent pglite data on the `psykl-pglite-data` named Docker volume.
 - A user can create a Task with a title via the PWA and see it appear in the list after a refresh.
 - All five test pyramid layers (Static Analysis, Unit, Integration, Component, E2E) have at least one passing test exercising real behavior, including the `user_id` default-deny Component-layer contract tests.
 - CI pipeline runs the full pyramid on every PR and blocks merge on failure.
@@ -296,8 +297,35 @@ Resolved via `/plan-eng-review` on 2026-05-20.
 | 9 | Helm chart location | **`deploy/helm/`** at repo root | Explicit and conventional; sister to `components/` and `packages/`. Earlier "chart/ or deploy/helm/" wording resolved to the longer, more obvious path. |
 | 10 | Branching convention during a milestone | **Each DevTask branches off `main` and PRs into `main`** | Per AGENTS.md → Git Conventions. No stacking. Initiative planning branches (e.g., `feat/plan-and-bootstrap`) carry only doc changes and merge to `main` as their own PR. Enables DevTask parallelism and avoids rebase cascades. |
 | 11 | Test file location convention | **Per AGENTS.md → Test Discipline → Test File Location Convention** | Unit + Component layers colocated with source; Integration in `tests/integration/`; E2E in repo-root `e2e/`. Filename suffixes (`*.unit.test.ts`, `*.contract.test.ts`, `*.integration.test.ts`, `*.e2e.spec.ts`) make per-layer CI globs trivial. |
-| 12 | OpenAPI artifact path + flow | **`components/service-task/openapi.json` (gitignored, emitted at build); copied to `packages/shared-types/dist/openapi.json` for client consumption.** `web_client` consumes via `openapi-fetch` + types generated by `openapi-typescript` at build. | The emitted artifact lives outside the Zod source-of-truth — it's a derived deliverable, regenerable from `packages/shared-types/src/schemas/`. Gitignored to prevent churn-y diffs; CI builds it on every PR for validation. |
+| 12 | OpenAPI artifact path + build order | **Emitted to `components/service-task/openapi.json` (gitignored).** Generated by a `pnpm --filter service-task build:openapi` script that imports Zod schemas from `packages/shared-types` and writes the JSON. `web_client` runs `openapi-typescript components/service-task/openapi.json --output src/api/types.ts` as a build step (output also gitignored; regenerated on every install/build). CI orchestrates the order: `pnpm -r build` builds `packages/shared-types` first, then runs `build:openapi` in `service-task`, then builds `web_client`. Local dev: a Vite plugin or `pnpm dev` orchestrator regenerates the types on schema-file change. | The Zod source-of-truth lives in `packages/shared-types/src/schemas/`. The emitted artifact is a derived deliverable, never the source. Gitignoring both `openapi.json` and `web_client/src/api/types.ts` prevents churn-y diffs; CI regenerates on every PR for validation. |
 | 13 | Drizzle directory layout in `service-task` | Schema: **`components/service-task/src/db/schema/`** (one `.ts` per table). Migrations: **`components/service-task/drizzle/migrations/`** (generated SQL files, checked into git). Config: **`components/service-task/drizzle.config.ts`**. | Convention matches Drizzle community defaults. Schema in `src/db/schema/` means the runtime code imports it directly without leaving `src/`. Migrations live outside `src/` because they're not source code — they're generated artifacts checked in for replay. |
+| 14 | Service ports (local dev) | `service-task` listens on `:3000`. `web_client` Vite dev server listens on `:5173`. Production container images expose the same ports. | Conventional NestJS + Vite defaults; no reason to deviate. |
+| 15 | Cross-Origin Resource Sharing (CORS) posture | `service-task` allows `Origin: http://localhost:5173` in dev (configurable via `CORS_ORIGIN` env var). No reverse proxy in M1 — PWA → API is direct cross-origin. PWA reads API base URL from `VITE_API_URL` env var (default `http://localhost:3000`). | Reverse proxy adds infra without payoff at M1 scale. Direct CORS is simpler and reverse-proxy-compatible later. |
+| 16 | Subtree mirror upstream URLs | **TBD — blocker for DevTask 10 only.** Repo URLs for `web_client` and `service-task` mirrors must be created before DevTask 10 runs. Stored secrets: `SUBTREE_PUSH_TOKEN` (a personal access token or fine-grained PAT with push scope on both mirror repos) in GitHub Actions secrets. Naming convention: `jonpham/psykl-web_client` and `jonpham/psykl-service-task`. | Mirror repos are downstream-only; the monorepo is canonical. Per-component-named mirrors are clearer than `psykl-system-{component}`. |
+| 17 | GitHub branch protection on `main` | Configured **once at the repo settings level (not by code)**: require PR review (1+ reviewer), require status checks to pass (the CI job names from DevTask 8), require linear history (no merge commits), block force-pushes. Not a DevTask deliverable — it's a manual repo-settings change to be performed before DevTask 8's CI starts being relied on as a merge gate. | Branch-protection rules live in GitHub UI / API, not the codebase. Mentioning here so the spec writer doesn't waste a DevTask trying to encode this in YAML. |
+| 18 | `engine-strict` enforcement | `.npmrc` at repo root contains `engine-strict=true` so the Node 24 / pnpm 10 pins from Decision #6 are enforced as hard errors at install time, not soft warnings. | Without this, `pnpm install` only warns on engine mismatch. Strict mode makes mismatch fail-fast, catching environment drift early. |
+
+### DevTask Dependency Graph
+
+Specs do not all run independently. The minimal dependency order is:
+
+```
+S1 (Workspace Bootstrap)            ──┐
+                                       ├──► S4 (Local dev stack)
+S2 (service-task minimal API)       ──┤        │
+                                       ├──► S5 (CI test pipeline)
+S3 (web_client minimal PWA)         ──┤        │
+                                       │        ▼
+                                       └──► S6 (CD release pipeline)
+
+S1 must merge first (everything depends on it).
+S2 and S3 can merge in parallel after S1 (their workpieces don't overlap).
+S4 needs S2 + S3 (compose stack references both component containers).
+S5 needs S4 (CI runs E2E against the compose stack).
+S6 needs S5 (CD release depends on CI passing).
+```
+
+DevTask numbering uses **global ordering across all Specs**. Splits add letter suffixes (e.g., DevTask 3a, 3b) without renumbering downstream DevTasks. The 11-DevTask target stays as the framing; the post-split count may land at 11-14 depending on file-count requirements.
 
 ### Architecture Evolution Roadmap (informational, not committed)
 
@@ -343,4 +371,4 @@ All six blocking Open Questions are resolved (see Decisions above). Concrete han
 | DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | not run (optional next step) |
 
 - **UNRESOLVED:** 0
-- **VERDICT:** **ENG CLEARED** — M1 architecture is locked across all 13 decisions (1, 2, 2b, 3-13). An adversarial cold-read review on 2026-05-20 found gap-class issues that have been addressed in this same sweep: vocabulary collision (Task→DevTask), trilemma resolution rule, spec filename convention, test file location convention, branching convention, registry choice (GHCR), database revisit (pglite), helm path (deploy/helm/), OpenAPI artifact path, Drizzle directory layout, Zod schema-first discipline. Ready for `superpowers:writing-plans` to produce the 6 Specs / ~11-14 DevTasks under `docs/specs/m1-bootstrap/`.
+- **VERDICT:** **ENG CLEARED** — M1 architecture is locked across all 18 decisions (1, 2, 2b, 3-18) plus the DevTask Dependency Graph. Two adversarial cold-read reviews on 2026-05-20 caught a total of ~40 gap-class issues, all addressed in successive sweeps: vocabulary collision (Task→DevTask), trilemma resolution rule, spec filename convention, test file location convention, branching convention, registry choice (GHCR), database revisit (pglite), helm path (deploy/helm/), OpenAPI artifact path + build order, Drizzle directory layout, Zod schema-first discipline, ports + CORS posture, subtree mirror URLs, branch protection scope, engine-strict enforcement, feature-doc-per-Spec rule, planning-vs-execution session rule. Ready for `superpowers:writing-plans` to produce the 6 Specs / ~11-14 DevTasks under `docs/specs/m1-bootstrap/`.

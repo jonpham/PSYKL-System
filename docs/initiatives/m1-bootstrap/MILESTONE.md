@@ -6,13 +6,13 @@
 
 ## Description
 
-Establish the repository foundation and the development style PSYKL-System will use for every subsequent milestone. Ship a minimal vertical slice (Create + Read on a `Task` with a `title`) that travels through `web_client` (PWA) → `service-task` (API) → SQLite → back, with a full 5-layer test pyramid (Static Analysis → Unit → Integration → Component → End-to-End, per AGENTS.md → Test Discipline) green on every Pull Request. Stand up Continuous Integration plus Continuous Deployment: container images published to a registry, components subtree-synced to upstream mirrors, helm chart packaged, and a tagged-release workflow ready to fire on `v*.*.*`.
+Establish the repository foundation and the development style PSYKL-System will use for every subsequent milestone. Ship a minimal vertical slice (Create + Read on a `Task` with a `title`) that travels through `web_client` (PWA) → `service-task` (API) → pglite (in-process PostgreSQL via WebAssembly) → back, with a full 5-layer test pyramid (Static Analysis → Unit → Integration → Component → End-to-End, per AGENTS.md → Test Discipline) green on every Pull Request. Stand up Continuous Integration plus Continuous Deployment: container images published to a registry, components subtree-synced to upstream mirrors, helm chart packaged, and a tagged-release workflow ready to fire on `v*.*.*`.
 
 M1 is explicitly NOT product discovery. M1 proves the architecture and trains the gstack → superpowers → execute agentic workflow loop on real (not throwaway) domain code. The MVP loop described in `docs/PRODUCT.md` (backlog → daily plan → PSYKL execution) lands across M2 and M3.
 
 ## Success Criteria
 
-- `docker compose up` from a fresh clone produces a running PWA at a local URL with a working API and persistent SQLite.
+- `docker compose up` from a fresh clone produces a running PWA at `http://localhost:5173`, a working API at `http://localhost:3000`, and persistent pglite data on the `psykl-pglite-data` named Docker volume.
 - A user can create a Task with a title via the PWA and see it appear in the list after a refresh.
 - All five test pyramid layers (Static Analysis, Unit, Integration, Component, E2E) have at least one passing test exercising real behavior, including `user_id` default-deny Component-layer contract tests.
 - CI runs the full pyramid on every PR; merge is blocked on failure.

@@ -8,7 +8,7 @@
 **Active plan:** `superpowers:writing-plans` against M1 design doc → atomic ≤10-file DevTasks under `docs/specs/m1-bootstrap/`
 **Active skill:** _between skills — paused after `/plan-eng-review` + adversarial-review sweep_
 **Branch:** `feat/plan-and-bootstrap`
-**Current step:** Pre-`superpowers` doc sweep complete (vocabulary collision Task→DevTask, trilemma resolution rule, spec filename convention, test file location convention, branching convention, GHCR registry lock, database revisit pglite, deploy/helm/ path, OpenAPI artifact path, Drizzle directory layout, Zod schema-first discipline).
+**Current step:** Pre-`superpowers` doc sweep complete after TWO adversarial-review iterations. First sweep promoted cross-agent rules (vocabulary Task→DevTask, trilemma resolution, spec filename convention, test file locations, branching, GHCR, pglite database revisit, deploy/helm/, OpenAPI artifact, Drizzle directory layout, Zod schema-first). Second sweep caught residual SQLite mentions, SPEC.md rename inversion, `@nestjs/swagger` in template, AGENTS.md "or stacked branches" contradiction, missing port assignments, CORS posture, subtree mirror URLs, branch-protection scoping, engine-strict, feature-doc-per-Spec rule, planning-vs-execution session rule, DevTask dependency graph.
 **Known blockers:** None.
 **Next action:** Invoke `superpowers:writing-plans` against `docs/initiatives/m1-bootstrap/DESIGN.md`. The skill should produce 6 Spec docs under `docs/specs/m1-bootstrap/` following `docs/templates/SPEC.md` (filename pattern `YYYYMMDD-S{N}-{spec-slug}.md`).
 
@@ -27,8 +27,12 @@
 | Database (M1) | pglite (in-process PostgreSQL via WebAssembly) — Postgres-shaped from day one for clean M4+ networked migration |
 | Container registry | GitHub Container Registry (`ghcr.io/jonpham/psykl-system-*`) |
 | Helm chart location | `deploy/helm/` |
-| Branching convention | Each DevTask branches off `main`, PRs into `main` |
+| Branching convention | Each DevTask branches off `main`, PRs into `main` (no stacking) |
 | Test file locations | Unit + Component colocated next to source; Integration in per-component `tests/integration/`; E2E in repo-root `e2e/` |
+| Service ports (local dev) | `service-task` :3000, `web_client` Vite :5173 |
+| CORS posture | service-task allows `Origin: http://localhost:5173` in dev (configurable via `CORS_ORIGIN` env var); no reverse proxy in M1 |
+| Subtree mirror repos | `jonpham/psykl-web_client`, `jonpham/psykl-service-task` (must be created before DevTask 10) |
+| `engine-strict` | `.npmrc` at repo root contains `engine-strict=true` |
 | LICENSE | MIT |
 
 ## Initiative Summary

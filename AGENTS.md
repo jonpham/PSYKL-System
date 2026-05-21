@@ -26,7 +26,7 @@ These rules govern every session. Follow them without exception.
 - A step is one checklist item in the active feature doc's `## Steps` section, and ends with a commit.
 - Exception: if the active feature doc has `step_gating: false` in its frontmatter,
   complete all steps in the spec before stopping — but still stop at the phase boundary
-- Never begin the next spec without starting a new AI assistant session
+- During execution, never begin the next Spec without starting a new AI assistant session. (Applies AFTER specs are written. Does NOT apply during `superpowers:writing-plans` itself — that skill produces multiple specs in one run.)
 
 ### Before Implementing Anything
 
@@ -81,7 +81,7 @@ Output the following before stopping:
 
   1. **Static Analysis** — language- and framework-specific tools for linting, formatting, code-style enforcement, compilation, and type-checking. Examples by component: TypeScript components use ESLint + Prettier + `tsc`; Swift components use SwiftLint + swift-format + the Swift compiler; other languages bring their equivalents. Runs FIRST in every Pull Request; failure blocks every other test layer from running.
   2. **Unit** — pure functions, classes, and small UI widgets tested in isolation (e.g. a single React component or a single SwiftUI view). No I/O, no network. Fast.
-  3. **Integration** — multi-module interactions within ONE system component: API handler + database, middleware + handler, store + reducer. In-process dependencies are real (in-memory SQLite is fine); external services not yet involved. Also includes Multi UI Component storybook tests.
+  3. **Integration** — multi-module interactions within ONE system component: API handler + database, middleware + handler, store + reducer. In-process dependencies are real (in-process pglite in M1, per `docs/initiatives/m1-bootstrap/DESIGN.md` Decision #8); external services not yet involved. Also includes Multi UI Component storybook tests.
   4. **Component** — the SYSTEM component tested as a black box against its boundaries.
      - For a service (`service-task`): API contract testing — status codes, response shapes, header enforcement (including the `user_id` default-deny posture).
      - For a UI application (`web_client` PWA, `ios_client` native): drive the UI against mocked / faked / stubbed back-end services. The component is exercised end-to-end within itself, with its dependencies controlled.
@@ -91,20 +91,20 @@ Output the following before stopping:
      - Future client surfaces use whichever driver matches the platform.
 
 - **Tests live in the same Pull Request as the implementation they cover.** A spec proposing implementation without corresponding tests is a violation of the working agreement and must be rejected at review.
-- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-memory SQLite for speed); E2E tests run against the real Docker Compose stack (or equivalent); mocks at Component boundaries are explicit and intentional (services not in the project's control, or back-ends being faked for UI component tests). Mocking core domain logic is a smell.
+- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-process pglite in M1; whichever in-process database the active initiative's DESIGN.md selects); E2E tests run against the real Docker Compose stack (or equivalent); mocks at Component boundaries are explicit and intentional (services not in the project's control, or back-ends being faked for UI component tests). Mocking core domain logic is a smell.
 - **Negative-path tests are required where the design calls for default-deny behavior** (e.g., the `user_id` middleware in Milestone 1 must have Component-layer contract tests proving requests without proper headers are rejected).
 
 #### Test File Location Convention
 
-Every test file lives in a predictable place so a single CI glob catches each layer cleanly. **Convention applies to every component**:
+Every test file lives in a predictable place so a single CI glob catches each layer cleanly. **Convention applies to every component AND every package under `packages/`**:
 
-| Layer | Location | Filename pattern |
-|-------|----------|------------------|
-| Static Analysis | Configured at component root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents). | n/a — runs against all source |
-| Unit | **Colocated** next to the source it tests, inside `src/`. | `*.unit.test.ts` / `*.unit.test.tsx` |
-| Integration | Per-component, in a top-level `tests/integration/` directory. | `*.integration.test.ts` |
-| Component | **Colocated** next to the boundary it verifies (e.g., contract test next to the controller). | `*.contract.test.ts` (services) / `*.component.test.tsx` (UI apps) |
-| End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs. | `*.e2e.spec.ts` |
+| Layer | Location | Filename pattern | Canonical run command |
+|-------|----------|------------------|-----------------------|
+| Static Analysis | Configured at component or package root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents). | n/a — runs against all source | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
+| Unit | **Colocated** next to the source it tests, inside `src/`. | `*.unit.test.ts` / `*.unit.test.tsx` | `pnpm -r test:unit` |
+| Integration | Per-component, in a top-level `tests/integration/` directory. For packages with no service-level integration concerns (e.g. `packages/shared-types`), this layer is skipped. | `*.integration.test.ts` | `pnpm -r test:integration` |
+| Component | **Colocated** next to the boundary it verifies (e.g., contract test next to the controller). For UI applications, use Vitest + Testing Library (the project's default Component-layer toolchain). | `*.contract.test.ts` (services) / `*.component.test.tsx` (UI apps) | `pnpm -r test:component` |
+| End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs. | `*.e2e.spec.ts` | `pnpm test:e2e` (root-level script) |
 
 Concrete example:
 
@@ -247,13 +247,14 @@ Docs live in `docs/`:
 - NEVER commit directly to `main`; NEVER force push to `main`
 - NEVER force push, if necessary STOP and provide command for user to do destructive actions manually with precautions
 - Always use a feature branch + pull request
-- Every PR must include an updated feature doc in `docs/features/`
+- A feature doc in `docs/features/` is created once **per Spec, not per DevTask** — it consolidates the Spec's outcome and lands with the final DevTask PR of that Spec. Earlier DevTask PRs within the same Spec do NOT need to create or touch a feature doc; they update the spec doc's `## Tasks` checklist instead. The "every PR" rule from older AGENTS.md text is superseded by this per-Spec-completion rule.
 - **Hard limit: ≤10 files changed per PR.** Exemptions: `pnpm-lock.yaml`,
   `pnpm-workspace.yaml`. If a spec requires more, split it into multiple
-  sequential PRs against the same branch (or stacked branches), each with
-  its own atomic scope (e.g., scaffold → implementation → docs/CI). When
-  writing a spec or plan, design the merge boundaries to fit this limit
-  before drafting steps.
+  sequential DevTasks (each its own branch off `main`), each with its own
+  atomic scope (e.g., scaffold → implementation → docs/CI). When writing
+  a spec or plan, design the merge boundaries to fit this limit before
+  drafting steps. **No stacking on prior DevTask branches** (per the
+  branching convention above) — sibling branches off `main` only.
 
 ### Mono Repo Structure
 
