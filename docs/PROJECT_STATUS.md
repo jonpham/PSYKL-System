@@ -5,11 +5,11 @@
 **Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution started
 **Active spec:** M1 Spec 1/6 Workspace Bootstrap (`docs/specs/m1-bootstrap/20260520-S1-workspace-bootstrap.md`)
-**Active plan:** Executing Spec 1, DevTask 1/2: repository-root workspace scaffolding
+**Active plan:** Executing Spec 1, DevTask 2/2: `packages/shared-types` Zod schemas
 **Active skill:** `superpowers:executing-plans`
-**Branch:** `infra/m1-workspace-bootstrap` (DevTask 1 branch off `main`)
-**Current step:** DevTask 1 implementation complete locally; committed on `infra/m1-workspace-bootstrap`. Awaiting review/approval before DevTask 2.
-**Next action:** Review DevTask 1, push/open PR if desired, then start DevTask 2 (`packages/shared-types`) only after explicit approval.
+**Branch:** `chore/shared-types-zod-schemas` (stacked on `infra/m1-workspace-bootstrap` by explicit user override while PR #10 is open)
+**Current step:** DevTask 2 implementation complete locally; committing and opening a stacked PR against `infra/m1-workspace-bootstrap`.
+**Next action:** Review the stacked DevTask 2 PR; after PR #10 merges, retarget/rebase this PR onto `main`.
 **Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 **Next action (for the next agent or you):**
   1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).
