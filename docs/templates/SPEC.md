@@ -1,7 +1,7 @@
 # {Spec Name} — Implementation Spec
 
 > Template for `superpowers:writing-plans` to write into.
-> See an example at `docs/superpowers/specs/2026-05-14-message-reactions-design.md`.
+> Reference examples of well-shaped specs may exist locally outside the repo (gitignored); ask the user if a reference is helpful.
 
 ---
 

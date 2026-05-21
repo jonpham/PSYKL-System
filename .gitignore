@@ -1,1 +1,5 @@
 .DS_Store
+
+# Local-only reference material — examples and scratch artifacts kept on disk
+# for the user's eyes only. Not project artifacts.
+docs/superpowers/

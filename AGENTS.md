@@ -184,7 +184,6 @@ Docs live in `docs/`:
 | `docs/specs/{initiative}/`                         | Active superpowers implementation plans and specs for that initiative       |
 | `docs/templates/FEATURE.md`                        | Post-implementation feature-summary template                                |
 | `docs/templates/SPEC.md`                           | Pre-implementation spec template for `superpowers:writing-plans` to write into |
-| `docs/superpowers/specs/`                          | Reference examples of well-shaped specs (not active work)                   |
 | `docs/STACK.md`, `ARCHITECTURE.md`, `CHANGELOG.md` | Reference docs                                                              |
 
 **No automated GitHub issue sync.** Repository plan documents are the source of truth during development. GitHub Issues may be written manually from planning outputs and referenced as part of feature completion and document consolidation. After development, feature docs represent consolidated plan documents while GitHub becomes the source of truth for released work.
