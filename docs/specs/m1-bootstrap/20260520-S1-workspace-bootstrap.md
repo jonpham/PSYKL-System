@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN-PROGRESS
 issue: P1
 pr:
 completed_at:
@@ -7,7 +7,7 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 1
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
 honors_decisions: [1, 5, 6, 18, 24, 2b, 26]
 ---
 
@@ -64,22 +64,22 @@ This Spec creates these files (no modifications to existing files — the repo c
 - Create: `/Users/jp/code/psykl/LICENSE` (no extension)
 - Verify/extend: `/Users/jp/code/psykl/CHANGELOG.md` (existing)
 
-- [ ] **Step 1: Verify Node 24 LTS is available**
+- [x] **Step 1: Verify Node 24 LTS is available**
 
 Run: `node --version`
 Expected: `v24.x.x` (any patch). If output is a different major, install Node 24 via `nvm install 24` or your system package manager, then `nvm use 24`.
 
-- [ ] **Step 2: Enable Corepack**
+- [x] **Step 2: Enable Corepack**
 
 Run: `corepack enable`
 Expected: no output, exit code 0. (Corepack ships with Node 24; this lets the `packageManager` field auto-activate the correct pnpm version.)
 
-- [ ] **Step 3: Create `.nvmrc`**
+- [x] **Step 3: Create `.nvmrc`**
 
 Run: `echo "24" > .nvmrc`
 Verify: `cat .nvmrc` outputs `24`.
 
-- [ ] **Step 4: Create `.npmrc`**
+- [x] **Step 4: Create `.npmrc`**
 
 Write to `/Users/jp/code/psykl/.npmrc`:
 
@@ -91,7 +91,7 @@ strict-peer-dependencies=false
 
 Verify: `cat .npmrc` shows the three lines.
 
-- [ ] **Step 5: Create root `package.json`**
+- [x] **Step 5: Create root `package.json`**
 
 Write to `/Users/jp/code/psykl/package.json`:
 
@@ -121,7 +121,7 @@ Write to `/Users/jp/code/psykl/package.json`:
 }
 ```
 
-- [ ] **Step 6: Create `pnpm-workspace.yaml`**
+- [x] **Step 6: Create `pnpm-workspace.yaml`**
 
 Write to `/Users/jp/code/psykl/pnpm-workspace.yaml`:
 
@@ -131,7 +131,7 @@ packages:
   - "packages/*"
 ```
 
-- [ ] **Step 7: Create `tsconfig.base.json`**
+- [x] **Step 7: Create `tsconfig.base.json`**
 
 Write to `/Users/jp/code/psykl/tsconfig.base.json`:
 
@@ -159,7 +159,7 @@ Write to `/Users/jp/code/psykl/tsconfig.base.json`:
 }
 ```
 
-- [ ] **Step 8: Extend `.gitignore`**
+- [x] **Step 8: Extend `.gitignore`**
 
 Read current `.gitignore`. Append (do NOT replace existing entries):
 
@@ -200,7 +200,7 @@ playwright-report/
 test-results/
 ```
 
-- [ ] **Step 9: Create `.editorconfig`**
+- [x] **Step 9: Create `.editorconfig`**
 
 Write to `/Users/jp/code/psykl/.editorconfig`:
 
@@ -222,7 +222,7 @@ trim_trailing_whitespace = false
 indent_style = tab
 ```
 
-- [ ] **Step 10: Create `LICENSE`**
+- [x] **Step 10: Create `LICENSE`**
 
 Write to `/Users/jp/code/psykl/LICENSE` (no extension):
 
@@ -250,7 +250,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-- [ ] **Step 11: Verify `CHANGELOG.md` has `## Unreleased` heading**
+- [x] **Step 11: Verify `CHANGELOG.md` has `## Unreleased` heading**
 
 Run: `grep -c "^## Unreleased" CHANGELOG.md`
 Expected: `1`. If `0`, prepend the heading via:
@@ -259,17 +259,17 @@ Expected: `1`. If `0`, prepend the heading via:
 ( echo "# Changelog" ; echo "" ; echo "## Unreleased" ; echo "" ; cat CHANGELOG.md ) > CHANGELOG.md.new && mv CHANGELOG.md.new CHANGELOG.md
 ```
 
-- [ ] **Step 12: Run `pnpm install`**
+- [x] **Step 12: Run `pnpm install`**
 
 Run: `pnpm install`
 Expected: exits 0. Creates `pnpm-lock.yaml` at repo root and a `node_modules/` directory. Should warn that `components/*` and `packages/*` glob match no packages yet — that's fine for now (DevTask 2 fixes the `packages/*` case).
 
-- [ ] **Step 13: Verify engine-strict works**
+- [x] **Step 13: Verify engine-strict works**
 
 Run: `node -e "console.log(process.versions.node)"`
 Expected: `24.x.x`. If a future Node ever ships >=25, the `engines.node` constraint + `engine-strict=true` will make `pnpm install` fail — that's intentional.
 
-- [ ] **Step 14: Commit DevTask 1**
+- [x] **Step 14: Commit DevTask 1**
 
 ```bash
 git add package.json pnpm-workspace.yaml tsconfig.base.json .nvmrc .npmrc .gitignore .editorconfig LICENSE CHANGELOG.md pnpm-lock.yaml

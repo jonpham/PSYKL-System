@@ -1,0 +1,23 @@
+{
+  "name": "psykl-system",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PSYKL-System - time-independent planning tool around energy cycles. See docs/PRODUCT.md.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "format:check": "pnpm -r format:check",
+    "typecheck": "pnpm -r typecheck",
+    "test:unit": "pnpm -r test:unit",
+    "test:integration": "pnpm -r test:integration",
+    "test:component": "pnpm -r test:component",
+    "test:e2e": "echo 'e2e wired up in Spec 5' && exit 0",
+    "dev": "echo 'dev orchestrator wired up after components scaffold; for now run per-component: pnpm --filter <name> dev'"
+  }
+}

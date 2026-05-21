@@ -3,12 +3,13 @@
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
 **Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, awaiting execution
-**Active spec:** _none in progress — paused here. The 6 plans are written; execution has NOT started._
-**Active plan:** Awaiting user to manually create GitHub Issues from the 6 briefs at `docs/initiatives/m1-bootstrap/issues/`, then resume execution (possibly with a different AI agent).
-**Active skill:** _between skills — `superpowers:writing-plans` complete; next skill (`superpowers:subagent-driven-development` or `superpowers:executing-plans`, OR an equivalent on a different AI agent) not yet invoked_
-**Branch:** `feat/plan-and-bootstrap` (planning-only branch; merges to `main` as the doc-only planning PR. Each subsequent DevTask gets its own branch off `main` per AGENTS.md.)
-**Current step:** Handoff to GitHub-issue creation + execution-later. All design + planning artifacts committed; nothing in-flight.
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution started
+**Active spec:** M1 Spec 1/6 Workspace Bootstrap (`docs/specs/m1-bootstrap/20260520-S1-workspace-bootstrap.md`)
+**Active plan:** Executing Spec 1, DevTask 1/2: repository-root workspace scaffolding
+**Active skill:** `superpowers:executing-plans`
+**Branch:** `infra/m1-workspace-bootstrap` (DevTask 1 branch off `main`)
+**Current step:** DevTask 1 implementation complete locally; committed on `infra/m1-workspace-bootstrap`. Awaiting review/approval before DevTask 2.
+**Next action:** Review DevTask 1, push/open PR if desired, then start DevTask 2 (`packages/shared-types`) only after explicit approval.
 **Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 **Next action (for the next agent or you):**
   1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).

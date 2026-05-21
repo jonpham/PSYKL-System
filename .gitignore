@@ -3,3 +3,37 @@
 # Local-only reference material — examples and scratch artifacts kept on disk
 # for the user's eyes only. Not project artifacts.
 docs/superpowers/
+
+# Node / pnpm
+node_modules/
+*.log
+.pnpm-debug.log*
+.pnpm-store/
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# Generated artifacts (regenerated on every build)
+**/openapi.json
+**/src/api/types.ts
+.pglite-dev/
+
+# OS
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
