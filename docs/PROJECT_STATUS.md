@@ -5,11 +5,11 @@
 **Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution started
 **Active spec:** M1 Spec 2/6 service-task minimal API (`docs/specs/m1-bootstrap/20260520-S2-service-task-minimal-api.md`)
-**Active plan:** Executing Spec 2, DevTask 4/3: Drizzle schema, initial migration, pglite client
+**Active plan:** Executing Spec 2, DevTask 3a/3: NestJS handlers + module wiring
 **Active skill:** `superpowers:executing-plans`
-**Branch:** `infra/service-task-drizzle-schema` (stacked on `chore/shared-types-zod-schemas` by explicit user override while PRs #10/#11 are open)
-**Current step:** DevTask 4 implementation complete locally; committing and opening a stacked PR against `chore/shared-types-zod-schemas`.
-**Next action:** Review the stacked DevTask 4 PR; after PRs #10/#11 merge, retarget/rebase this PR onto `main`.
+**Branch:** `feat/service-task-nestjs-handlers` (DevTask 3a branch off current `main`; remaining Spec 2 DevTasks will use stacked PRs by explicit user override)
+**Current step:** DevTask 3a implementation complete locally; committing and preparing a stacked PR workflow for DevTask 3b next.
+**Next action:** Review/push/open the DevTask 3a PR, then start DevTask 3b (`UserIdGuard`, OpenAPI emission, Component contract tests) stacked on `feat/service-task-nestjs-handlers`.
 **Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 **Next action (for the next agent or you):**
   1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).

@@ -7,7 +7,7 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 2
 devtasks_total: 3
-devtasks_complete: 1
+devtasks_complete: 2
 honors_decisions: [2, 2b, 4, 8, 13, 19, 20, 24, 25, 29, 31, 32]
 ---
 
@@ -346,7 +346,7 @@ Push and open PR. After merge, continue.
 
 Start DevTask 3a on a fresh branch off `main`: `git checkout main && git pull && git checkout -b feat/service-task-nestjs-handlers`.
 
-- [ ] **Step 1: Add NestJS dependencies**
+- [x] **Step 1: Add NestJS dependencies**
 
 Append to `components/service-task/package.json` `dependencies`:
 
@@ -369,7 +369,7 @@ Append to `devDependencies`:
 
 Run: `pnpm install`
 
-- [ ] **Step 2: Create `nest-cli.json`**
+- [x] **Step 2: Create `nest-cli.json`**
 
 ```json
 {
@@ -382,7 +382,7 @@ Run: `pnpm install`
 }
 ```
 
-- [ ] **Step 3: Write failing unit tests for `TaskService`**
+- [x] **Step 3: Write failing unit tests for `TaskService`**
 
 Write `components/service-task/src/task/task.service.unit.test.ts`:
 
@@ -434,12 +434,12 @@ describe('TaskService', () => {
 });
 ```
 
-- [ ] **Step 4: Run the test to verify it fails**
+- [x] **Step 4: Run the test to verify it fails**
 
 Run: `pnpm --filter @psykl/service-task test:unit`
 Expected: FAIL with "Cannot find module './task.service'" — the file doesn't exist yet.
 
-- [ ] **Step 5: Implement `TaskService`**
+- [x] **Step 5: Implement `TaskService`**
 
 Write `components/service-task/src/task/task.service.ts`:
 
@@ -491,12 +491,12 @@ export class TaskService {
 }
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `pnpm --filter @psykl/service-task test:unit`
 Expected: PASS — all 3 TaskService unit tests green.
 
-- [ ] **Step 7: Create the `TaskController`**
+- [x] **Step 7: Create the `TaskController`**
 
 Write `components/service-task/src/task/task.controller.ts`:
 
@@ -531,7 +531,7 @@ export class TaskController {
 }
 ```
 
-- [ ] **Step 8: Wire the module**
+- [x] **Step 8: Wire the module**
 
 Write `components/service-task/src/task/task.module.ts`:
 
@@ -589,12 +589,12 @@ async function bootstrap() {
 bootstrap();
 ```
 
-- [ ] **Step 9: Run typecheck**
+- [x] **Step 9: Run typecheck**
 
 Run: `pnpm --filter @psykl/service-task typecheck`
 Expected: PASS.
 
-- [ ] **Step 10: Smoke-run the dev server (without the guard — DevTask 3b adds it)**
+- [x] **Step 10: Smoke-run the dev server (without the guard — DevTask 3b adds it)**
 
 Run: `pnpm --filter @psykl/service-task dev`
 Expected: logs `service-task listening on http://0.0.0.0:3000` and pglite init logs.
@@ -609,7 +609,7 @@ Expected: a JSON response with `id`, `user_id` (`undefined` since guard isn't wi
 
 Stop the dev server (Ctrl-C).
 
-- [ ] **Step 11: Commit DevTask 3a**
+- [x] **Step 11: Commit DevTask 3a**
 
 ```bash
 git add components/service-task/ pnpm-lock.yaml

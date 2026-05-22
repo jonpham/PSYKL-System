@@ -19,7 +19,7 @@
   },
   "files": ["dist", "src"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json --tsBuildInfoFile dist/tsconfig.tsbuildinfo",
     "lint": "eslint . --max-warnings 0",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
