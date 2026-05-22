@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { UserIdGuard } from './auth/user-id.guard.js';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
@@ -9,6 +10,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'X-User-Id'],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   });
+  app.useGlobalGuards(new UserIdGuard());
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, '0.0.0.0');

@@ -5,11 +5,11 @@
 **Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution started
 **Active spec:** M1 Spec 2/6 service-task minimal API (`docs/specs/m1-bootstrap/20260520-S2-service-task-minimal-api.md`)
-**Active plan:** Executing Spec 2, DevTask 3a/3: NestJS handlers + module wiring
+**Active plan:** Executing Spec 2, DevTask 3b/3: Global `UserIdGuard`, OpenAPI emission, Component contract tests
 **Active skill:** `superpowers:executing-plans`
-**Branch:** `feat/service-task-nestjs-handlers` (DevTask 3a branch off current `main`; remaining Spec 2 DevTasks will use stacked PRs by explicit user override)
-**Current step:** DevTask 3a implementation complete locally; committing and preparing a stacked PR workflow for DevTask 3b next.
-**Next action:** Review/push/open the DevTask 3a PR, then start DevTask 3b (`UserIdGuard`, OpenAPI emission, Component contract tests) stacked on `feat/service-task-nestjs-handlers`.
+**Branch:** `feat/service-task-user-id-guard-and-openapi` (stacked on `feat/service-task-nestjs-handlers` by explicit user override)
+**Current step:** DevTask 3b implementation complete locally; committing and opening a stacked PR against `feat/service-task-nestjs-handlers`.
+**Next action:** Review/merge PR #14 first, then review the stacked DevTask 3b PR; after both merge, close out Spec 2 with the feature doc and final frontmatter updates.
 **Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 **Next action (for the next agent or you):**
   1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).
