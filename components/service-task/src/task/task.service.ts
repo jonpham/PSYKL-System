@@ -12,10 +12,7 @@ export class TaskService {
 
   async createTask(userId: string, input: TaskInput): Promise<TaskResponse> {
     const id = uuidv7();
-    const [row] = await this.db
-      .insert(schema.tasks)
-      .values({ id, userId, title: input.title })
-      .returning();
+    const [row] = await this.db.insert(schema.tasks).values({ id, userId, title: input.title }).returning();
 
     if (!row) {
       throw new Error('Insert returned no row');

@@ -33,9 +33,7 @@ describe('TaskService', () => {
   it('generates a UUID v7 id when creating a Task', async () => {
     const created = await service.createTask('local', { title: 'hello' });
 
-    expect(created.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    );
+    expect(created.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
   });
 
   it('passes the user_id from the guard, not from the request body', async () => {

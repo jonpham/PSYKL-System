@@ -6,8 +6,8 @@ completed_at:
 created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 2
-devtasks_total: 3
-devtasks_complete: 3
+devtasks_total: 4
+devtasks_complete: 4
 honors_decisions: [2, 2b, 4, 8, 13, 19, 20, 24, 25, 29, 31, 32]
 ---
 
@@ -23,7 +23,7 @@ honors_decisions: [2, 2b, 4, 8, 13, 19, 20, 24, 25, 29, 31, 32]
 
 **Reads from:** `docs/initiatives/m1-bootstrap/DESIGN.md` Decisions appendix. Honors decisions #2 (NestJS), #2b (Zod schema-first), #4 (Drizzle), #8 (pglite), #13 (Drizzle directory layout), #19 (UUID v7), #20 (timestamptz + DB default), #24 (pnpm script contract), #25 (PGLITE_DATA_DIR env), #29 (CORS allowed headers), #31 (text column for id), #32 (node:24-bookworm-slim — applies in Spec 4's Dockerfile).
 
-**Execution order:** DevTask 4 (Drizzle + schema + migration) lands FIRST so DevTask 3a's TaskService has real persistence to test against. Original global numbering (3a → 3b → 4) retained for cross-doc consistency; execution order is 4 → 3a → 3b.
+**Execution order:** DevTask 4 (Drizzle + schema + migration) lands FIRST so DevTask 3a's TaskService has real persistence to test against. Original global numbering (3a → 3b → 4) retained for cross-doc consistency; execution order is 4 → 3a → 3b. DevTask 3c was added during execution to close the Static Analysis gap before Spec 5 CI consumes `lint` and `format:check`.
 
 ---
 
@@ -916,13 +916,54 @@ Push, open PR, merge.
 
 ---
 
-## Spec 2 Verification (after all 3 DevTasks merge)
+## Task 3c: ESLint + Prettier static analysis
+
+**Files (added on top of DevTasks 4 + 3a + 3b):**
+- Create: `/Users/jp/code/psykl/eslint.config.js`
+- Create: `/Users/jp/code/psykl/prettier.config.js`
+- Create: `/Users/jp/code/psykl/.prettierignore`
+- Modify: `/Users/jp/code/psykl/package.json` (add shared static-analysis dev dependencies)
+- Modify: `/Users/jp/code/psykl/components/service-task/package.json` (make `format:check` use the root ignore file)
+- Modify: `/Users/jp/code/psykl/packages/shared-types/package.json` (make `format:check` use the root ignore file)
+- Format: existing `service-task` and `shared-types` files that fail the new Prettier check
+
+Start DevTask 3c on a branch stacked on `feat/service-task-user-id-guard-and-openapi`: `git checkout -b feat/service-task-static-analysis`.
+
+- [x] **Step 1: Verify existing static-analysis scripts fail**
+
+Run: `pnpm --filter @psykl/service-task lint`, `pnpm --filter @psykl/service-task format:check`, `pnpm --filter @psykl/shared-types lint`, and `pnpm --filter @psykl/shared-types format:check`.
+Expected before implementation: FAIL because `eslint` and `prettier` are not installed/configured.
+
+- [x] **Step 2: Add ESLint + Prettier dependencies and root configs**
+
+Install root dev dependencies: `eslint`, `@eslint/js`, `typescript-eslint`, `prettier`, and `globals`.
+Add root `eslint.config.js`, `prettier.config.js`, and `.prettierignore`.
+
+- [x] **Step 3: Run lint and format checks**
+
+Run package-level and recursive checks. Format existing files where required.
+Expected: `pnpm -r lint` and `pnpm -r format:check` both PASS.
+
+- [x] **Step 4: Run regression verification**
+
+Run service unit, integration, component, typecheck, build, and OpenAPI generation.
+Expected: PASS.
+
+- [x] **Step 5: Commit DevTask 3c**
+
+Commit as a stacked PR after DevTask 3b.
+
+---
+
+## Spec 2 Verification (after all 4 DevTasks merge)
 
 - [ ] **Step 1: End-to-end smoke against a fresh clone**
 
 ```bash
 git clone <repo-url> /tmp/psykl-smoke && cd /tmp/psykl-smoke
 pnpm install
+pnpm -r lint
+pnpm -r format:check
 pnpm --filter @psykl/service-task test:unit
 pnpm --filter @psykl/service-task test:integration
 pnpm --filter @psykl/service-task test:component
@@ -937,4 +978,4 @@ kill %1
 
 - [ ] **Step 2: Close out the Spec**
 
-When DevTask 3b's PR merges, set frontmatter `status: DONE`, `devtasks_complete: 3`, populate `branches:` and `prs:` lists. Promote `docs/initiatives/m1-bootstrap/issues/[20260520]P2_m1-service-task-minimal-api.md` to `docs/features/` updating its frontmatter and adding Change Log entries for the 3 merged PRs.
+When DevTask 3c's PR merges, set frontmatter `status: DONE`, `devtasks_complete: 4`, populate `branches:` and `prs:` lists. Promote `docs/initiatives/m1-bootstrap/issues/[20260520]P2_m1-service-task-minimal-api.md` to `docs/features/` updating its frontmatter and adding Change Log entries for the 4 merged PRs.

@@ -32,18 +32,12 @@ describe('TaskController contract', () => {
       user_id: 'local',
       title: 'first task',
     });
-    expect(res.body.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    );
+    expect(res.body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(typeof res.body.created_at).toBe('string');
   });
 
   it('POST /tasks with empty title returns 400', async () => {
-    await request(app.getHttpServer())
-      .post('/tasks')
-      .set('X-User-Id', 'local')
-      .send({ title: '' })
-      .expect(400);
+    await request(app.getHttpServer()).post('/tasks').set('X-User-Id', 'local').send({ title: '' }).expect(400);
   });
 
   it('POST /tasks with extra fields returns 400 (strict schema)', async () => {
