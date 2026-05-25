@@ -4,12 +4,12 @@
 
 **Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution started
-**Active spec:** M1 Spec 2/6 service-task minimal API (`docs/specs/m1-bootstrap/20260520-S2-service-task-minimal-api.md`)
-**Active plan:** Executing Spec 2, DevTask 3c/4: ESLint + Prettier static analysis
-**Active skill:** `superpowers:executing-plans`
-**Branch:** `feat/service-task-static-analysis` (stacked on `feat/service-task-user-id-guard-and-openapi` by explicit user override)
-**Current step:** DevTask 3c implementation complete locally; committing and opening a stacked PR against `feat/service-task-user-id-guard-and-openapi`.
-**Next action:** Review/merge PR #15 first, then review the stacked DevTask 3c PR; after all Spec 2 PRs merge, close out Spec 2 with the feature doc and final frontmatter updates.
+**Active spec:** M1 Spec 3/6 web_client minimal PWA (`docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md`)
+**Active plan:** Spec 1 and Spec 2 implementation complete; closeout docs prepared. Next execution target is Spec 3, DevTask 5/6: Vite + React PWA scaffold.
+**Active skill:** none active — next execution should use `superpowers:executing-plans`
+**Branch:** `chore/m1-spec1-spec2-closeout` (closeout branch from `origin/main`)
+**Current step:** Spec 1 and Spec 2 feature docs created; spec frontmatter updated to `DONE`; awaiting PR review/merge.
+**Next action:** Merge closeout PR, then start M1 Spec 3 from a fresh local worktree branch off updated `main`.
 **Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 **Next action (for the next agent or you):**
   1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).

@@ -1,8 +1,17 @@
 ---
-status: IN-PROGRESS
+status: DONE
 issue: P2
-pr:
-completed_at:
+branches:
+  - infra/service-task-drizzle-schema
+  - feat/service-task-nestjs-handlers
+  - feat/service-task-user-id-guard-and-openapi
+  - feat/service-task-static-analysis
+prs:
+  - https://github.com/jonpham/PSYKL-System/pull/12
+  - https://github.com/jonpham/PSYKL-System/pull/14
+  - https://github.com/jonpham/PSYKL-System/pull/15
+  - https://github.com/jonpham/PSYKL-System/pull/16
+completed_at: 2026-05-25
 created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 2

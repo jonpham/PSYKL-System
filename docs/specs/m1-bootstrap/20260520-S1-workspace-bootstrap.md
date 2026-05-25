@@ -1,8 +1,14 @@
 ---
-status: IN-PROGRESS
+status: DONE
 issue: P1
-pr:
-completed_at:
+branches:
+  - infra/m1-workspace-bootstrap
+  - chore/shared-types-zod-schemas
+prs:
+  - https://github.com/jonpham/PSYKL-System/pull/10
+  - https://github.com/jonpham/PSYKL-System/pull/11
+  - https://github.com/jonpham/PSYKL-System/pull/13
+completed_at: 2026-05-25
 created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 1
