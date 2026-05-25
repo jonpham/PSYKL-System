@@ -16,12 +16,11 @@ export class TaskController {
     @Req() req: RequestWithUser,
     @Body(new ZodValidationPipe(TaskInputSchema)) body: TaskInput,
   ): Promise<TaskResponse> {
-    // DevTask 3b replaces this local fallback with the global UserIdGuard.
-    return this.tasks.createTask(req.userId ?? 'local', body);
+    return this.tasks.createTask(req.userId!, body);
   }
 
   @Get()
   async list(@Req() req: RequestWithUser): Promise<TaskResponse[]> {
-    return this.tasks.listTasks(req.userId ?? 'local');
+    return this.tasks.listTasks(req.userId!);
   }
 }

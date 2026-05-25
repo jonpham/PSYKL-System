@@ -7,7 +7,7 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 2
 devtasks_total: 3
-devtasks_complete: 2
+devtasks_complete: 3
 honors_decisions: [2, 2b, 4, 8, 13, 19, 20, 24, 25, 29, 31, 32]
 ---
 
@@ -639,7 +639,7 @@ Push, open PR, merge.
 
 Start DevTask 3b on a fresh branch off `main`: `git checkout main && git pull && git checkout -b feat/service-task-user-id-guard-and-openapi`.
 
-- [ ] **Step 1: Write failing contract test for `UserIdGuard`**
+- [x] **Step 1: Write failing contract test for `UserIdGuard`**
 
 Write `components/service-task/src/auth/user-id.guard.contract.test.ts`:
 
@@ -684,12 +684,12 @@ describe('UserIdGuard (Component-layer contract)', () => {
 });
 ```
 
-- [ ] **Step 2: Run the contract test to verify it fails**
+- [x] **Step 2: Run the contract test to verify it fails**
 
 Run: `pnpm --filter @psykl/service-task test:component`
 Expected: FAIL — "Cannot find module './user-id.guard'".
 
-- [ ] **Step 3: Implement `UserIdGuard`**
+- [x] **Step 3: Implement `UserIdGuard`**
 
 Write `components/service-task/src/auth/user-id.guard.ts`:
 
@@ -730,7 +730,7 @@ export class UserIdGuard implements CanActivate {
 }
 ```
 
-- [ ] **Step 4: Register the guard globally**
+- [x] **Step 4: Register the guard globally**
 
 Modify `components/service-task/src/main.ts`. Replace the bootstrap function with:
 
@@ -755,12 +755,12 @@ async function bootstrap() {
 bootstrap();
 ```
 
-- [ ] **Step 5: Run the contract test to verify it passes**
+- [x] **Step 5: Run the contract test to verify it passes**
 
 Run: `pnpm --filter @psykl/service-task test:component`
 Expected: PASS — all 4 UserIdGuard contract tests green.
 
-- [ ] **Step 6: Write controller contract tests (positive paths)**
+- [x] **Step 6: Write controller contract tests (positive paths)**
 
 Write `components/service-task/src/task/task.controller.contract.test.ts`:
 
@@ -833,12 +833,12 @@ describe('TaskController contract', () => {
 });
 ```
 
-- [ ] **Step 7: Run contract tests**
+- [x] **Step 7: Run contract tests**
 
 Run: `pnpm --filter @psykl/service-task test:component`
 Expected: PASS — all UserIdGuard + TaskController contract tests green.
 
-- [ ] **Step 8: Write the OpenAPI build script**
+- [x] **Step 8: Write the OpenAPI build script**
 
 Write `components/service-task/scripts/build-openapi.ts`:
 
@@ -855,17 +855,17 @@ const doc = buildOpenApiDocument();
 process.stdout.write(JSON.stringify(doc, null, 2));
 ```
 
-- [ ] **Step 9: Run the OpenAPI emission**
+- [x] **Step 9: Run the OpenAPI emission**
 
 Run: `pnpm --filter @psykl/service-task build:openapi`
 Expected: creates `components/service-task/openapi.json`. Inspect with `cat components/service-task/openapi.json | jq '.paths | keys'`. Should output `["/tasks"]`. Check `cat components/service-task/openapi.json | jq '.components.schemas | keys'` — should show `["Task", "TaskInput"]`.
 
-- [ ] **Step 10: Verify `.gitignore` is excluding the emitted artifact**
+- [x] **Step 10: Verify `.gitignore` is excluding the emitted artifact**
 
 Run: `git check-ignore components/service-task/openapi.json && echo "IGNORED" || echo "NOT IGNORED"`
 Expected: `IGNORED` (the root `.gitignore` from DevTask 1 has `**/openapi.json`).
 
-- [ ] **Step 11: Manual end-to-end smoke test**
+- [x] **Step 11: Manual end-to-end smoke test**
 
 Run: `pnpm --filter @psykl/service-task dev`. In another terminal:
 
@@ -896,7 +896,7 @@ curl -s http://localhost:3000/tasks -H "X-User-Id: local"
 
 Stop the dev server.
 
-- [ ] **Step 12: Commit DevTask 3b**
+- [x] **Step 12: Commit DevTask 3b**
 
 ```bash
 git add components/service-task/
