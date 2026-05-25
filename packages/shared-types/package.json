@@ -17,11 +17,14 @@
       "import": "./dist/openapi.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json --tsBuildInfoFile dist/tsconfig.tsbuildinfo",
     "lint": "eslint . --max-warnings 0",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check . --ignore-path ../../.prettierignore",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --reporter=verbose",
     "test:integration": "echo 'no integration tests' && exit 0",

@@ -9,7 +9,7 @@
     "dev": "pnpm --filter @psykl/shared-types build && tsx watch src/main.ts",
     "start": "node dist/main.js",
     "lint": "eslint . --max-warnings 0",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check . --ignore-path ../../.prettierignore",
     "typecheck": "pnpm --filter @psykl/shared-types build && tsc --noEmit",
     "test:unit": "vitest run --reporter=verbose src/**/*.unit.test.ts",
     "test:integration": "vitest run --reporter=verbose tests/integration",
