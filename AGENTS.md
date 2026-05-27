@@ -103,7 +103,7 @@ Every test file lives in a predictable place so a single CI glob catches each la
 | Static Analysis | Configured at component or package root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents). | n/a — runs against all source | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
 | Unit | **Colocated** next to the source it tests, inside `src/`. | `*.unit.test.ts` / `*.unit.test.tsx` | `pnpm -r test:unit` |
 | Integration | Per-component, in a top-level `tests/integration/` directory. For packages with no service-level integration concerns (e.g. `packages/shared-types`), this layer is skipped. | `*.integration.test.ts` | `pnpm -r test:integration` |
-| Component | **Colocated** next to the boundary it verifies. For services, contract tests live next to the controller. For UI applications, **UI Component tests** drive the UI Components against stubbed back-ends using Vitest + Testing Library (the project's default UI Component-test toolchain). | `*.contract.test.ts` (services) / `*.component.test.tsx` (UI apps — UI Component tests) | `pnpm -r test:component` |
+| Component | **Colocated** next to the boundary it verifies. For services, contract tests live next to the controller. For UI applications, **UI Component tests** drive the UI Components against stubbed back-ends using **Storybook 8 + `@storybook/test-runner` (CLI) + play functions**, with **`msw-storybook-addon`** for HTTP stubbing — the project's default UI Component-test toolchain (per M1 DESIGN.md Decision #33 / #34 re-open). The retired `*.component.test.tsx` Vitest pattern is no longer used for UI applications. | `*.contract.test.ts` (services) / `*.stories.tsx` with play functions (UI apps — UI Component tests) | `pnpm -r test:component` |
 | End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs. | `*.e2e.spec.ts` | `pnpm test:e2e` (root-level script) |
 
 Concrete example:
@@ -129,7 +129,7 @@ components/web_client/
       TaskList/
         TaskList.tsx
         TaskList.unit.test.tsx                 ← Unit (UI Component in isolation)
-        TaskList.component.test.tsx            ← UI Component test (UI driven with stubbed backend)
+        TaskList.stories.tsx                   ← UI Component test (Storybook play function, MSW-stubbed backend)
         index.ts                               (re-exports TaskList)
 
 e2e/
@@ -146,7 +146,7 @@ Every UI Component gets **its own directory** from the moment it is created. No 
 src/components/<ComponentName>/
   <ComponentName>.tsx
   <ComponentName>.unit.test.tsx
-  <ComponentName>.component.test.tsx     (or .stories.tsx + play function once Storybook lands — DT8)
+  <ComponentName>.stories.tsx            (Storybook story + play function — Component-layer UI test, per DESIGN.md #33/#34)
   index.ts                               (re-exports <ComponentName>)
 ```
 
