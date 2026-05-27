@@ -7,7 +7,11 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['src/test/setup.ts'],
-    include: ['src/**/*.unit.test.tsx', 'src/**/*.component.test.tsx'],
+    // UI Component-layer tests now live in `*.stories.tsx` play functions
+    // (per M1 DESIGN.md Decision #33 / #34 re-open). Vitest only matches Unit
+    // tests for web_client; `pnpm test:component` is wired to Storybook's
+    // `@storybook/test-runner` CLI instead.
+    include: ['src/**/*.unit.test.tsx'],
     testTimeout: 10_000,
   },
 });
