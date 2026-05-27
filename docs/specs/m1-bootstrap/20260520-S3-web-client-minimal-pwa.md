@@ -8,7 +8,7 @@ initiative: m1-bootstrap
 spec_number: 3
 devtasks_total: 2
 devtasks_complete: 1
-branch: feat/web-client-pwa-shell
+branch: feat/web-client-task-ui-from-pwa-shell
 honors_decisions: [3, 11, 12, 14, 15, 22, 24, 33]
 ---
 
@@ -381,9 +381,11 @@ Push, open PR, merge.
 - Modify: `/Users/jp/code/psykl/components/web_client/src/App.tsx` (mount the Task UI in the slot)
 - Modify: `/Users/jp/code/psykl/components/web_client/src/test/setup.ts` (register handlers)
 
-Start DevTask 6 on a branch off `main`: `git checkout main && git pull && git checkout -b feat/web-client-task-ui`.
+Execution note: Per user correction during execution, DevTask 6 continues from the tip of DevTask 5 branch `feat/web-client-pwa-shell` and opens a stacked Pull Request into that branch. Do not merge the Pull Request without explicit user approval in the current session.
 
-- [ ] **Step 1: Generate API types**
+Start DevTask 6 on a branch off `feat/web-client-pwa-shell`: `git fetch origin && git checkout -b feat/web-client-task-ui-from-pwa-shell origin/feat/web-client-pwa-shell`.
+
+- [x] **Step 1: Generate API types**
 
 The `codegen` script needs `components/service-task/openapi.json` to exist. If Spec 2 has merged, run:
 
@@ -394,7 +396,7 @@ pnpm --filter @psykl/web-client codegen
 
 Expected: creates `components/web_client/src/api/types.ts` (gitignored). Inspect: `head -20 components/web_client/src/api/types.ts`. Should contain `export interface paths { "/tasks": { ... } }`.
 
-- [ ] **Step 2: Create the API client**
+- [x] **Step 2: Create the API client**
 
 Write `components/web_client/src/api/client.ts`:
 
@@ -420,7 +422,7 @@ export type Task = paths['/tasks']['get']['responses']['200']['content']['applic
 export type TaskInput = paths['/tasks']['post']['requestBody']['content']['application/json'];
 ```
 
-- [ ] **Step 3: Write MSW handlers**
+- [x] **Step 3: Write MSW handlers**
 
 Write `components/web_client/src/test/msw-handlers.ts`:
 
@@ -464,7 +466,7 @@ export const handlers = [
 ];
 ```
 
-- [ ] **Step 4: Wire MSW into `src/test/setup.ts`**
+- [x] **Step 4: Wire MSW into `src/test/setup.ts`**
 
 Replace `src/test/setup.ts` contents with:
 
@@ -482,7 +484,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 ```
 
-- [ ] **Step 5: Write failing Unit + Component tests for `TaskCreateForm`**
+- [x] **Step 5: Write failing Unit + Component tests for `TaskCreateForm`**
 
 Write `components/web_client/src/components/TaskCreateForm.unit.test.tsx`:
 
@@ -549,7 +551,7 @@ describe('TaskCreateForm (Component, with MSW)', () => {
 });
 ```
 
-- [ ] **Step 6: Run tests to confirm failure**
+- [x] **Step 6: Run tests to confirm failure**
 
 ```bash
 pnpm --filter @psykl/web-client test:unit
@@ -558,7 +560,7 @@ pnpm --filter @psykl/web-client test:component
 
 Expected: FAIL — "Cannot find module './TaskCreateForm'".
 
-- [ ] **Step 7: Implement `TaskCreateForm`**
+- [x] **Step 7: Implement `TaskCreateForm`**
 
 Write `components/web_client/src/components/TaskCreateForm.tsx`:
 
@@ -612,7 +614,7 @@ export function TaskCreateForm({ onCreated }: Props) {
 }
 ```
 
-- [ ] **Step 8: Run TaskCreateForm tests, confirm pass**
+- [x] **Step 8: Run TaskCreateForm tests, confirm pass**
 
 ```bash
 pnpm --filter @psykl/web-client test:unit
@@ -621,7 +623,7 @@ pnpm --filter @psykl/web-client test:component
 
 Expected: PASS — TaskCreateForm tests green; TaskList tests fail (don't exist yet).
 
-- [ ] **Step 9: Write failing Unit + Component tests for `TaskList`**
+- [x] **Step 9: Write failing Unit + Component tests for `TaskList`**
 
 Write `components/web_client/src/components/TaskList.unit.test.tsx`:
 
@@ -689,7 +691,7 @@ describe('TaskList (Component, integrated with TaskCreateForm via MSW)', () => {
 });
 ```
 
-- [ ] **Step 10: Run tests, confirm failure**
+- [x] **Step 10: Run tests, confirm failure**
 
 ```bash
 pnpm --filter @psykl/web-client test:unit
@@ -698,7 +700,7 @@ pnpm --filter @psykl/web-client test:component
 
 Expected: FAIL — "Cannot find module './TaskList'" + the App.tsx slot doesn't render the Task UI yet.
 
-- [ ] **Step 11: Implement `TaskList`**
+- [x] **Step 11: Implement `TaskList`**
 
 Write `components/web_client/src/components/TaskList.tsx`:
 
@@ -730,7 +732,7 @@ export function TaskList({ tasks, loading, error }: Props) {
 }
 ```
 
-- [ ] **Step 12: Wire the Task UI into `App.tsx`**
+- [x] **Step 12: Wire the Task UI into `App.tsx`**
 
 Replace `components/web_client/src/App.tsx`:
 
@@ -773,7 +775,7 @@ export default function App() {
 }
 ```
 
-- [ ] **Step 13: Run all tests, confirm pass**
+- [x] **Step 13: Run all tests, confirm pass**
 
 ```bash
 pnpm --filter @psykl/web-client test:unit
@@ -782,7 +784,7 @@ pnpm --filter @psykl/web-client test:component
 
 Expected: PASS — all TaskCreateForm + TaskList + App tests green. The original App shell tests from DevTask 5 may need a minor update (the "renders heading" test still passes; the task-ui-slot still exists).
 
-- [ ] **Step 14: Manual smoke test against the real service-task**
+- [x] **Step 14: Manual smoke test against the real service-task**
 
 Open two terminals. In one: `pnpm --filter @psykl/service-task dev`. In the other: `pnpm --filter @psykl/web-client dev`.
 
@@ -796,7 +798,9 @@ Browse to `http://localhost:5173`. Expected:
 
 Stop both servers.
 
-- [ ] **Step 15: Verify typecheck and build**
+Execution note: The in-app browser runtime was unavailable in this session, so the live-stack smoke used `curl` against the real `service-task` API and Vite-served app page. The UI create/list flow was verified by Component-layer tests with Mock Service Worker.
+
+- [x] **Step 15: Verify typecheck and build**
 
 ```bash
 pnpm --filter @psykl/service-task build:openapi   # ensure openapi.json exists
@@ -807,7 +811,7 @@ pnpm --filter @psykl/web-client build
 
 Expected: all pass; `components/web_client/dist/` created.
 
-- [ ] **Step 16: Commit DevTask 6**
+- [x] **Step 16: Commit DevTask 6**
 
 ```bash
 git add components/web_client/src/api/client.ts \
