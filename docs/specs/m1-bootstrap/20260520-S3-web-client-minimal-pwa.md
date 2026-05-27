@@ -7,7 +7,7 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 3
 devtasks_total: 4
-devtasks_complete: 1
+devtasks_complete: 2
 branch: feat/web-client-task-ui-from-pwa-shell
 honors_decisions: [3, 11, 12, 14, 15, 22, 24, 33]
 ---
