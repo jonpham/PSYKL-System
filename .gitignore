@@ -42,3 +42,7 @@ worktrees/
 coverage/
 playwright-report/
 test-results/
+
+# Storybook
+storybook-static/
+**/storybook-static/

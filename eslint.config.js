@@ -11,6 +11,8 @@ export default [
       '**/drizzle/migrations/**',
       '**/openapi.json',
       '**/tsconfig.tsbuildinfo',
+      '**/storybook-static/**',
+      '**/public/mockServiceWorker.js',
     ],
   },
   js.configs.recommended,
