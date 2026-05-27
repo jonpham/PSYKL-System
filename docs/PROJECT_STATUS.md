@@ -2,14 +2,14 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed plan & task:** `superpowers:writing-plans` produced 6 implementation plans at `docs/specs/m1-bootstrap/`
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution started
-**Active spec:** M1 Spec 3/6 web_client minimal PWA (`docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md`)
-**Active plan:** Spec 3, DevTask 6/6: Task UI consuming `service-task` API.
-**Active skill:** `superpowers:executing-plans`
-**Branch:** `feat/web-client-task-ui-from-pwa-shell` from `origin/feat/web-client-pwa-shell`
-**Current step:** DevTask 6 implementation complete locally; opening a Pull Request against `feat/web-client-pwa-shell` without merging.
-**Next action:** Review DevTask 6 Pull Request. Do not merge any Pull Request without explicit user approval in the current session.
+**Last completed plan & task:** Spec 3 DT6 (web_client Task UI) implementation pushed; PR #23 awaiting review/merge into the Spec integration branch.
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution in progress
+**Active spec:** M1 Spec 3/6 web_client minimal PWA (`docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md`) — **functional baseline complete**: DT5 (PWA shell, #19) merged + DT6 (Task UI consuming service-task, #23) implementation pushed and green across the local static-analysis + test pyramid (typecheck, lint, format:check, 9 unit tests, 3 UI Component tests). Two quality DevTasks pending, both added from PR #23 review: **DT7** Husky pre-commit static-analysis gate; **DT8** Storybook + `@storybook/test-runner` + play functions (supersedes M1 DESIGN.md Decision #33 and AGENTS.md UI Component-test toolchain note).
+**Active plan:** Spec 3 — DT5 merged (#19) ✅, DT6 pushed in #23 (awaiting merge), DT7 + DT8 not started.
+**Active skill:** `superpowers:executing-plans` (for the pending Spec 3 DevTasks). Note: `superpowers:writing-plans` already wrote the Step-by-Step breakdowns for DT7 and DT8 inline in the Spec 3 doc on 2026-05-27.
+**Branch:** `feat/web-client-task-ui-from-pwa-shell` rooted on Spec 3 integration branch `spec/m1-s3-web-client-minimal-pwa`. Spec integration PR #21 targets `main`.
+**Current step:** Spec 3 functional baseline merged-ready. UI Components refactored to per-component folder layout (`src/components/<Name>/`) per the AGENTS.md → UI Component Folder Layout rule introduced from PR #23 review (commit `134df1b`).
+**Next action:** (1) Review and merge PR #23 → `spec/m1-s3-web-client-minimal-pwa`. (2) Branch and execute DT7 (`chore/m1-s3-dt7-husky-precommit`). (3) Branch and execute DT8 (`feat/m1-s3-dt8-storybook-play-tests`) — Step 1 of DT8 updates M1 DESIGN.md Decision #33 and AGENTS.md Test File Location row before any code. (4) After DT8 merges, finalize Spec PR #21 → `main`, write the Spec 3 feature doc under `docs/features/`, then start Spec 4 (local dev stack). Do NOT merge any Pull Request without explicit user approval in the current session.
 **Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 **Next action (for the next agent or you):**
   1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).
