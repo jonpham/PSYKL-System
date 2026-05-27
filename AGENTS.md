@@ -80,18 +80,18 @@ Output the following before stopping:
 - **The full test pyramid is established from Milestone 1 and maintained throughout the project's life.** Five layers, ordered fastest-at-base to slowest-at-top. Every Pull Request runs the full pyramid in CI:
 
   1. **Static Analysis** — language- and framework-specific tools for linting, formatting, code-style enforcement, compilation, and type-checking. Examples by component: TypeScript components use ESLint + Prettier + `tsc`; Swift components use SwiftLint + swift-format + the Swift compiler; other languages bring their equivalents. Runs FIRST in every Pull Request; failure blocks every other test layer from running.
-  2. **Unit** — pure functions, classes, and small UI widgets tested in isolation (e.g. a single React component or a single SwiftUI view). No I/O, no network. Fast.
+  2. **Unit** — pure functions, classes, and small UI Components tested in isolation (e.g. a single React UI Component or a single SwiftUI view). No I/O, no network. Fast.
   3. **Integration** — multi-module interactions within ONE system component: API handler + database, middleware + handler, store + reducer. In-process dependencies are real (in-process pglite in M1, per `docs/initiatives/m1-bootstrap/DESIGN.md` Decision #8); external services not yet involved. Also includes Multi UI Component storybook tests.
   4. **Component** — the SYSTEM component tested as a black box against its boundaries.
      - For a service (`service-task`): API contract testing — status codes, response shapes, header enforcement (including the `user_id` default-deny posture).
-     - For a UI application (`web_client` PWA, `ios_client` native): drive the UI against mocked / faked / stubbed back-end services. The component is exercised end-to-end within itself, with its dependencies controlled.
+     - For a UI application (`web_client` PWA, `ios_client` native): drive the UI Components against mocked / faked / stubbed back-end services. The system component (the UI application) is exercised end-to-end within itself, with its dependencies controlled. These are **UI Component tests**.
   5. **End-to-End (E2E)** — the entire stack running together (the Docker Compose deployment, or its equivalent for native clients), driven by the actual client. **Client-specific tooling**:
      - PWA → browser driver (e.g. Playwright).
      - iOS / iPadOS / macOS native → simulator or real-device driver (e.g. XCUITest or a Swift Testing harness).
      - Future client surfaces use whichever driver matches the platform.
 
 - **Tests live in the same Pull Request as the implementation they cover.** A spec proposing implementation without corresponding tests is a violation of the working agreement and must be rejected at review.
-- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-process pglite in M1; whichever in-process database the active initiative's DESIGN.md selects); E2E tests run against the real Docker Compose stack (or equivalent); mocks at Component boundaries are explicit and intentional (services not in the project's control, or back-ends being faked for UI component tests). Mocking core domain logic is a smell.
+- **Tests must exercise real behavior, not stubs.** Integration tests touch real databases (in-process pglite in M1; whichever in-process database the active initiative's DESIGN.md selects); E2E tests run against the real Docker Compose stack (or equivalent); mocks at Component-layer boundaries are explicit and intentional (services not in the project's control, or back-ends being faked for UI Component tests). Mocking core domain logic is a smell.
 - **Negative-path tests are required where the design calls for default-deny behavior** (e.g., the `user_id` middleware in Milestone 1 must have Component-layer contract tests proving requests without proper headers are rejected).
 
 #### Test File Location Convention
@@ -103,7 +103,7 @@ Every test file lives in a predictable place so a single CI glob catches each la
 | Static Analysis | Configured at component or package root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents). | n/a — runs against all source | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
 | Unit | **Colocated** next to the source it tests, inside `src/`. | `*.unit.test.ts` / `*.unit.test.tsx` | `pnpm -r test:unit` |
 | Integration | Per-component, in a top-level `tests/integration/` directory. For packages with no service-level integration concerns (e.g. `packages/shared-types`), this layer is skipped. | `*.integration.test.ts` | `pnpm -r test:integration` |
-| Component | **Colocated** next to the boundary it verifies (e.g., contract test next to the controller). For UI applications, use Vitest + Testing Library (the project's default Component-layer toolchain). | `*.contract.test.ts` (services) / `*.component.test.tsx` (UI apps) | `pnpm -r test:component` |
+| Component | **Colocated** next to the boundary it verifies. For services, contract tests live next to the controller. For UI applications, **UI Component tests** drive the UI Components against stubbed back-ends using Vitest + Testing Library (the project's default UI Component-test toolchain). | `*.contract.test.ts` (services) / `*.component.test.tsx` (UI apps — UI Component tests) | `pnpm -r test:component` |
 | End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs. | `*.e2e.spec.ts` | `pnpm test:e2e` (root-level script) |
 
 Concrete example:
@@ -126,9 +126,11 @@ components/service-task/
 components/web_client/
   src/
     components/
-      TaskList.tsx
-      TaskList.unit.test.tsx                   ← Unit (UI widget)
-      TaskList.component.test.tsx              ← Component (UI driven with stubbed backend)
+      TaskList/
+        TaskList.tsx
+        TaskList.unit.test.tsx                 ← Unit (UI Component in isolation)
+        TaskList.component.test.tsx            ← UI Component test (UI driven with stubbed backend)
+        index.ts                               (re-exports TaskList)
 
 e2e/
   m1-task-crud.e2e.spec.ts                     ← End-to-End

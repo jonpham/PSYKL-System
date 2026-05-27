@@ -1,4 +1,4 @@
-import type { Task } from '../api/client';
+import type { Task } from '../../api/client';
 
 interface TaskListProps {
   tasks: Task[];

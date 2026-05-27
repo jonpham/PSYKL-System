@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import App from '../App';
+import App from '../../App';
 
 describe('TaskList (Component, integrated with TaskCreateForm via MSW)', () => {
   it('shows newly created tasks in the list after Create', async () => {

@@ -1,6 +1,6 @@
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { useState } from 'react';
-import { apiClient, taskRequestParams, type Task } from '../api/client';
+import { apiClient, taskRequestParams, type Task } from '../../api/client';
 
 interface TaskCreateFormProps {
   onCreated: (task: Task) => void;
@@ -11,7 +11,7 @@ export function TaskCreateForm({ onCreated }: TaskCreateFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
