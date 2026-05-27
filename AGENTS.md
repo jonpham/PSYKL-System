@@ -134,6 +134,10 @@ e2e/
   m1-task-crud.e2e.spec.ts                     ← End-to-End
 ```
 
+#### Component Folder Nesting Threshold
+
+Default to a flat `src/components/` directory with colocated tests (per the table above). Promote a component to its own folder once it would colocate **≥5 files** (e.g., `.tsx` + `.unit.test.tsx` + `.component.test.tsx` + `.stories.tsx` + a helper or styles module). At that point, move it to `src/components/<ComponentName>/` with a sibling `index.ts` re-export so import paths stay stable. Components with fewer than 5 colocated files stay flat. The threshold balances "too many files in one directory" against "too many nested directories."
+
 ### Design Doc Discipline
 
 - **Candidate lists in initiative/design docs are constraints-first, not options-first.** A design doc must NOT pre-narrow framework, tool, or library choices unless those choices were explicitly discussed during the design session. Carry the constraint set; let candidates surface during the answer pass (typically `/plan-eng-review` or spec drafting).
