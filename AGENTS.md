@@ -140,7 +140,7 @@ e2e/
 - **Acronyms are defined on first use within a doc**, even if defined elsewhere in the project. Each doc is read independently; the glossary travels with the doc or appears inline.
 - **A design doc's Decisions appendix is normative once status is `APPROVED`.** Subsequent skills (`superpowers:writing-plans`, spec authors, executors) MUST treat those decisions as locked. Re-opening a closed decision requires explicit user permission and a new `/plan-eng-review` pass against the affected design doc.
 - **A design doc's Spec / DevTask Breakdown is an authoritative starting suggestion, not a rigid contract.** `superpowers:writing-plans` may adjust DevTask grouping, split a DevTask into more DevTasks, or split a DevTask into multiple Steps — but MUST cover everything the breakdown enumerates and MUST honor the trilemma resolution rule below.
-- **Trilemma resolution (≤10 files per PR vs tests-in-same-PR vs DevTask count):** When three constraints collide, prefer **(C) splitting DevTasks** over (A) bending the ≤10-files rule, and never give on (B) tests-in-same-PR. A design doc's DevTask count is a target, not a ceiling. If a planned DevTask needs >10 files including required test files, split it. The TDD discipline is sacred.
+- **Trilemma resolution (≤10 application-behavior files per DevTask PR vs tests-in-same-PR vs DevTask count):** When three constraints collide, prefer **(C) splitting DevTasks** over (A) bending the ≤10-files rule, and never give on (B) tests-in-same-PR. A design doc's DevTask count is a target, not a ceiling. If a planned DevTask needs >10 application-behavior files including required test files, split it. The TDD discipline is sacred. The file-count rule applies to DevTask PRs only; Spec integration PRs aggregate all DevTask diffs and have no file limit (see Git Conventions → Spec/DevTask branching workflow).
 
 ### API Decision Discipline
 
@@ -241,21 +241,29 @@ Docs live in `docs/`:
 
 ### Git Conventions
 
-- Branch naming: `(feat|bug|infra|chore)/short-description`
-- **Each DevTask branches off `main` and PRs into `main`.** No stacking on prior DevTask branches; no stacking on the initiative planning branch. Initiative planning branches (e.g., `feat/plan-and-bootstrap`) carry only doc-changes and merge to `main` independently before or after DevTasks land.
+- **Branch naming:**
+  - Spec integration branch: `spec/m{N}-s{M}-{spec-slug}` (e.g., `spec/m1-s2-service-task-minimal-api`).
+  - DevTask branch: `(feat|bug|infra|chore)/m{N}-s{M}-dt{K}-{short-slug}` (e.g., `feat/m1-s2-dt3-nestjs-handlers`).
+  - Initiative planning branch: `feat/plan-{initiative-slug}` (e.g., `feat/plan-m2-pwa-crud-offline`); doc-changes only.
+- **Spec/DevTask branching workflow (Spec PRs are long-lived integration branches; DevTask PRs are small reviewable units).**
+  - At the start of each Spec, create `spec/m{N}-s{M}-{slug}` off `main` and open a **draft PR against `main`**. This is the long-lived Spec PR; it stays open until every DevTask in the Spec has merged into the Spec branch, then the Spec PR is finalized and merged into `main` as the whole-Spec review.
+  - Each DevTask branches off the **active Spec integration branch** (not off `main`) and opens a PR **targeting that Spec branch** (not `main`). DevTask PRs are where small focused review happens.
+  - **No stacking of DevTask branches on prior DevTask branches.** All DevTasks within a Spec are siblings rooted on the Spec integration branch. If DevTask K+1 has a hard ordering dependency on DevTask K, K+1's branch waits for K to merge into the Spec branch before being opened.
+  - **Initiative planning branches** (e.g., `feat/plan-m2-pwa-crud-offline`) carry only doc-changes and merge to `main` independently — they are not parented by any Spec branch.
 - Commit messages: Conventional Commits — `feat:`, `fix:`, `chore:`, `docs:`, `test:`
 - NEVER commit directly to `main`; NEVER force push to `main`
 - NEVER force push to `main` or any feature branch tracked by an open PR. If a force-push seems necessary, STOP and provide the command for the user to run manually with precautions.
 - **Exception:** the subtree-sync GitHub Action (per M1 DESIGN.md DevTask 10) force-pushes to the downstream mirror repositories (`jonpham/psykl-{web_client,service-task}`) on every merge to `main`. This is the documented exception — mirror repos are downstream-only and the force-push is the canonical pattern for `git subtree split`. No other force-push is permitted.
 - Always use a feature branch + pull request
 - A feature doc in `docs/features/` is created once **per Spec, not per DevTask** — it consolidates the Spec's outcome and lands with the final DevTask PR of that Spec. Earlier DevTask PRs within the same Spec do NOT need to create or touch a feature doc; they update the spec doc's `## Tasks` checklist instead. The "every PR" rule from older AGENTS.md text is superseded by this per-Spec-completion rule.
-- **Hard limit: ≤10 files changed per PR.** Exemptions: `pnpm-lock.yaml`,
-  `pnpm-workspace.yaml`. If a spec requires more, split it into multiple
-  sequential DevTasks (each its own branch off `main`), each with its own
-  atomic scope (e.g., scaffold → implementation → docs/CI). When writing
-  a spec or plan, design the merge boundaries to fit this limit before
-  drafting steps. **No stacking on prior DevTask branches** (per the
-  branching convention above) — sibling branches off `main` only.
+- **Per-DevTask-PR file limit: ≤10 application-behavior files.** Applies to DevTask PRs (the small reviewable units targeting a Spec branch), NOT to Spec PRs (which aggregate all DevTask diffs and carry no file limit — they are the whole-Spec integration review). The purpose is small focused review per DevTask. When a planned DevTask exceeds the limit, split it into multiple sequential DevTasks (trilemma rule above), each on its own sibling branch off the Spec branch.
+- **Files excluded from the ≤10 count:**
+  - **Lockfiles** — `pnpm-lock.yaml`, `pnpm-workspace.yaml`.
+  - **Documentation files** — anything matching `docs/**`, top-level `README*`, `CHANGELOG*`, `LICENSE*`, `AGENTS.md`, `CLAUDE.md`, and any `**/*.md` accompanying source.
+  - **Code-generated files on these paths** (extend this list as new generators land):
+    - `components/service-task/drizzle/migrations/**` — drizzle-kit output, checked into git for replay (per M1 Decision #13).
+  - **Gitignored files** never appear in PR diffs so do not need an exemption entry (this covers `components/service-task/openapi.json`, `components/web_client/src/api/types.ts`, and the `.pglite-dev/` dev data directory, per M1 Decision #12 and #25).
+- **What "application-behavior files" means in practice.** Source files under `components/*/src/`, `packages/*/src/`, and `e2e/`; configuration files (`*.config.ts`, `package.json`, `Dockerfile`, CI workflow YAML); and any file a reviewer must read to understand the change. Test files at the appropriate pyramid layer are application-behavior files for the purpose of this count — tests-in-same-PR is sacred per Test Discipline, so a DevTask that needs 7 implementation files plus 5 test files is over the limit and must be split.
 
 ### Mono Repo Structure
 
@@ -283,18 +291,17 @@ _Rules for writing and updating feature documents that summarize what has been c
 
 **Feature docs (`docs/features/`):**
 ```
-[{YYYYMMDD}]{ISSUE_REF}_{feature-slug}.md
+[{YYYYMMDD}]{Milestone-ID}_{feature-slug}.md
 
-[20260520]P1_energy-cycle-spec.md          # Planned, no GitHub Issue yet
-[20260520]GH12_energy-cycle-spec.md        # GitHub Issue created
+[20260520]m1_energy-cycle-spec.md
 ```
 
 **Spec docs (`docs/specs/{initiative}/`):**
 ```
-{YYYYMMDD}-S{N}-{spec-slug}.md
+{YYYYMMDD}-Spec{N}-{spec-slug}.md
 
-20260521-S1-workspace-bootstrap.md         # Spec 1 of the initiative
-20260521-S2-service-task-minimal-api.md    # Spec 2 of the initiative
+20260521-Spec1-workspace-bootstrap.md         # Spec 1 of the initiative
+20260521-Spec2-service-task-minimal-api.md    # Spec 2 of the initiative
 ```
 - `YYYYMMDD`: spec creation date (does not change)
 - `S{N}`: Spec number within the parent initiative, matching the initiative's DESIGN.md Spec/DevTask Breakdown table.
