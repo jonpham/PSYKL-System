@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN-PROGRESS
 issue: P3
 pr:
 completed_at:
@@ -7,7 +7,8 @@ created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 3
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
+branch: feat/web-client-pwa-shell
 honors_decisions: [3, 11, 12, 14, 15, 22, 24, 33]
 ---
 
@@ -63,9 +64,11 @@ honors_decisions: [3, 11, 12, 14, 15, 22, 24, 33]
 - Create: all DevTask-5 files in the table above
 - Modify: `/Users/jp/code/psykl/.gitignore` (no changes needed — covered by `**/dist/`, `**/src/api/types.ts` patterns from Spec 1)
 
+**Execution note:** Implemented with Vitest 3.2.4 instead of the planned Vitest 2.x because Vitest 2 pulls Vite 5 types, which conflict with the locked Vite 6 app/tooling decision during `tsc -b`. Deferred `src/test/setup.ts` to DevTask 6, where Mock Service Worker handlers are actually introduced, to keep DevTask 5 inside the PR file limit.
+
 Start DevTask 5 on a branch off `main`: `git checkout main && git pull && git checkout -b feat/web-client-pwa-shell`.
 
-- [ ] **Step 1: Create `package.json`**
+- [x] **Step 1: Create `package.json`**
 
 Write `components/web_client/package.json`:
 
@@ -111,7 +114,7 @@ Write `components/web_client/package.json`:
 }
 ```
 
-- [ ] **Step 2: Create `tsconfig.json` and `tsconfig.node.json`**
+- [x] **Step 2: Create `tsconfig.json`**
 
 `tsconfig.json`:
 
@@ -149,7 +152,7 @@ Write `components/web_client/package.json`:
 }
 ```
 
-- [ ] **Step 3: Create `vite.config.ts`**
+- [x] **Step 3: Create `vite.config.ts`**
 
 ```ts
 import { defineConfig } from 'vite';
@@ -187,7 +190,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Create `vitest.config.ts`**
+- [x] **Step 4: Create `vitest.config.ts`**
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -205,7 +208,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 5: Create `index.html`**
+- [x] **Step 5: Create `index.html`**
 
 ```html
 <!doctype html>
@@ -224,7 +227,7 @@ export default defineConfig({
 </html>
 ```
 
-- [ ] **Step 6: Create placeholder PWA icons**
+- [x] **Step 6: Create placeholder PWA icons**
 
 Run (from `components/web_client/`):
 
@@ -236,37 +239,21 @@ node -e "
 const fs = require('fs');
 // Tiny 1x1 PNG placeholder, scaled-by-CSS in the manifest meta during dev.
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
-fs.writeFileSync('public/pwa-icon-192.png', png);
-fs.writeFileSync('public/pwa-icon-512.png', png);
+fs.writeFileSync('public/pwa-icon.png', png);
 "
 ```
 
-Verify both files exist with `ls -la public/`. Replace with real icons later — they're not a M1 deliverable beyond "manifest validates."
+Verify the placeholder file exists with `ls -la public/`. Replace with real icons later — icon artwork is not a M1 deliverable beyond "manifest validates."
 
-- [ ] **Step 7: Write the test setup file**
+- [x] **Step 7: Defer the shared test setup file**
 
-Write `components/web_client/src/test/setup.ts`:
+Deferred `components/web_client/src/test/setup.ts` to DevTask 6, where Mock Service Worker handlers are introduced. For DevTask 5, `@testing-library/jest-dom` is imported directly by `src/App.unit.test.tsx`.
 
-```ts
-import '@testing-library/jest-dom/vitest';
-import { afterAll, afterEach, beforeAll } from 'vitest';
-
-// MSW server lives here; DevTask 6 adds handlers. For DevTask 5 (shell only),
-// no HTTP calls happen, so the server starts with no handlers.
-import { setupServer } from 'msw/node';
-
-export const server = setupServer();
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-```
-
-- [ ] **Step 8: Install dependencies**
+- [x] **Step 8: Install dependencies**
 
 Run from repo root: `pnpm install`. Confirm `components/web_client/node_modules` exists.
 
-- [ ] **Step 9: Write the failing App shell unit test**
+- [x] **Step 9: Write the failing App shell unit test**
 
 Write `components/web_client/src/App.unit.test.tsx`:
 
@@ -288,12 +275,12 @@ describe('App shell', () => {
 });
 ```
 
-- [ ] **Step 10: Run the test, expect failure**
+- [x] **Step 10: Run the test, expect failure**
 
 Run: `pnpm --filter @psykl/web-client test:unit`
 Expected: FAIL — "Cannot find module './App'".
 
-- [ ] **Step 11: Implement the App shell**
+- [x] **Step 11: Implement the App shell**
 
 Write `components/web_client/src/App.tsx`:
 
@@ -330,12 +317,12 @@ ReactDOM.createRoot(root).render(
 
 (Note: `import 'reflect-metadata'` is harmless here and keeps the import discipline consistent with service-task. Remove if not desired.)
 
-- [ ] **Step 12: Run the test, expect pass**
+- [x] **Step 12: Run the test, expect pass**
 
 Run: `pnpm --filter @psykl/web-client test:unit`
 Expected: PASS — 2 tests green.
 
-- [ ] **Step 13: Smoke-run the dev server**
+- [x] **Step 13: Smoke-run the dev server**
 
 Run: `pnpm --filter @psykl/web-client dev`
 Expected: Vite starts on `http://localhost:5173`. Open in a browser. Confirm:
@@ -346,7 +333,7 @@ Expected: Vite starts on `http://localhost:5173`. Open in a browser. Confirm:
 
 Stop the dev server.
 
-- [ ] **Step 14: Verify typecheck and build**
+- [x] **Step 14: Verify typecheck and build**
 
 Run:
 
@@ -358,7 +345,7 @@ test -d components/web_client/dist && echo "dist created"
 
 Expected: typecheck passes, build succeeds, `dist/` exists.
 
-- [ ] **Step 15: Commit DevTask 5**
+- [x] **Step 15: Commit DevTask 5**
 
 ```bash
 git add components/web_client/ pnpm-lock.yaml
