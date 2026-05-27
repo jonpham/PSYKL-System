@@ -134,9 +134,34 @@ e2e/
   m1-task-crud.e2e.spec.ts                     ← End-to-End
 ```
 
-#### Component Folder Nesting Threshold
+#### UI Component Folder Layout
 
-Default to a flat `src/components/` directory with colocated tests (per the table above). Promote a component to its own folder once it would colocate **≥5 files** (e.g., `.tsx` + `.unit.test.tsx` + `.component.test.tsx` + `.stories.tsx` + a helper or styles module). At that point, move it to `src/components/<ComponentName>/` with a sibling `index.ts` re-export so import paths stay stable. Components with fewer than 5 colocated files stay flat. The threshold balances "too many files in one directory" against "too many nested directories."
+> "UI Component" here means a React/SwiftUI/etc. presentation component inside a system application — distinct from a system **component** under the repo's top-level `components/` directory (`web_client`, `service-task`, etc.).
+
+Every UI Component gets **its own directory** from the moment it is created. No flat files in `src/components/`. The directory holds the UI Component's source, colocated tests, stories, helpers, styles, and an `index.ts` re-export so import paths stay stable.
+
+```
+src/components/<ComponentName>/
+  <ComponentName>.tsx
+  <ComponentName>.unit.test.tsx
+  <ComponentName>.component.test.tsx     (or .stories.tsx + play function once Storybook lands — DT8)
+  index.ts                               (re-exports <ComponentName>)
+```
+
+**Nesting rule for private child UI Components.** If a UI Component is consumed by exactly one parent UI Component, it lives as a subdirectory of that parent — not as a sibling in `src/components/`. Promote it back up to `src/components/<Name>/` only when a second consumer appears.
+
+```
+src/components/TaskList/
+  TaskList.tsx
+  TaskList.unit.test.tsx
+  index.ts
+  TaskRow/                               (consumed only by TaskList → nested)
+    TaskRow.tsx
+    TaskRow.unit.test.tsx
+    index.ts
+```
+
+**Root-page exception.** Top-level page / route components (e.g., `App.tsx`, future `src/pages/*`) may stay as flat files; they are the application shell and have no parent UI Component.
 
 ### Design Doc Discipline
 
