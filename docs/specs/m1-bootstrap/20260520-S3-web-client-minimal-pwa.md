@@ -6,7 +6,7 @@ completed_at:
 created_at: 2026-05-20
 initiative: m1-bootstrap
 spec_number: 3
-devtasks_total: 2
+devtasks_total: 4
 devtasks_complete: 1
 branch: feat/web-client-task-ui-from-pwa-shell
 honors_decisions: [3, 11, 12, 14, 15, 22, 24, 33]
@@ -835,6 +835,69 @@ Push, open PR, merge.
 
 ---
 
+## Task 7: Husky pre-commit static-analysis gate (added 2026-05-27 from PR #23 review)
+
+**Branch:** `chore/m1-s3-dt7-husky-precommit` off `spec/m1-s3-web-client-minimal-pwa`.
+**Scope:** Add a local pre-commit gate that runs the existing Static Analysis layer (ESLint, Prettier, `tsc`) against staged files before they reach CI. ESLint + Prettier + `tsc` already exist at the root (`eslint.config.js`, `prettier.config.js`, `tsconfig.base.json`) and in each component's scripts; this DevTask only adds the local gating layer.
+**Why now:** Catch test-pyramid Layer 1 (Static Analysis) failures pre-push, before the component tree grows further (PR #23 review).
+**Honors:** AGENTS.md → Test Discipline (Layer 1: Static Analysis). No DESIGN.md decision is re-opened — the pre-commit hook is an additive local convenience over the already-required CI checks.
+
+- [ ] **Step 1: Add Husky + lint-staged dev deps at the repo root**
+  - `pnpm add -Dw husky lint-staged`.
+  - Add `"prepare": "husky"` to the root `package.json` scripts so contributors get the hook on first install.
+- [ ] **Step 2: Initialize `.husky/`**
+  - Run `pnpm exec husky init` (creates `.husky/pre-commit` template).
+  - Replace the generated command with `pnpm exec lint-staged`.
+- [ ] **Step 3: Define `lint-staged` config at the repo root**
+  - In root `package.json` (or `.lintstagedrc.json`): map staged file patterns to commands.
+    - `*.{ts,tsx}` → `eslint --max-warnings 0 --fix` then `prettier --write`.
+    - `*.{js,jsx,json,md,yml,yaml,css}` → `prettier --write`.
+  - Run `tsc --noEmit` once at the end (project-wide), not per-file.
+- [ ] **Step 4: Document the contributor workflow**
+  - Add a short "Pre-commit hooks" subsection to `README.md` describing the gate and the `--no-verify` escape hatch (use is logged in commit body per AGENTS.md Git Safety Protocol).
+- [ ] **Step 5: Verify**
+  - Stage a deliberately-broken file (e.g., unused import); confirm the commit is blocked.
+  - Stage a clean change; confirm the commit succeeds and `lint-staged` ran.
+- [ ] **Step 6: Commit DevTask 7**
+  - One commit. Subject: `chore(M1-T7): add Husky pre-commit static-analysis gate`. Body lists every file added.
+
+---
+
+## Task 8: Storybook + Play tests as the Component-layer CLI runner (added 2026-05-27 from PR #23 review)
+
+**Branch:** `feat/m1-s3-dt8-storybook-play-tests` off `spec/m1-s3-web-client-minimal-pwa`.
+**Scope:** Re-open and supersede DESIGN.md Decision #33 (MSW for Component-layer stubbing) and AGENTS.md Test File Location Convention (Vitest + Testing Library as the Component-layer toolchain) for the `web_client`. Adopt Storybook 8 + `@storybook/test-runner` + play functions. The test-runner becomes the CLI gate behind `pnpm --filter @psykl/web-client test:component`, replacing the current Vitest-driven `*.component.test.tsx` files.
+**Why now:** Per PR #23 inline review — UI Component coverage should double as Manual Visual Check via Storybook (PR #23 review). Locked-decision re-open is explicit per AGENTS.md → Design Doc Discipline.
+
+**Locked-decision updates required (Step 1, before any code):**
+- M1 DESIGN.md Decision #33: replace "MSW for `web_client` Component-test back-end stubbing" with "Storybook + `@storybook/test-runner` + play functions; MSW remains for back-end stubbing inside Storybook stories via the `msw-storybook-addon`."
+- AGENTS.md → Test File Location Convention: change the Component-layer row's tooling note to "Storybook 8 + `@storybook/test-runner` (CLI) + play functions, with `msw-storybook-addon` for HTTP stubbing." Filename pattern becomes `*.stories.tsx` (play functions live inside stories); the `*.component.test.tsx` pattern is retired for UI applications.
+
+- [ ] **Step 1: Update DESIGN.md and AGENTS.md (locked-decision re-open)**
+  - Edit both documents per the bullets above. Bump DESIGN.md Decisions appendix with a new entry referencing PR #23 review.
+- [ ] **Step 2: Install Storybook in `components/web_client/`**
+  - `pnpm --filter @psykl/web-client dlx storybook@latest init` (React + Vite preset).
+  - Add `@storybook/test-runner`, `@storybook/test`, `msw-storybook-addon` as dev deps.
+- [ ] **Step 3: Wire `msw-storybook-addon`**
+  - Initialize MSW for Storybook in `.storybook/preview.ts`. Reuse the handlers from `src/test/msw-handlers.ts`.
+- [ ] **Step 4: Author `TaskCreateForm.stories.tsx` with a play function**
+  - Story renders the form; play function fills the input, clicks submit, awaits the MSW-stubbed POST, asserts the success state.
+- [ ] **Step 5: Author `TaskList.stories.tsx` with a play function**
+  - Story renders the list; play function awaits MSW-stubbed GET, asserts tasks render.
+- [ ] **Step 6: Wire `pnpm --filter @psykl/web-client test:component`**
+  - Script becomes: build Storybook static (`storybook build`), then `test-storybook --ci --url=http://127.0.0.1:6006` (or against the built static via `http-server`). The CLI exit code gates the Component layer.
+  - Confirm `pnpm -r test:component` from the repo root still exits clean.
+- [ ] **Step 7: Delete the retired Vitest Component tests**
+  - Remove `TaskCreateForm.component.test.tsx` and `TaskList.component.test.tsx`. Unit tests stay.
+- [ ] **Step 8: Update web_client `package.json` and any vitest config to stop matching `*.component.test.tsx`**
+  - Vitest only runs `*.unit.test.*` for the web_client.
+- [ ] **Step 9: Manual visual check via `pnpm --filter @psykl/web-client storybook`**
+  - Confirm both stories render correctly in the Storybook UI.
+- [ ] **Step 10: Commit DevTask 8**
+  - One commit (or trilemma-split if production behavior source file count exceeds 10). Subject: `feat(M1-T8): adopt Storybook + Play tests for web_client Component layer`. Body lists every file added/removed and links the DESIGN.md / AGENTS.md decision updates.
+
+---
+
 ## Spec 3 Verification (after both DevTasks merge)
 
 - [ ] **Step 1: Full-stack smoke test**
@@ -857,4 +920,4 @@ kill %1 %2
 
 - [ ] **Step 2: Close out the Spec**
 
-When DevTask 6 merges, set frontmatter `status: DONE`, `devtasks_complete: 2`, populate branch/PR lists. Promote `docs/initiatives/m1-bootstrap/issues/[20260520]P3_m1-web-client-minimal-pwa.md` to `docs/features/` updating the Change Log.
+When all four DevTasks (5, 6, 7, 8) merge into the Spec branch and the Spec PR merges to `main`, set frontmatter `status: DONE`, `devtasks_complete: 4`, populate branch/PR lists. Promote `docs/initiatives/m1-bootstrap/issues/[20260520]P3_m1-web-client-minimal-pwa.md` to `docs/features/` updating the Change Log.
