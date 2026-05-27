@@ -28,6 +28,20 @@ As a developer, I want to clone the PSYKL-System monorepo and run `pnpm install`
 4. OpenAPI builder helper in `@psykl/shared-types` for downstream service generation.
 5. Unit tests covering valid and invalid Task schema parsing and OpenAPI document generation.
 
+## Source Artifacts Consolidated
+
+- Initiative design: `docs/initiatives/m1-bootstrap/DESIGN.md`.
+- Original issue brief: `docs/initiatives/m1-bootstrap/issues/[20260520]P1_m1-workspace-bootstrap.md`.
+- Execution spec: `docs/specs/m1-bootstrap/20260520-S1-workspace-bootstrap.md`.
+- GitHub issue: [#2](https://github.com/jonpham/PSYKL-System/issues/2).
+
+## Implementation Notes
+
+- DevTask 1 established the monorepo root as the source of truth for package manager, runtime, TypeScript, editor, ignore, license, and changelog policy.
+- DevTask 2 added `@psykl/shared-types` as the first workspace package. Its Zod schemas define the `Task`, `TaskInput`, and `TaskResponse` contracts used by the API and future PWA client.
+- The OpenAPI builder lives with the schemas so downstream service and client code regenerate contracts rather than hand-maintaining API artifacts.
+- The package participates in the full pnpm script contract even where a test layer is a no-op, so recursive CI commands stay deterministic as more packages arrive.
+
 ## Verification Steps
 
 **Associated E2E test:** none. End-to-end tests arrive in M1 Spec 5.
@@ -68,6 +82,7 @@ Expectation: a fresh checkout installs cleanly, builds shared types, and exposes
 - **ADR-M1-001:** pnpm is the workspace and lockfile standard for M1.
 - **ADR-M1-002:** `@psykl/shared-types` provides a schema-first contract package consumed by service and client components.
 - **ADR-M1-003:** strict engine pinning prevents drift across developer machines and CI.
+- **ADR-M1-004:** generated artifacts such as `dist/`, `openapi.json`, and generated client API types are excluded from source control and rebuilt by package scripts or CI.
 
 ## Change Log
 
