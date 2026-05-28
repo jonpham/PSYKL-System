@@ -286,9 +286,8 @@ services:
   service-task:
     tmpfs:
       - /var/lib/psykl/pglite
-    volumes:
-      # Empty to clear the inherited named-volume mount from the base compose file.
-      []
+    # Clear the inherited named-volume mount from the base compose file.
+    volumes: !reset []
 ```
 
 - [x] **Step 8: Build the compose stack**
