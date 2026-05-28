@@ -28,5 +28,11 @@ test.describe('M1: PSYKL Task CRUD via PWA', () => {
     for (const title of titles) {
       await expect(page.getByText(title)).toBeVisible();
     }
+
+    const renderedTitles = await page
+      .getByRole('listitem')
+      .locator('span')
+      .evaluateAll((items, count) => items.slice(0, count).map((item) => item.textContent), titles.length);
+    expect(renderedTitles).toEqual([...titles].reverse());
   });
 });
