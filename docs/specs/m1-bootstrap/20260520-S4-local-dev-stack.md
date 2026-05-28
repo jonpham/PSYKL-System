@@ -350,7 +350,7 @@ curl -s http://localhost:3000/tasks -H "X-User-Id: local"
 
 Expected: the "docker compose test" task is still there. Volume `psykl-pglite-data` survived.
 
-- [ ] **Step 12: Verify clean tear-down with `-v`**
+- [x] **Step 12: Verify clean tear-down with `-v`**
 
 ```bash
 docker compose down -v          # this DOES delete the volume
