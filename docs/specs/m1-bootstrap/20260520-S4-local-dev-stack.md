@@ -29,15 +29,15 @@ honors_decisions: [14, 15, 21, 25, 27, 29, 32]
 
 ## File Structure
 
-| File | Purpose |
-|------|---------|
-| `/Users/jp/code/psykl/docker-compose.yml` | Production-shaped local stack: service-task (Node) + web_client (nginx) + named volume |
-| `/Users/jp/code/psykl/docker-compose.e2e.yml` | Overlay: swaps the pglite named volume for `tmpfs` so E2E runs start clean |
-| `/Users/jp/code/psykl/components/service-task/Dockerfile` | Multi-stage: builder (pnpm install + tsc build) → runtime (node:24-bookworm-slim + dist + migrations) |
-| `/Users/jp/code/psykl/components/service-task/.dockerignore` | Exclude node_modules, dist, tests, .pglite-dev/ |
-| `/Users/jp/code/psykl/components/web_client/Dockerfile` | Multi-stage: builder (pnpm install + vite build) → runtime (nginx:alpine + dist) |
-| `/Users/jp/code/psykl/components/web_client/nginx.conf` | SPA-fallback rewrite + reasonable defaults |
-| `/Users/jp/code/psykl/components/web_client/.dockerignore` | Exclude node_modules, dist, src/api/types.ts |
+| File                                                         | Purpose                                                                                               |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `/Users/jp/code/psykl/docker-compose.yml`                    | Production-shaped local stack: service-task (Node) + web_client (nginx) + named volume                |
+| `/Users/jp/code/psykl/docker-compose.e2e.yml`                | Overlay: swaps the pglite named volume for `tmpfs` so E2E runs start clean                            |
+| `/Users/jp/code/psykl/components/service-task/Dockerfile`    | Multi-stage: builder (pnpm install + tsc build) → runtime (node:24-bookworm-slim + dist + migrations) |
+| `/Users/jp/code/psykl/components/service-task/.dockerignore` | Exclude node_modules, dist, tests, .pglite-dev/                                                       |
+| `/Users/jp/code/psykl/components/web_client/Dockerfile`      | Multi-stage: builder (pnpm install + vite build) → runtime (nginx:alpine + dist)                      |
+| `/Users/jp/code/psykl/components/web_client/nginx.conf`      | SPA-fallback rewrite + reasonable defaults                                                            |
+| `/Users/jp/code/psykl/components/web_client/.dockerignore`   | Exclude node_modules, dist, src/api/types.ts                                                          |
 
 ---
 
@@ -45,7 +45,7 @@ honors_decisions: [14, 15, 21, 25, 27, 29, 32]
 
 Start DevTask 7 on a branch off `main`: `git checkout main && git pull && git checkout -b infra/docker-compose-stack`.
 
-- [ ] **Step 1: Write `components/service-task/.dockerignore`**
+- [x] **Step 1: Write `components/service-task/.dockerignore`**
 
 ```
 node_modules
@@ -229,15 +229,21 @@ services:
     container_name: psykl-service-task
     environment:
       NODE_ENV: production
-      PORT: "3000"
+      PORT: '3000'
       PGLITE_DATA_DIR: /var/lib/psykl/pglite
       CORS_ORIGIN: http://localhost:5173
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - psykl-pglite-data:/var/lib/psykl/pglite
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/tasks', { headers: { 'X-User-Id': 'healthcheck' } }).then(r => process.exit(r.status === 401 ? 1 : 0)).catch(() => process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/tasks', { headers: { 'X-User-Id': 'healthcheck' } }).then(r => process.exit(r.status === 401 ? 1 : 0)).catch(() => process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -252,9 +258,9 @@ services:
       service-task:
         condition: service_healthy
     ports:
-      - "5173:80"
+      - '5173:80'
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:80/']
       interval: 10s
       timeout: 5s
       retries: 5
