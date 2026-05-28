@@ -170,7 +170,7 @@ http {
 }
 ```
 
-- [ ] **Step 5: Write `components/web_client/Dockerfile`**
+- [x] **Step 5: Write `components/web_client/Dockerfile`**
 
 ```dockerfile
 # syntax=docker/dockerfile:1.7
