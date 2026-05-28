@@ -1,0 +1,11 @@
+# E2E overlay (Decision #27): swaps the pglite named volume for a tmpfs mount
+# so every CI run starts with an empty database.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up
+
+services:
+  service-task:
+    tmpfs:
+      - /var/lib/psykl/pglite
+    volumes:
+      # Empty to clear the inherited named-volume mount from the base compose file.
+      []

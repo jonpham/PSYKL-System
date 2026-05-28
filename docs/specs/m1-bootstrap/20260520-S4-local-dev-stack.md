@@ -272,7 +272,7 @@ volumes:
 
 Note: the service-task healthcheck calls `/tasks` expecting a 401 (no `X-User-Id` header is OK as evidence the server is up and the global UserIdGuard is wired). Exits 0 on 401, 1 otherwise.
 
-- [ ] **Step 7: Write `/Users/jp/code/psykl/docker-compose.e2e.yml` overlay**
+- [x] **Step 7: Write `/Users/jp/code/psykl/docker-compose.e2e.yml` overlay**
 
 ```yaml
 # E2E overlay (Decision #27): swaps the pglite named volume for a tmpfs mount
