@@ -2,12 +2,13 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed plan & task:** M1 Spec 3 (web_client minimal PWA) — all four DevTasks shipped through Spec integration PR [#21](https://github.com/jonpham/PSYKL-System/pull/21), merged to `main`.
+**Last completed spec:** M1 Spec 3 — web_client Minimal PWA. Feature doc: [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md). Spec integration PR [#21](https://github.com/jonpham/PSYKL-System/pull/21) is merged to `main`.
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 3 of 6 specs shipped (S1, S2, S3); 3 remaining (S4, S5, S6).
-**Active spec:** None active. Next up is **M1 Spec 4 — local dev stack** (`docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`); start with a fresh session and `superpowers:subagent-driven-development` against that plan.
+**Active spec for execution:** N/A.
+**Next executable spec:** M1 Spec 4 — local dev stack (`docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`); start with a fresh session and `superpowers:subagent-driven-development` against that plan.
 **Active skill:** Idle.
 **Branch:** `main` is current through Spec 3 close-out plus follow-up docs/tooling fixes. Next work should branch from `main`.
-**Current step:** Ready to start M1 Spec 4 — local dev stack.
+**Current step:** N/A — between Specs.
 **Next action:** Start a fresh Spec 4 execution session with `superpowers:subagent-driven-development` against `docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`. Do NOT merge any Pull Request without explicit user approval in the current session.
 **Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 
