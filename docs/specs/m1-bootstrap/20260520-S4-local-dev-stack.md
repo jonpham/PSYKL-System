@@ -115,7 +115,7 @@ EXPOSE 3000
 RUN mkdir -p /var/lib/psykl/pglite
 
 WORKDIR /app/components/service-task
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
 ```
 
 - [x] **Step 3: Write `components/web_client/.dockerignore`**
