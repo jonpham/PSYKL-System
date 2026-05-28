@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
+import { HttpResponse, http } from 'msw';
 import App from '../../App';
 import type { Task } from '../../api/client';
 import { TaskList } from './TaskList';
@@ -101,5 +102,32 @@ export const IntegratedWithCreateForm: Story = {
       expect(await canvas.findByText('second')).toBeInTheDocument();
       expect(canvas.getByText('first')).toBeInTheDocument();
     });
+  },
+};
+
+/**
+ * Renders the full `App` with a per-story MSW override that makes `GET /tasks`
+ * fail with a network error. Covers the `App.tsx` `useEffect` error branch
+ * (`catch` → `setError('Failed to load tasks')`) which the default handlers
+ * and other stories don't exercise.
+ *
+ * Uses `HttpResponse.error()` (network failure) rather than a 500 status
+ * because openapi-fetch only surfaces non-2xx responses as `loadError` when
+ * the OpenAPI document declares the error response shape; an undeclared
+ * 500 falls through with `data: undefined` and skips App.tsx's error
+ * branch. A network failure throws, hitting the catch reliably. Status-
+ * code-aware error handling is M2 work; see the AGENTS.md test pyramid
+ * + DESIGN.md follow-up.
+ */
+export const AppLoadError: Story = {
+  parameters: {
+    msw: {
+      handlers: [http.get('*/tasks', () => HttpResponse.error())],
+    },
+  },
+  render: () => <App />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(await canvas.findByRole('alert')).toHaveTextContent(/failed to load tasks/i);
   },
 };
