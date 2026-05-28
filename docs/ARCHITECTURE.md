@@ -55,7 +55,7 @@ The initial `tasks` table stores:
 
 - unset: in-memory mode for tests.
 - local dev: `.pglite-dev` when configured.
-- container runtime: `/var/lib/psykl/pglite` when Docker work lands.
+- container runtime: `/var/lib/psykl/pglite`, mounted from the `psykl-pglite-data` Docker volume in the default Compose stack.
 
 ### Authorization Boundary
 
@@ -77,9 +77,20 @@ UI Components follow the per-component folder layout (`src/components/<Name>/{<N
 
 A Husky `pre-commit` hook at the repository root runs the Static Analysis layer (`pnpm exec lint-staged` → `pnpm -r format:check` → `pnpm -r typecheck`) on every commit, pulling Test Pyramid Layer 1 forward to local commit time so failures don't reach CI. `prepare: "husky"` in root `package.json` installs the hook on first `pnpm install` for every contributor. The `--no-verify` escape hatch is documented but its use must be logged in the commit body per the project's Git Safety Protocol.
 
+### Local Container Stack
+
+`docker-compose.yml` is the canonical M1 full-stack local runtime. It builds the real monorepo components rather than pulling published images:
+
+- `service-task`: multi-stage `node:24-bookworm-slim` image, listens on container and host `:3000`, and persists pglite at `/var/lib/psykl/pglite` through the named Docker volume `psykl-pglite-data`.
+- `web_client`: multi-stage `node:24-bookworm-slim` build image with an `nginx:alpine` runtime serving the Vite `dist/` output on container `:80`, mapped to host `:5173`.
+
+`docker-compose.e2e.yml` is the test overlay for Spec 5 and later. It clears the inherited named-volume mount and replaces `/var/lib/psykl/pglite` with `tmpfs`, so each E2E run starts with an empty database without adding a test-only reset endpoint to `service-task`.
+
+Dockerfiles use repository-root build contexts because they need workspace manifests, `packages/shared-types`, and cross-component generated OpenAPI/client types. Each image keeps its own `Dockerfile.dockerignore` next to the Dockerfile so image-specific build-context policy stays colocated with application code.
+
 ### Testing Strategy
 
-The M1 service + PWA establishes all five layers of the project test pyramid except E2E:
+The M1 service + PWA establishes the local version of all five layers of the project test pyramid; Spec 5 wires the same layers into GitHub Actions:
 
 - **Static Analysis:** ESLint, Prettier, and TypeScript scripts at package and recursive workspace levels. Mandatory in CI and enforced locally by the Husky pre-commit hook.
 - **Unit:** pure service behavior (UUID v7 generation, user-scoped query shape) and React UI Components rendered in isolation via Vitest + Testing Library.
@@ -87,7 +98,7 @@ The M1 service + PWA establishes all five layers of the project test pyramid exc
 - **Component:**
   - For `service-task`: in-process HTTP contract tests for guard negative paths and Task endpoint positive paths.
   - For `web_client`: **UI Component tests** authored as Storybook 8 stories with play functions, executed via `@storybook/test-runner` against the built Storybook static. `msw-storybook-addon` initializes Mock Service Worker inside the story preview so the same handler set from `src/test/msw-handlers.ts` stubs the `service-task` boundary in both Vitest setup and Storybook. Each play function doubles as a Manual Visual Check surface when run interactively via `pnpm --filter @psykl/web-client storybook`.
-- **End-to-End:** planned for M1 Spec 5 after the PWA and Docker Compose stack exist (Playwright; locked per DESIGN.md Decision #28).
+- **End-to-End:** the Docker Compose stack exists as the runtime target; Spec 5 wires Playwright against it in CI (locked per DESIGN.md Decision #28).
 
 ## Architecture Decision Records
 
@@ -154,3 +165,23 @@ Every UI Component lives in its own directory (`src/components/<Name>/`) with `<
 ### ADR-M1-016: Husky Pre-Commit Static-Analysis Gate
 
 A repository-root Husky `pre-commit` hook runs `pnpm exec lint-staged` → `pnpm -r format:check` → `pnpm -r typecheck` on every commit. Pre-commit composition pulls Test Pyramid Layer 1 forward to local commit time so failures don't reach CI. `prepare: "husky"` in root `package.json` installs the hook on first `pnpm install` for every contributor. The `--no-verify` escape hatch is documented but its use must be logged in the commit body per the Git Safety Protocol.
+
+### ADR-M1-017: Docker Compose as the Full-Stack Local Runtime
+
+Use Docker Compose v2 as the canonical M1 full-stack runtime. The stack builds `service-task` and `web_client` from the monorepo, runs the API on host `:3000`, runs the PWA through nginx on host `:5173`, and keeps the same component boundaries that future CI E2E tests will exercise.
+
+### ADR-M1-018: pglite Persists Through a Docker Volume
+
+Keep pglite in-process inside `service-task` and persist it through the `psykl-pglite-data` named Docker volume mounted at `/var/lib/psykl/pglite`. M1 does not add a database container; the database remains an application-owned embedded PostgreSQL-compatible store until a later milestone intentionally moves to a networked database.
+
+### ADR-M1-019: Compose Overlay for E2E Reset
+
+Use `docker-compose.e2e.yml` to replace persistent pglite storage with `tmpfs` for test runs. This gives CI a clean database for every E2E run without adding a test-only HTTP reset endpoint or changing production-shaped Compose semantics.
+
+### ADR-M1-020: nginx Serves the PWA Runtime Image
+
+Serve `web_client`'s built Vite output from `nginx:alpine` with a SPA fallback rule. The PWA remains a static client application; nginx is only the production-shaped file server for local Compose and future container deployment.
+
+### ADR-M1-021: Debian Slim Node Images for pglite Compatibility
+
+Use `node:24-bookworm-slim` for Node build/runtime stages rather than Alpine. The larger Debian image avoids pglite WebAssembly compatibility risk around musl libc while keeping the runtime image smaller than a full Debian Node image.

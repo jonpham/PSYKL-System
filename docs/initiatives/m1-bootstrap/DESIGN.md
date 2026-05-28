@@ -416,16 +416,16 @@ All six blocking Open Questions are resolved (see Decisions above). Concrete han
 
 ## Issue-shaped Spec Briefs
 
-For each of the 6 Specs, a feature-doc-shaped Markdown file exists at `docs/initiatives/m1-bootstrap/issues/`. These follow the AGENTS.md feature-doc template + filename convention (`[YYYYMMDD]P{N}_m1-{slug}.md`) and contain: User Story, DevTasks composing the Spec, Verification Steps (manual + acceptance criteria), Affected Components, Design Decisions cross-referenced to the appendix above, Architecture Decisions (ADRs), and an empty Change Log. They're suitable for direct paste into GitHub Issue bodies and serve as supplementary context for `superpowers:writing-plans`.
+Pending Specs keep feature-doc-shaped Markdown issue briefs at `docs/initiatives/m1-bootstrap/issues/`. Shipped Specs are consolidated into `docs/features/` and their issue briefs are deleted per AGENTS.md close-out discipline. The issue briefs follow the AGENTS.md feature-doc template + filename convention (`[YYYYMMDD]P{N}_m1-{slug}.md`) and contain: User Story, DevTasks composing the Spec, Verification Steps (manual + acceptance criteria), Affected Components, Design Decisions cross-referenced to the appendix above, Architecture Decisions (ADRs), and an empty Change Log. They're suitable for direct paste into GitHub Issue bodies and serve as supplementary context for `superpowers:writing-plans`.
 
-| Spec | Issue Brief |
-|------|-------------|
-| S1 Workspace Bootstrap | [`issues/[20260520]P1_m1-workspace-bootstrap.md`](./issues/%5B20260520%5DP1_m1-workspace-bootstrap.md) |
-| S2 service-task minimal API | [`issues/[20260520]P2_m1-service-task-minimal-api.md`](./issues/%5B20260520%5DP2_m1-service-task-minimal-api.md) |
-| S3 web_client minimal PWA | [`issues/[20260520]P3_m1-web-client-minimal-pwa.md`](./issues/%5B20260520%5DP3_m1-web-client-minimal-pwa.md) |
-| S4 Local dev stack | [`issues/[20260520]P4_m1-local-dev-stack.md`](./issues/%5B20260520%5DP4_m1-local-dev-stack.md) |
-| S5 CI test pipeline | [`issues/[20260520]P5_m1-ci-test-pipeline.md`](./issues/%5B20260520%5DP5_m1-ci-test-pipeline.md) |
-| S6 CD release pipeline | [`issues/[20260520]P6_m1-cd-release-pipeline.md`](./issues/%5B20260520%5DP6_m1-cd-release-pipeline.md) |
+| Spec | Record |
+|------|--------|
+| S1 Workspace Bootstrap | Shipped: [`docs/features/[20260520]GH2_m1-workspace-bootstrap.md`](../../features/%5B20260520%5DGH2_m1-workspace-bootstrap.md) |
+| S2 service-task minimal API | Shipped: [`docs/features/[20260520]GH3_m1-service-task-minimal-api.md`](../../features/%5B20260520%5DGH3_m1-service-task-minimal-api.md) |
+| S3 web_client minimal PWA | Shipped: [`docs/features/[20260520]GH4_m1-web-client-minimal-pwa.md`](../../features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md) |
+| S4 Local dev stack | Shipped: [`docs/features/[20260520]GH5_m1-local-dev-stack.md`](../../features/%5B20260520%5DGH5_m1-local-dev-stack.md) |
+| S5 CI test pipeline | Pending issue brief: [`issues/[20260520]P5_m1-ci-test-pipeline.md`](./issues/%5B20260520%5DP5_m1-ci-test-pipeline.md) |
+| S6 CD release pipeline | Pending issue brief: [`issues/[20260520]P6_m1-cd-release-pipeline.md`](./issues/%5B20260520%5DP6_m1-cd-release-pipeline.md) |
 
 ## GSTACK REVIEW REPORT
 
