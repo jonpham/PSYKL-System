@@ -92,19 +92,20 @@ Open `http://localhost:5173`. The page should render the PSYKL shell with an emp
 
 ### Common per-component commands
 
-| Command                                           | What it does                                                                             |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm --filter @psykl/service-task dev`           | Run the NestJS API in watch mode against in-process pglite                               |
-| `pnpm --filter @psykl/service-task build`         | Build the API (`tsc` to `dist/`)                                                         |
-| `pnpm --filter @psykl/service-task build:openapi` | Emit `components/service-task/openapi.json` from shared Zod schemas via `zod-to-openapi` |
-| `pnpm --filter @psykl/service-task db:generate`   | Generate a new Drizzle SQL migration from a schema change                                |
-| `pnpm --filter @psykl/service-task db:push`       | Push the current schema to the active pglite instance (use during local dev only)        |
-| `pnpm --filter @psykl/web-client dev`             | Run Vite dev server on `:5173`                                                           |
-| `pnpm --filter @psykl/web-client codegen`         | Generate `src/api/types.ts` from `components/service-task/openapi.json`                  |
-| `pnpm --filter @psykl/web-client build`           | Production build (`tsc -b && vite build`)                                                |
-| `pnpm --filter @psykl/web-client preview`         | Serve the production build for smoke-testing                                             |
-| `pnpm --filter @psykl/web-client storybook`       | Run Storybook dev server on `:6006` (Manual Visual Check surface for UI Components)      |
-| `pnpm --filter @psykl/web-client build-storybook` | Build Storybook static into `storybook-static/`                                          |
+| Command                                           | What it does                                                                                                                             |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm --filter @psykl/service-task dev`           | Run the NestJS API in watch mode against in-process pglite                                                                               |
+| `pnpm --filter @psykl/service-task build`         | Build the API (`tsc` to `dist/`)                                                                                                         |
+| `pnpm --filter @psykl/service-task build:openapi` | Emit `components/service-task/openapi.json` from shared Zod schemas via `zod-to-openapi`                                                 |
+| `pnpm --filter @psykl/service-task openapi:view`  | Regenerate `openapi.json` and serve a Scalar viewer at `http://localhost:3003` (via `pnpm dlx @scalar/cli`; no install in the workspace) |
+| `pnpm --filter @psykl/service-task db:generate`   | Generate a new Drizzle SQL migration from a schema change                                                                                |
+| `pnpm --filter @psykl/service-task db:push`       | Push the current schema to the active pglite instance (use during local dev only)                                                        |
+| `pnpm --filter @psykl/web-client dev`             | Run Vite dev server on `:5173`                                                                                                           |
+| `pnpm --filter @psykl/web-client codegen`         | Generate `src/api/types.ts` from `components/service-task/openapi.json`                                                                  |
+| `pnpm --filter @psykl/web-client build`           | Production build (`tsc -b && vite build`)                                                                                                |
+| `pnpm --filter @psykl/web-client preview`         | Serve the production build for smoke-testing                                                                                             |
+| `pnpm --filter @psykl/web-client storybook`       | Run Storybook dev server on `:6006` (Manual Visual Check surface for UI Components)                                                      |
+| `pnpm --filter @psykl/web-client build-storybook` | Build Storybook static into `storybook-static/`                                                                                          |
 
 ---
 
