@@ -289,7 +289,7 @@ services:
       []
 ```
 
-- [ ] **Step 8: Build the compose stack**
+- [x] **Step 8: Build the compose stack**
 
 Run from repo root: `docker compose build`
 
