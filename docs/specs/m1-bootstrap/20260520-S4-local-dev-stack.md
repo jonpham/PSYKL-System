@@ -380,7 +380,7 @@ curl -s http://localhost:3000/tasks -H "X-User-Id: local"
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml down
 ```
 
-- [ ] **Step 14: Final cleanup**
+- [x] **Step 14: Final cleanup**
 
 ```bash
 docker compose down -v
