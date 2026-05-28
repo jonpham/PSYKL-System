@@ -115,7 +115,7 @@ WORKDIR /app/components/service-task
 CMD ["node", "dist/main.js"]
 ```
 
-- [ ] **Step 3: Write `components/web_client/.dockerignore`**
+- [x] **Step 3: Write `components/web_client/.dockerignore`**
 
 ```
 node_modules
