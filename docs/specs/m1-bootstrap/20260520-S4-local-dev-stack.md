@@ -360,7 +360,7 @@ curl -s http://localhost:3000/tasks -H "X-User-Id: local"
 
 Expected: `[]` (empty array). Volume was recreated empty.
 
-- [ ] **Step 13: Verify the E2E overlay starts clean every time**
+- [x] **Step 13: Verify the E2E overlay starts clean every time**
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
