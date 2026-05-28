@@ -164,7 +164,7 @@ Or use the root pass-through scripts (same effect):
 
 ### Pull Request CI
 
-Pull Requests to `main` run two GitHub Actions workflows:
+Pull Requests to `main` and Spec integration branches (`spec/**`) run two GitHub Actions workflows:
 
 | Required check | Coverage                                                 |
 | -------------- | -------------------------------------------------------- |

@@ -1,6 +1,19 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('M1: PSYKL Task CRUD via PWA', () => {
+  test.beforeEach(async ({ page }) => {
+    const userId = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    await page.route('http://localhost:3000/**', async (route) => {
+      await route.continue({
+        headers: {
+          ...route.request().headers(),
+          'X-User-Id': userId,
+        },
+      });
+    });
+  });
+
   test('user creates a task and sees it in the list', async ({ page }) => {
     await page.goto('/');
 
@@ -29,10 +42,6 @@ test.describe('M1: PSYKL Task CRUD via PWA', () => {
       await expect(page.getByText(title)).toBeVisible();
     }
 
-    const renderedTitles = await page
-      .getByRole('listitem')
-      .locator('span')
-      .evaluateAll((items, count) => items.slice(0, count).map((item) => item.textContent), titles.length);
-    expect(renderedTitles).toEqual([...titles].reverse());
+    await expect(page.getByRole('listitem').locator('span')).toHaveText([...titles].reverse());
   });
 });
