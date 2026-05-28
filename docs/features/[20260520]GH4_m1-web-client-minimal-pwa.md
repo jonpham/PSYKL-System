@@ -14,7 +14,7 @@ prs:
 completed_at: 2026-05-27
 created_at: 2026-05-20
 initiative: m1-bootstrap
-spec: docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md
+spec: consolidated-into-this-doc
 ---
 
 # M1 Spec 3: web_client Minimal PWA
@@ -37,8 +37,8 @@ As a **user**, I want to **open the PWA, type a task title, click create, and se
 ## Source Artifacts Consolidated
 
 - Initiative design: `docs/initiatives/m1-bootstrap/DESIGN.md` (Decisions #33 + #34).
-- Original issue brief: `docs/initiatives/m1-bootstrap/issues/[20260520]P3_m1-web-client-minimal-pwa.md` (this file supersedes it; the brief was deleted with this PR).
-- Execution spec: `docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md`.
+- Original issue brief: `docs/initiatives/m1-bootstrap/issues/[20260520]P3_m1-web-client-minimal-pwa.md` (consolidated into this feature doc and removed by this PR).
+- Execution spec: `docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md` (consolidated into this feature doc and removed by this PR; the four DevTask Step checklists, File Structure table, and STOP-point convention live only in git history from here forward).
 - GitHub issue: [#4](https://github.com/jonpham/PSYKL-System/issues/4).
 - Constituent DevTask PRs: [#19](https://github.com/jonpham/PSYKL-System/pull/19) (DT5 PWA shell), [#23](https://github.com/jonpham/PSYKL-System/pull/23) (DT6 Task UI), [#24](https://github.com/jonpham/PSYKL-System/pull/24) (DT7 Husky pre-commit), [#25](https://github.com/jonpham/PSYKL-System/pull/25) (DT8 Storybook + Play tests).
 - Spec integration PR: [#21](https://github.com/jonpham/PSYKL-System/pull/21).
@@ -96,8 +96,7 @@ A minimal PWA that creates and lists PSYKL `Task` records via the real `service-
   - `eslint.config.js`, `.prettierignore`, `.gitignore` (Storybook static + MSW worker + generated types exclusions).
   - `README.md` (Pre-commit hooks section).
 - `docs/initiatives/m1-bootstrap/DESIGN.md`: Decision #33 rewritten + new Decision #34.
-- `docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md`: all four DevTask checklists ticked, frontmatter completion fields, post-DT8 toolchain notes.
-- `docs/PROJECT_STATUS.md`, `CHANGELOG.md`: status + change log updates.
+- `docs/PROJECT_STATUS.md`, `CHANGELOG.md`, `docs/ARCHITECTURE.md`, `docs/STACK.md`: status, change log, architecture, and stack updates.
 
 ## Design Decisions
 

@@ -2,74 +2,59 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed plan & task:** Spec 3 DT7 (Husky pre-commit) merged into DT6 branch (PR #24 closed); DT8 (Storybook + Play tests) implementation pushed and reviewed in PR #25.
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + spec plans WRITTEN, execution in progress
-**Active spec:** M1 Spec 3/6 web_client minimal PWA (`docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md`) — **all four DevTasks implementation-complete**: DT5 (PWA shell, #19) merged, DT6 (Task UI, #23 open), DT7 (Husky pre-commit, #24 merged into DT6 branch), DT8 (Storybook + Play tests, #25 open). All test layers green locally across the full pyramid.
-**Active plan:** Spec 3 — DT5 ✅ merged, DT6 ✅ implementation in #23 (open, awaiting merge to spec branch), DT7 ✅ merged into DT6 branch via #24, DT8 ✅ implementation in #25 (open, awaiting merge).
-**Active skill:** `superpowers:subagent-driven-development` (drove DT7 + DT8 implementer/spec/code-review cycles on 2026-05-27).
-**Branch:** `feat/web-client-task-ui-from-pwa-shell` (DT6 branch, now includes merged DT7) rooted on Spec 3 integration branch `spec/m1-s3-web-client-minimal-pwa`. Spec integration PR #21 targets `main`.
-**Current step:** All Spec 3 DevTask implementation done. Three PRs open in the merge queue: #23 (DT6, now contains DT7), #25 (DT8 sibling, rebased onto #23 tip), and #21 (Spec integration). DT8 supersedes M1 DESIGN.md Decision #33 (MSW for Component-layer stubbing → Storybook + `@storybook/test-runner` + play functions + `msw-storybook-addon`) and adds Decision #34 documenting the re-open.
-**Next action:** (1) Final review of PR #25 (DT8). (2) Merge #25 → `feat/web-client-task-ui-from-pwa-shell` (DT6 branch). (3) Merge #23 → `spec/m1-s3-web-client-minimal-pwa` (carries DT6 + DT7 + DT8 to the Spec integration branch). (4) Run Spec 3 Verification (full-stack smoke per spec doc). (5) Finalize PR #21 → `main`. (6) Write the Spec 3 feature doc under `docs/features/` (per AGENTS.md "feature doc per Spec, not per DevTask" rule) and bump spec frontmatter `status: DONE`. (7) Start Spec 4 (local dev stack). Do NOT merge any Pull Request without explicit user approval in the current session.
-**Known blockers:** None for planning. For execution: (1) GitHub Issues need to be manually created from the 6 briefs before execution can map work to issues. (2) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (3) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
-**Next action (for the next agent or you):**
-
-1. Read this file + `AGENTS.md` + `docs/initiatives/m1-bootstrap/DESIGN.md` (especially the Decisions appendix #1-#33 — all LOCKED, do NOT re-open).
-2. Pick a Spec to execute first (Spec 1 is the foundation — start there unless you have a reason to skip).
-3. Open the corresponding plan at `docs/specs/m1-bootstrap/20260520-S{N}-{slug}.md` and execute task-by-task using `superpowers:subagent-driven-development` (Claude Code), `superpowers:executing-plans`, or the equivalent on whatever agent you're driving.
-4. Each DevTask = one branch off `main`, one PR into `main`, ≤10 files per PR (lockfile exempt), tests-in-same-PR per AGENTS.md.
+**Last completed plan & task:** M1 Spec 3 (web_client minimal PWA) — all four DevTasks merged into the Spec integration branch; PR [#21](https://github.com/jonpham/PSYKL-System/pull/21) ready for merge to `main` pending explicit user approval.
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 3 of 6 specs shipped (S1, S2, S3); 3 remaining (S4, S5, S6).
+**Active spec:** None active. Next up is **M1 Spec 4 — local dev stack** (`docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`); start with a fresh session and `superpowers:subagent-driven-development` against that plan.
+**Active skill:** Idle.
+**Branch:** Spec integration branch `spec/m1-s3-web-client-minimal-pwa` carries PR #21 against `main`. Working trees recommended for next work: clone a fresh worktree off `main` once #21 merges.
+**Current step:** Spec 3 close-out documentation (this commit) landing on the spec branch in preparation for the Spec PR merge.
+**Next action:** (1) Merge PR #21 → `main` (with explicit user approval). (2) Pull `main` locally. (3) Start a fresh session for Spec 4 — `superpowers:subagent-driven-development` against `docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`. Do NOT merge any Pull Request without explicit user approval in the current session.
+**Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 
 1. **Read in this order:**
-   - `CLAUDE.md` → sources `AGENTS.md`
-   - `AGENTS.md` — working agreement, vocabulary (Project / Initiative / Spec / DevTask / Step / Feature), Test Discipline (5-layer pyramid, TDD mandatory), Git Conventions (each DevTask off `main`, no stacking), naming conventions, skill routing
-   - `docs/PRODUCT.md` — product brief, the Sync and Sharing Model (single-user multi-device, no collaboration ever)
-   - `docs/PROJECT_STATUS.md` — this file
-   - `docs/initiatives/m1-bootstrap/DESIGN.md` — the M1 design, especially the 33-entry Decisions appendix
-   - `docs/initiatives/m1-bootstrap/issues/` — six issue briefs, one per Spec
-   - `docs/specs/m1-bootstrap/` — six implementation plans, one per Spec, task-by-task
+   - [`README.md`](../README.md) — developer quickstart (install, scripts, verification, deploy)
+   - [`CLAUDE.md`](../CLAUDE.md) → sources [`AGENTS.md`](../AGENTS.md)
+   - [`AGENTS.md`](../AGENTS.md) — working agreement, vocabulary (Project / Initiative / Spec / DevTask / Step / Feature), Test Discipline (5-layer pyramid, TDD mandatory), Git Conventions (sibling-default DevTask branches; stacking only on real dependency; rebase-before-PR), naming conventions, skill routing
+   - [`docs/PRODUCT.md`](PRODUCT.md) — product brief; the Sync and Sharing Model (single-user multi-device, no collaboration ever)
+   - [`docs/STACK.md`](STACK.md) — what's shipped (tech stack table per milestone)
+   - [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — durable architectural decisions (ADRs) and component descriptions for everything that's shipped
+   - [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md) — this file
+   - [`docs/features/`](features/) — completed-feature records (one per shipped Spec)
+   - [`docs/initiatives/m1-bootstrap/DESIGN.md`](initiatives/m1-bootstrap/DESIGN.md) — the M1 design and 34-entry Decisions appendix
+   - [`docs/initiatives/m1-bootstrap/issues/`](initiatives/m1-bootstrap/issues/) — issue briefs for pending Specs (S4, S5, S6); shipped Specs are consolidated into `docs/features/`
+   - [`docs/specs/m1-bootstrap/`](specs/m1-bootstrap/) — execution plans for pending Specs (S4, S5, S6); shipped Specs' plans are deleted at Spec close-out per AGENTS.md doc-sprawl rule
 2. **Vocabulary to memorize:** `DevTask` = workflow concept (PR-sized unit). `Task` = PSYKL data-model entity (the `id, user_id, title, created_at` record). They are unrelated.
 3. **The Decisions appendix is normative.** If a decision looks wrong, surface it for user discussion — do not silently rework.
 4. **TDD ordering is mandatory:** failing test → implementation → green → refactor → commit. Tests live in the same PR as the implementation.
-5. **Each DevTask = one PR, ≤10 files (lockfile exempt). If a DevTask grows past 10 files, SPLIT it (trilemma rule).**
+5. **DevTask branching:** siblings off the Spec integration branch unless K+1 depends on K's unmerged work; rebase onto `origin/<target>` before opening any PR.
 
-## M1 Locked-in Stack
+## M1 Stack
 
-| Layer                        | Choice                                                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Package manager              | pnpm + pnpm-workspace.yaml                                                                                                                                          |
-| Node runtime                 | Node 24 LTS (pinned via `.nvmrc` + `engines`)                                                                                                                       |
-| pnpm version                 | 10.x (pinned via `packageManager` field)                                                                                                                            |
-| API framework                | NestJS, REST, multi-transport-ready (gRPC + GraphQL deferrable into the same app)                                                                                   |
-| API spec / schema discipline | Schema-first via Zod in `packages/shared-types/src/schemas/` + `nestjs-zod` DTOs + `zod-to-openapi` emitted document                                                |
-| OpenAPI artifact             | `components/service-task/openapi.json` (gitignored, emitted at build) consumed by clients via `openapi-typescript` + `openapi-fetch`                                |
-| PWA framework                | Vite + React (SPA mode) + `vite-plugin-pwa`                                                                                                                         |
-| ORM + migrations             | Drizzle ORM + drizzle-kit; schema at `components/service-task/src/db/schema/`; migrations at `components/service-task/drizzle/migrations/`                          |
-| Database (M1)                | pglite (in-process PostgreSQL via WebAssembly) — Postgres-shaped from day one for clean M4+ networked migration                                                     |
-| PSYKL Task id                | UUID v7 (RFC 9562, time-ordered), generated app-side in NestJS `TaskService` via `uuid` package                                                                     |
-| `created_at` column          | `timestamptz` with DB default `now()` (Drizzle: `timestamp('created_at', { withTimezone: true }).notNull().defaultNow()`)                                           |
-| Web client prod runtime      | nginx serving built `dist/` (multi-stage Dockerfile, nginx:alpine + SPA-fallback config)                                                                            |
-| pglite persistence path      | Production: `/var/lib/psykl/pglite` (Docker volume `psykl-pglite-data`). Dev: `./.pglite-dev` (gitignored). Tests: in-memory (no path). Env var: `PGLITE_DATA_DIR`. |
-| Container registry           | GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`)                                                                                       |
-| Helm chart location          | `deploy/helm/`                                                                                                                                                      |
-| Branching convention         | Each DevTask branches off `main`, PRs into `main` (no stacking)                                                                                                     |
-| Test file locations          | Unit + Component colocated next to source; Integration in per-component `tests/integration/`; E2E in repo-root `e2e/`                                               |
-| Service ports (local dev)    | `service-task` :3000, `web_client` Vite :5173                                                                                                                       |
-| CORS posture                 | service-task allows `Origin: http://localhost:5173` in dev (configurable via `CORS_ORIGIN` env var); no reverse proxy in M1                                         |
-| Subtree mirror repos         | `jonpham/psykl-web_client`, `jonpham/psykl-service-task` (must be created before DevTask 10)                                                                        |
-| `engine-strict`              | `.npmrc` at repo root contains `engine-strict=true`                                                                                                                 |
-| LICENSE                      | MIT                                                                                                                                                                 |
+See [`docs/STACK.md`](STACK.md) for the canonical M1 stack table (what's shipped vs what's pending). Architecture rationale lives in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Initiative Summary
 
-| Initiative                            | Theme                                                                                | Status                        | Initiative Doc                                                                         |
-| ------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------- | -------------------------------------------------------------------------------------- |
-| M1 — Bootstrap                        | Vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | 🟡 Designed, decisions closed | [`m1-bootstrap/`](initiatives/m1-bootstrap/)                                           |
-| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync                         | ⚪ Sketched                   | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
-| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives                        | ⚪ Sketched                   | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
-| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host                    | ⚪ Sketched                   | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
+| Initiative                            | Theme                                                                                | Status                                                  | Initiative Doc                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| M1 — Bootstrap                        | Vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | 🟡 In progress — S1, S2, S3 shipped; S4, S5, S6 pending | [`m1-bootstrap/`](initiatives/m1-bootstrap/)                                           |
+| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync                         | ⚪ Sketched                                             | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
+| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives                        | ⚪ Sketched                                             | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
+| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host                    | ⚪ Sketched                                             | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
 
-Legend: 🟢 Done · 🟡 Active · ⚪ Sketched / Not started
+Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started
+
+## M1 Specs
+
+| Spec | Title                    | Status                                      | Feature doc                                                                                                 |
+| ---- | ------------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| S1   | Workspace Bootstrap      | 🟢 Shipped                                  | [`[20260520]GH2_m1-workspace-bootstrap.md`](features/%5B20260520%5DGH2_m1-workspace-bootstrap.md)           |
+| S2   | service-task Minimal API | 🟢 Shipped                                  | [`[20260520]GH3_m1-service-task-minimal-api.md`](features/%5B20260520%5DGH3_m1-service-task-minimal-api.md) |
+| S3   | web_client Minimal PWA   | 🟢 Shipped (pending PR #21 merge to `main`) | [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md)     |
+| S4   | Local Dev Stack          | ⚪ Pending — execution plan ready           | _written at close-out_                                                                                      |
+| S5   | CI Test Pipeline         | ⚪ Pending — execution plan ready           | _written at close-out_                                                                                      |
+| S6   | CD Release Pipeline      | ⚪ Pending — execution plan ready           | _written at close-out_                                                                                      |
 
 ## Remaining Design Areas That Require `/plan-eng-review`
 
