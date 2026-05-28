@@ -46,7 +46,7 @@ These are tightenings or codifications of patterns already lived during S3. Disc
 4. **`honors_decisions:` frontmatter refresh on re-open.** Add a rule under File & Status Discipline: when a decision referenced in any spec doc's `honors_decisions:` is re-opened, every spec doc referencing it must add the new decision number.
 5. **Per-Spec doc consolidation at Spec close-out.** Clarify the existing "After completing an initiative... can be deleted" rule: at Spec close-out, the per-Spec issue brief AND execution-plan spec are consolidated into the per-Spec feature doc under `docs/features/` and then DELETED. Initiative-level docs are deleted at initiative close-out per the existing rule.
 6. **README + durable docs (`ARCHITECTURE.md`, `STACK.md`, `CHANGELOG.md`) refresh at Spec close-out.** Add a checklist item: every Spec PR's close-out commit refreshes README script tables (if scripts changed), `ARCHITECTURE.md` (if the Spec shipped a new component or new ADRs), `STACK.md` (if the stack table changed), and `CHANGELOG.md` (always — one entry per Spec).
-7. **Per-Spec retrospective convention.** New subsection: per-Spec retrospectives are optional but recommended whenever the Spec surfaced friction worth recording. Land them at `docs/initiatives/{initiative}/retrospectives/{date}-{spec-slug}.md`.
+7. **Per-Spec retrospective convention.** New subsection: per-Spec retrospectives are optional but recommended whenever the Spec surfaced friction worth recording. Land them at `docs/retrospectives/{date}-{spec-slug}.md` (top-level durable location, not nested under the initiative — survives initiative close-out cleanup).
 
 ## Proposed: per-component AGENTS.md split (NEEDS USER DECISION)
 
