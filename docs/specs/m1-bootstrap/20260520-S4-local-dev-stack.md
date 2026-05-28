@@ -299,7 +299,7 @@ Expected: both images build successfully. `service-task` image is ~150-250 MB (D
 
 If the build fails on `pnpm install`: verify the workspace manifests copied correctly. The dockerfiles list `packages/shared-types/package.json`, `components/service-task/package.json`, `components/web_client/package.json` explicitly — extending later (M2+ adds more components) requires updating both Dockerfiles.
 
-- [ ] **Step 9: Start the stack**
+- [x] **Step 9: Start the stack**
 
 Run: `docker compose up -d`
 
