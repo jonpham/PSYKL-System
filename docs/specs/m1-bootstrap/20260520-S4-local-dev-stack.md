@@ -314,7 +314,7 @@ docker compose logs web-client | tail -10
 
 `service-task` should log: pglite init, Drizzle migrations applied, "service-task listening on http://0.0.0.0:3000". `web-client` should be silent except for nginx startup.
 
-- [ ] **Step 10: Smoke-test the running stack**
+- [x] **Step 10: Smoke-test the running stack**
 
 ```bash
 # API: empty list with valid header
