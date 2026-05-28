@@ -339,7 +339,7 @@ curl -s http://localhost:5173/ | head -20
 
 Open `http://localhost:5173` in a browser. Confirm the PWA loads, shows the task created above, and can create new tasks. Network panel shows requests going to `http://localhost:3000` with `X-User-Id: local`.
 
-- [ ] **Step 11: Verify persistence across `down`+`up`**
+- [x] **Step 11: Verify persistence across `down`+`up`**
 
 ```bash
 docker compose down              # NOT -v; we want to keep the volume
