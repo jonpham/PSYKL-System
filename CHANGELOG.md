@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+_No unreleased changes._
+
+## M1 Bootstrap Specs 1-3 Shipped - 2026-05-27
+
 - Completed M1 Spec 1 Workspace Bootstrap: pnpm workspace scaffold, Node/pnpm pins, MIT license, and `@psykl/shared-types`.
 - Completed M1 Spec 2 service-task minimal API: NestJS Task API, pglite/Drizzle persistence, global `UserIdGuard`, OpenAPI emission, and static analysis.
 - Completed M1 Spec 3 web_client minimal PWA: installable Vite + React (SPA mode) + `vite-plugin-pwa` shell driving `POST /tasks` and `GET /tasks` against `service-task` via typed `openapi-fetch` (end-to-end type safety from shared Zod schemas through the emitted OpenAPI document to the client's generated types); Husky + lint-staged pre-commit gate running ESLint + Prettier + project-wide `tsc` on every commit; Storybook 8 + `@storybook/test-runner` + play functions + `msw-storybook-addon` as the UI Component-layer CLI gate (supersedes M1 DESIGN.md Decision #33 with new Decision #34); UI Component Folder Layout convention adopted (every UI Component its own directory with colocated tests + `index.ts` re-export; private children nest under their single parent; root pages flat); AGENTS.md updates for UI Component vs system component disambiguation, sibling-default DevTask branching with stacking-only-on-real-dependency, rebase-before-PR rule. Constituent PRs: [#19](https://github.com/jonpham/PSYKL-System/pull/19), [#23](https://github.com/jonpham/PSYKL-System/pull/23), [#24](https://github.com/jonpham/PSYKL-System/pull/24), [#25](https://github.com/jonpham/PSYKL-System/pull/25); Spec integration [#21](https://github.com/jonpham/PSYKL-System/pull/21).
