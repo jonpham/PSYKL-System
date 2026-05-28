@@ -4,8 +4,8 @@
 
 These rules govern every session. Follow them without exception.
 
-
 ## Key Stages, Documents, and Terms
+
 1. **Project** — The monorepo repository and its system is the project, it shares a common overarching goal and status, and should be mapped to an associated GitHub Project.
 2. **Initiative** — A milestone that aims to deliver a new or set of new associated features that expand the system's use cases for its users. Written using `gstack`, and is represented by a design and associated test/eng plans. (Mirrored to GitHub Milestone)
 3. **Spec** — An implementation design and plan for delivering a use case feature identified in an Initiative, can be described by a User Story; Written by `superpowers` based on an Initiative's workstream or phase. A Spec may contain one or more DevTasks. (Mirrored to GitHub Issue)
@@ -16,12 +16,15 @@ These rules govern every session. Follow them without exception.
 > **Why "DevTask" and not "Task":** PSYKL's data model has an entity literally named `Task` (`id, user_id, title, created_at`). To eliminate the collision between workflow-level vocabulary and product-domain vocabulary, this project uses **DevTask** for the workflow concept (a PR-sized unit of work) and reserves bare `Task` for the PSYKL data-model entity. When you see `Task` in code, schemas, API paths, or PSYKL-domain prose, it means the data record. When you see `DevTask`, it means the workflow concept.
 
 ### Phase-Gating (Default)
+
 ## For Planning Designs
+
 - Every document generated for planning or execution should mention the skill used to write it.
 - Stop to discuss or confirm Key engineering decisions whenever there are multiple directions for the design
-- Stop and request user review of a design (*.md) file before moving onto planning next phase or spec.
+- Stop and request user review of a design (\*.md) file before moving onto planning next phase or spec.
 
 ## For Execution on Specs
+
 - During execution, complete exactly **one DevTask** at a time, then STOP and wait for explicit approval. (Applies AFTER `superpowers:writing-plans` has produced all specs. Does NOT apply during the planning skill itself — that skill writes multiple specs in a single session.)
 - A Step is one checklist item in the **active spec doc's `## DevTasks` section** (inside a DevTask block), and ends with a commit. Feature docs (`docs/features/`) do NOT contain Steps — they are post-implementation summaries written once per Spec at the final DevTask's merge.
 - Exception: if the active spec doc has `step_gating: false` in its frontmatter,
@@ -68,17 +71,29 @@ Output the following before stopping:
 - After completing a spec, update frontmatter: `status`, `branch`, `pr`, `completed_at`
 - After completing a spec, summarize changes implemented, significant design decisions, and architectural decisions (ADR) into the spec's associated feature document.
 - Commit feature doc changes as part of the same PR as the implementation. CHANGELOG.md should be updated to include a change log for each feature implemented.
-- After completing an initiative, scan feature documents created over the course of execution. If feature documents successfully summarize the high-level details of the initiative and its specs, the initiative and spec files can be deleted to minimize document sprawl.
+- **At Spec close-out, consolidate AND delete the per-Spec issue brief and execution-plan spec.** The per-Spec feature doc under `docs/features/` is the consolidated record; `docs/initiatives/{initiative}/issues/{spec-brief}.md` and `docs/specs/{initiative}/{spec}.md` are deleted in the same close-out PR. (The initiative-level docs and design docs are deleted later at initiative close-out per the next rule.)
+- After completing an initiative, scan feature documents created over the course of execution. If feature documents successfully summarize the high-level details of the initiative and its specs, the initiative-level docs (`DESIGN.md`, `MILESTONE.md`, retrospectives, remaining issue briefs) can be deleted to minimize document sprawl.
+- **`honors_decisions:` frontmatter must be refreshed on decision re-open.** When a Decisions-appendix entry referenced in any spec doc's `honors_decisions:` is re-opened (rewritten, deprecated, or superseded by a new decision), every spec doc that referenced it must add the new decision number in the same PR that lands the re-open.
+- **Durable docs are refreshed at Spec close-out.** Every Spec's close-out PR refreshes the following when applicable: `README.md` script tables (if scripts changed); `docs/STACK.md` (if the stack table changed); `docs/ARCHITECTURE.md` (if the Spec shipped a new component or ADRs); `CHANGELOG.md` (always — one entry per Spec); `docs/PROJECT_STATUS.md` (always — Active spec advances).
 
 ### Workflow Retrospectives
 
 - After completing an initiative, ask the user if there is anything about the AI Agentic development workflow that they would like changed and update this or other documents accordingly.
+- **Per-Spec retrospectives are optional but recommended** whenever a Spec surfaced friction worth recording (worktree pollution, locked-decision re-opens, tooling swaps, branch-tracking traps, etc.). Land them at `docs/initiatives/{initiative}/retrospectives/{YYYY-MM-DD}-{spec-slug}.md` with the per-spec PRs enumerated in frontmatter and a "Proposed AGENTS.md changes" section if applicable. Initiative-level retrospectives still happen at initiative close-out per the rule above.
+
+### Subagent-Driven Development Discipline
+
+When invoking `superpowers:subagent-driven-development` or dispatching long-lived subagents via the `Agent` tool:
+
+- **Always use `Agent isolation: "worktree"` for implementer subagents.** Without it, the subagent runs in the controller's working tree and can switch the branch out from under the user. Reviewer subagents (read-only) can skip isolation.
+- **Pre-tune `.claude/settings.json` before the first subagent dispatch.** Run `/fewer-permission-prompts` to add common read-only patterns to the project-shared allowlist; subagents inherit the parent's permission mode and uninstrumented commands flood the user with prompts. Project-shared `.claude/settings.json` (NOT `settings.local.json`) so the allowlist applies to every contributor's subagent runs.
+- **Watch token budgets.** Each implementer + 2-stage reviewer cycle can run 50k–100k tokens per task. If the user issues a token-conservation warning, pause and create a handoff doc (see Per-Spec retrospective format) before dispatching more subagents.
+- **Order: sequential by default; parallel only when truly independent.** The skill's two-stage review (spec compliance → code quality) is forbidden to run before the implementer finishes; if multiple DevTasks are truly independent (no shared base mutations, no shared files), they can run in parallel via multiple `Agent` calls in one message.
 
 ### Test Discipline (TDD + Full Test Pyramid)
 
 - **Test-Driven Development (TDD = writing failing tests before implementation) is mandatory.** Every spec orders steps as: failing test(s) → implementation → green → refactor. Never the reverse.
 - **The full test pyramid is established from Milestone 1 and maintained throughout the project's life.** Five layers, ordered fastest-at-base to slowest-at-top. Every Pull Request runs the full pyramid in CI:
-
   1. **Static Analysis** — language- and framework-specific tools for linting, formatting, code-style enforcement, compilation, and type-checking. Examples by component: TypeScript components use ESLint + Prettier + `tsc`; Swift components use SwiftLint + swift-format + the Swift compiler; other languages bring their equivalents. Runs FIRST in every Pull Request; failure blocks every other test layer from running.
   2. **Unit** — pure functions, classes, and small UI Components tested in isolation (e.g. a single React UI Component or a single SwiftUI view). No I/O, no network. Fast.
   3. **Integration** — multi-module interactions within ONE system component: API handler + database, middleware + handler, store + reducer. In-process dependencies are real (in-process pglite in M1, per `docs/initiatives/m1-bootstrap/DESIGN.md` Decision #8); external services not yet involved. Also includes Multi UI Component storybook tests.
@@ -98,13 +113,13 @@ Output the following before stopping:
 
 Every test file lives in a predictable place so a single CI glob catches each layer cleanly. **Convention applies to every component AND every package under `packages/`**:
 
-| Layer | Location | Filename pattern | Canonical run command |
-|-------|----------|------------------|-----------------------|
-| Static Analysis | Configured at component or package root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents). | n/a — runs against all source | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
-| Unit | **Colocated** next to the source it tests, inside `src/`. | `*.unit.test.ts` / `*.unit.test.tsx` | `pnpm -r test:unit` |
-| Integration | Per-component, in a top-level `tests/integration/` directory. For packages with no service-level integration concerns (e.g. `packages/shared-types`), this layer is skipped. | `*.integration.test.ts` | `pnpm -r test:integration` |
-| Component | **Colocated** next to the boundary it verifies. For services, contract tests live next to the controller. For UI applications, **UI Component tests** drive the UI Components against stubbed back-ends using **Storybook 8 + `@storybook/test-runner` (CLI) + play functions**, with **`msw-storybook-addon`** for HTTP stubbing — the project's default UI Component-test toolchain (per M1 DESIGN.md Decision #33 / #34 re-open). The retired `*.component.test.tsx` Vitest pattern is no longer used for UI applications. | `*.contract.test.ts` (services) / `*.stories.tsx` with play functions (UI apps — UI Component tests) | `pnpm -r test:component` |
-| End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs. | `*.e2e.spec.ts` | `pnpm test:e2e` (root-level script) |
+| Layer            | Location                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Filename pattern                                                                                     | Canonical run command                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Static Analysis  | Configured at component or package root (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`, language-specific equivalents).                                                                                                                                                                                                                                                                                                                                                                                           | n/a — runs against all source                                                                        | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
+| Unit             | **Colocated** next to the source it tests, inside `src/`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `*.unit.test.ts` / `*.unit.test.tsx`                                                                 | `pnpm -r test:unit`                                         |
+| Integration      | Per-component, in a top-level `tests/integration/` directory. For packages with no service-level integration concerns (e.g. `packages/shared-types`), this layer is skipped.                                                                                                                                                                                                                                                                                                                                                  | `*.integration.test.ts`                                                                              | `pnpm -r test:integration`                                  |
+| Component        | **Colocated** next to the boundary it verifies. For services, contract tests live next to the controller. For UI applications, **UI Component tests** drive the UI Components against stubbed back-ends using **Storybook 8 + `@storybook/test-runner` (CLI) + play functions**, with **`msw-storybook-addon`** for HTTP stubbing — the project's default UI Component-test toolchain (per M1 DESIGN.md Decision #33 / #34 re-open). The retired `*.component.test.tsx` Vitest pattern is no longer used for UI applications. | `*.contract.test.ts` (services) / `*.stories.tsx` with play functions (UI apps — UI Component tests) | `pnpm -r test:component`                                    |
+| End-to-End (E2E) | Repo-root `e2e/` directory (web client E2E specs). For Apple-native components arriving in M3, per-component `e2e/` is also acceptable since the driver tooling differs.                                                                                                                                                                                                                                                                                                                                                      | `*.e2e.spec.ts`                                                                                      | `pnpm test:e2e` (root-level script)                         |
 
 Concrete example:
 
@@ -169,7 +184,9 @@ src/components/TaskList/
 
 - **Candidate lists in initiative/design docs are constraints-first, not options-first.** A design doc must NOT pre-narrow framework, tool, or library choices unless those choices were explicitly discussed during the design session. Carry the constraint set; let candidates surface during the answer pass (typically `/plan-eng-review` or spec drafting).
 - **Acronyms are defined on first use within a doc**, even if defined elsewhere in the project. Each doc is read independently; the glossary travels with the doc or appears inline.
-- **A design doc's Decisions appendix is normative once status is `APPROVED`.** Subsequent skills (`superpowers:writing-plans`, spec authors, executors) MUST treat those decisions as locked. Re-opening a closed decision requires explicit user permission and a new `/plan-eng-review` pass against the affected design doc.
+- **A design doc's Decisions appendix is normative once status is `APPROVED`.** Subsequent skills (`superpowers:writing-plans`, spec authors, executors) MUST treat those decisions as locked. Re-opening a closed decision requires explicit user permission.
+  - **Wide-scope re-open** (changes that ripple through multiple Specs, alter the test pyramid taxonomy, or change a cross-component contract): requires a new `/plan-eng-review` pass against the affected design doc before the re-open lands.
+  - **Narrow-scope re-open** (a contained tooling swap or toolchain replacement within one Spec, no contract change, no cross-component effect): may use the lighter ceremony — rewrite the original decision in place, add a new decision with explicit rationale and a back-link to the original decision number, and propagate the change through every doc that references the old decision number (including AGENTS.md sections and spec doc `honors_decisions:` frontmatter). No `/plan-eng-review` pass required. The bar for "narrow scope" is conservative: when in doubt, take the wide-scope path.
 - **A design doc's Spec / DevTask Breakdown is an authoritative starting suggestion, not a rigid contract.** `superpowers:writing-plans` may adjust DevTask grouping, split a DevTask into more DevTasks, or split a DevTask into multiple Steps — but MUST cover everything the breakdown enumerates and MUST honor the trilemma resolution rule below.
 - **Trilemma resolution (≤10 production behavior source files per DevTask PR vs tests-in-same-PR vs DevTask count):** When three constraints collide, prefer **(C) splitting DevTasks** over (A) bending the ≤10 production-behavior-source-file rule, and never give on (B) tests-in-same-PR. A design doc's DevTask count is a target, not a ceiling. If a planned DevTask needs >10 production behavior source files, split it. Do not split merely because required tests, configuration, documentation, assets, generated files, or lockfile changes push the total Pull Request diff above 10 files. The Test-Driven Development (TDD) discipline is sacred. The file-count rule applies to DevTask Pull Requests only; Spec integration Pull Requests aggregate all DevTask diffs and have no file limit (see Git Conventions -> Spec/DevTask branching workflow).
 
@@ -240,23 +257,24 @@ For those who want to build on their accomplishments to best suit their own need
 **GitHub Repo:** [jonpham/PSYKL-System](https://github.com/jonpham/PSYKL-System)
 **GitHub Project:** [PSYKL-System Project & Roadmap](https://github.com/users/jonpham/projects/6/)
 **GitHub Milestones:** [PSYKL-System/milestones](https://github.com/jonpham/PSYKL-System/milestones)
+
 ---
 
 ## Project Documentation
 
 Docs live in `docs/`:
 
-| Path                                               | Purpose                                                                     |
-| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Path                                               | Purpose                                                                                                           |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `docs/PRODUCT.md`                                  | Canonical product brief (premise, differentiator, MVP, future features, surfaces, constraints, milestone roadmap) |
-| `docs/PROJECT_STATUS.md`                           | Live status — active initiative / spec / task, locked-in stack, open design surfaces, future review areas |
-| `docs/BACKLOG_IDEAS.md`                            | Someday/maybe learning experiments and side-quests outside the milestone roadmap |
-| `docs/features/`                                   | Completed features describing system behavior with GitHub issue & PR links  |
-| `docs/initiatives/{initiative}/`                   | gstack initiative planning, discovery, and design review artifacts (DESIGN.md + MILESTONE.md per initiative) |
-| `docs/specs/{initiative}/`                         | Active superpowers implementation plans and specs for that initiative       |
-| `docs/templates/FEATURE.md`                        | Post-implementation feature-summary template                                |
-| `docs/templates/SPEC.md`                           | Pre-implementation spec template for `superpowers:writing-plans` to write into |
-| `docs/STACK.md`, `ARCHITECTURE.md`, `CHANGELOG.md` | Reference docs                                                              |
+| `docs/PROJECT_STATUS.md`                           | Live status — active initiative / spec / task, locked-in stack, open design surfaces, future review areas         |
+| `docs/BACKLOG_IDEAS.md`                            | Someday/maybe learning experiments and side-quests outside the milestone roadmap                                  |
+| `docs/features/`                                   | Completed features describing system behavior with GitHub issue & PR links                                        |
+| `docs/initiatives/{initiative}/`                   | gstack initiative planning, discovery, and design review artifacts (DESIGN.md + MILESTONE.md per initiative)      |
+| `docs/specs/{initiative}/`                         | Active superpowers implementation plans and specs for that initiative                                             |
+| `docs/templates/FEATURE.md`                        | Post-implementation feature-summary template                                                                      |
+| `docs/templates/SPEC.md`                           | Pre-implementation spec template for `superpowers:writing-plans` to write into                                    |
+| `docs/STACK.md`, `ARCHITECTURE.md`, `CHANGELOG.md` | Reference docs                                                                                                    |
 
 **No automated GitHub issue sync.** Repository plan documents are the source of truth during development. GitHub Issues may be written manually from planning outputs and referenced as part of feature completion and document consolidation. After development, feature docs represent consolidated plan documents while GitHub becomes the source of truth for released work.
 
@@ -286,6 +304,7 @@ Docs live in `docs/`:
 - NEVER commit directly to `main`; NEVER force push to `main`
 - **HARD RULE: never merge any Pull Request without explicit user approval in the current session.** This applies to every Pull Request type, including DevTask Pull Requests into Spec integration branches, Spec integration Pull Requests into `main`, documentation Pull Requests, and cleanup Pull Requests. Commands such as `gh pr merge`, GitHub connector merge actions, and local merge-then-push workflows are forbidden unless the user has explicitly approved that specific merge.
 - **HARD RULE: never run plain `git push` after creating or rebasing a branch until its upstream is verified.** Before any push, run `git status --short --branch` and `git rev-parse --abbrev-ref --symbolic-full-name @{u}`. If the upstream is missing, is `origin/main`, or is any branch other than the intended remote branch, do **not** run plain `git push`; instead use an explicit refspec: `git push -u origin HEAD:<intended-branch>`. This is mandatory for branches created from remote refs such as `origin/main` or `origin/spec/...`, because Git may inherit the remote ref as the upstream and accidentally push commits to the wrong branch.
+  - **Concrete trap caught in M1 Spec 3:** DT8's branch was created with `git branch feat/m1-s3-dt8-storybook-play-tests origin/feat/web-client-task-ui-from-pwa-shell`. The local branch tracked `origin/feat/web-client-task-ui-from-pwa-shell` (the DT6 branch), NOT its own remote ref. A bare `git push` would have shoved DT8 commits onto the DT6 branch. The explicit-refspec form (`git push -u origin HEAD:feat/m1-s3-dt8-storybook-play-tests`) is what saved it. Always verify with `git rev-parse --abbrev-ref --symbolic-full-name @{u}` first.
 - NEVER force push to `main` or any feature branch tracked by an open PR. If a force-push seems necessary, STOP and provide the command for the user to run manually with precautions.
 - **Exception:** the subtree-sync GitHub Action (per M1 DESIGN.md DevTask 10) force-pushes to the downstream mirror repositories (`jonpham/psykl-{web_client,service-task}`) on every merge to `main`. This is the documented exception — mirror repos are downstream-only and the force-push is the canonical pattern for `git subtree split`. No other force-push is permitted.
 - Always use a feature branch + pull request
@@ -318,6 +337,7 @@ After merging to `main`, the `sync-subtrees-push.yml` workflow automatically pus
 ---
 
 ## Feature Docs
+
 _Rules for writing and updating feature documents that summarize what has been completed in the repository_
 
 - After execution of a spec, check whether a feature document has been created to summarize changes.
@@ -329,6 +349,7 @@ _Rules for writing and updating feature documents that summarize what has been c
 ### Naming Convention
 
 **Feature docs (`docs/features/`):**
+
 ```
 [{YYYYMMDD}]{Milestone-ID}_{feature-slug}.md
 
@@ -336,18 +357,21 @@ _Rules for writing and updating feature documents that summarize what has been c
 ```
 
 **Spec docs (`docs/specs/{initiative}/`):**
+
 ```
 {YYYYMMDD}-Spec{N}-{spec-slug}.md
 
 20260521-Spec1-workspace-bootstrap.md         # Spec 1 of the initiative
 20260521-Spec2-service-task-minimal-api.md    # Spec 2 of the initiative
 ```
+
 - `YYYYMMDD`: spec creation date (does not change)
 - `S{N}`: Spec number within the parent initiative, matching the initiative's DESIGN.md Spec/DevTask Breakdown table.
 - `spec-slug`: kebab-case slug derived from the Spec's User Story / title.
 - DevTask-level work is tracked inside the spec doc's `## Tasks` section (one heading per DevTask), not as separate spec files.
 
 **Universal rules:**
+
 - `YYYYMMDD`: the date the doc was first created (does not change as status moves).
 - `ISSUE_REF`: `P{n}` local plan, `GH{n}` only when a manually created GitHub Issue exists (feature docs only).
 - Status (`TODO` | `IN-PROGRESS` | `DONE` | `BLOCKED`) lives in the doc's frontmatter, **not** in the filename, so files don't need renames as status changes.
@@ -384,6 +408,6 @@ Two skill ecosystems are in use:
 Key routing rules:
 
 - Socratic ideation / "I have an idea, help me think it through" → `/office-hours` (gstack)
-- Product ideas and initiative planning → use gstack; write *.md files under `docs/initiatives/{initiative}/`
+- Product ideas and initiative planning → use gstack; write \*.md files under `docs/initiatives/{initiative}/`
 - Strategy, scope, architecture, design, and developer-experience review → use gstack plan-review skills; outputs under `docs/initiatives/{initiative}/`
 - Implementation planning and design → use superpowers; write specs under `docs/specs/{initiative}/`
