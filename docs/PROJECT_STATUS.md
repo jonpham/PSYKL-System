@@ -4,12 +4,12 @@
 
 **Last completed spec:** M1 Spec 4 — Local Dev Stack. Feature doc: [`[20260520]GH5_m1-local-dev-stack.md`](features/%5B20260520%5DGH5_m1-local-dev-stack.md). DevTask PR [#28](https://github.com/jonpham/PSYKL-System/pull/28) targets Spec integration PR [#27](https://github.com/jonpham/PSYKL-System/pull/27).
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 4 of 6 specs shipped (S1, S2, S3, S4); 2 remaining (S5, S6).
-**Active spec for execution:** N/A — Spec 4 close-out is complete in PR [#28](https://github.com/jonpham/PSYKL-System/pull/28). Do not begin Spec 5 without a new AI assistant session.
-**Next executable spec:** M1 Spec 5 — CI Test Pipeline (`docs/specs/m1-bootstrap/20260520-S5-ci-test-pipeline.md`).
-**Active skill:** `document-release`.
-**Branch:** DevTask branch `infra/m1-s4-dt7-docker-compose-stack` in isolated worktree `worktrees/m1-s4-dt7-docker-compose-stack`.
-**Current step:** S4 close-out docs are being finalized before marking PR [#28](https://github.com/jonpham/PSYKL-System/pull/28) ready for review.
-**Next action:** Run documentation verification, commit/push the S4 close-out changes, then request code review before marking PR #28 ready. Do NOT merge any Pull Request without explicit user approval in the current session.
+**Active spec for execution:** M1 Spec 5 — CI Test Pipeline (`docs/specs/m1-bootstrap/20260520-S5-ci-test-pipeline.md`), DevTask 8/8.
+**Next executable spec:** M1 Spec 6 — CD Release Pipeline (`docs/specs/m1-bootstrap/20260520-S6-cd-release-pipeline.md`) after Spec 5 close-out. Do not begin Spec 6 without a new AI assistant session.
+**Active skill:** `superpowers:executing-plans`.
+**Branch:** DevTask branch `infra/m1-s5-dt8-ci-test-pipeline` in isolated worktree `worktrees/m1-s5-ci-test-pipeline`.
+**Current step:** S5 DevTask 8 Steps 1-11 are implemented and locally verified; Step 12 remains to commit/push/open the Pull Request, and Steps 13-14 require post-merge branch-protection verification.
+**Next action:** Commit the local S5 DevTask 8 changes, then ask before pushing/opening the Pull Request. Do NOT merge any Pull Request without explicit user approval in the current session.
 **Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)

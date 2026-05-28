@@ -29,15 +29,15 @@ honors_decisions: [11, 17, 23, 24, 27, 28]
 
 ## File Structure
 
-| File | Purpose |
-|------|---------|
-| `/Users/jp/code/psykl/.github/workflows/ci.yml` | Lint + typecheck + format-check + Unit + Integration + Component (per-component, via pnpm -r) |
-| `/Users/jp/code/psykl/.github/workflows/ci-e2e.yml` | E2E job: build compose stack, bring up with E2E overlay, run Playwright, tear down |
-| `/Users/jp/code/psykl/vitest.workspace.ts` | Vitest workspace mode config referencing each component/package's vitest.config.ts |
-| `/Users/jp/code/psykl/e2e/package.json` | E2E test package (Playwright deps, scripts) |
-| `/Users/jp/code/psykl/e2e/playwright.config.ts` | Playwright config: baseURL, single Chromium project, 1 retry in CI |
-| `/Users/jp/code/psykl/e2e/m1-task-crud.e2e.spec.ts` | E2E test: open PWA, create task, see it in list |
-| `/Users/jp/code/psykl/e2e/tsconfig.json` | TS config for e2e/ |
+| File                                                | Purpose                                                                                       |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `/Users/jp/code/psykl/.github/workflows/ci.yml`     | Lint + typecheck + format-check + Unit + Integration + Component (per-component, via pnpm -r) |
+| `/Users/jp/code/psykl/.github/workflows/ci-e2e.yml` | E2E job: build compose stack, bring up with E2E overlay, run Playwright, tear down            |
+| `/Users/jp/code/psykl/vitest.workspace.ts`          | Vitest workspace mode config referencing each component/package's vitest.config.ts            |
+| `/Users/jp/code/psykl/e2e/package.json`             | E2E test package (Playwright deps, scripts)                                                   |
+| `/Users/jp/code/psykl/e2e/playwright.config.ts`     | Playwright config: baseURL, single Chromium project, 1 retry in CI                            |
+| `/Users/jp/code/psykl/e2e/m1-task-crud.e2e.spec.ts` | E2E test: open PWA, create task, see it in list                                               |
+| `/Users/jp/code/psykl/e2e/tsconfig.json`            | TS config for e2e/                                                                            |
 
 ---
 
@@ -45,7 +45,7 @@ honors_decisions: [11, 17, 23, 24, 27, 28]
 
 Start DevTask 8 on a branch off `main`: `git checkout main && git pull && git checkout -b infra/ci-test-pipeline`.
 
-- [ ] **Step 1: Add `vitest.workspace.ts` at repo root**
+- [x] **Step 1: Add `vitest.workspace.ts` at repo root**
 
 Write `/Users/jp/code/psykl/vitest.workspace.ts`:
 
@@ -59,7 +59,7 @@ export default defineWorkspace([
 ]);
 ```
 
-- [ ] **Step 2: Update root `package.json` test scripts to use workspace mode where applicable**
+- [x] **Step 2: Update root `package.json` test scripts to use workspace mode where applicable**
 
 Modify root `package.json`'s `scripts` section. Replace the test scripts with:
 
@@ -72,7 +72,7 @@ Modify root `package.json`'s `scripts` section. Replace the test scripts with:
 
 (Vitest with workspace + an `--include` pattern will fan out across all configured packages.)
 
-- [ ] **Step 3: Create `e2e/package.json`**
+- [x] **Step 3: Create `e2e/package.json`**
 
 ```json
 {
@@ -95,22 +95,22 @@ Modify root `package.json`'s `scripts` section. Replace the test scripts with:
 }
 ```
 
-- [ ] **Step 4: Add `e2e/` to `pnpm-workspace.yaml`**
+- [x] **Step 4: Add `e2e/` to `pnpm-workspace.yaml`**
 
 Modify `/Users/jp/code/psykl/pnpm-workspace.yaml`:
 
 ```yaml
 packages:
-  - "components/*"
-  - "packages/*"
-  - "e2e"
+  - 'components/*'
+  - 'packages/*'
+  - 'e2e'
 ```
 
-- [ ] **Step 5: Install Playwright**
+- [x] **Step 5: Install Playwright**
 
 Run: `pnpm install`. Then: `pnpm --filter @psykl/e2e test:install-browsers` (locally; CI caches this).
 
-- [ ] **Step 6: Create `e2e/tsconfig.json`**
+- [x] **Step 6: Create `e2e/tsconfig.json`**
 
 ```json
 {
@@ -126,7 +126,7 @@ Run: `pnpm install`. Then: `pnpm --filter @psykl/e2e test:install-browsers` (loc
 }
 ```
 
-- [ ] **Step 7: Create `e2e/playwright.config.ts`**
+- [x] **Step 7: Create `e2e/playwright.config.ts`**
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
@@ -154,7 +154,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 8: Write the failing E2E spec**
+- [x] **Step 8: Write the failing E2E spec**
 
 Write `e2e/m1-task-crud.e2e.spec.ts`:
 
@@ -192,7 +192,7 @@ test.describe('M1: PSYKL Task CRUD via PWA', () => {
 });
 ```
 
-- [ ] **Step 9: Verify the E2E spec passes locally against the running stack**
+- [x] **Step 9: Verify the E2E spec passes locally against the running stack**
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
@@ -203,7 +203,7 @@ docker compose -f docker-compose.yml -f docker-compose.e2e.yml down
 
 Expected: both tests pass. If they fail because the PWA can't reach service-task: check that the web_client container's nginx serves the SPA correctly and the `VITE_API_URL` was baked into the build (default `http://localhost:3000` should work from a host browser, since both ports are exposed on host).
 
-- [ ] **Step 10: Create `.github/workflows/ci.yml`**
+- [x] **Step 10: Create `.github/workflows/ci.yml`**
 
 Write `/Users/jp/code/psykl/.github/workflows/ci.yml`:
 
@@ -276,7 +276,7 @@ jobs:
         run: pnpm test:component
 ```
 
-- [ ] **Step 11: Create `.github/workflows/ci-e2e.yml`**
+- [x] **Step 11: Create `.github/workflows/ci-e2e.yml`**
 
 ```yaml
 name: CI E2E
@@ -407,6 +407,7 @@ Add a note to `CONTRIBUTING.md` (or `README.md`'s "Development" section) referen
 - [ ] **Step 14: Verify branch protection blocks a failing PR**
 
 Open a throwaway PR that intentionally breaks a test (e.g., change an assertion in `task.service.unit.test.ts` to fail). Confirm:
+
 - CI workflow runs, fails on the broken assertion.
 - The "Merge pull request" button is disabled with "Required statuses must pass before merging."
 - Revert the change; CI re-runs; merge button enables.

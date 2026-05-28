@@ -1,3 +1,4 @@
 packages:
-  - "components/*"
-  - "packages/*"
+  - 'components/*'
+  - 'packages/*'
+  - 'e2e'
