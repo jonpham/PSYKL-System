@@ -387,7 +387,7 @@ docker compose down -v
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
 ```
 
-- [ ] **Step 15: Commit DevTask 7**
+- [x] **Step 15: Commit DevTask 7**
 
 ```bash
 git add docker-compose.yml docker-compose.e2e.yml \

@@ -4,12 +4,12 @@
 
 **Last completed spec:** M1 Spec 3 — web_client Minimal PWA. Feature doc: [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md). Spec integration PR [#21](https://github.com/jonpham/PSYKL-System/pull/21) is merged to `main`.
 **Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 3 of 6 specs shipped (S1, S2, S3); 3 remaining (S4, S5, S6).
-**Active spec for execution:** N/A.
-**Next executable spec:** M1 Spec 4 — local dev stack (`docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`); start with a fresh session and `superpowers:subagent-driven-development` against that plan.
-**Active skill:** Idle.
-**Branch:** `main` is current through Spec 3 close-out plus follow-up docs/tooling fixes. Next work should branch from `main`.
-**Current step:** N/A — between Specs.
-**Next action:** Start a fresh Spec 4 execution session with `superpowers:subagent-driven-development` against `docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`. Do NOT merge any Pull Request without explicit user approval in the current session.
+**Active spec for execution:** M1 Spec 4 — local dev stack (`docs/specs/m1-bootstrap/20260520-S4-local-dev-stack.md`).
+**Next executable spec:** N/A — Spec 4 is currently executing. After Spec 4 merges, next is M1 Spec 5 — CI Test Pipeline (`docs/specs/m1-bootstrap/20260520-S5-ci-test-pipeline.md`).
+**Active skill:** `superpowers:executing-plans`.
+**Branch:** DevTask branch `infra/m1-s4-dt7-docker-compose-stack` in isolated worktree `worktrees/m1-s4-dt7-docker-compose-stack`.
+**Current step:** DevTask 7 local implementation complete; ready for PR publication/review.
+**Next action:** Create or verify Spec integration branch `spec/m1-s4-local-dev-stack`, push `infra/m1-s4-dt7-docker-compose-stack`, and open the DevTask PR targeting the Spec branch. Do NOT merge any Pull Request without explicit user approval in the current session.
 **Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
@@ -48,14 +48,14 @@ Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started
 
 ## M1 Specs
 
-| Spec | Title                    | Status                                      | Feature doc                                                                                                 |
-| ---- | ------------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| S1   | Workspace Bootstrap      | 🟢 Shipped                                  | [`[20260520]GH2_m1-workspace-bootstrap.md`](features/%5B20260520%5DGH2_m1-workspace-bootstrap.md)           |
-| S2   | service-task Minimal API | 🟢 Shipped                                  | [`[20260520]GH3_m1-service-task-minimal-api.md`](features/%5B20260520%5DGH3_m1-service-task-minimal-api.md) |
-| S3   | web_client Minimal PWA   | 🟢 Shipped                                  | [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md)     |
-| S4   | Local Dev Stack          | ⚪ Pending — execution plan ready           | _written at close-out_                                                                                      |
-| S5   | CI Test Pipeline         | ⚪ Pending — execution plan ready           | _written at close-out_                                                                                      |
-| S6   | CD Release Pipeline      | ⚪ Pending — execution plan ready           | _written at close-out_                                                                                      |
+| Spec | Title                    | Status                            | Feature doc                                                                                                 |
+| ---- | ------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| S1   | Workspace Bootstrap      | 🟢 Shipped                        | [`[20260520]GH2_m1-workspace-bootstrap.md`](features/%5B20260520%5DGH2_m1-workspace-bootstrap.md)           |
+| S2   | service-task Minimal API | 🟢 Shipped                        | [`[20260520]GH3_m1-service-task-minimal-api.md`](features/%5B20260520%5DGH3_m1-service-task-minimal-api.md) |
+| S3   | web_client Minimal PWA   | 🟢 Shipped                        | [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md)     |
+| S4   | Local Dev Stack          | ⚪ Pending — execution plan ready | _written at close-out_                                                                                      |
+| S5   | CI Test Pipeline         | ⚪ Pending — execution plan ready | _written at close-out_                                                                                      |
+| S6   | CD Release Pipeline      | ⚪ Pending — execution plan ready | _written at close-out_                                                                                      |
 
 ## Remaining Design Areas That Require `/plan-eng-review`
 
