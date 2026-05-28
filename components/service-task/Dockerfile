@@ -36,8 +36,9 @@ COPY --from=builder /repo/packages/shared-types/package.json /repo/packages/shar
 COPY --from=builder /repo/components/service-task/package.json /repo/components/service-task/dist /app/components/service-task/
 COPY --from=builder /repo/components/service-task/drizzle /app/components/service-task/drizzle
 
-# Install production-only deps in the runtime image.
-RUN pnpm install --prod --frozen-lockfile
+# Install production-only deps in the runtime image. Ignore lifecycle scripts so
+# root `prepare` does not try to run Husky without dev dependencies installed.
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 ENV NODE_ENV=production
 ENV PORT=3000
