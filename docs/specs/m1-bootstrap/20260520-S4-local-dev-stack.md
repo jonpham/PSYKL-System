@@ -59,7 +59,7 @@ coverage
 README.md
 ```
 
-- [ ] **Step 2: Write `components/service-task/Dockerfile`**
+- [x] **Step 2: Write `components/service-task/Dockerfile`**
 
 ```dockerfile
 # syntax=docker/dockerfile:1.7
