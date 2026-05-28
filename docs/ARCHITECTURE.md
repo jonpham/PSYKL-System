@@ -63,16 +63,31 @@ M1 and M2 use a deliberately simple single-user auth posture. Every request must
 
 `user_id` ownership is the access model. There are no per-Task access control lists because PSYKL is single-user, multi-device, and never collaborative. Real authentication can replace the header source in M4 without changing the Task data model.
 
+### web_client Component
+
+`components/web_client` is a Vite + React (SPA mode) Progressive Web App with a `vite-plugin-pwa`-emitted Web App Manifest. M1 exposes:
+
+- An installable PWA shell rendered by `App.tsx` (M1 is online-required; service worker / offline cache deferred to M2).
+- A Task UI composed of `TaskCreateForm` and `TaskList` UI Components that drive `POST /tasks` and `GET /tasks` against `service-task`.
+- A typed `openapi-fetch` client (`src/api/client.ts`) consuming `openapi-typescript`-generated types from the emitted `components/service-task/openapi.json`. End-to-end type safety: a Zod schema change in `service-task` propagates through the OpenAPI document into the client's generated types and surfaces as a `tsc` error in `web_client`.
+
+UI Components follow the per-component folder layout (`src/components/<Name>/{<Name>.tsx, <Name>.unit.test.tsx, <Name>.stories.tsx, index.ts}`). Root-page components (`App.tsx`) stay flat as the only documented exception. Private child UI Components nest as subdirectories of their single parent.
+
+### Repo-wide Local Static-Analysis Gate
+
+A Husky `pre-commit` hook at the repository root runs the Static Analysis layer (`pnpm exec lint-staged` → `pnpm -r format:check` → `pnpm -r typecheck`) on every commit, pulling Test Pyramid Layer 1 forward to local commit time so failures don't reach CI. `prepare: "husky"` in root `package.json` installs the hook on first `pnpm install` for every contributor. The `--no-verify` escape hatch is documented but its use must be logged in the commit body per the project's Git Safety Protocol.
+
 ### Testing Strategy
 
-The M1 service establishes the lower layers of the project test pyramid:
+The M1 service + PWA establishes all five layers of the project test pyramid except E2E:
 
-- Unit: pure service behavior such as UUID v7 generation and user-scoped query shape.
-- Integration: Drizzle plus pglite schema and persistence behavior.
-- Component: in-process HTTP contract tests for guard negative paths and Task endpoint positive paths.
-- Static Analysis: ESLint, Prettier, and TypeScript scripts at package and recursive workspace levels.
-
-End-to-end browser testing is planned for M1 Spec 5 after the PWA and Docker Compose stack exist.
+- **Static Analysis:** ESLint, Prettier, and TypeScript scripts at package and recursive workspace levels. Mandatory in CI and enforced locally by the Husky pre-commit hook.
+- **Unit:** pure service behavior (UUID v7 generation, user-scoped query shape) and React UI Components rendered in isolation via Vitest + Testing Library.
+- **Integration:** Drizzle plus pglite schema and persistence behavior. `web_client` has no Integration layer in M1 (no in-process database or middleware boundary; Decision #22).
+- **Component:**
+  - For `service-task`: in-process HTTP contract tests for guard negative paths and Task endpoint positive paths.
+  - For `web_client`: **UI Component tests** authored as Storybook 8 stories with play functions, executed via `@storybook/test-runner` against the built Storybook static. `msw-storybook-addon` initializes Mock Service Worker inside the story preview so the same handler set from `src/test/msw-handlers.ts` stubs the `service-task` boundary in both Vitest setup and Storybook. Each play function doubles as a Manual Visual Check surface when run interactively via `pnpm --filter @psykl/web-client storybook`.
+- **End-to-End:** planned for M1 Spec 5 after the PWA and Docker Compose stack exist (Playwright; locked per DESIGN.md Decision #28).
 
 ## Architecture Decision Records
 
@@ -115,3 +130,27 @@ Use a global NestJS guard as the M1/M2 authorization boundary. It enforces `X-Us
 ### ADR-M1-010: Root Static Analysis Configuration
 
 Use root ESLint flat config and Prettier config for TypeScript workspace packages. Package scripts invoke shared configuration to make recursive CI checks deterministic.
+
+### ADR-M1-011: Vite + React (SPA Mode) for the PWA
+
+Use Vite + React in SPA mode with `vite-plugin-pwa` for the M1 web client. Chosen over Next.js / Remix / SvelteKit specifically to avoid server-component-blended frameworks (per DESIGN.md Premise 4). The PWA is a clean static app served by nginx in production, not a Node server. M1 ships an installable manifest only; offline service worker and sync engine are M2 work.
+
+### ADR-M1-012: End-to-End Type Safety via openapi-fetch + openapi-typescript
+
+The web client consumes `service-task` through `openapi-fetch` typed against `openapi-typescript`-generated types from the emitted `openapi.json`. The contract is enforced by the TypeScript compiler — a Zod schema change in `service-task` propagates through the OpenAPI document into the client's generated types and breaks `tsc` in `web_client`. Both the OpenAPI document and the generated types are gitignored; CI regenerates them on every PR.
+
+### ADR-M1-013: MSW for HTTP Boundary Stubbing
+
+Mock Service Worker (`msw`) is the project's HTTP boundary stub mechanism. It operates at the `fetch` layer (closest to "stubbed back-end"), doesn't require mocking the `openapi-fetch` client internals, and the handler set is reusable across Vitest setup and Storybook stories via `msw-storybook-addon`. Single source of truth lives at `components/web_client/src/test/msw-handlers.ts`.
+
+### ADR-M1-014: Storybook + Play Tests as the UI Component-Layer Toolchain
+
+UI Component-layer tests are authored as Storybook 8 stories with play functions and executed via `@storybook/test-runner` against the built Storybook static. The `pnpm --filter @psykl/web-client test:component` script builds the static, serves it via `http-server`, runs `test-storybook --ci`, and the test-runner exit code gates the layer. Each play function doubles as a visual Manual Check surface in `storybook dev`. Supersedes the originally locked Decision #33 (which named Vitest + Testing Library as the Component-layer toolchain for UI applications); the supersession is documented in new Decision #34. The `*.contract.test.ts` filename pattern still governs service-side Component contract tests.
+
+### ADR-M1-015: UI Component Folder Layout
+
+Every UI Component lives in its own directory (`src/components/<Name>/`) with `<Name>.tsx`, colocated tests (`*.unit.test.tsx` + `*.stories.tsx`), and an `index.ts` re-export so import paths stay stable. Private child UI Components nest as subdirectories of their single parent and promote back to the top level only when a second consumer appears. Root-page components (`App.tsx`, future `src/pages/*`) are the only flat exception. The convention disambiguates UI Component (presentation unit) from system **component** (top-level `components/` directory entries such as `web_client`, `service-task`).
+
+### ADR-M1-016: Husky Pre-Commit Static-Analysis Gate
+
+A repository-root Husky `pre-commit` hook runs `pnpm exec lint-staged` → `pnpm -r format:check` → `pnpm -r typecheck` on every commit. Pre-commit composition pulls Test Pyramid Layer 1 forward to local commit time so failures don't reach CI. `prepare: "husky"` in root `package.json` installs the hook on first `pnpm install` for every contributor. The `--no-verify` escape hatch is documented but its use must be logged in the commit body per the Git Safety Protocol.
