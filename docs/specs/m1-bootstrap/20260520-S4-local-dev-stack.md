@@ -215,7 +215,7 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-- [ ] **Step 6: Write `/Users/jp/code/psykl/docker-compose.yml`**
+- [x] **Step 6: Write `/Users/jp/code/psykl/docker-compose.yml`**
 
 ```yaml
 name: psykl
