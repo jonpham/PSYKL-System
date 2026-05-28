@@ -21,6 +21,8 @@ For people who want to build on their accomplishments using **repetition and ene
 ├── components/                # System components (each with its own tech stack + downstream subtree mirror)
 │   ├── service-task/          # NestJS REST API (Tasks; pglite via Drizzle)
 │   └── web_client/            # Vite + React PWA consuming service-task via openapi-fetch
+├── docker-compose.yml         # Full local stack: service-task + web_client + persistent pglite volume
+├── docker-compose.e2e.yml     # E2E overlay: tmpfs pglite state for clean test runs
 ├── packages/                  # Shared library packages
 │   └── shared-types/          # Zod schemas → TypeScript types → OpenAPI source of truth
 ├── docs/                      # Project docs — see "Documentation" below
@@ -44,6 +46,7 @@ For people who want to build on their accomplishments using **repetition and ene
 
 - **Node 24 LTS** — pinned via `.nvmrc`. Activate with `nvm use` (or your platform's equivalent).
 - **pnpm 10.x** — pinned via the root `packageManager` field. Activate with Corepack: `corepack enable && corepack prepare pnpm@10 --activate`.
+- **Docker Engine + Docker Compose v2** — used for the full-stack local runtime and the future E2E workflow.
 - `engine-strict=true` in `.npmrc` means a mismatched Node/pnpm version fails at `pnpm install` time. This is intentional.
 
 ### Install
@@ -71,6 +74,20 @@ Both artifacts are gitignored; CI regenerates them on every PR.
 ---
 
 ## Run locally
+
+### Run the full stack with Docker Compose
+
+```sh
+docker compose up --build
+```
+
+Open `http://localhost:5173`. The PWA is served by nginx and calls `service-task` on `http://localhost:3000`. Task data persists in the `psykl-pglite-data` Docker volume until you run `docker compose down -v`.
+
+Use the E2E overlay when you need a clean pglite store on each stack run:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --build
+```
 
 ### Run the API
 
@@ -144,14 +161,15 @@ Or use the root pass-through scripts (same effect):
 
 ### Full-stack smoke
 
-After Spec 4 lands the local Docker Compose stack this gets replaced with a single `docker compose up` command. Until then:
+Use Docker Compose for the full-stack local smoke:
 
-1. `pnpm --filter @psykl/service-task dev` (terminal 1).
-2. `pnpm --filter @psykl/web-client dev` (terminal 2).
-3. Open `http://localhost:5173`.
-4. Create a task, refresh, confirm it persists.
-5. DevTools → Application → Manifest should load cleanly (installable PWA).
-6. DevTools → Network: confirm `POST /tasks` carries `X-User-Id: local` and `Content-Type: application/json`; no CORS errors.
+1. Run `docker compose up --build`.
+2. Open `http://localhost:5173`.
+3. Create a task, refresh, confirm it persists.
+4. Run `docker compose down`, then `docker compose up` again; confirm the task still exists.
+5. Run `docker compose down -v`, then `docker compose up` again; confirm the task list is empty.
+6. DevTools → Application → Manifest should load cleanly (installable PWA).
+7. DevTools → Network: confirm `POST /tasks` carries `X-User-Id: local` and `Content-Type: application/json`; no CORS errors.
 
 ### Pre-commit hook
 
@@ -169,7 +187,7 @@ Husky runs `pnpm exec lint-staged → pnpm -r format:check → pnpm -r typecheck
 - Helm chart lives at `deploy/helm/`.
 - After a merge to `main`, CI runs `git subtree split` + force-push of `components/*` to their downstream mirror repos (`jonpham/psykl-{service-task,web_client}`).
 
-For the current shape of what's planned see [`docs/STACK.md`](docs/STACK.md) → "Pending" and [`docs/initiatives/m1-bootstrap/DESIGN.md`](docs/initiatives/m1-bootstrap/DESIGN.md) Decisions #16, #17, #21, #27, #30.
+The local Docker Compose runtime is available now for development and future E2E runs; image publishing and Helm deployment are still Spec 6 work. For the current shape see [`docs/STACK.md`](docs/STACK.md) → "Pending" and [`docs/initiatives/m1-bootstrap/DESIGN.md`](docs/initiatives/m1-bootstrap/DESIGN.md) Decisions #16, #17, #21, #27, #30.
 
 ---
 

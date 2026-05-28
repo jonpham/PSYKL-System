@@ -1,0 +1,50 @@
+name: psykl
+
+services:
+  service-task:
+    build:
+      context: .
+      dockerfile: components/service-task/Dockerfile
+    image: psykl-service-task:local
+    container_name: psykl-service-task
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      PGLITE_DATA_DIR: /var/lib/psykl/pglite
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3000:3000'
+    volumes:
+      - psykl-pglite-data:/var/lib/psykl/pglite
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/tasks', { headers: { 'X-User-Id': 'healthcheck' } }).then(r => process.exit(r.status === 401 ? 1 : 0)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web-client:
+    build:
+      context: .
+      dockerfile: components/web_client/Dockerfile
+    image: psykl-web-client:local
+    container_name: psykl-web-client
+    depends_on:
+      service-task:
+        condition: service_healthy
+    ports:
+      - '5173:80'
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://127.0.0.1:80/']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  psykl-pglite-data:
+    name: psykl-pglite-data
