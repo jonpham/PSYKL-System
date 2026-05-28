@@ -29,15 +29,15 @@ honors_decisions: [14, 15, 21, 25, 27, 29, 32]
 
 ## File Structure
 
-| File                                                         | Purpose                                                                                               |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `/Users/jp/code/psykl/docker-compose.yml`                    | Production-shaped local stack: service-task (Node) + web_client (nginx) + named volume                |
-| `/Users/jp/code/psykl/docker-compose.e2e.yml`                | Overlay: swaps the pglite named volume for `tmpfs` so E2E runs start clean                            |
-| `/Users/jp/code/psykl/components/service-task/Dockerfile`    | Multi-stage: builder (pnpm install + tsc build) → runtime (node:24-bookworm-slim + dist + migrations) |
-| `/Users/jp/code/psykl/components/service-task/.dockerignore` | Exclude node_modules, dist, tests, .pglite-dev/                                                       |
-| `/Users/jp/code/psykl/components/web_client/Dockerfile`      | Multi-stage: builder (pnpm install + vite build) → runtime (nginx:alpine + dist)                      |
-| `/Users/jp/code/psykl/components/web_client/nginx.conf`      | SPA-fallback rewrite + reasonable defaults                                                            |
-| `/Users/jp/code/psykl/components/web_client/.dockerignore`   | Exclude node_modules, dist, src/api/types.ts                                                          |
+| File                                                                   | Purpose                                                                                               |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `/Users/jp/code/psykl/docker-compose.yml`                              | Production-shaped local stack: service-task (Node) + web_client (nginx) + named volume                |
+| `/Users/jp/code/psykl/docker-compose.e2e.yml`                          | Overlay: swaps the pglite named volume for `tmpfs` so E2E runs start clean                            |
+| `/Users/jp/code/psykl/components/service-task/Dockerfile`              | Multi-stage: builder (pnpm install + tsc build) → runtime (node:24-bookworm-slim + dist + migrations) |
+| `/Users/jp/code/psykl/components/service-task/Dockerfile.dockerignore` | Exclude node_modules, dist, tests, .pglite-dev/ from the service-task Docker build context            |
+| `/Users/jp/code/psykl/components/web_client/Dockerfile`                | Multi-stage: builder (pnpm install + vite build) → runtime (nginx:alpine + dist)                      |
+| `/Users/jp/code/psykl/components/web_client/nginx.conf`                | SPA-fallback rewrite + reasonable defaults                                                            |
+| `/Users/jp/code/psykl/components/web_client/Dockerfile.dockerignore`   | Exclude node_modules, dist, src/api/types.ts from the web_client Docker build context                 |
 
 ---
 
@@ -45,7 +45,7 @@ honors_decisions: [14, 15, 21, 25, 27, 29, 32]
 
 Start DevTask 7 on a branch off `main`: `git checkout main && git pull && git checkout -b infra/docker-compose-stack`.
 
-- [x] **Step 1: Write `components/service-task/.dockerignore`**
+- [x] **Step 1: Write `components/service-task/Dockerfile.dockerignore`**
 
 ```
 node_modules
@@ -118,7 +118,7 @@ WORKDIR /app/components/service-task
 CMD ["node", "dist/src/main.js"]
 ```
 
-- [x] **Step 3: Write `components/web_client/.dockerignore`**
+- [x] **Step 3: Write `components/web_client/Dockerfile.dockerignore`**
 
 ```
 node_modules
@@ -391,8 +391,8 @@ docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
 
 ```bash
 git add docker-compose.yml docker-compose.e2e.yml \
-        components/service-task/Dockerfile components/service-task/.dockerignore \
-        components/web_client/Dockerfile components/web_client/nginx.conf components/web_client/.dockerignore
+        components/service-task/Dockerfile components/service-task/Dockerfile.dockerignore \
+        components/web_client/Dockerfile components/web_client/nginx.conf components/web_client/Dockerfile.dockerignore
 git commit -m "infra(M1-T7): Docker Compose stack with nginx, pglite volume, and E2E overlay
 
 Two-container production-shaped stack (service-task + web-client) with

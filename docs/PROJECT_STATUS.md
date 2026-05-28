@@ -8,8 +8,8 @@
 **Next executable spec:** N/A — Spec 4 is currently executing. After Spec 4 merges, next is M1 Spec 5 — CI Test Pipeline (`docs/specs/m1-bootstrap/20260520-S5-ci-test-pipeline.md`).
 **Active skill:** `superpowers:executing-plans`.
 **Branch:** DevTask branch `infra/m1-s4-dt7-docker-compose-stack` in isolated worktree `worktrees/m1-s4-dt7-docker-compose-stack`.
-**Current step:** DevTask 7 local implementation complete; ready for PR publication/review.
-**Next action:** Create or verify Spec integration branch `spec/m1-s4-local-dev-stack`, push `infra/m1-s4-dt7-docker-compose-stack`, and open the DevTask PR targeting the Spec branch. Do NOT merge any Pull Request without explicit user approval in the current session.
+**Current step:** DevTask 7 implementation published as draft PR [#28](https://github.com/jonpham/PSYKL-System/pull/28) targeting Spec integration PR [#27](https://github.com/jonpham/PSYKL-System/pull/27); code review in progress.
+**Next action:** Address PR #28 review findings, rerun Docker Compose verification, then mark PR #28 ready for review. Do NOT merge any Pull Request without explicit user approval in the current session.
 **Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)

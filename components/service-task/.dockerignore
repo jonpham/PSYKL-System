@@ -1,9 +1,0 @@
-node_modules
-dist
-.pglite-dev
-**/*.test.ts
-tests
-coverage
-.git
-.gitignore
-README.md
