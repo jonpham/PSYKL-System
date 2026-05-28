@@ -263,7 +263,7 @@ services:
     ports:
       - '5173:80'
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:80/']
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://127.0.0.1:80/']
       interval: 10s
       timeout: 5s
       retries: 5
