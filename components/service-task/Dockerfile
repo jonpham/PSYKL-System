@@ -32,8 +32,10 @@ RUN corepack enable
 
 # Copy production node_modules + built dist from the builder.
 COPY --from=builder /repo/package.json /repo/pnpm-workspace.yaml /repo/pnpm-lock.yaml ./
-COPY --from=builder /repo/packages/shared-types/package.json /repo/packages/shared-types/dist /app/packages/shared-types/
-COPY --from=builder /repo/components/service-task/package.json /repo/components/service-task/dist /app/components/service-task/
+COPY --from=builder /repo/packages/shared-types/package.json /app/packages/shared-types/package.json
+COPY --from=builder /repo/packages/shared-types/dist /app/packages/shared-types/dist
+COPY --from=builder /repo/components/service-task/package.json /app/components/service-task/package.json
+COPY --from=builder /repo/components/service-task/dist /app/components/service-task/dist
 COPY --from=builder /repo/components/service-task/drizzle /app/components/service-task/drizzle
 
 # Install production-only deps in the runtime image. Ignore lifecycle scripts so
