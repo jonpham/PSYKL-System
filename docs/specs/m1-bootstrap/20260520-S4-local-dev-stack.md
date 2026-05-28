@@ -130,7 +130,7 @@ coverage
 README.md
 ```
 
-- [ ] **Step 4: Write `components/web_client/nginx.conf`**
+- [x] **Step 4: Write `components/web_client/nginx.conf`**
 
 ```nginx
 worker_processes auto;
