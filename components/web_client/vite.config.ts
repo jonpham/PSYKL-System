@@ -16,7 +16,11 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
-        icons: [{ src: '/pwa-icon.png', sizes: '192x192 512x512', type: 'image/png' }],
+        icons: [
+          { src: '/pwa-icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/pwa-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        ],
       },
       // M1 ships the manifest only. Service worker and offline cache are M2 work.
       injectRegister: false,
