@@ -162,16 +162,36 @@ Or use the root pass-through scripts (same effect):
 | `pnpm test:component`   | `pnpm -r test:component`        |
 | `pnpm test:e2e`         | `pnpm --filter @psykl/e2e test` |
 
+The GitHub Actions workflows call root verification scripts. Commands with multi-step shell behavior delegate to reusable scripts under `scripts/`:
+
+| Root script                              | Behavior                                        |
+| ---------------------------------------- | ----------------------------------------------- |
+| `pnpm verify:prepare`                    | Builds shared types, OpenAPI, and web API types |
+| `pnpm verify:static`                     | Lint, format check, and typecheck               |
+| `pnpm verify:unit`                       | Unit tests                                      |
+| `pnpm verify:integration`                | Integration tests                               |
+| `pnpm verify:component:install-browsers` | Installs Chromium for Storybook tests           |
+| `pnpm verify:component`                  | Component tests                                 |
+| `pnpm verify:e2e:install-browsers`       | Installs Chromium for E2E tests                 |
+| `pnpm verify:e2e:up`                     | Builds and starts the Docker Compose E2E stack  |
+| `pnpm verify:e2e:wait`                   | service-task + web-client readiness checks      |
+| `pnpm verify:e2e`                        | Playwright E2E tests                            |
+| `pnpm verify:e2e:logs`                   | Docker Compose E2E logs                         |
+| `pnpm verify:e2e:down`                   | Stops and removes the Docker Compose E2E stack  |
+
 ### Pull Request CI
 
 Pull Requests to `main` and Spec integration branches (`spec/**`) run two GitHub Actions workflows:
 
-| Required check | Coverage                                                 |
-| -------------- | -------------------------------------------------------- |
-| `CI / ci`      | Static Analysis, Unit, Integration, and Component layers |
-| `CI E2E / e2e` | Docker Compose stack plus Playwright Chromium E2E        |
+| Required check           | Coverage                                                |
+| ------------------------ | ------------------------------------------------------- |
+| `CI / static-checking`   | Static Analysis: lint, format check, and typecheck      |
+| `CI / unit-tests`        | Unit tests                                              |
+| `CI / integration-tests` | Integration tests                                       |
+| `CI / component-tests`   | Component tests, including Storybook UI Component tests |
+| `CI E2E / e2e`           | Docker Compose stack plus Playwright Chromium E2E       |
 
-After these workflows have run once on GitHub, configure `main` branch protection to require both checks, one approving review, and linear history. Use the exact check names shown in GitHub's status UI if they differ from the names above.
+After these workflows have run once on GitHub, configure `main` branch protection to require all five checks, one approving review, and linear history. Use the exact check names shown in GitHub's status UI if they differ from the names above.
 
 ### Full-stack smoke
 

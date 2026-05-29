@@ -4,6 +4,7 @@
       "Bash(gsd-sdk query *)",
       "Bash(vitest run *)",
       "Bash(pnpm test*)",
+      "Bash(pnpm verify*)",
       "Bash(npm test*)",
       "Bash(helm lint *)",
       "Bash(pnpm lint*)",

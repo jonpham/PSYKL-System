@@ -7,9 +7,9 @@
 **Active spec for execution:** M1 Spec 5 — CI Test Pipeline (`docs/specs/m1-bootstrap/20260520-S5-ci-test-pipeline.md`), DevTask 8/8.
 **Next executable spec:** M1 Spec 6 — CD Release Pipeline (`docs/specs/m1-bootstrap/20260520-S6-cd-release-pipeline.md`) after Spec 5 close-out. Do not begin Spec 6 without a new AI assistant session.
 **Active skill:** `superpowers:executing-plans`.
-**Branch:** DevTask branch `infra/m1-s5-dt8-ci-test-pipeline` in isolated worktree `worktrees/m1-s5-ci-test-pipeline`.
-**Current step:** S5 DevTask 8 Steps 1-11 are implemented, locally verified, and code-reviewed. Because S5 has a single DevTask, the DevTask branch is being fast-forwarded into the Spec integration branch so there is one Spec Pull Request instead of separate DevTask + Spec Pull Requests.
-**Next action:** Push `spec/m1-s5-ci-test-pipeline` and open the Spec Pull Request. After the workflows run on GitHub and the Spec Pull Request merges, complete Steps 13-14 branch-protection verification. Do NOT merge any Pull Request without explicit user approval in the current session.
+**Branch:** Spec integration branch `spec/m1-s5-ci-test-pipeline` in isolated worktree `worktrees/m1-s5-ci-test-pipeline`; the single DevTask branch has been folded into the Spec branch so PR #29 is the only S5 Pull Request.
+**Current step:** S5 DevTask 8 Steps 1-12 are implemented, locally verified, code-reviewed, and pushed to PR #29.
+**Next action:** Wait for PR #29 workflows to run on GitHub. After the Spec Pull Request merges and workflows run on `main`, complete Steps 13-14 branch-protection verification using the split check names documented in the S5 spec. Do NOT merge any Pull Request without explicit user approval in the current session.
 **Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)

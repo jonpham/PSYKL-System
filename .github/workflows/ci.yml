@@ -7,7 +7,118 @@ on:
     branches: [main, 'spec/**']
 
 jobs:
-  ci:
+  static-checking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Static Checking
+        run: pnpm verify:static
+
+  unit-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Unit Tests
+        run: pnpm verify:unit
+
+  integration-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Integration Tests
+        run: pnpm verify:integration
+
+  component-tests:
+    needs: static-checking
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -46,31 +157,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers for UI Component tests
-        run: pnpm --filter @psykl/web-client exec playwright install --with-deps chromium
+        run: pnpm verify:component:install-browsers
 
-      - name: Build shared-types
-        run: pnpm --filter @psykl/shared-types build
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
 
-      - name: Build OpenAPI artifact
-        run: pnpm --filter @psykl/service-task build:openapi
-
-      - name: Generate web_client API types
-        run: pnpm --filter @psykl/web-client codegen
-
-      - name: Lint
-        run: pnpm -r lint
-
-      - name: Format check
-        run: pnpm -r format:check
-
-      - name: Typecheck
-        run: pnpm -r typecheck
-
-      - name: Unit tests
-        run: pnpm test:unit
-
-      - name: Integration tests
-        run: pnpm test:integration
-
-      - name: Component tests
-        run: pnpm test:component
+      - name: Component Tests
+        run: pnpm verify:component

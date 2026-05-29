@@ -214,66 +214,48 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, 'spec/**']
 
 jobs:
-  ci:
-    name: Lint + Typecheck + Unit + Integration + Component
+  static-checking:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
       - uses: actions/checkout@v4
+      # Shared Node/pnpm/cache/dependency setup omitted for brevity.
+      - run: pnpm verify:prepare
+      - run: pnpm verify:static
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
+  unit-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # Shared Node/pnpm/cache/dependency setup omitted for brevity.
+      - run: pnpm verify:prepare
+      - run: pnpm verify:unit
 
-      - name: Set up pnpm via Corepack
-        run: corepack enable
+  integration-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # Shared Node/pnpm/cache/dependency setup omitted for brevity.
+      - run: pnpm verify:prepare
+      - run: pnpm verify:integration
 
-      - name: Get pnpm store path
-        id: pnpm-cache-path
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
-          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build shared-types
-        run: pnpm --filter @psykl/shared-types build
-
-      - name: Build OpenAPI artifact
-        run: pnpm --filter @psykl/service-task build:openapi
-
-      - name: Generate web_client API types
-        run: pnpm --filter @psykl/web-client codegen
-
-      - name: Lint
-        run: pnpm -r lint
-
-      - name: Format check
-        run: pnpm -r format:check
-
-      - name: Typecheck
-        run: pnpm -r typecheck
-
-      - name: Unit tests
-        run: pnpm test:unit
-
-      - name: Integration tests
-        run: pnpm test:integration
-
-      - name: Component tests
-        run: pnpm test:component
+  component-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # Shared Node/pnpm/cache/dependency setup omitted for brevity.
+      - run: pnpm verify:component:install-browsers
+      - run: pnpm verify:prepare
+      - run: pnpm verify:component
 ```
 
 - [x] **Step 11: Create `.github/workflows/ci-e2e.yml`**
@@ -285,91 +267,29 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, 'spec/**']
 
 jobs:
   e2e:
-    name: End-to-End (Playwright against Docker Compose)
     runs-on: ubuntu-latest
     timeout-minutes: 25
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Set up pnpm via Corepack
-        run: corepack enable
-
-      - name: Get pnpm store path
-        id: pnpm-cache-path
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
-          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-${{ runner.os }}-
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers (Chromium only)
-        run: pnpm --filter @psykl/e2e exec playwright install --with-deps chromium
-
-      - name: Build compose images and start stack with E2E overlay
-        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
-
-      - name: Wait for service-task to be healthy
-        run: |
-          for i in {1..30}; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/tasks || echo 000)
-            if [ "$status" = "401" ]; then echo "service-task ready"; break; fi
-            echo "waiting for service-task... attempt $i (status $status)"
-            sleep 2
-          done
-
-      - name: Wait for web-client to be healthy
-        run: |
-          for i in {1..30}; do
-            if curl -sf http://localhost:5173/ > /dev/null; then echo "web-client ready"; break; fi
-            echo "waiting for web-client... attempt $i"
-            sleep 2
-          done
-
-      - name: Run Playwright E2E
-        run: pnpm --filter @psykl/e2e test
-
-      - name: Upload Playwright report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: e2e/playwright-report/
-          retention-days: 7
-
-      - name: Tear down compose stack
-        if: always()
-        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
+      # Shared Node/pnpm/cache/dependency setup omitted for brevity.
+      - run: pnpm verify:e2e:install-browsers
+      - run: pnpm verify:e2e:up
+      - run: pnpm verify:e2e:wait
+      - run: pnpm verify:e2e
+      - if: failure()
+        run: pnpm verify:e2e:logs
+      - if: always()
+        run: pnpm verify:e2e:down
 ```
 
-- [ ] **Step 12: Commit and push DevTask 8 (open the PR to verify CI runs)**
+- [x] **Step 12: Commit and push DevTask 8 (open the PR to verify CI runs)**
 
 ```bash
-git add .github/workflows/ vitest.workspace.ts pnpm-workspace.yaml package.json e2e/
+git add .github/workflows/ .claude/settings.json README.md docs/PROJECT_STATUS.md docs/specs/m1-bootstrap/20260520-S5-ci-test-pipeline.md package.json pnpm-workspace.yaml vitest.workspace.ts e2e/ scripts/
 git commit -m "infra(M1-T8): CI workflows for full 5-layer test pyramid + Playwright E2E
 
 ci.yml runs Static Analysis (lint + format:check + typecheck) +
@@ -384,7 +304,8 @@ Honors Decisions #11, #23, #24, #27, #28.
 
 Branch protection on main (Decision #17) is a one-time repo-settings
 change, not a deliverable of this DevTask. Required status checks
-to add manually after merge: 'CI / ci' and 'CI E2E / e2e'."
+to add manually after merge: 'CI / static-checking', 'CI / unit-tests',
+'CI / integration-tests', 'CI / component-tests', and 'CI E2E / e2e'."
 ```
 
 Push and open a PR. Confirm both workflows trigger and run to green. (The first E2E run will be slow because of the browser install — subsequent runs benefit from the cache.)
@@ -397,7 +318,7 @@ After the DevTask 8 PR merges and CI has run at least once on `main`:
 2. Under "Branch protection rules", click "Add branch protection rule".
 3. Branch name pattern: `main`.
 4. Check: "Require a pull request before merging", "Require approvals" (set to 1), "Require status checks to pass before merging".
-5. Under "Status checks that are required", add: `CI / ci` and `CI E2E / e2e`.
+5. Under "Status checks that are required", add: `CI / static-checking`, `CI / unit-tests`, `CI / integration-tests`, `CI / component-tests`, and `CI E2E / e2e`.
 6. Check: "Require linear history".
 7. Uncheck: "Allow force pushes".
 8. Save.
