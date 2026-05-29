@@ -4,6 +4,10 @@
 
 _No unreleased changes._
 
+## M1 Bootstrap Spec 5 Shipped - 2026-05-29
+
+- Completed M1 Spec 5 CI Test Pipeline ([feature doc](docs/features/%5B20260520%5DGH6_m1-ci-test-pipeline.md)): GitHub Actions now runs the full M1 test pyramid on Pull Requests to `main` and Spec integration branches. Lower layers are split into `CI / static-checking`, `CI / unit-tests`, `CI / integration-tests`, and `CI / component-tests`, with Static Analysis blocking deeper lower-layer jobs. `CI E2E / e2e` builds the Docker Compose stack with the E2E overlay, waits for `service-task` and `web_client`, runs Playwright Chromium against the PWA, captures failure artifacts/logs, and tears the stack down. Root `verify:*` scripts are the developer-facing CI command surface; reusable Compose/readiness helpers live under `scripts/`. Constituent PR: [#29](https://github.com/jonpham/PSYKL-System/pull/29).
+
 ## M1 Bootstrap Spec 4 Shipped - 2026-05-28
 
 - Completed M1 Spec 4 Local Dev Stack ([feature doc](docs/features/%5B20260520%5DGH5_m1-local-dev-stack.md)): Docker Compose now builds and runs the full M1 stack (`service-task` + `web_client`) from the monorepo with production-shaped container boundaries, persistent pglite data via the `psykl-pglite-data` named volume, nginx serving the built PWA on host `:5173`, and the API on host `:3000`; `docker-compose.e2e.yml` replaces pglite persistence with `tmpfs` so Spec 5's Playwright E2E workflow can start clean every run. Docker image context rules are colocated with each image as `Dockerfile.dockerignore`. Constituent PR: [#28](https://github.com/jonpham/PSYKL-System/pull/28); Spec integration [#27](https://github.com/jonpham/PSYKL-System/pull/27).

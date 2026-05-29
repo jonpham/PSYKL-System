@@ -88,9 +88,26 @@ A Husky `pre-commit` hook at the repository root runs the Static Analysis layer 
 
 Dockerfiles use repository-root build contexts because they need workspace manifests, `packages/shared-types`, and cross-component generated OpenAPI/client types. Each image keeps its own `Dockerfile.dockerignore` next to the Dockerfile so image-specific build-context policy stays colocated with application code.
 
+### Continuous Integration
+
+GitHub Actions is the M1 CI gate. Pull Requests targeting `main` and Spec integration branches (`spec/**`) run the same verification surface developers can run locally through root `verify:*` scripts.
+
+The lower test layers live in `.github/workflows/ci.yml` as four jobs:
+
+- `static-checking`: `pnpm verify:prepare` followed by lint, format check, and typecheck.
+- `unit-tests`: generated artifact prep followed by Unit tests.
+- `integration-tests`: generated artifact prep followed by Integration tests.
+- `component-tests`: Chromium install for Storybook tests, generated artifact prep, then Component tests.
+
+`unit-tests`, `integration-tests`, and `component-tests` depend on `static-checking`, preserving the rule that Static Analysis runs first and blocks deeper lower-layer work when it fails.
+
+The E2E layer lives in `.github/workflows/ci-e2e.yml`. It installs Playwright Chromium, builds and starts the Docker Compose stack with the E2E overlay, waits for `service-task` and `web_client`, runs Playwright against the PWA, uploads Playwright reports on failure, prints Compose logs on failure, and always tears the stack down.
+
+Branch protection is configured in GitHub repository settings after the checks have run on `main`; code records the required check names, but the protection rule itself is not represented in YAML.
+
 ### Testing Strategy
 
-The M1 service + PWA establishes the local version of all five layers of the project test pyramid; Spec 5 wires the same layers into GitHub Actions:
+The M1 service + PWA establishes the local and CI version of all five layers of the project test pyramid:
 
 - **Static Analysis:** ESLint, Prettier, and TypeScript scripts at package and recursive workspace levels. Mandatory in CI and enforced locally by the Husky pre-commit hook.
 - **Unit:** pure service behavior (UUID v7 generation, user-scoped query shape) and React UI Components rendered in isolation via Vitest + Testing Library.
@@ -98,7 +115,7 @@ The M1 service + PWA establishes the local version of all five layers of the pro
 - **Component:**
   - For `service-task`: in-process HTTP contract tests for guard negative paths and Task endpoint positive paths.
   - For `web_client`: **UI Component tests** authored as Storybook 8 stories with play functions, executed via `@storybook/test-runner` against the built Storybook static. `msw-storybook-addon` initializes Mock Service Worker inside the story preview so the same handler set from `src/test/msw-handlers.ts` stubs the `service-task` boundary in both Vitest setup and Storybook. Each play function doubles as a Manual Visual Check surface when run interactively via `pnpm --filter @psykl/web-client storybook`.
-- **End-to-End:** the Docker Compose stack exists as the runtime target; Spec 5 wires Playwright against it in CI (locked per DESIGN.md Decision #28).
+- **End-to-End:** Playwright Chromium drives the Docker Compose stack through the PWA against the real `service-task` boundary and a clean pglite database supplied by the E2E overlay.
 
 ## Architecture Decision Records
 
@@ -185,3 +202,19 @@ Serve `web_client`'s built Vite output from `nginx:alpine` with a SPA fallback r
 ### ADR-M1-021: Debian Slim Node Images for pglite Compatibility
 
 Use `node:24-bookworm-slim` for Node build/runtime stages rather than Alpine. The larger Debian image avoids pglite WebAssembly compatibility risk around musl libc while keeping the runtime image smaller than a full Debian Node image.
+
+### ADR-M1-022: GitHub Actions as the M1 CI Gate
+
+Use GitHub Actions to run the full Test Pyramid on Pull Requests to `main` and `spec/**`. Long-lived Spec integration PRs receive the same verification signal as final merges, which keeps feature work from accumulating untested drift.
+
+### ADR-M1-023: Static Analysis Blocks Deeper Lower-Layer Jobs
+
+Split lower-layer CI into `static-checking`, `unit-tests`, `integration-tests`, and `component-tests`, with the latter three declaring `needs: static-checking`. This preserves the project's required order: Static Analysis runs first and blocks deeper test layers when lint, formatting, or type checks fail.
+
+### ADR-M1-024: Root verify Scripts Own CI Command Semantics
+
+Root `verify:*` scripts in `package.json` are the developer-facing command surface for CI behavior. Workflow YAML calls those commands instead of duplicating test invocations. Shell scripts under `scripts/` are reserved for reusable multi-step shell behavior such as Docker Compose lifecycle and readiness polling.
+
+### ADR-M1-025: E2E CI Drives the Real Compose Stack
+
+Run Playwright Chromium against the actual Docker Compose stack rather than mocked service boundaries. The E2E workflow uses `docker-compose.e2e.yml` to replace persistent pglite storage with `tmpfs`, giving each run clean database state without adding test-only application endpoints.
