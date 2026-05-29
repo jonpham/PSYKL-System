@@ -90,7 +90,7 @@ Dockerfiles use repository-root build contexts because they need workspace manif
 
 ### Continuous Integration
 
-GitHub Actions is the M1 CI gate. Pull Requests targeting `main` and Spec integration branches (`spec/**`) run the same verification surface developers can run locally through root `verify:*` scripts.
+GitHub Actions is the M1 CI visibility gate. Pull Requests targeting `main` and Spec integration branches (`spec/**`) run the same verification surface developers can run locally through root `verify:*` scripts.
 
 The lower test layers live in `.github/workflows/ci.yml` as four jobs:
 
@@ -103,7 +103,7 @@ The lower test layers live in `.github/workflows/ci.yml` as four jobs:
 
 The E2E layer lives in `.github/workflows/ci-e2e.yml`. It installs Playwright Chromium, builds and starts the Docker Compose stack with the E2E overlay, waits for `service-task` and `web_client`, runs Playwright against the PWA, uploads Playwright reports on failure, prints Compose logs on failure, and always tears the stack down.
 
-Branch protection is configured in GitHub repository settings after the checks have run on `main`; code records the required check names, but the protection rule itself is not represented in YAML.
+Because `PSYKL-System` is currently a private repository without GitHub Pro, GitHub branch-protection enforcement and required status checks are out of scope. Maintainers use the visible workflow checks as the manual merge gate.
 
 ### Testing Strategy
 
@@ -203,11 +203,11 @@ Serve `web_client`'s built Vite output from `nginx:alpine` with a SPA fallback r
 
 Use `node:24-bookworm-slim` for Node build/runtime stages rather than Alpine. The larger Debian image avoids pglite WebAssembly compatibility risk around musl libc while keeping the runtime image smaller than a full Debian Node image.
 
-### ADR-M1-022: GitHub Actions as the M1 CI Gate
+### ADR-M1-022: GitHub Actions as the M1 CI Visibility Gate
 
-Use GitHub Actions to run the full Test Pyramid on Pull Requests to `main` and `spec/**`. Long-lived Spec integration PRs receive the same verification signal as final merges, which keeps feature work from accumulating untested drift.
+Use GitHub Actions to run the full Test Pyramid on Pull Requests to `main` and `spec/**`. Long-lived Spec integration PRs receive the same verification signal as final merges, which keeps feature work from accumulating untested drift. While the repository is private without GitHub Pro, this is visible CI evidence rather than enforced branch protection.
 
-### ADR-M1-023: Static Analysis Blocks Deeper Lower-Layer Jobs
+### ADR-M1-023: Static Analysis Blocks Deeper Lower-Layer Jobs Within CI
 
 Split lower-layer CI into `static-checking`, `unit-tests`, `integration-tests`, and `component-tests`, with the latter three declaring `needs: static-checking`. This preserves the project's required order: Static Analysis runs first and blocks deeper test layers when lint, formatting, or type checks fail.
 

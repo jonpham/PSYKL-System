@@ -15,7 +15,7 @@ M1 is explicitly NOT product discovery. M1 proves the architecture and trains th
 - `docker compose up` from a fresh clone produces a running PWA at `http://localhost:5173`, a working API at `http://localhost:3000`, and persistent pglite data on the `psykl-pglite-data` named Docker volume.
 - A user can create a Task with a title via the PWA and see it appear in the list after a refresh.
 - All five test pyramid layers (Static Analysis, Unit, Integration, Component, E2E) have at least one passing test exercising real behavior, including `user_id` default-deny Component-layer contract tests.
-- CI runs the full pyramid on every PR; merge is blocked on failure.
+- CI runs the full pyramid on every PR and `main` push; while the repository is private without GitHub Pro, maintainers manually gate merges on visible green checks.
 - End-to-end suite runs against the Docker Compose stack in CI on every PR.
 - On merge to `main`: CD publishes `service-task` and `web_client` container images to the registry, subtree-syncs to upstream mirrors, and packages the helm chart.
 - A `v0.1.0` tag triggers the release workflow end-to-end (image publish + helm package + GitHub Release notes) and closes M1.

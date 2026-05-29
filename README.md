@@ -183,7 +183,7 @@ The GitHub Actions workflows call root verification scripts. Commands with multi
 
 Pull Requests to `main` and Spec integration branches (`spec/**`) run two GitHub Actions workflows:
 
-| Required check           | Coverage                                                |
+| Check name               | Coverage                                                |
 | ------------------------ | ------------------------------------------------------- |
 | `CI / static-checking`   | Static Analysis: lint, format check, and typecheck      |
 | `CI / unit-tests`        | Unit tests                                              |
@@ -191,7 +191,7 @@ Pull Requests to `main` and Spec integration branches (`spec/**`) run two GitHub
 | `CI / component-tests`   | Component tests, including Storybook UI Component tests |
 | `CI E2E / e2e`           | Docker Compose stack plus Playwright Chromium E2E       |
 
-After these workflows have run once on GitHub, configure `main` branch protection to require all five checks, one approving review, and linear history. Use the exact check names shown in GitHub's status UI if they differ from the names above.
+For this private repository, GitHub branch-protection enforcement is out of scope unless the repository becomes public or GitHub Pro is enabled. Treat these checks as the manual merge gate: do not merge PRs until the visible workflow checks are green.
 
 ### Full-stack smoke
 
