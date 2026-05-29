@@ -34,12 +34,14 @@ As an **operator** (the user, self-hosting PSYKL-System on a homelab and eventua
 **Manual verification:**
 
 _Setup / Preconditions_
+
 - Specs 1-5 complete and merged.
 - Mirror repos created: `jonpham/psykl-web_client` and `jonpham/psykl-service-task` (both empty, public, no protection rules).
 - `SUBTREE_PUSH_TOKEN` GitHub Actions secret set with a fine-grained PAT scoped to push on both mirror repos.
 - Repo settings → Actions → "Allow GitHub Actions to create and approve PRs" enabled (for GHCR `GITHUB_TOKEN` packages-write scope).
 
 _Steps_
+
 1. Merge a PR to `main` after Spec 5 lands.
 2. Confirm the merge-to-main CI workflow triggers `ci.yml` (Spec 5 jobs) AND `cd-publish.yml` (DevTask 9 + DevTask 10).
 3. Visit `ghcr.io/jonpham/psykl-service-task` and `ghcr.io/jonpham/psykl-web_client`. Both should now show two tags: the new commit SHA and `:latest`.
@@ -63,7 +65,7 @@ M1 closes with `v0.1.0` tagged, two container images on GHCR, two subtree mirror
 - **#7** Container image registry: GitHub Container Registry (GHCR) at `ghcr.io/jonpham/psykl-{service-task,web_client}`. Free for public repos; integrated with GitHub Actions via `GITHUB_TOKEN`.
 - **#9** Helm chart location: `deploy/helm/` at repo root.
 - **#16** Subtree mirror upstream URLs: `jonpham/psykl-web_client`, `jonpham/psykl-service-task`. Must be created before DevTask 10 runs. Secrets: `SUBTREE_PUSH_TOKEN` (fine-grained PAT, push scope on both mirror repos).
-- **#17** GitHub branch protection on `main`: required status checks must include the CD workflow names so a failing CD blocks merge.
+- **#17** Branch-protection enforcement is scoped out while `PSYKL-System` is private without GitHub Pro. CD workflows provide visible merge/release evidence, not enforced required checks.
 - **#30** Container image tag strategy: on merge to `main` → `:{sha}` + `:latest`; on `v*.*.*` tag → additionally `:{semver}`. Helm chart `values.yaml` defaults to `:latest`; release pipeline overrides to `:{semver}` for the packaged chart.
 
 ## Architecture Decisions (ADR)
@@ -76,6 +78,6 @@ M1 closes with `v0.1.0` tagged, two container images on GHCR, two subtree mirror
 
 ## Change Log
 
-| Date | PR | Summary |
-| ---- | -- | ------- |
+| Date       | PR         | Summary    |
+| ---------- | ---------- | ---------- |
 | _none yet_ | _none yet_ | _none yet_ |

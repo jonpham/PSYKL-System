@@ -2,15 +2,15 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed spec:** M1 Spec 5 — CI Test Pipeline. Feature doc: [`[20260520]GH6_m1-ci-test-pipeline.md`](features/%5B20260520%5DGH6_m1-ci-test-pipeline.md). Spec integration PR [#29](https://github.com/jonpham/PSYKL-System/pull/29) carries the close-out work and must merge before `main` reflects this status.
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 5 of 6 specs shipped or in final merge (S1, S2, S3, S4, S5); 1 remaining (S6).
-**Active spec for execution:** N/A — M1 Spec 5 is closed out in PR #29.
-**Next executable spec:** M1 Spec 6 — CD Release Pipeline (`docs/specs/m1-bootstrap/20260520-S6-cd-release-pipeline.md`) after PR #29 merges and the S5 branch-protection follow-up is complete. Do not begin Spec 6 without a new AI assistant session.
+**Last completed spec:** M1 Spec 5 — CI Test Pipeline (`ci-test-pipeline`). Feature doc: [`[20260520]GH6_m1-ci-test-pipeline.md`](features/%5B20260520%5DGH6_m1-ci-test-pipeline.md). Spec integration PR [#29](https://github.com/jonpham/PSYKL-System/pull/29) merged with all five visible checks passing on `main`.
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 5 of 6 specs shipped (S1, S2, S3, S4, S5); 1 remaining (S6).
+**Active spec for execution:** N/A — `ci-test-pipeline` is closed out. Branch-protection enforcement is scoped out while the repository is private without GitHub Pro.
+**Next executable spec:** M1 Spec 6 — CD Release Pipeline (`cd-release-pipeline`) at `docs/specs/m1-bootstrap/20260520-S6-cd-release-pipeline.md`. Do not begin Spec 6 without a new AI assistant session.
 **Active skill:** `superpowers:executing-plans`.
-**Branch:** Spec integration branch `spec/m1-s5-ci-test-pipeline` in isolated worktree `worktrees/m1-s5-ci-test-pipeline`; the single DevTask branch has been folded into the Spec branch so PR #29 is the only S5 Pull Request.
-**Current step:** S5 Spec close-out is committed on `spec/m1-s5-ci-test-pipeline`; PR #29 is awaiting final review/merge.
-**Next action:** Wait for PR #29 workflows to pass, then merge only with explicit user approval. After PR #29 merges and workflows run on `main`, configure and verify branch protection using `CI / static-checking`, `CI / unit-tests`, `CI / integration-tests`, `CI / component-tests`, and `CI E2E / e2e`.
-**Known blockers:** None for planning. For execution: (1) Per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs. (2) GitHub branch protection on `main` (Decision #17) is a manual repo-settings change that should happen after Spec 5's CI lands green.
+**Branch:** Documentation correction branch `docs/m1-s5-private-ci-scope` in isolated worktree `worktrees/m1-s5-private-ci-scope`.
+**Current step:** Removing branch-protection enforcement and required-status-check claims from `ci-test-pipeline` docs because the repository is private without GitHub Pro.
+**Next action:** Commit and merge the `ci-test-pipeline` private-repo scope correction, then start `cd-release-pipeline` in a fresh isolated worktree/new AI assistant session.
+**Known blockers:** For `cd-release-pipeline` execution: per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 

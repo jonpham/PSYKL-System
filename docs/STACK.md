@@ -30,7 +30,7 @@
 | Local dev stack                   | Docker Compose v2 runs `service-task` + `web_client`; pglite persists in named volume `psykl-pglite-data`                                                              |
 | E2E stack reset                   | `docker-compose.e2e.yml` clears the pglite named volume mount and replaces it with `tmpfs` for clean test runs                                                         |
 | CI provider                       | GitHub Actions                                                                                                                                                         |
-| CI required checks                | `CI / static-checking`, `CI / unit-tests`, `CI / integration-tests`, `CI / component-tests`, `CI E2E / e2e`                                                            |
+| CI check names                    | `CI / static-checking`, `CI / unit-tests`, `CI / integration-tests`, `CI / component-tests`, `CI E2E / e2e`; manual merge gate while repo is private                   |
 | CI command surface                | Root `verify:*` scripts in `package.json`; reusable shell behavior under `scripts/`                                                                                    |
 | E2E driver                        | Playwright Chromium against the Docker Compose stack                                                                                                                   |
 | Container image bases             | `node:24-bookworm-slim` for Node build/runtime stages; `nginx:alpine` for the `web_client` static runtime                                                              |

@@ -8,7 +8,7 @@ initiative: m1-bootstrap
 spec_number: 6
 devtasks_total: 3
 devtasks_complete: 0
-honors_decisions: [7, 9, 16, 17, 30]
+honors_decisions: [7, 9, 16, 30]
 ---
 
 # M1 Spec 6: CD release pipeline — Implementation Plan
@@ -21,11 +21,12 @@ honors_decisions: [7, 9, 16, 17, 30]
 
 **Tech Stack:** GitHub Actions, `docker/login-action@v3`, `docker/build-push-action@v6`, `actions/checkout@v4`, `actions/upload-release-asset@v1` (or `softprops/action-gh-release@v2`), `helm/chart-testing-action@v2` (optional lint), Helm 3.x.
 
-**Reads from:** `docs/initiatives/m1-bootstrap/DESIGN.md` Decisions appendix. Honors decisions #7 (GHCR), #9 (`deploy/helm/`), #16 (subtree mirror URLs + `SUBTREE_PUSH_TOKEN`), #17 (branch protection includes CD jobs), #30 (three-tag image strategy).
+**Reads from:** `docs/initiatives/m1-bootstrap/DESIGN.md` Decisions appendix. Honors decisions #7 (GHCR), #9 (`deploy/helm/`), #16 (subtree mirror URLs + `SUBTREE_PUSH_TOKEN`), #30 (three-tag image strategy). Decision #17 scopes branch-protection enforcement out while the repository is private without GitHub Pro, so CD jobs are visible checks rather than required status checks.
 
 **Depends on:** Specs 1-5 must have merged.
 
 **Prerequisites (one-time, manual, before DevTask 10):**
+
 - Create empty public GitHub repos: `jonpham/psykl-web_client` and `jonpham/psykl-service-task` (mirror repos).
 - Generate a fine-grained personal access token with `contents: write` scope on those two repos, save as the `SUBTREE_PUSH_TOKEN` GitHub Actions secret in the monorepo settings.
 
@@ -33,21 +34,21 @@ honors_decisions: [7, 9, 16, 17, 30]
 
 ## File Structure
 
-| File | Purpose | DevTask |
-|------|---------|---------|
-| `/Users/jp/code/psykl/.github/workflows/cd-publish.yml` | On merge to main: build + push service-task + web_client images to GHCR (sha + latest tags) | 9 |
-| `/Users/jp/code/psykl/.github/workflows/cd-subtree-sync.yml` | On merge to main: subtree-split + force-push to upstream mirror repos | 10 |
-| `/Users/jp/code/psykl/.github/workflows/cd-release.yml` | On `v*.*.*` tag: re-tag images with semver, package helm chart, create GitHub Release | 11 |
-| `/Users/jp/code/psykl/deploy/helm/Chart.yaml` | Helm chart metadata | 11 |
-| `/Users/jp/code/psykl/deploy/helm/values.yaml` | Default values: image tags `:latest`, ports, replicas=1 | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/_helpers.tpl` | Standard Helm helpers (full name, labels, selectors) | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/service-task-deployment.yaml` | Deployment for service-task | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/service-task-service.yaml` | ClusterIP Service for service-task | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/service-task-pvc.yaml` | PersistentVolumeClaim for pglite data | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/web-client-deployment.yaml` | Deployment for web_client (nginx) | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/web-client-service.yaml` | ClusterIP Service for web_client | 11 |
-| `/Users/jp/code/psykl/deploy/helm/templates/ingress.yaml` | Optional Ingress (disabled by default; M4+ enables) | 11 |
-| `/Users/jp/code/psykl/deploy/helm/.helmignore` | Standard Helm-ignore | 11 |
+| File                                                                      | Purpose                                                                                     | DevTask |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------- |
+| `/Users/jp/code/psykl/.github/workflows/cd-publish.yml`                   | On merge to main: build + push service-task + web_client images to GHCR (sha + latest tags) | 9       |
+| `/Users/jp/code/psykl/.github/workflows/cd-subtree-sync.yml`              | On merge to main: subtree-split + force-push to upstream mirror repos                       | 10      |
+| `/Users/jp/code/psykl/.github/workflows/cd-release.yml`                   | On `v*.*.*` tag: re-tag images with semver, package helm chart, create GitHub Release       | 11      |
+| `/Users/jp/code/psykl/deploy/helm/Chart.yaml`                             | Helm chart metadata                                                                         | 11      |
+| `/Users/jp/code/psykl/deploy/helm/values.yaml`                            | Default values: image tags `:latest`, ports, replicas=1                                     | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/_helpers.tpl`                 | Standard Helm helpers (full name, labels, selectors)                                        | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/service-task-deployment.yaml` | Deployment for service-task                                                                 | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/service-task-service.yaml`    | ClusterIP Service for service-task                                                          | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/service-task-pvc.yaml`        | PersistentVolumeClaim for pglite data                                                       | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/web-client-deployment.yaml`   | Deployment for web_client (nginx)                                                           | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/web-client-service.yaml`      | ClusterIP Service for web_client                                                            | 11      |
+| `/Users/jp/code/psykl/deploy/helm/templates/ingress.yaml`                 | Optional Ingress (disabled by default; M4+ enables)                                         | 11      |
+| `/Users/jp/code/psykl/deploy/helm/.helmignore`                            | Standard Helm-ignore                                                                        | 11      |
 
 ---
 
@@ -108,6 +109,7 @@ jobs:
 ```
 
 Notes:
+
 - Two-tag strategy on merge per Decision #30 (`:{sha}` + `:latest`). Semver tag (`:{semver}`) lands in DevTask 11's release workflow.
 - `GITHUB_TOKEN` has `packages: write` here because the workflow declares it. Image visibility (public/private) follows the repo visibility by default; can be changed in GHCR settings after first push.
 - Matrix iterates over both components in parallel.
@@ -178,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # subtree split needs full history
+          fetch-depth: 0 # subtree split needs full history
 
       - name: Configure git
         run: |
@@ -243,7 +245,7 @@ name: psykl
 description: PSYKL-System — time-independent planning around energy cycles.
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: '0.1.0'
 home: https://github.com/jonpham/PSYKL-System
 sources:
   - https://github.com/jonpham/PSYKL-System
@@ -264,17 +266,17 @@ keywords:
 serviceTask:
   image:
     repository: ghcr.io/jonpham/psykl-service-task
-    tag: latest        # CD overrides this to :{semver} when packaging for a tagged release
+    tag: latest # CD overrides this to :{semver} when packaging for a tagged release
     pullPolicy: IfNotPresent
-  replicas: 1          # PSYKL is single-user multi-device per Premise 8; horizontal scaling unnecessary
+  replicas: 1 # PSYKL is single-user multi-device per Premise 8; horizontal scaling unnecessary
   port: 3000
   env:
     PGLITE_DATA_DIR: /var/lib/psykl/pglite
-    PORT: "3000"
-    CORS_ORIGIN: ""   # set per-environment (e.g., to the web_client public URL)
+    PORT: '3000'
+    CORS_ORIGIN: '' # set per-environment (e.g., to the web_client public URL)
   persistence:
     size: 1Gi
-    storageClassName: ""   # default StorageClass; override per cluster
+    storageClassName: '' # default StorageClass; override per cluster
 
 webClient:
   image:
@@ -285,8 +287,8 @@ webClient:
   port: 80
 
 ingress:
-  enabled: false   # M4+ flips this to true with real host configuration
-  className: ""
+  enabled: false # M4+ flips this to true with real host configuration
+  className: ''
   host: psykl.local
   tls: false
 ```
@@ -546,7 +548,7 @@ Expected: `helm lint` passes with no errors. `helm template` renders without err
 
 - [ ] **Step 12: Create `.github/workflows/cd-release.yml`**
 
-```yaml
+````yaml
 name: CD Release
 
 on:
@@ -555,8 +557,8 @@ on:
       - 'v*.*.*'
 
 permissions:
-  contents: write     # for GitHub Release creation
-  packages: write     # for re-tagging GHCR images
+  contents: write # for GitHub Release creation
+  packages: write # for re-tagging GHCR images
 
 jobs:
   release:
@@ -647,7 +649,7 @@ jobs:
           prerelease: false
           files: |
             dist/psykl-${{ steps.version.outputs.version }}.tgz
-```
+````
 
 Note: the workflow assumes the `cd-publish.yml` workflow has already pushed the `:{sha}` images for this commit (it runs first, on merge to main, before the user tags). If the tag fires immediately and the publish hasn't completed, the `docker pull` will fail and the release errors — the operator should wait for `cd-publish.yml` to complete before tagging. Future iteration: add a `workflow_run` dependency.
 
@@ -695,6 +697,7 @@ git push origin v0.1.0
 ```
 
 Watch the `CD Release` workflow run. Expected:
+
 - Both images get an additional `:0.1.0` tag on GHCR.
 - A new GitHub Release at `https://github.com/jonpham/PSYKL-System/releases/tag/v0.1.0` with `psykl-0.1.0.tgz` attached.
 
@@ -708,9 +711,9 @@ kubectl port-forward svc/psykl-test-web-client 8080:80
 # Browse to http://localhost:8080 — confirm PWA loads
 ```
 
-- [ ] **Step 16: Update branch protection to require CD jobs**
+- [ ] **Step 16: Confirm CD checks are visible on GitHub**
 
-After CD workflows run green on a few PRs, add `CD Publish / publish` and `CD Subtree Sync / subtree-sync` to the required status checks on `main` (Settings → Branches → Branch protection rules → Edit). Do NOT add `CD Release / release` since that one only runs on tags, not on PRs.
+After CD workflows run green on a few PRs, confirm `CD Publish / publish` and `CD Subtree Sync / subtree-sync` appear as visible checks on PRs and `main` runs. Do NOT configure required status checks while the repository is private without GitHub Pro. Do NOT include `CD Release / release` in PR expectations since that workflow only runs on tags.
 
 ---
 
