@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gsd-sdk query *)",
+      "Bash(vitest run *)",
+      "Bash(pnpm test*)",
+      "Bash(npm test*)",
+      "Bash(helm lint *)",
+      "Bash(pnpm lint*)",
+      "Bash(git fetch*)",
+      "Bash(tsc *)",
+      "Bash(helm template *)",
+      "Bash(npx tsc*)",
+      "Bash(pnpm -r typecheck)",
+      "Bash(pnpm -r lint)",
+      "Bash(pnpm -r format:check)",
+      "Bash(pnpm -r test:unit)",
+      "Bash(pnpm -r test:component)"
+    ]
+  }
+}
