@@ -2,7 +2,7 @@
 
 > Durable reference for the technology choices shipped in PSYKL-System. Captures **what is implemented**, not what is planned. Initiative-level design docs at `docs/initiatives/{initiative}/DESIGN.md` carry plans; this file records reality.
 
-## M1 Bootstrap (Specs 1–4 shipped; Specs 5–6 pending)
+## M1 Bootstrap (Specs 1–5 shipped; Spec 6 pending)
 
 | Layer                             | Choice                                                                                                                                                                 |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -29,6 +29,10 @@
 | CORS posture                      | service-task allows `Origin: http://localhost:5173` in dev (configurable via `CORS_ORIGIN`); `X-User-Id` whitelisted in allowed-headers per Decision #29               |
 | Local dev stack                   | Docker Compose v2 runs `service-task` + `web_client`; pglite persists in named volume `psykl-pglite-data`                                                              |
 | E2E stack reset                   | `docker-compose.e2e.yml` clears the pglite named volume mount and replaces it with `tmpfs` for clean test runs                                                         |
+| CI provider                       | GitHub Actions                                                                                                                                                         |
+| CI required checks                | `CI / static-checking`, `CI / unit-tests`, `CI / integration-tests`, `CI / component-tests`, `CI E2E / e2e`                                                            |
+| CI command surface                | Root `verify:*` scripts in `package.json`; reusable shell behavior under `scripts/`                                                                                    |
+| E2E driver                        | Playwright Chromium against the Docker Compose stack                                                                                                                   |
 | Container image bases             | `node:24-bookworm-slim` for Node build/runtime stages; `nginx:alpine` for the `web_client` static runtime                                                              |
 | UI Component folder layout        | Per-component directory (`src/components/<Name>/`) with colocated tests and `index.ts` re-export; root-page exception for `App.tsx`                                    |
 | Test file locations               | Static + Unit + UI Component colocated next to source; Integration in per-component `tests/integration/`; E2E in repo-root `e2e/`                                      |
@@ -39,8 +43,6 @@
 
 | Layer                | Choice                                                                                                                   | Lands in  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------- |
-| CI test pipeline     | GitHub Actions running the full Test Pyramid (Static + Unit + Integration + Component + E2E) on every PR                 | M1 Spec 5 |
-| E2E driver           | Playwright (browser); locked via DESIGN.md Decision #28                                                                  | M1 Spec 5 |
 | CD release pipeline  | GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`); subtree mirrors to component-mirror repos | M1 Spec 6 |
 | Helm chart location  | `deploy/helm/`                                                                                                           | M1 Spec 6 |
 | Container registry   | GitHub Container Registry (`ghcr.io/jonpham/psykl-*`)                                                                    | M1 Spec 6 |

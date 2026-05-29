@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, 'spec/**']
+
+jobs:
+  static-checking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Static Checking
+        run: pnpm verify:static
+
+  unit-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Unit Tests
+        run: pnpm verify:unit
+
+  integration-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Integration Tests
+        run: pnpm verify:integration
+
+  component-tests:
+    needs: static-checking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Set up pnpm via Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-cache-path
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache-path.outputs.STORE_PATH }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('.nvmrc', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers for UI Component tests
+        run: pnpm verify:component:install-browsers
+
+      - name: Prepare generated artifacts
+        run: pnpm verify:prepare
+
+      - name: Component Tests
+        run: pnpm verify:component

@@ -128,7 +128,7 @@ Open `http://localhost:5173`. The page should render the PSYKL shell with an emp
 
 ## Verify locally (full Test Pyramid)
 
-The project's test discipline is a five-layer pyramid (Static Analysis → Unit → Integration → Component → E2E). Static Analysis through Component run locally today; E2E lands in M1 Spec 5.
+The project's test discipline is a five-layer pyramid (Static Analysis → Unit → Integration → Component → E2E). The E2E layer runs Playwright Chromium against the Docker Compose stack with the E2E overlay.
 
 Run the entire pyramid (recursive across all workspace packages):
 
@@ -143,21 +143,55 @@ pnpm -r typecheck                                  # Layer 1: tsc --noEmit (proj
 pnpm -r test:unit                                  # Layer 2: Vitest/Jest unit tests
 pnpm -r test:integration                           # Layer 3: in-process pglite integration tests
 pnpm -r test:component                             # Layer 4: service contract tests + UI Component tests (Storybook test-runner)
-# pnpm -r test:e2e                                 # Layer 5: not wired yet — lands in Spec 5
+
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+pnpm test:e2e                                      # Layer 5: Playwright Chromium against the running stack
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
 ```
 
 Or use the root pass-through scripts (same effect):
 
-| Root script             | Equivalent                            |
-| ----------------------- | ------------------------------------- |
-| `pnpm build`            | `pnpm -r build`                       |
-| `pnpm lint`             | `pnpm -r lint`                        |
-| `pnpm format:check`     | `pnpm -r format:check`                |
-| `pnpm typecheck`        | `pnpm -r typecheck`                   |
-| `pnpm test:unit`        | `pnpm -r test:unit`                   |
-| `pnpm test:integration` | `pnpm -r test:integration`            |
-| `pnpm test:component`   | `pnpm -r test:component`              |
-| `pnpm test:e2e`         | Stub — exits 0 until Spec 5 wires E2E |
+| Root script             | Equivalent                      |
+| ----------------------- | ------------------------------- |
+| `pnpm build`            | `pnpm -r build`                 |
+| `pnpm lint`             | `pnpm -r lint`                  |
+| `pnpm format:check`     | `pnpm -r format:check`          |
+| `pnpm typecheck`        | `pnpm -r typecheck`             |
+| `pnpm test:unit`        | `pnpm -r test:unit`             |
+| `pnpm test:integration` | `pnpm -r test:integration`      |
+| `pnpm test:component`   | `pnpm -r test:component`        |
+| `pnpm test:e2e`         | `pnpm --filter @psykl/e2e test` |
+
+The GitHub Actions workflows call root verification scripts. Commands with multi-step shell behavior delegate to reusable scripts under `scripts/`:
+
+| Root script                              | Behavior                                        |
+| ---------------------------------------- | ----------------------------------------------- |
+| `pnpm verify:prepare`                    | Builds shared types, OpenAPI, and web API types |
+| `pnpm verify:static`                     | Lint, format check, and typecheck               |
+| `pnpm verify:unit`                       | Unit tests                                      |
+| `pnpm verify:integration`                | Integration tests                               |
+| `pnpm verify:component:install-browsers` | Installs Chromium for Storybook tests           |
+| `pnpm verify:component`                  | Component tests                                 |
+| `pnpm verify:e2e:install-browsers`       | Installs Chromium for E2E tests                 |
+| `pnpm verify:e2e:up`                     | Builds and starts the Docker Compose E2E stack  |
+| `pnpm verify:e2e:wait`                   | service-task + web-client readiness checks      |
+| `pnpm verify:e2e`                        | Playwright E2E tests                            |
+| `pnpm verify:e2e:logs`                   | Docker Compose E2E logs                         |
+| `pnpm verify:e2e:down`                   | Stops and removes the Docker Compose E2E stack  |
+
+### Pull Request CI
+
+Pull Requests to `main` and Spec integration branches (`spec/**`) run two GitHub Actions workflows:
+
+| Required check           | Coverage                                                |
+| ------------------------ | ------------------------------------------------------- |
+| `CI / static-checking`   | Static Analysis: lint, format check, and typecheck      |
+| `CI / unit-tests`        | Unit tests                                              |
+| `CI / integration-tests` | Integration tests                                       |
+| `CI / component-tests`   | Component tests, including Storybook UI Component tests |
+| `CI E2E / e2e`           | Docker Compose stack plus Playwright Chromium E2E       |
+
+After these workflows have run once on GitHub, configure `main` branch protection to require all five checks, one approving review, and linear history. Use the exact check names shown in GitHub's status UI if they differ from the names above.
 
 ### Full-stack smoke
 
