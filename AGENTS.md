@@ -77,6 +77,29 @@ Output the following before stopping:
 - After completing an initiative, scan feature documents created over the course of execution. If feature documents successfully summarize the high-level details of the initiative and its specs, the initiative-level docs (`DESIGN.md`, `MILESTONE.md`, remaining issue briefs) can be deleted to minimize document sprawl. Retrospectives at `docs/retrospectives/` are durable and stay across initiative close-outs.
 - **`honors_decisions:` frontmatter must be refreshed on decision re-open.** When a Decisions-appendix entry referenced in any spec doc's `honors_decisions:` is re-opened (rewritten, deprecated, or superseded by a new decision), every spec doc that referenced it must add the new decision number in the same PR that lands the re-open.
 - **Durable docs are refreshed in the Spec integration PR at Spec close-out.** Every Spec integration PR refreshes the following when applicable before merging to `main`: `README.md` script tables (if scripts changed); `docs/STACK.md` (if the stack table changed); `docs/ARCHITECTURE.md` (if the Spec shipped a new component or ADRs); `CHANGELOG.md` (always — one entry per Spec, and merged Specs must move out of `Unreleased` into a dated shipped/released section); `docs/PROJECT_STATUS.md` (always — last completed Spec points to the feature doc, current execution is `N/A`, and the next executable Spec is named).
+- **Procedure docs (release, deploy, runbooks) live in `README.md` from the start.** Feature docs and spec docs reference `README.md` sections by anchor; never duplicate procedural content. The M1 Spec 6 release procedure migrated through three locations (manual-instructions companion → feature doc → README) in ~10 days because this rule wasn't enforced from the start. Codified in the M1 Bootstrap retrospective Autonomous Change #2.
+- **Parent worktree sync at Spec integration PR merge.** After the Spec integration PR merges to `main`, the operator (or the agent on the operator's behalf) fast-forwards the parent worktree's `main` to `origin/main`. The Spec is not "fully merged" from a worktree-discipline standpoint until this is done. Reminder, not an enforcement gate. Codified in the M1 Bootstrap retrospective Autonomous Change #3.
+- **CHANGELOG release-dating convention at tag cut.** At release tag cut, the CHANGELOG's per-Spec dated sections are preserved as the historical ship record. A new `## [X.Y.Z] - YYYY-MM-DD` heading is added above them as the release marker. The per-Spec sections are NOT consolidated into the release block — they carry per-Spec ship dates that the release block intentionally aggregates without losing. The release-marker line is agent-written at tag cut on the operator's behalf; the operator retains explicit-approval gate on the PR that lands the CHANGELOG date edit. Codified in the M1 Bootstrap retrospective Autonomous Change #4.
+- **Spec close-out completeness checklist.** The agent MUST walk this checklist explicitly in the Spec integration PR before marking it ready for review:
+  1. Feature doc created at `docs/features/[{YYYYMMDD}]{ISSUE_REF}_{slug}.md`; consolidates the per-Spec issue brief + execution plan content.
+  2. Per-Spec issue brief deleted (`docs/initiatives/{initiative}/issues/{spec-brief}.md`).
+  3. Per-Spec execution plan deleted (`docs/specs/{initiative}/{spec}.md`).
+  4. Any companion docs created at Spec kickoff with `deleted_at_spec_closeout: true` frontmatter are deleted; their content is consolidated into the feature doc or `README.md` per the procedure-doc placement rule above.
+  5. Durable docs refreshed per the prior rule: `README.md`, `docs/STACK.md`, `docs/ARCHITECTURE.md`, `CHANGELOG.md`, `docs/PROJECT_STATUS.md`.
+  6. `honors_decisions:` frontmatter refreshed across all spec docs touched by any decision re-open in this Spec.
+  7. `grep -r` sweep across durable docs for any reference to the now-deleted planning files (issue briefs, execution plans, companion docs); every match must either be updated or be explicitly intentional with a comment.
+  8. **If the Spec ships a new GitHub Actions workflow:** after the Spec integration PR merges to `main`, the first workflow run on the merge commit MUST show `conclusion: success` before the Spec is considered shipped. Failed first runs require post-merge fixup PRs and are recorded as ADR operational footnotes in `docs/ARCHITECTURE.md`. The M1 Spec 6 fixup PRs #35 (cd-publish buildx) and #36 (cd-subtree-sync persist-credentials) are the precedent. The Spec PR description must include this as an explicit pending-verification checkbox.
+  9. Parent worktree `main` fast-forwarded to `origin/main` per the rule above.
+  10. Merged DevTask + Spec branches deleted locally and remotely (`git branch -d` then `git push origin --delete`).
+- **Initiative close-out completeness checklist.** The agent MUST walk this checklist explicitly in the initiative close-out PR (which may be the final Spec integration PR or a separate post-release PR):
+  1. All Spec feature docs reviewed for completeness against the initiative DESIGN.md decisions appendix. Any DESIGN.md decision without coverage in a feature doc's "Design Decisions" section OR a corresponding ADR in `docs/ARCHITECTURE.md` must be addressed before deletion.
+  2. `docs/initiatives/{initiative}/{DESIGN.md, MILESTONE.md}` deleted; the `issues/` directory (if any briefs remain) deleted.
+  3. Workflow retrospective written at `docs/retrospectives/{YYYY-MM-DD}-{initiative-slug}.md` per the Workflow Retrospectives section.
+  4. `docs/PROJECT_STATUS.md` updated: last-completed-initiative pointer, next-executable-initiative named, active everything = N/A.
+  5. Release tag cut per `README.md` → Release.
+  6. `feat/plan-{next-initiative-slug}` parking branch created (if not already) for the next initiative's planning artifacts.
+
+Both checklists codified in the M1 Bootstrap retrospective Autonomous Change #6 after the user flagged inconsistent close-outs as friction.
 
 ### Workflow Retrospectives
 
@@ -191,6 +214,7 @@ src/components/TaskList/
   - **Narrow-scope re-open** (a contained tooling swap or toolchain replacement within one Spec, no contract change, no cross-component effect): may use the lighter ceremony — rewrite the original decision in place, add a new decision with explicit rationale and a back-link to the original decision number, and propagate the change through every doc that references the old decision number (including AGENTS.md sections and spec doc `honors_decisions:` frontmatter). No `/plan-eng-review` pass required. The bar for "narrow scope" is conservative: when in doubt, take the wide-scope path.
 - **A design doc's Spec / DevTask Breakdown is an authoritative starting suggestion, not a rigid contract.** `superpowers:writing-plans` may adjust DevTask grouping, split a DevTask into more DevTasks, or split a DevTask into multiple Steps — but MUST cover everything the breakdown enumerates and MUST honor the trilemma resolution rule below.
 - **Trilemma resolution (≤10 production behavior source files per DevTask PR vs tests-in-same-PR vs DevTask count):** When three constraints collide, prefer **(C) splitting DevTasks** over (A) bending the ≤10 production-behavior-source-file rule, and never give on (B) tests-in-same-PR. A design doc's DevTask count is a target, not a ceiling. If a planned DevTask needs >10 production behavior source files, split it. Do not split merely because required tests, configuration, documentation, assets, generated files, or lockfile changes push the total Pull Request diff above 10 files. The Test-Driven Development (TDD) discipline is sacred. The file-count rule applies to DevTask Pull Requests only; Spec integration Pull Requests aggregate all DevTask diffs and have no file limit (see Git Conventions -> Spec/DevTask branching workflow).
+- **External-resource naming confirmation before plan finalization.** Any decision that names an out-of-code resource — mirror repositories, image registry paths, secret names, GitHub Actions secrets, cloud project IDs, domain names, external API endpoints, third-party account identifiers — must be confirmed against the actual-created resource with the user before the plan's status flips to `APPROVED`. Discovered-divergence at execution time is expensive: the M1 mirror-repo naming divergence (Decision #16 → #35) required a narrow-scope re-open across 6 docs that would have been a one-line plan edit if caught pre-finalization. The required form during plan finalization: "Decision #N names `{resource}`. Has this resource been created yet, and if so, what is its actual name?" Codified in the M1 Bootstrap retrospective at `docs/retrospectives/2026-06-10-m1-bootstrap.md` Autonomous Change #5.
 
 ### API Decision Discipline
 
@@ -228,6 +252,19 @@ At the close of every skill workflow, STOP. Do not auto-invoke or auto-suggest t
 3. Suggest which skill is appropriate next, justified by AGENTS.md routing rules and the current project state — but wait for the user to say "go" before invoking it.
 
 Skill boundaries are STOP points, same as DevTask boundaries during execution. Never silently transition between `/office-hours` → `/plan-ceo-review` → `/plan-eng-review` → `superpowers:writing-plans`. Each handoff is a conversation.
+
+**HARD RULE: at any skill's documented implementation-complete boundary, the agent MUST explicitly surface the transition and STOP for user approval before invoking the next skill.** This applies even when the source skill's own instructions name the next skill as a "required sub-skill". The required form is:
+
+> "I am about to transition from `{current-skill}` to `{next-skill}` because `{reason — usually a quote from the current skill's own instructions}`. Confirm?"
+
+Examples of documented implementation-complete boundaries that trigger this rule:
+
+- `superpowers:executing-plans` Step 3 → `superpowers:finishing-a-development-branch`
+- `superpowers:writing-plans` → `superpowers:executing-plans` (after specs are written)
+- `/office-hours` → `/plan-ceo-review` / `/plan-eng-review` / `/plan-devex-review` (after the initiative design doc has a draft)
+- `/plan-eng-review` → `superpowers:writing-plans` (after a Spec-sized plan is APPROVED)
+
+Auto-transition without the explicit "Confirm?" prompt is forbidden. Codified in the M1 Bootstrap retrospective at `docs/retrospectives/2026-06-10-m1-bootstrap.md` Autonomous Change #8 after the agent missed the executing-plans → finishing-a-development-branch handoff during M1 Spec 6 close-out.
 
 ### Right tool for the job beats stretching
 
