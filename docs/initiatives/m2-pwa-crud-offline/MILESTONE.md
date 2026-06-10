@@ -1,8 +1,8 @@
 # Milestone M2 — Complete Task CRUD + Offline-first PWA
 
-**Status:** Open (sketch — design doc to be drafted via `/office-hours` once M1 ships)
-**Design doc:** _not yet drafted_
-**Effort:** TBD (estimate during design phase)
+**Status:** APPROVED for spec planning — DESIGN.md drafted via `/office-hours` (adapted) on 2026-05-22 and promoted during `superpowers:writing-plans` on 2026-06-10 after the user requested M2 spec generation. M1 close-out has landed on `origin/main`; durable product-doc updates for the PWA surface are included on this planning branch.
+**Design doc:** [`DESIGN.md`](./DESIGN.md)
+**Effort:** M (human: ~2-3 weeks / Claude Code: ~3-5 days of focused work). Source: M2 DESIGN.md → "Recommended Approach → Approach C".
 
 ## Description
 
@@ -15,8 +15,9 @@ M2 starts the dogfood phase. Once it ships, the user runs PSYKL daily on the PWA
 - API: `PATCH /tasks/:id`, `DELETE /tasks/:id`, `completed_at` column + migration
 - PWA UI: edit task title in place, mark complete, delete with confirmation
 - PWA UX: loading skeletons, empty state, optimistic create/update with rollback on failure
-- PWA offline: service worker, app-shell caching, IndexedDB for task data, sync engine with last-write-wins conflict resolution (per `/office-hours` premise; full Conflict-free Replicated Data Type approach deferred to a later milestone)
+- PWA offline: service worker, app-shell caching, IndexedDB for task data, sync engine with last-write-wins conflict resolution (per M2 DESIGN.md; Conflict-free Replicated Data Type frameworks remain out of scope for the project's lifetime)
 - Tests: extend the test pyramid established in M1 to cover Update/Delete/offline-sync paths
+- Code style + linting tightening: route the M1 retrospective's deferred linting/TypeScript/formatting/commit-style candidates into M2 execution planning, or explicitly defer specific candidates with rationale.
 
 ## Success Criteria (preliminary, refine during design)
 
@@ -35,6 +36,6 @@ M2 starts the dogfood phase. Once it ships, the user runs PSYKL daily on the PWA
 
 ## Prerequisites
 
-- M1 complete and tagged `v0.1.0`.
-- M1 retrospective documented and any AGENTS.md updates committed.
-- `/office-hours` design doc for M2 written and APPROVED.
+- M1 complete and tagged `v0.1.0` (satisfied on `origin/main`).
+- M1 retrospective documented and any AGENTS.md updates committed (satisfied on `origin/main`).
+- `/office-hours` design doc for M2 written and APPROVED (written here; pending user approval).
