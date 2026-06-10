@@ -150,14 +150,14 @@ This Spec contains 4 DevTasks. The Spec integration branch is `spec/m2-s1-servic
 **Branch:** `feat/m2-s1-dt1-task-schema-evolution`
 **Affected:** `packages/shared-types/src/schemas/task.ts`, `packages/shared-types/src/schemas/task.unit.test.ts`, `packages/shared-types/src/index.ts`, `components/service-task/src/db/schema/task.ts`, `components/service-task/tests/integration/task-crud.integration.test.ts`, Drizzle migration output, generated OpenAPI.
 
-- [ ] Step 1: Write failing shared schema tests for `completed_at`, `updated_at`, `server_updated_at`, `deleted_at`, `TaskPatchInputSchema`, and `TaskDeleteInputSchema`.
-- [ ] Step 1a: Write failing shared schema tests proving `TaskInputSchema` requires client-supplied UUID v7 `id` and `updated_at`, and rejects UUID v4/non-UUID IDs.
-- [ ] Step 2: Run `pnpm --filter @psykl/shared-types test:unit -- task.unit.test.ts`; expected failure: new schemas or fields are missing.
-- [ ] Step 3: Extend shared Zod schemas and exports with the exact snake_case wire fields; `TaskInputSchema` is `{ id, title, updated_at }`.
-- [ ] Step 4: Write failing migration integration coverage by seeding an M1-shape `tasks` row and applying migration `0002`; assert `updated_at = created_at` and `server_updated_at` is present.
-- [ ] Step 5: Update Drizzle task schema and generate migration `0002`.
-- [ ] Step 6: Run `pnpm --filter @psykl/shared-types test:unit`, `pnpm --filter @psykl/service-task test:integration`, and `pnpm verify:prepare`.
-- [ ] Step 7: Commit with `feat: evolve task schema for offline sync`.
+- [x] Step 1: Write failing shared schema tests for `completed_at`, `updated_at`, `server_updated_at`, `deleted_at`, `TaskPatchInputSchema`, and `TaskDeleteInputSchema`.
+- [x] Step 1a: Write failing shared schema tests proving `TaskInputSchema` requires client-supplied UUID v7 `id` and `updated_at`, and rejects UUID v4/non-UUID IDs.
+- [x] Step 2: Run `pnpm --filter @psykl/shared-types test:unit -- task.unit.test.ts`; expected failure: new schemas or fields are missing.
+- [x] Step 3: Extend shared Zod schemas and exports with the exact snake_case wire fields; `TaskInputSchema` is `{ id, title, updated_at }`.
+- [x] Step 4: Write failing migration integration coverage by seeding an M1-shape `tasks` row and applying migration `0002`; assert `updated_at = created_at` and `server_updated_at` is present.
+- [x] Step 5: Update Drizzle task schema and generate migration `0002`.
+- [x] Step 6: Run `pnpm --filter @psykl/shared-types test:unit`, `pnpm --filter @psykl/service-task test:integration`, and `pnpm verify:prepare`.
+- [x] Step 7: Commit with `feat: evolve task schema for offline sync`.
 
 ### DevTask M2-2: Add PATCH with LWW reconciliation
 

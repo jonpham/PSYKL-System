@@ -21,16 +21,21 @@ export const handlers = [
       return new HttpResponse(null, { status: 401 });
     }
 
-    const body = (await request.json()) as { title?: string };
-    if (!body.title || body.title.length > 200) {
+    const body = (await request.json()) as { id?: string; title?: string; updated_at?: string };
+    if (!body.id || !body.title || !body.updated_at || body.title.length > 200) {
       return new HttpResponse(null, { status: 400 });
     }
 
+    const now = new Date().toISOString();
     const task: Task = {
-      id: `01940000-0000-7000-8000-${String(store.length).padStart(12, '0')}`,
+      id: body.id,
       user_id: 'local',
       title: body.title,
-      created_at: new Date().toISOString(),
+      created_at: now,
+      completed_at: null,
+      updated_at: body.updated_at,
+      server_updated_at: now,
+      deleted_at: null,
     };
     store = [task, ...store];
 

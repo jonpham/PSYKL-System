@@ -21,37 +21,71 @@ describe('TaskController contract', () => {
   });
 
   it('POST /tasks with valid body returns 201 and the persisted record', async () => {
+    const id = '0193e1c0-1234-7000-8000-000000000000';
     const res = await request(app.getHttpServer())
       .post('/tasks')
       .set('X-User-Id', 'local')
       .set('Content-Type', 'application/json')
-      .send({ title: 'first task' })
+      .send({ id, title: 'first task', updated_at: '2026-05-20T12:00:00.000Z' })
       .expect(201);
 
     expect(res.body).toMatchObject({
+      id,
       user_id: 'local',
       title: 'first task',
+      completed_at: null,
+      updated_at: '2026-05-20T12:00:00.000Z',
+      deleted_at: null,
     });
-    expect(res.body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(typeof res.body.created_at).toBe('string');
+    expect(typeof res.body.server_updated_at).toBe('string');
   });
 
   it('POST /tasks with empty title returns 400', async () => {
-    await request(app.getHttpServer()).post('/tasks').set('X-User-Id', 'local').send({ title: '' }).expect(400);
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'local')
+      .send({ id: '0193e1c0-1234-7000-8000-000000000001', title: '', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(400);
+  });
+
+  it('POST /tasks with a non-v7 UUID id returns 400', async () => {
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'local')
+      .send({ id: '0193e1c0-1234-4000-8000-000000000001', title: 'bad id', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(400);
   });
 
   it('POST /tasks with extra fields returns 400 (strict schema)', async () => {
     await request(app.getHttpServer())
       .post('/tasks')
       .set('X-User-Id', 'local')
-      .send({ title: 'x', user_id: 'spoofed' })
+      .send({
+        id: '0193e1c0-1234-7000-8000-000000000002',
+        title: 'x',
+        updated_at: '2026-05-20T12:00:00.000Z',
+        user_id: 'spoofed',
+      })
       .expect(400);
   });
 
   it('GET /tasks returns 200 and only the current user_id tasks', async () => {
-    await request(app.getHttpServer()).post('/tasks').set('X-User-Id', 'alice').send({ title: 'a1' }).expect(201);
-    await request(app.getHttpServer()).post('/tasks').set('X-User-Id', 'alice').send({ title: 'a2' }).expect(201);
-    await request(app.getHttpServer()).post('/tasks').set('X-User-Id', 'bob').send({ title: 'b1' }).expect(201);
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'alice')
+      .send({ id: '0193e1c0-1234-7000-8000-000000000003', title: 'a1', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'alice')
+      .send({ id: '0193e1c0-1234-7000-8000-000000000004', title: 'a2', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'bob')
+      .send({ id: '0193e1c0-1234-7000-8000-000000000005', title: 'b1', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(201);
 
     const aliceRes = await request(app.getHttpServer()).get('/tasks').set('X-User-Id', 'alice').expect(200);
     const aliceTitles = (aliceRes.body as Array<{ title: string }>).map((task) => task.title).sort();

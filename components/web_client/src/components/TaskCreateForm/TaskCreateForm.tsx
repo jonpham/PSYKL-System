@@ -1,5 +1,6 @@
 import type { SubmitEvent } from 'react';
 import { useState } from 'react';
+import { v7 as uuidv7 } from 'uuid';
 import { apiClient, taskRequestParams, type Task } from '../../api/client';
 
 interface TaskCreateFormProps {
@@ -24,7 +25,7 @@ export function TaskCreateForm({ onCreated }: TaskCreateFormProps) {
     try {
       const { data, error } = await apiClient.POST('/tasks', {
         ...taskRequestParams,
-        body: { title: trimmedTitle },
+        body: { id: uuidv7(), title: trimmedTitle, updated_at: new Date().toISOString() },
       });
 
       if (error) {
