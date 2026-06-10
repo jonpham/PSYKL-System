@@ -4,6 +4,10 @@
 
 _No unreleased changes._
 
+## [0.1.0] - 2026-06-10
+
+M1 Bootstrap milestone release. Vertical slice (NestJS Task API + Vite/React PWA + pglite persistence) with full 5-layer test pyramid, CI on every PR, and CD on every merge to `main` (GHCR image publish, subtree-sync to downstream component mirror repos, tagged-release Helm chart). See the per-Spec dated sections below for shipped details.
+
 ## M1 Bootstrap Spec 6 Shipped - 2026-06-09
 
 - Completed M1 Spec 6 CD Release Pipeline ([feature doc](docs/features/%5B20260520%5DGH7_m1-cd-release-pipeline.md)): three GitHub Actions workflows + a Helm chart wire M1's distribution story. `cd-publish.yml` builds `service-task` + `web_client` container images on every merge to `main` and pushes to GitHub Container Registry with `:{sha}` and `:latest` tags. `cd-subtree-sync.yml` force-pushes both component subtrees to their downstream mirror repositories `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks` (per Decision #16 as re-opened by Decision #35) using a fine-grained `SUBTREE_PUSH_TOKEN` PAT — the documented AGENTS.md force-push exception. `cd-release.yml` triggers on `v*.*.*` tags to add `:{semver}` image tags (third tag per Decision #30) and create a GitHub Release with the packaged Helm chart attached. The Helm chart at `deploy/helm/` is single-replica per Premise 8 with PVC-backed pglite persistence, sibling Deployments + Services for `service-task` and `web_client`, and an optional disabled-by-default Ingress. Decision #16 narrow-scope re-open (new Decision #35) changes mirror repo names from the mechanical `psykl-{web_client,service-task}` to surface-descriptive `PSYKL-Client_WEB-PWA` + `PSYKL-API_Tasks`. Constituent PRs: [#32](https://github.com/jonpham/PSYKL-System/pull/32), [#33](https://github.com/jonpham/PSYKL-System/pull/33); Spec integration [#31](https://github.com/jonpham/PSYKL-System/pull/31).

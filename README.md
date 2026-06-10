@@ -220,9 +220,97 @@ M1's CD release pipeline is wired (M1 Spec 6 — [feature doc](docs/features/%5B
 - **On every merge to `main`:** `.github/workflows/cd-publish.yml` builds and pushes `service-task` + `web_client` container images to GitHub Container Registry with `:{sha}` + `:latest` tags. `.github/workflows/cd-subtree-sync.yml` force-pushes the two component subtrees to their downstream mirror repositories `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks`.
 - **On every `v*.*.*` tag push:** `.github/workflows/cd-release.yml` re-tags the existing `:{sha}` images with the semver, packages the Helm chart at `deploy/helm/`, and creates a GitHub Release with the packaged `.tgz` attached as a release asset.
 - **Helm chart at `deploy/helm/`:** single chart, multi-Deployment — `service-task` (Deployment + Service + PVC for pglite persistence) and `web_client` (Deployment + Service), single-replica per Premise 8, optional Ingress disabled by default. Install a published release with `gh release download v0.X.Y --pattern '*.tgz' && helm install psykl ./psykl-0.X.Y.tgz`.
-- **First-time release setup:** see the [Spec 6 feature doc](docs/features/%5B20260520%5DGH7_m1-cd-release-pipeline.md) "Release procedure" section for the v0.1.0 cut walkthrough.
+  For details see [`docs/STACK.md`](docs/STACK.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ADR-M1-026 through ADR-M1-030.
 
-For details see [`docs/STACK.md`](docs/STACK.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ADR-M1-026 through ADR-M1-030.
+---
+
+## Release
+
+Cutting a new release is operator-side. The procedure below applies to every release; substitute `X.Y.Z` with the actual semver (e.g., `0.1.0`, `0.2.0`).
+
+### Preconditions
+
+- All Specs for the release are shipped to `main`.
+- `cd-publish.yml` and `cd-subtree-sync.yml` are running green on every merge to `main` — check with `gh run list --workflow=cd-publish.yml --branch=main --limit=1` and `gh run list --workflow=cd-subtree-sync.yml --branch=main --limit=1`.
+- One-time-per-repo: GHCR workflow permissions are "Read and write" (Settings → Actions → General → Workflow permissions). Only relevant if `cd-publish.yml` ever errors with `permission denied` pushing to `ghcr.io`.
+- One-time-per-major-release: confirm `SUBTREE_PUSH_TOKEN` (the fine-grained PAT used by `cd-subtree-sync.yml`) is not expiring soon. Rotate via Settings → Developer settings → Personal access tokens (fine-grained) and update the Actions secret if needed.
+
+### Procedure
+
+1. **Update `CHANGELOG.md` for the release date.** Rename the current `## Unreleased` heading to `## [X.Y.Z] - YYYY-MM-DD` (use the actual tag date). Add a fresh empty `## Unreleased` heading above it.
+
+   ```bash
+   git checkout main && git pull
+   # Edit CHANGELOG.md per above.
+   git add CHANGELOG.md
+   git commit -m "docs: release vX.Y.Z — move Unreleased to dated X.Y.Z section"
+   git push -u origin HEAD:docs/release-vX.Y.Z   # explicit refspec per AGENTS.md HARD RULE
+   gh pr create --base main --head docs/release-vX.Y.Z --title "docs: release vX.Y.Z" --body "CHANGELOG date for vX.Y.Z."
+   ```
+
+   Merge the PR through the normal review flow with explicit approval per the AGENTS.md HARD RULE on PR merges. The merge commit is what gets tagged in step 3.
+
+2. **Wait for `cd-publish.yml` and `cd-subtree-sync.yml` on the new `main` commit.** `cd-release.yml` will pull the `:{sha}` images this commit produced, so they must exist before tagging.
+
+   ```bash
+   gh run list --workflow=cd-publish.yml --branch=main --limit=1     # status=completed, conclusion=success
+   gh run list --workflow=cd-subtree-sync.yml --branch=main --limit=1 # status=completed, conclusion=success
+   ```
+
+3. **Tag and push `vX.Y.Z`.**
+
+   ```bash
+   git checkout main && git pull
+   git tag -a vX.Y.Z -m "PSYKL-System vX.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+   `git push origin vX.Y.Z` is the explicit-refspec form per the AGENTS.md HARD RULE — it pushes only the tag, never any branch.
+
+4. **Watch `cd-release.yml` complete.**
+
+   ```bash
+   gh run watch --workflow=cd-release.yml
+   ```
+
+5. **Verify.**
+
+   ```bash
+   # GHCR images now carry :X.Y.Z (in addition to :{sha} and :latest)
+   gh api /users/jonpham/packages/container/psykl-service-task/versions \
+     --jq '.[] | select(.metadata.container.tags | contains(["X.Y.Z"]))'
+   gh api /users/jonpham/packages/container/psykl-web_client/versions \
+     --jq '.[] | select(.metadata.container.tags | contains(["X.Y.Z"]))'
+
+   # GitHub Release exists with the packaged Helm chart attached
+   gh release view vX.Y.Z --repo jonpham/PSYKL-System
+   # Expected: psykl-X.Y.Z.tgz under Assets
+   ```
+
+6. **(Optional one-time per image)** Make GHCR images public if you want pull-anywhere access. https://github.com/users/jonpham/packages/container/psykl-service-task/settings → "Change package visibility" → Public. Repeat for `psykl-web_client`.
+
+7. **Smoke-install the chart in a local Kubernetes cluster** (kind, minikube, or k3s).
+
+   ```bash
+   gh release download vX.Y.Z --repo jonpham/PSYKL-System --pattern '*.tgz'
+   helm install psykl-test ./psykl-X.Y.Z.tgz
+   kubectl get pods                              # both psykl-test-* pods Running
+   kubectl port-forward svc/psykl-test-web-client 8080:80
+   # Browse http://localhost:8080 — PWA loads.
+   helm uninstall psykl-test
+   ```
+
+### Failure modes & remediation
+
+If a release step fails, do **not** delete or move the `vX.Y.Z` tag — the failed workflow run is the operator's record of what happened. Fix the root cause on a new branch off `main`, merge a fix PR, cut a new patch tag (`vX.Y.Z+1`).
+
+| Symptom                                                                                 | Likely cause                                                                                                  | Fix                                                                                            |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `cd-release.yml` step `Re-tag service-task image with :{semver}` fails on `docker pull` | `cd-publish.yml` hadn't completed for the tagged commit before the tag was pushed                             | Wait for `cd-publish.yml`, then cut `vX.Y.Z+1` (do not re-push the same tag)                   |
+| `cd-release.yml` `helm lint` fails                                                      | Chart edit landed since the last release without local lint                                                   | Fix the chart, merge, cut a new patch tag                                                      |
+| GitHub Release missing the `.tgz` asset                                                 | `softprops/action-gh-release@v2` step failed but earlier steps passed; re-running the workflow will re-upload | Re-run the workflow from the Actions tab; manually attach the asset only if re-run still fails |
+| `cd-subtree-sync.yml` 403                                                               | `SUBTREE_PUSH_TOKEN` expired or its repo-access list drifted (see ADR-M1-027 in `docs/ARCHITECTURE.md`)       | Regenerate the PAT, update the Actions secret, re-run the failed workflow                      |
+| `cd-publish.yml` `Cache export is not supported for the docker driver`                  | `docker/setup-buildx-action@v3` step missing from a new matrix leg (see ADR-M1-026)                           | Add the buildx-setup step to the new matrix leg                                                |
 
 ---
 

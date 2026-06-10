@@ -98,49 +98,14 @@ _Expectation_ — M1 ships with two container images on GHCR (each tagged with s
 - **ADR-M1-029: Tagged-Release Workflow.** Pushing a `v*.*.*` tag triggers a third workflow that (1) pulls the `:{sha}` images that `cd-publish.yml` produced for that commit, (2) re-tags them as `:{semver}` and pushes the new tag, (3) syncs the Helm chart's `version` + `appVersion` + `values.yaml` image tags to the semver via `sed` in-workflow (no commit back to `main`), (4) packages the chart, (5) creates a GitHub Release with the `.tgz` attached. The workflow assumes `cd-publish.yml` has completed for the tagged commit; operator-side ordering of "wait for publish before tagging" is documented in the release procedure below. See Decision #30.
 - **ADR-M1-030: Helm Templates Excluded from Prettier.** `deploy/helm/templates/` is added to `.prettierignore` because Helm Go-template syntax (`{{- ... -}}` actions embedded in YAML keys, values, and structural positions) is unparseable by prettier's YAML parser. `helm lint` and `helm template` provide the same correctness signal locally and in the release workflow.
 
-## Release procedure — cutting the M1 v0.1.0 release
+## Release procedure
 
-This procedure replaces the manual-instructions doc that was deleted at Spec close-out. It runs once per release.
+The durable release procedure for every release (v0.1.0 and beyond) lives in [`README.md` → Release](../../README.md#release). It is intentionally version-agnostic: substitute `X.Y.Z` with the actual semver. The README also carries a failure-mode table tied to ADR-M1-026 and ADR-M1-027 for fast remediation.
 
-**Preconditions (already done at Spec close-out):**
+**M1 v0.1.0-specific notes (record-only — apply the README procedure when cutting):**
 
-- All six M1 Specs (1–6) shipped to `main`.
-- `CD Publish` and `CD Subtree Sync` workflows running green on every merge to `main`.
-
-**Steps:**
-
-1. **Update `CHANGELOG.md` for the release date.** Move the current `## Unreleased` heading + any unreleased bullets into a fresh dated section: `## [0.1.0] - 2026-MM-DD` (use the actual tag date). Add a fresh empty `## Unreleased` heading above it. Commit, open a Pull Request, merge with explicit approval per the AGENTS.md HARD RULE on PR merges.
-2. **Wait for `CD Publish` and `CD Subtree Sync` to complete on `main`** for the CHANGELOG-update commit. `cd-release.yml` will pull the `:{sha}` images this commit produced, so they must exist before tagging:
-   ```bash
-   gh run list --workflow=cd-publish.yml --branch=main --limit=1
-   gh run list --workflow=cd-subtree-sync.yml --branch=main --limit=1
-   # Both: status=completed, conclusion=success
-   ```
-3. **Tag and push v0.1.0:**
-   ```bash
-   git checkout main && git pull
-   git tag -a v0.1.0 -m "M1 Bootstrap release"
-   git push origin v0.1.0
-   ```
-   `git push origin v0.1.0` is the explicit-refspec form per the AGENTS.md HARD RULE — pushes only the tag, never any branch.
-4. **Watch `CD Release` complete:** `gh run watch --workflow=cd-release.yml`.
-5. **Verify:**
-   ```bash
-   gh api /users/jonpham/packages/container/psykl-service-task/versions --jq '.[] | select(.metadata.container.tags | contains(["0.1.0"]))'
-   gh api /users/jonpham/packages/container/psykl-web_client/versions  --jq '.[] | select(.metadata.container.tags | contains(["0.1.0"]))'
-   gh release view v0.1.0 --repo jonpham/PSYKL-System   # expect psykl-0.1.0.tgz under Assets
-   ```
-6. **(Optional one-time)** Make GHCR images public if desired: https://github.com/users/jonpham/packages/container/psykl-service-task/settings → Change package visibility → Public (same for `psykl-web_client`).
-7. **Helm smoke-install** in a local cluster:
-   ```bash
-   gh release download v0.1.0 --repo jonpham/PSYKL-System --pattern '*.tgz'
-   helm install psykl-test ./psykl-0.1.0.tgz
-   kubectl get pods    # both psykl-test-* pods Running
-   kubectl port-forward svc/psykl-test-web-client 8080:80
-   # Browse http://localhost:8080 — PWA loads.
-   helm uninstall psykl-test
-   ```
-8. **First-time GHCR permission flip (only if `CD Publish` ever errors with `permission denied`):** Settings → Actions → General → Workflow permissions → select "Read and write permissions". Re-run the failed workflow.
+- The CHANGELOG `## Unreleased` section already names M1 Spec 6 alongside Specs 1–5 with their dated "Shipped" subsections. At v0.1.0 cut, the operator may either (a) leave the per-Spec dated sections in place and add an empty `## [0.1.0] - YYYY-MM-DD` heading above them as the release marker, or (b) consolidate all six per-Spec sections into one `## [0.1.0] - YYYY-MM-DD` block. Either is consistent with the README procedure; preference is (a) for the M1 release to preserve the per-Spec ship dates as the historical record.
+- The two CD fixup PRs that landed after Spec 6's integration merge — [#35](https://github.com/jonpham/PSYKL-System/pull/35) (buildx + gha cache) and [#36](https://github.com/jonpham/PSYKL-System/pull/36) (subtree-sync `persist-credentials: false`) — are operational fixes captured in ADR-M1-026 and ADR-M1-027. They do not need a separate CHANGELOG entry; they are part of the M1 Spec 6 shipped functionality.
 
 ## M1 Initiative close-out (after v0.1.0 ships)
 
