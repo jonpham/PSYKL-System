@@ -10,7 +10,7 @@
 **Branch:** Documentation correction branch `docs/m1-s5-private-ci-scope` in isolated worktree `worktrees/m1-s5-private-ci-scope`.
 **Current step:** Removing branch-protection enforcement and required-status-check claims from `ci-test-pipeline` docs because the repository is private without GitHub Pro.
 **Next action:** Commit and merge the `ci-test-pipeline` private-repo scope correction, then start `cd-release-pipeline` in a fresh isolated worktree/new AI assistant session.
-**Known blockers:** For `cd-release-pipeline` execution: per AGENTS.md Decision #16, the subtree mirror repos `jonpham/psykl-web_client` and `jonpham/psykl-service-task` must be created (empty, public) and the `SUBTREE_PUSH_TOKEN` GitHub Actions secret set before Spec 6's DevTask 10 runs.
+**Known blockers:** None — Spec 6 DevTask 10 prerequisites complete. Mirror repos `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks` exist (per M1 DESIGN.md Decision #35 re-open of #16) and `SUBTREE_PUSH_TOKEN` is set.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 

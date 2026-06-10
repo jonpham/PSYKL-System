@@ -8,7 +8,7 @@ initiative: m1-bootstrap
 spec_number: 6
 devtasks_total: 3
 devtasks_complete: 0
-honors_decisions: [7, 9, 16, 30]
+honors_decisions: [7, 9, 16, 30, 35]
 ---
 
 # M1 Spec 6: CD release pipeline — Implementation Plan
@@ -27,7 +27,7 @@ honors_decisions: [7, 9, 16, 30]
 
 **Prerequisites (one-time, manual, before DevTask 10):**
 
-- Create empty public GitHub repos: `jonpham/psykl-web_client` and `jonpham/psykl-service-task` (mirror repos).
+- Create empty public GitHub repos: `jonpham/PSYKL-Client_WEB-PWA` (mirror of `components/web_client`) and `jonpham/PSYKL-API_Tasks` (mirror of `components/service-task`), per Decision #35.
 - Generate a fine-grained personal access token with `contents: write` scope on those two repos, save as the `SUBTREE_PUSH_TOKEN` GitHub Actions secret in the monorepo settings.
 
 ---
@@ -151,9 +151,9 @@ Push, open PR (this is the second time CD Publish runs — once on the PR merge,
 
 Start DevTask 10 on a branch off `main`: `git checkout main && git pull && git checkout -b infra/cd-subtree-sync`.
 
-**Prerequisite check:** Confirm `jonpham/psykl-web_client` and `jonpham/psykl-service-task` exist (empty, public, no branch protection). Confirm `SUBTREE_PUSH_TOKEN` secret is set in the monorepo's Settings → Secrets → Actions. If either is missing, do those one-time manual steps FIRST.
+**Prerequisite check:** Confirm `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks` exist (empty, public, no branch protection) per Decision #35. Confirm `SUBTREE_PUSH_TOKEN` secret is set in the monorepo's Settings → Secrets → Actions. If either is missing, do those one-time manual steps FIRST.
 
-- [ ] **Step 1: Write `.github/workflows/cd-subtree-sync.yml`**
+- [x] **Step 1: Write `.github/workflows/cd-subtree-sync.yml`**
 
 ```yaml
 name: CD Subtree Sync
@@ -176,10 +176,10 @@ jobs:
         include:
           - component: web_client
             prefix: components/web_client
-            mirror: jonpham/psykl-web_client
+            mirror: jonpham/PSYKL-Client_WEB-PWA
           - component: service-task
             prefix: components/service-task
-            mirror: jonpham/psykl-service-task
+            mirror: jonpham/PSYKL-API_Tasks
 
     steps:
       - uses: actions/checkout@v4
@@ -207,21 +207,25 @@ jobs:
             ${{ steps.split.outputs.SPLIT_SHA }}:refs/heads/main
 ```
 
-- [ ] **Step 2: Test by merging a small change**
+- [x] **Step 2: Smoke-test deferred to Spec close-out (Phase B)**
 
-Open a throwaway PR touching `components/web_client/src/App.tsx` (add a harmless comment). Merge. Wait for `CD Subtree Sync` to complete. Visit `https://github.com/jonpham/psykl-web_client`. The mirror should now contain the latest `web_client` subtree as its `main` branch with a single commit (the split commit).
+Same reason as DevTask 9 Step 2: the workflow triggers on `push: branches: [main]`. DevTask PRs target the Spec integration branch, so the workflow does not fire during DevTask review. Real smoke-test happens when the Spec 6 integration PR (#31) merges to `main`; verification commands live in `cd-release-pipeline_manual-instructions.md` Phase B.3 (mirror-repo populated check).
 
-Repeat the same on `components/service-task` to verify both mirrors update.
+Reference (original plan text — kept for posterity):
 
-- [ ] **Step 3: Commit DevTask 10**
+> Open a throwaway PR touching `components/web_client/src/App.tsx` (add a harmless comment). Merge. Wait for `CD Subtree Sync` to complete. Visit `https://github.com/jonpham/PSYKL-Client_WEB-PWA`. The mirror should now contain the latest `web_client` subtree as its `main` branch with a single commit (the split commit).
+>
+> Repeat the same on `components/service-task` to verify both mirrors update.
+
+- [x] **Step 3: Commit DevTask 10**
 
 ```bash
 git add .github/workflows/cd-subtree-sync.yml
 git commit -m "infra(M1-T10): CD subtree-sync to downstream mirror repos on merge
 
 Matrix fans out across components/web_client and components/service-task.
-Force-pushes via SUBTREE_PUSH_TOKEN secret to jonpham/psykl-web_client
-and jonpham/psykl-service-task respectively.
+Force-pushes via SUBTREE_PUSH_TOKEN secret to jonpham/PSYKL-Client_WEB-PWA
+and jonpham/PSYKL-API_Tasks respectively (per Decision #35).
 
 This is the documented AGENTS.md force-push exception — mirror repos
 are downstream-only and force-push is the canonical pattern for
@@ -726,7 +730,7 @@ After CD workflows run green on a few PRs, confirm `CD Publish / publish` and `C
 - [ ] **Step 1: Verify all artifacts**
 
 - GHCR images: `ghcr.io/jonpham/psykl-service-task:{0.1.0,latest,SHA}` and `ghcr.io/jonpham/psykl-web_client:{0.1.0,latest,SHA}` all present.
-- Mirror repos: `jonpham/psykl-web_client` and `jonpham/psykl-service-task` both contain the latest component subtree as their `main` branch.
+- Mirror repos: `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks` both contain the latest component subtree as their `main` branch.
 - GitHub Release: `https://github.com/jonpham/PSYKL-System/releases/tag/v0.1.0` exists with `psykl-0.1.0.tgz` attached.
 - Local cluster install: `helm install psykl-test ./deploy/helm` brings up both pods Running, web_client reachable via port-forward.
 
