@@ -2,15 +2,15 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Last completed spec:** M1 Spec 5 — CI Test Pipeline (`ci-test-pipeline`). Feature doc: [`[20260520]GH6_m1-ci-test-pipeline.md`](features/%5B20260520%5DGH6_m1-ci-test-pipeline.md). Spec integration PR [#29](https://github.com/jonpham/PSYKL-System/pull/29) merged with all five visible checks passing on `main`.
-**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 5 of 6 specs shipped (S1, S2, S3, S4, S5); 1 remaining (S6).
-**Active spec for execution:** N/A — `ci-test-pipeline` is closed out. Branch-protection enforcement is scoped out while the repository is private without GitHub Pro.
-**Next executable spec:** M1 Spec 6 — CD Release Pipeline (`cd-release-pipeline`) at `docs/specs/m1-bootstrap/20260520-S6-cd-release-pipeline.md`. Do not begin Spec 6 without a new AI assistant session.
+**Last completed spec:** M1 Spec 6 — CD Release Pipeline (`cd-release-pipeline`). Feature doc: [`[20260520]GH7_m1-cd-release-pipeline.md`](features/%5B20260520%5DGH7_m1-cd-release-pipeline.md). Spec integration PR [#31](https://github.com/jonpham/PSYKL-System/pull/31).
+**Active initiative:** M1 Bootstrap (`docs/initiatives/m1-bootstrap/`) — APPROVED + 6 of 6 specs shipped. **M1 implementation complete.** Remaining M1 close-out: cut `v0.1.0` tag (see feature doc release procedure), then initiative close-out (delete `DESIGN.md` / `MILESTONE.md` / `issues/` per AGENTS.md doc-sprawl rule, run AI workflow retrospective, hand off to M2).
+**Active spec for execution:** N/A — Spec 6 closed out alongside this Spec integration PR.
+**Next executable spec:** M2 — PWA CRUD + offline-first (no initiative DESIGN.md yet). First action for M2: run `/office-hours` against `docs/initiatives/m2-pwa-crud-offline/` to produce the M2 design doc; then `/plan-eng-review` to lock decisions (offline-first sync engine details are the big surface); then `superpowers:writing-plans` to break into Specs. **Do not begin M2 design work without a new AI assistant session and an explicit user "go".**
 **Active skill:** `superpowers:executing-plans`.
-**Branch:** Documentation correction branch `docs/m1-s5-private-ci-scope` in isolated worktree `worktrees/m1-s5-private-ci-scope`.
-**Current step:** Removing branch-protection enforcement and required-status-check claims from `ci-test-pipeline` docs because the repository is private without GitHub Pro.
-**Next action:** Commit and merge the `ci-test-pipeline` private-repo scope correction, then start `cd-release-pipeline` in a fresh isolated worktree/new AI assistant session.
-**Known blockers:** None — Spec 6 DevTask 10 prerequisites complete. Mirror repos `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks` exist (per M1 DESIGN.md Decision #35 re-open of #16) and `SUBTREE_PUSH_TOKEN` is set.
+**Branch:** Spec 6 integration branch `spec/m1-s6-cd-release-pipeline` (PR [#31](https://github.com/jonpham/PSYKL-System/pull/31), draft → ready), with DevTask 11 + close-out commits on `infra/m1-s6-dt11-helm-and-release`.
+**Current step:** Spec 6 close-out — feature doc, durable doc refreshes, deletion of per-Spec planning artifacts, all on the final DevTask branch per AGENTS.md.
+**Next action:** Merge DevTask 11 PR into the Spec branch, mark Spec 6 PR ready for review, then merge Spec 6 PR to `main` (explicit user approval per the AGENTS.md HARD RULE). After merge: Phase B verification (GHCR images visible, mirrors populated), then release procedure (CHANGELOG date, tag `v0.1.0`, release notes, smoke-install), then M1 initiative close-out.
+**Known blockers:** None.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 
@@ -23,9 +23,8 @@
    - [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — durable architectural decisions (ADRs) and component descriptions for everything that's shipped
    - [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md) — this file
    - [`docs/features/`](features/) — completed-feature records (one per shipped Spec)
-   - [`docs/initiatives/m1-bootstrap/DESIGN.md`](initiatives/m1-bootstrap/DESIGN.md) — the M1 design and 34-entry Decisions appendix
-   - [`docs/initiatives/m1-bootstrap/issues/`](initiatives/m1-bootstrap/issues/) — issue briefs for pending Specs (S5, S6); shipped Specs are consolidated into `docs/features/`
-   - [`docs/specs/m1-bootstrap/`](specs/m1-bootstrap/) — execution plans for pending Specs (S5, S6); shipped Specs' plans are deleted at Spec close-out per AGENTS.md doc-sprawl rule
+   - [`docs/initiatives/m1-bootstrap/DESIGN.md`](initiatives/m1-bootstrap/DESIGN.md) — the M1 design and 35-entry Decisions appendix (deleted at M1 initiative close-out per AGENTS.md doc-sprawl rule once retrospective lands)
+   - [`docs/specs/m1-bootstrap/`](specs/m1-bootstrap/) — execution plans for pending Specs (none — M1 is complete); shipped Specs' plans are deleted at Spec close-out per AGENTS.md doc-sprawl rule
 2. **Vocabulary to memorize:** `DevTask` = workflow concept (PR-sized unit). `Task` = PSYKL data-model entity (the `id, user_id, title, created_at` record). They are unrelated.
 3. **The Decisions appendix is normative.** If a decision looks wrong, surface it for user discussion — do not silently rework.
 4. **TDD ordering is mandatory:** failing test → implementation → green → refactor → commit. Tests live in the same PR as the implementation.
@@ -37,25 +36,25 @@ See [`docs/STACK.md`](STACK.md) for the canonical M1 stack table (what's shipped
 
 ## Initiative Summary
 
-| Initiative                            | Theme                                                                                | Status                                                  | Initiative Doc                                                                         |
-| ------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| M1 — Bootstrap                        | Vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | 🟡 In progress — S1, S2, S3, S4 shipped; S5, S6 pending | [`m1-bootstrap/`](initiatives/m1-bootstrap/)                                           |
-| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync                         | ⚪ Sketched                                             | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
-| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives                        | ⚪ Sketched                                             | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
-| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host                    | ⚪ Sketched                                             | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
+| Initiative                            | Theme                                                                                | Status                                                                                        | Initiative Doc                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| M1 — Bootstrap                        | Vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | 🟡 Implementation complete — all 6 Specs shipped; pending `v0.1.0` cut + initiative close-out | [`m1-bootstrap/`](initiatives/m1-bootstrap/)                                           |
+| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync                         | ⚪ Sketched                                                                                   | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
+| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives                        | ⚪ Sketched                                                                                   | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
+| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host                    | ⚪ Sketched                                                                                   | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
 
 Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started
 
 ## M1 Specs
 
-| Spec | Title                    | Status                            | Feature doc                                                                                                 |
-| ---- | ------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| S1   | Workspace Bootstrap      | 🟢 Shipped                        | [`[20260520]GH2_m1-workspace-bootstrap.md`](features/%5B20260520%5DGH2_m1-workspace-bootstrap.md)           |
-| S2   | service-task Minimal API | 🟢 Shipped                        | [`[20260520]GH3_m1-service-task-minimal-api.md`](features/%5B20260520%5DGH3_m1-service-task-minimal-api.md) |
-| S3   | web_client Minimal PWA   | 🟢 Shipped                        | [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md)     |
-| S4   | Local Dev Stack          | 🟢 Shipped                        | [`[20260520]GH5_m1-local-dev-stack.md`](features/%5B20260520%5DGH5_m1-local-dev-stack.md)                   |
-| S5   | CI Test Pipeline         | ⚪ Pending — execution plan ready | _written at close-out_                                                                                      |
-| S6   | CD Release Pipeline      | ⚪ Pending — execution plan ready | _written at close-out_                                                                                      |
+| Spec | Title                    | Status     | Feature doc                                                                                                 |
+| ---- | ------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------- |
+| S1   | Workspace Bootstrap      | 🟢 Shipped | [`[20260520]GH2_m1-workspace-bootstrap.md`](features/%5B20260520%5DGH2_m1-workspace-bootstrap.md)           |
+| S2   | service-task Minimal API | 🟢 Shipped | [`[20260520]GH3_m1-service-task-minimal-api.md`](features/%5B20260520%5DGH3_m1-service-task-minimal-api.md) |
+| S3   | web_client Minimal PWA   | 🟢 Shipped | [`[20260520]GH4_m1-web-client-minimal-pwa.md`](features/%5B20260520%5DGH4_m1-web-client-minimal-pwa.md)     |
+| S4   | Local Dev Stack          | 🟢 Shipped | [`[20260520]GH5_m1-local-dev-stack.md`](features/%5B20260520%5DGH5_m1-local-dev-stack.md)                   |
+| S5   | CI Test Pipeline         | 🟢 Shipped | [`[20260520]GH6_m1-ci-test-pipeline.md`](features/%5B20260520%5DGH6_m1-ci-test-pipeline.md)                 |
+| S6   | CD Release Pipeline      | 🟢 Shipped | [`[20260520]GH7_m1-cd-release-pipeline.md`](features/%5B20260520%5DGH7_m1-cd-release-pipeline.md)           |
 
 ## Remaining Design Areas That Require `/plan-eng-review`
 

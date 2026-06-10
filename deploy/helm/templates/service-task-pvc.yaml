@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-pglite-data
+  labels:
+    {{- include "psykl.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.serviceTask.persistence.size }}
+  {{- if .Values.serviceTask.persistence.storageClassName }}
+  storageClassName: {{ .Values.serviceTask.persistence.storageClassName }}
+  {{- end }}
