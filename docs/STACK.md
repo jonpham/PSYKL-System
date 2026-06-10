@@ -46,7 +46,7 @@
 | CD release pipeline  | GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`); subtree mirrors to component-mirror repos | M1 Spec 6 |
 | Helm chart location  | `deploy/helm/`                                                                                                           | M1 Spec 6 |
 | Container registry   | GitHub Container Registry (`ghcr.io/jonpham/psykl-*`)                                                                    | M1 Spec 6 |
-| Subtree mirror repos | `jonpham/psykl-web_client`, `jonpham/psykl-service-task`                                                                 | M1 Spec 6 |
+| Subtree mirror repos | `jonpham/PSYKL-Client_WEB-PWA`, `jonpham/PSYKL-API_Tasks`                                                                | M1 Spec 6 |
 | Offline-first store  | TBD (IndexedDB shape + sync queue + last-write-wins implementation)                                                      | M2        |
 | Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD                                                             | M3        |
 | Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)                                                                   | M4        |

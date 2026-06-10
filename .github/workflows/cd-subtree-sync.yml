@@ -18,10 +18,10 @@ jobs:
         include:
           - component: web_client
             prefix: components/web_client
-            mirror: jonpham/psykl-web_client
+            mirror: jonpham/PSYKL-Client_WEB-PWA
           - component: service-task
             prefix: components/service-task
-            mirror: jonpham/psykl-service-task
+            mirror: jonpham/PSYKL-API_Tasks
 
     steps:
       - uses: actions/checkout@v4

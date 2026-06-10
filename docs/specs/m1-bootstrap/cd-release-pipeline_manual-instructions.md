@@ -19,23 +19,23 @@ DevTask 9 (GHCR publish) needs nothing manual upfront. **DevTask 10 (subtree-syn
 
 ### A.1 — Create the two empty downstream mirror repositories
 
-Per M1 DESIGN.md Decision #16, `components/web_client` and `components/service-task` get mirrored to standalone public repositories on every merge to `main`.
+Per M1 DESIGN.md Decision #16 (re-opened as Decision #35), `components/web_client` is mirrored to `jonpham/PSYKL-Client_WEB-PWA` and `components/service-task` is mirrored to `jonpham/PSYKL-API_Tasks` on every merge to `main`.
 
 ```bash
-gh repo create jonpham/psykl-web_client \
+gh repo create jonpham/PSYKL-Client_WEB-PWA \
   --public \
-  --description "Downstream mirror of components/web_client from PSYKL-System monorepo. Do not commit here directly — the monorepo is the source of truth."
+  --description "Downstream mirror of components/web_client (PWA) from PSYKL-System monorepo. Do not commit here directly — the monorepo is the source of truth."
 
-gh repo create jonpham/psykl-service-task \
+gh repo create jonpham/PSYKL-API_Tasks \
   --public \
-  --description "Downstream mirror of components/service-task from PSYKL-System monorepo. Do not commit here directly — the monorepo is the source of truth."
+  --description "Downstream mirror of components/service-task (tasks API) from PSYKL-System monorepo. Do not commit here directly — the monorepo is the source of truth."
 ```
 
 **Verification:**
 
 ```bash
-gh repo view jonpham/psykl-web_client --json name,visibility,isEmpty
-gh repo view jonpham/psykl-service-task --json name,visibility,isEmpty
+gh repo view jonpham/PSYKL-Client_WEB-PWA --json name,visibility,isEmpty
+gh repo view jonpham/PSYKL-API_Tasks --json name,visibility,isEmpty
 # Both should show: visibility=PUBLIC, isEmpty=true
 ```
 
@@ -50,7 +50,7 @@ The subtree-sync workflow force-pushes to the two mirror repos. `GITHUB_TOKEN` (
    - **Token name:** `psykl-subtree-push`
    - **Resource owner:** `jonpham`
    - **Expiration:** pick a duration (recommend 1 year; rotation reminder goes on your calendar)
-   - **Repository access:** Only select repositories → `jonpham/psykl-web_client` and `jonpham/psykl-service-task`
+   - **Repository access:** Only select repositories → `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks`
    - **Repository permissions** → **Contents:** Read and write
    - (Everything else: No access)
 3. Click **Generate token** and copy it once (you cannot retrieve it later).
@@ -113,16 +113,16 @@ gh api -H "Accept: application/vnd.github+json" \
 After `CD Subtree Sync` runs green:
 
 ```bash
-gh api repos/jonpham/psykl-web_client/commits --jq '.[0] | {sha, message: .commit.message, date: .commit.author.date}'
-gh api repos/jonpham/psykl-service-task/commits --jq '.[0] | {sha, message: .commit.message, date: .commit.author.date}'
+gh api repos/jonpham/PSYKL-Client_WEB-PWA/commits --jq '.[0] | {sha, message: .commit.message, date: .commit.author.date}'
+gh api repos/jonpham/PSYKL-API_Tasks/commits --jq '.[0] | {sha, message: .commit.message, date: .commit.author.date}'
 ```
 
 **Expected:** Both mirrors now have a commit on `main`. The commit message is the most recent monorepo commit that touched that subtree's prefix.
 
 Browse the mirrors directly to confirm the file tree matches `components/web_client/` and `components/service-task/` respectively:
 
-- https://github.com/jonpham/psykl-web_client
-- https://github.com/jonpham/psykl-service-task
+- https://github.com/jonpham/PSYKL-Client_WEB-PWA
+- https://github.com/jonpham/PSYKL-API_Tasks
 
 ### B.4 — Confirm CD checks appear as visible (not required) status checks
 
