@@ -56,7 +56,7 @@ honors_decisions: [7, 9, 16, 30]
 
 Start DevTask 9 on a branch off `main`: `git checkout main && git pull && git checkout -b infra/cd-ghcr-publish`.
 
-- [ ] **Step 1: Write `.github/workflows/cd-publish.yml`**
+- [x] **Step 1: Write `.github/workflows/cd-publish.yml`**
 
 ```yaml
 name: CD Publish
@@ -114,9 +114,13 @@ Notes:
 - `GITHUB_TOKEN` has `packages: write` here because the workflow declares it. Image visibility (public/private) follows the repo visibility by default; can be changed in GHCR settings after first push.
 - Matrix iterates over both components in parallel.
 
-- [ ] **Step 2: Smoke-test by merging a tiny PR**
+- [x] **Step 2: Smoke-test deferred to Spec close-out (Phase B)**
 
-Open a throwaway PR (e.g., add an `## Unreleased` bullet to `CHANGELOG.md`). Merge it. Watch the `CD Publish` workflow run in the Actions tab. After ~5 minutes, both images should appear at:
+The workflow triggers on `push: branches: [main]`. DevTask PRs target the Spec integration branch (not `main`) per AGENTS.md Git Conventions, so the workflow cannot fire during DevTask 9. Real smoke-test happens when the Spec 6 integration PR (#31) merges to `main`; verification commands live in `cd-release-pipeline_manual-instructions.md` Phase B (B.1 one-time GHCR permission check, B.2 GHCR image visibility check).
+
+Reference (original plan text — kept for posterity):
+
+> Open a throwaway PR (e.g., add an `## Unreleased` bullet to `CHANGELOG.md`). Merge it. Watch the `CD Publish` workflow run in the Actions tab. After ~5 minutes, both images should appear at:
 
 ```
 https://github.com/jonpham?tab=packages&repo_name=PSYKL-System
@@ -126,7 +130,7 @@ with at least two tags each: `<sha>` and `latest`.
 
 If first run fails on `permission denied` to GHCR: in repo Settings → Actions → General → "Workflow permissions", set to "Read and write permissions" and check "Allow GitHub Actions to create and approve pull requests". Re-run the workflow.
 
-- [ ] **Step 3: Commit DevTask 9**
+- [x] **Step 3: Commit DevTask 9**
 
 ```bash
 git add .github/workflows/cd-publish.yml
