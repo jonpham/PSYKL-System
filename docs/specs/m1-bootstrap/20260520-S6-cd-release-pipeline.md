@@ -153,7 +153,7 @@ Start DevTask 10 on a branch off `main`: `git checkout main && git pull && git c
 
 **Prerequisite check:** Confirm `jonpham/psykl-web_client` and `jonpham/psykl-service-task` exist (empty, public, no branch protection). Confirm `SUBTREE_PUSH_TOKEN` secret is set in the monorepo's Settings → Secrets → Actions. If either is missing, do those one-time manual steps FIRST.
 
-- [ ] **Step 1: Write `.github/workflows/cd-subtree-sync.yml`**
+- [x] **Step 1: Write `.github/workflows/cd-subtree-sync.yml`**
 
 ```yaml
 name: CD Subtree Sync
@@ -207,13 +207,17 @@ jobs:
             ${{ steps.split.outputs.SPLIT_SHA }}:refs/heads/main
 ```
 
-- [ ] **Step 2: Test by merging a small change**
+- [x] **Step 2: Smoke-test deferred to Spec close-out (Phase B)**
 
-Open a throwaway PR touching `components/web_client/src/App.tsx` (add a harmless comment). Merge. Wait for `CD Subtree Sync` to complete. Visit `https://github.com/jonpham/psykl-web_client`. The mirror should now contain the latest `web_client` subtree as its `main` branch with a single commit (the split commit).
+Same reason as DevTask 9 Step 2: the workflow triggers on `push: branches: [main]`. DevTask PRs target the Spec integration branch, so the workflow does not fire during DevTask review. Real smoke-test happens when the Spec 6 integration PR (#31) merges to `main`; verification commands live in `cd-release-pipeline_manual-instructions.md` Phase B.3 (mirror-repo populated check).
 
-Repeat the same on `components/service-task` to verify both mirrors update.
+Reference (original plan text — kept for posterity):
 
-- [ ] **Step 3: Commit DevTask 10**
+> Open a throwaway PR touching `components/web_client/src/App.tsx` (add a harmless comment). Merge. Wait for `CD Subtree Sync` to complete. Visit `https://github.com/jonpham/psykl-web_client`. The mirror should now contain the latest `web_client` subtree as its `main` branch with a single commit (the split commit).
+>
+> Repeat the same on `components/service-task` to verify both mirrors update.
+
+- [x] **Step 3: Commit DevTask 10**
 
 ```bash
 git add .github/workflows/cd-subtree-sync.yml
