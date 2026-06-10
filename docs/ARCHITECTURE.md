@@ -4,7 +4,7 @@ This document records durable architecture decisions that survive beyond individ
 
 ## M1 Bootstrap Architecture
 
-M1 establishes a TypeScript monorepo with independently deployable system components under `components/` and shared packages under `packages/`. The monorepo remains the source of truth; component repositories are downstream mirrors managed later by subtree automation.
+M1 establishes a TypeScript monorepo with independently deployable system components under `components/` and shared packages under `packages/`. The monorepo remains the source of truth; component repositories are downstream mirrors maintained by the `cd-subtree-sync.yml` GitHub Actions workflow on every merge to `main`.
 
 ### Workspace And Tooling
 
@@ -218,3 +218,23 @@ Root `verify:*` scripts in `package.json` are the developer-facing command surfa
 ### ADR-M1-025: E2E CI Drives the Real Compose Stack
 
 Run Playwright Chromium against the actual Docker Compose stack rather than mocked service boundaries. The E2E workflow uses `docker-compose.e2e.yml` to replace persistent pglite storage with `tmpfs`, giving each run clean database state without adding test-only application endpoints.
+
+### ADR-M1-026: GHCR Continuous Publish on Merge to `main`
+
+Build `service-task` and `web_client` container images in parallel via a job matrix and push them to GitHub Container Registry on every merge to `main`. Two tags per image: `:{commit-sha}` (precise pin) and `:latest` (latest-tracking). The semver tag (`:{semver}`) is added later by the tagged-release workflow per Decision #30's three-tag strategy. GitHub Actions cache backend provides Docker layer caching. The workflow's `permissions:` block declares `packages: write`, so the default `GITHUB_TOKEN` is sufficient — no extra credential surface. GHCR was chosen over Docker Hub / Harbor for colocation with the monorepo and zero extra credential management (Decision #7).
+
+### ADR-M1-027: Subtree-Sync to Downstream Mirror Repos via Force-Push
+
+`.github/workflows/cd-subtree-sync.yml` runs `git subtree split` for `components/web_client` and `components/service-task` on every merge to `main` and force-pushes the split commits to `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks` respectively. This is the documented AGENTS.md force-push exception: mirror repos are downstream-only, and `git subtree split` produces a new commit graph each time, so force-push is the canonical pattern. Authentication is via a `SUBTREE_PUSH_TOKEN` fine-grained PAT with `contents: write` on the two mirror repos only. `components/ios_client` is excluded from the matrix until M3 introduces real iOS code. Mirror names follow Decision #16 as re-opened by Decision #35 — surface-descriptive (PWA client vs future Apple-native client; tasks API vs future services).
+
+### ADR-M1-028: Helm Chart as the M1 Distribution Shape
+
+`deploy/helm/` is a single Helm chart, multi-Deployment: `service-task` (Deployment + ClusterIP Service + PersistentVolumeClaim for pglite persistence at `/var/lib/psykl/pglite`) and `web_client` (Deployment + ClusterIP Service) as siblings under one release. Replicas default to 1 per Premise 8 — PSYKL is single-user multi-device, so horizontal scaling is unnecessary. An optional Ingress template is provided and disabled by default in `values.yaml`; M4+ flips it on with real host configuration. The chart's `version` and `appVersion` are bumped from `0.1.0` in the chart sources; the tagged-release workflow rewrites both to match the semver tag before packaging.
+
+### ADR-M1-029: Tagged-Release Workflow
+
+`.github/workflows/cd-release.yml` triggers on `v*.*.*` tag pushes and performs five ordered steps: (1) pull the `:{sha}` images that `cd-publish.yml` produced for the tagged commit, (2) re-tag them as `:{semver}` and push the new tag (third tag per Decision #30's three-tag strategy), (3) sync `Chart.yaml`'s `version` + `appVersion` and `values.yaml`'s image `tag:` to the semver via `sed` in-workflow (no commit back to `main` — the source-tree values stay at `0.1.0` as authoritative chart sources), (4) package the chart, (5) create a GitHub Release via `softprops/action-gh-release@v2` with the packaged `.tgz` attached as a release asset. The workflow assumes `cd-publish.yml` has completed for the tagged commit; operator-side ordering of "wait for publish before tagging" is documented in the Spec 6 feature doc's release procedure.
+
+### ADR-M1-030: Helm Templates Excluded from Prettier
+
+`deploy/helm/templates/` is added to `.prettierignore` because Helm Go-template syntax (`{{- ... -}}` actions embedded in YAML keys, values, and structural positions, plus conditional blocks that produce non-YAML output when surrounding context is conditional) is unparseable by prettier's YAML parser. `helm lint` and `helm template` provide the same correctness signal — both locally (developer-side) and in `cd-release.yml` (CI-side). Non-template chart files (`Chart.yaml`, `values.yaml`) remain prettier-formatted because they are pure YAML.

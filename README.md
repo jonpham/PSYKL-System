@@ -36,7 +36,7 @@ For people who want to build on their accomplishments using **repetition and ene
 └── CHANGELOG.md               # Release-style change log
 ```
 
-`components/*` and `packages/*` are the source of truth; component upstream repos (`jonpham/psykl-{service-task,web_client}`) are downstream mirrors maintained by CI subtree automation (lands in M1 Spec 6).
+`components/*` and `packages/*` are the source of truth; component downstream repos (`jonpham/PSYKL-Client_WEB-PWA` for `components/web_client`, `jonpham/PSYKL-API_Tasks` for `components/service-task`) are mirrors maintained by `.github/workflows/cd-subtree-sync.yml` on every merge to `main` (M1 Spec 6).
 
 ---
 
@@ -215,13 +215,14 @@ Husky runs `pnpm exec lint-staged → pnpm -r format:check → pnpm -r typecheck
 
 ## Deploy
 
-**M1 deploy is not wired yet** — it lands in M1 Spec 6 (CD release pipeline). The planned shape:
+M1's CD release pipeline is wired (M1 Spec 6 — [feature doc](docs/features/%5B20260520%5DGH7_m1-cd-release-pipeline.md)):
 
-- Each component is built into a container image and published to GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`).
-- Helm chart lives at `deploy/helm/`.
-- After a merge to `main`, CI runs `git subtree split` + force-push of `components/*` to their downstream mirror repos (`jonpham/psykl-{service-task,web_client}`).
+- **On every merge to `main`:** `.github/workflows/cd-publish.yml` builds and pushes `service-task` + `web_client` container images to GitHub Container Registry with `:{sha}` + `:latest` tags. `.github/workflows/cd-subtree-sync.yml` force-pushes the two component subtrees to their downstream mirror repositories `jonpham/PSYKL-Client_WEB-PWA` and `jonpham/PSYKL-API_Tasks`.
+- **On every `v*.*.*` tag push:** `.github/workflows/cd-release.yml` re-tags the existing `:{sha}` images with the semver, packages the Helm chart at `deploy/helm/`, and creates a GitHub Release with the packaged `.tgz` attached as a release asset.
+- **Helm chart at `deploy/helm/`:** single chart, multi-Deployment — `service-task` (Deployment + Service + PVC for pglite persistence) and `web_client` (Deployment + Service), single-replica per Premise 8, optional Ingress disabled by default. Install a published release with `gh release download v0.X.Y --pattern '*.tgz' && helm install psykl ./psykl-0.X.Y.tgz`.
+- **First-time release setup:** see the [Spec 6 feature doc](docs/features/%5B20260520%5DGH7_m1-cd-release-pipeline.md) "Release procedure" section for the v0.1.0 cut walkthrough.
 
-The local Docker Compose runtime is available now for development and future E2E runs; image publishing and Helm deployment are still Spec 6 work. For the current shape see [`docs/STACK.md`](docs/STACK.md) → "Pending" and [`docs/initiatives/m1-bootstrap/DESIGN.md`](docs/initiatives/m1-bootstrap/DESIGN.md) Decisions #16, #17, #21, #27, #30.
+For details see [`docs/STACK.md`](docs/STACK.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ADR-M1-026 through ADR-M1-030.
 
 ---
 
