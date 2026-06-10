@@ -16,7 +16,11 @@
       "Read(//Users/jp/.claude/projects/-Users-jp-code-psykl-worktrees-spec-m1-s3-web-client-minimal-pwa/**)",
       "Bash(python3 -c \"import sys, json; [print\\(json.dumps\\({'name': c.get\\('name'\\), 'input': c.get\\('input', {}\\)}\\)[:200]\\) for line in sys.stdin for c in \\(json.loads\\(line\\).get\\('message', {}\\) or {}\\).get\\('content', []\\) if isinstance\\(c, dict\\) and c.get\\('type'\\) == 'tool_use']\")",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('permissions', {}\\), indent=2\\)\\)\")",
-      "Bash(awk '/^## Task 8:/,/^## Spec 3 Verification/' /Users/jp/code/psykl/worktrees/feat-web-client-task-ui/docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md)"
+      "Bash(awk '/^## Task 8:/,/^## Spec 3 Verification/' /Users/jp/code/psykl/worktrees/feat-web-client-task-ui/docs/specs/m1-bootstrap/20260520-S3-web-client-minimal-pwa.md)",
+      "Bash(git check-ignore *)",
+      "Bash(git commit *)",
+      "Bash(pnpm --filter @psykl/service-task build:openapi)",
+      "Bash(pnpm --filter @psykl/web-client codegen)"
     ]
   }
 }
