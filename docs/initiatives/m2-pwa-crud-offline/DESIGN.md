@@ -4,8 +4,8 @@ generated_by: /office-hours (gstack, adapted — startup/builder phases skipped;
 generated_on: 2026-05-22
 branch: feat/plan-m2-pwa-crud-offline
 repo: jonpham/PSYKL-System
-status: DRAFT
-status_qualifier: 'DRAFT pending user review/approval. Rebased onto origin/main after M1 close-out: v0.1.0 and the M1 retrospective have landed, and no retrospective finding invalidated the M2 offline-first premises. Architectural decisions #34-#56 are closed.'
+status: APPROVED
+status_qualifier: 'Promoted during superpowers:writing-plans on 2026-06-10 after the user requested M2 spec generation. Rebased onto origin/main after M1 close-out: v0.1.0 and the M1 retrospective have landed, and no retrospective finding invalidated the M2 offline-first premises. Architectural decisions #34-#56 are closed.'
 mode: Builder, offline-first vertical
 milestone: M2
 reviewed_by: /plan-eng-review (scoped to architectural decisions only per AGENTS.md scope-matching rule; completed 2026-05-22)
@@ -499,10 +499,10 @@ Continuing the global decision numbering from M1's appendix as it existed when M
 
 All architectural Open Questions are resolved (#34-#56). Concrete handoff:
 
-1. (Manual / interactive) User reviews this M2 design and either approves it or requests changes.
-2. If approved, promote the design from DRAFT to APPROVED and land the durable `docs/PRODUCT.md` Surface Areas update from Decision #54.
-3. (Optional) `/plan-devex-review` for the offline-dev experience — does the developer's first encounter with the offline path (DevTools toggle, then Playwright `setOffline` in tests) feel discoverable.
-4. `superpowers:writing-plans` breaks M2 into the **6 Specs / ~11-13 DevTasks** enumerated above under `docs/specs/m2-pwa-crud-offline/`, and explicitly routes the M1 retrospective's code style + linting tightening item from M2-P11. Same naming convention as M1 (`YYYYMMDD-S{N}-{spec-slug}.md`). Each DevTask stays within the ≤10 production behavior source files rule; split per trilemma rule when needed.
+1. (Done 2026-06-10) User requested `superpowers:writing-plans`; this promoted the design from DRAFT to APPROVED for spec generation.
+2. (Done 2026-06-10) Durable `docs/PRODUCT.md` Surface Areas update from Decision #54 landed on the M2 planning branch.
+3. (Done 2026-06-10) `superpowers:writing-plans` broke M2 into the **6 Specs / 13 DevTasks** enumerated above under `docs/specs/m2-pwa-crud-offline/`, and explicitly routed the M1 retrospective's code style + linting tightening item from M2-P11.
+4. Next: user reviews the generated specs, then selects the execution approach for Spec M2-1.
 5. Execute specs atomically per AGENTS.md. Each Spec gets a long-lived Spec integration branch and draft PR against `main`; each DevTask gets its own branch and PR targeting the Spec branch unless a real dependency requires stacking. Tests ship in the same PR as the implementation.
 6. Close M2 with the feature-doc summary, a workflow retrospective, and a `v0.2.0` tag.
 

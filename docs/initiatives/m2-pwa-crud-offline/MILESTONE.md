@@ -1,6 +1,6 @@
 # Milestone M2 — Complete Task CRUD + Offline-first PWA
 
-**Status:** DRAFT — DESIGN.md drafted via `/office-hours` (adapted) on 2026-05-22; M1 close-out has landed on `origin/main`, so this promotes to APPROVED after user review accepts the design premises and durable product-doc updates.
+**Status:** APPROVED for spec planning — DESIGN.md drafted via `/office-hours` (adapted) on 2026-05-22 and promoted during `superpowers:writing-plans` on 2026-06-10 after the user requested M2 spec generation. M1 close-out has landed on `origin/main`; durable product-doc updates for the PWA surface are included on this planning branch.
 **Design doc:** [`DESIGN.md`](./DESIGN.md)
 **Effort:** M (human: ~2-3 weeks / Claude Code: ~3-5 days of focused work). Source: M2 DESIGN.md → "Recommended Approach → Approach C".
 

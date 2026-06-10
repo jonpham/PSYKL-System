@@ -3,6 +3,7 @@
 > Canonical product brief for PSYKL-System. Sits alongside the working agreement in [`AGENTS.md`](../AGENTS.md). When initiatives are planned with `gstack`, they should trace back to the premise, the Minimum Viable Product (MVP), and the constraints described here.
 >
 > **Glossary** (used freely below):
+>
 > - PSY = the unit of energy this tool helps a user manage. Treated as a first-class concept, not a unit of measure.
 > - PSYKL = a "psychological work cycle" — a self-defined period of focused work, user-tunable, defaulting to 25 minutes (pomodoro-style).
 > - PWA = Progressive Web App
@@ -75,12 +76,12 @@ The MVP closes the planning loop end-to-end:
 
 PSYKL-System ships as a set of clients sharing a single `service-task` backend:
 
-- **PWA** (browser / desktop / Android via add-to-home-screen) — primary surface in Milestones 1 and 2, used for product discovery
+- **PWA** (Chromium-family browser / desktop / Android via add-to-home-screen) — permanent first-class surface for Android, non-Mac desktops, and other non-Apple users; offline-first from M2 onward
 - **iPhone (iOS)** — primary surface long-term; arrives in M3
 - **iPad (iPadOS)** — arrives alongside the iOS client in M3
 - **macOS** — arrives alongside the iOS client in M3 (SwiftUI multiplatform or Mac Catalyst, decided during M3 design)
 
-Surface order is intentional: the PWA exists for cross-device dogfood and product iteration; the Apple-native clients carry the user's daily-driver experience once the product shape is known.
+Surface order is intentional: the PWA carries cross-device dogfood, product iteration, and the long-lived non-Apple experience; the Apple-native clients carry the user's Apple daily-driver experience once the product shape is known.
 
 ## Engineering Constraints
 
@@ -101,11 +102,11 @@ Surface order is intentional: the PWA exists for cross-device dogfood and produc
 
 ## Milestone Roadmap
 
-| Milestone | Theme | Status | Initiative dir |
-|-----------|-------|--------|----------------|
-| M1 | Bootstrap — vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | Designed | `docs/initiatives/m1-bootstrap/` |
-| M2 | Complete Task Create/Read/Update/Delete + offline-first PWA | Sketched | `docs/initiatives/m2-pwa-crud-offline/` |
-| M3 | Apple-native clients (iOS, iPadOS, macOS) + product discovery (PSYKL execution + retrospectives) | Sketched | `docs/initiatives/m3-apple-native-product-discovery/` |
-| M4 | Multi-user authentication + homelab multi-instance support | Sketched | `docs/initiatives/m4-multi-user-auth-homelab/` |
+| Milestone | Theme                                                                                            | Status   | Initiative dir                                        |
+| --------- | ------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------- |
+| M1        | Bootstrap — vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | Designed | `docs/initiatives/m1-bootstrap/`                      |
+| M2        | Complete Task Create/Read/Update/Delete + offline-first PWA                                      | Sketched | `docs/initiatives/m2-pwa-crud-offline/`               |
+| M3        | Apple-native clients (iOS, iPadOS, macOS) + product discovery (PSYKL execution + retrospectives) | Sketched | `docs/initiatives/m3-apple-native-product-discovery/` |
+| M4        | Multi-user authentication + homelab multi-instance support                                       | Sketched | `docs/initiatives/m4-multi-user-auth-homelab/`        |
 
 Each initiative directory carries a `MILESTONE.md` summary suitable for the corresponding GitHub Milestone description, and (once designed) a `DESIGN.md` with full scope, premises, alternatives considered, and success criteria.
