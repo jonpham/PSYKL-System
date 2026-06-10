@@ -245,7 +245,7 @@ Push, open PR, merge.
 
 Start DevTask 11 on a branch off `main`: `git checkout main && git pull && git checkout -b infra/helm-chart-and-release-workflow`.
 
-- [ ] **Step 1: Create `deploy/helm/Chart.yaml`**
+- [x] **Step 1: Create `deploy/helm/Chart.yaml`**
 
 ```yaml
 apiVersion: v2
@@ -265,7 +265,7 @@ keywords:
   - self-hosted
 ```
 
-- [ ] **Step 2: Create `deploy/helm/values.yaml`**
+- [x] **Step 2: Create `deploy/helm/values.yaml`**
 
 ```yaml
 # Default values for the psykl Helm chart.
@@ -301,7 +301,7 @@ ingress:
   tls: false
 ```
 
-- [ ] **Step 3: Create `deploy/helm/templates/_helpers.tpl`**
+- [x] **Step 3: Create `deploy/helm/templates/_helpers.tpl`**
 
 ```
 {{/* Standard chart label set. */}}
@@ -326,7 +326,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 ```
 
-- [ ] **Step 4: Create `deploy/helm/templates/service-task-pvc.yaml`**
+- [x] **Step 4: Create `deploy/helm/templates/service-task-pvc.yaml`**
 
 ```yaml
 apiVersion: v1
@@ -346,7 +346,7 @@ spec:
   {{- end }}
 ```
 
-- [ ] **Step 5: Create `deploy/helm/templates/service-task-deployment.yaml`**
+- [x] **Step 5: Create `deploy/helm/templates/service-task-deployment.yaml`**
 
 ```yaml
 apiVersion: apps/v1
@@ -407,7 +407,7 @@ spec:
 
 Note: the readiness/liveness probes hit `/tasks` with a placeholder `X-User-Id` header. The guard accepts any non-empty value, so the probe gets a real response (200 with an empty list if no tasks exist for that placeholder user). M4 will refine this to a dedicated `/healthz` endpoint exempted from the guard.
 
-- [ ] **Step 6: Create `deploy/helm/templates/service-task-service.yaml`**
+- [x] **Step 6: Create `deploy/helm/templates/service-task-service.yaml`**
 
 ```yaml
 apiVersion: v1
@@ -427,7 +427,7 @@ spec:
     {{- include "psykl.serviceTask.selectorLabels" . | nindent 4 }}
 ```
 
-- [ ] **Step 7: Create `deploy/helm/templates/web-client-deployment.yaml`**
+- [x] **Step 7: Create `deploy/helm/templates/web-client-deployment.yaml`**
 
 ```yaml
 apiVersion: apps/v1
@@ -464,7 +464,7 @@ spec:
             periodSeconds: 30
 ```
 
-- [ ] **Step 8: Create `deploy/helm/templates/web-client-service.yaml`**
+- [x] **Step 8: Create `deploy/helm/templates/web-client-service.yaml`**
 
 ```yaml
 apiVersion: v1
@@ -484,7 +484,7 @@ spec:
     {{- include "psykl.webClient.selectorLabels" . | nindent 4 }}
 ```
 
-- [ ] **Step 9: Create `deploy/helm/templates/ingress.yaml`**
+- [x] **Step 9: Create `deploy/helm/templates/ingress.yaml`**
 
 ```yaml
 {{- if .Values.ingress.enabled }}
@@ -527,7 +527,7 @@ spec:
 
 (Disabled by default in `values.yaml`; M4+ enables when there's a real cluster.)
 
-- [ ] **Step 10: Create `deploy/helm/.helmignore`**
+- [x] **Step 10: Create `deploy/helm/.helmignore`**
 
 ```
 .DS_Store
@@ -540,7 +540,7 @@ spec:
 README.md
 ```
 
-- [ ] **Step 11: Verify the chart renders cleanly**
+- [x] **Step 11: Verify the chart renders cleanly**
 
 Install Helm 3.x locally if not present: `brew install helm` (mac) or per https://helm.sh/docs/intro/install/.
 
@@ -554,7 +554,7 @@ head -50 /tmp/psykl-rendered.yaml
 
 Expected: `helm lint` passes with no errors. `helm template` renders without errors and produces valid Kubernetes YAML.
 
-- [ ] **Step 12: Create `.github/workflows/cd-release.yml`**
+- [x] **Step 12: Create `.github/workflows/cd-release.yml`**
 
 ````yaml
 name: CD Release
@@ -661,7 +661,7 @@ jobs:
 
 Note: the workflow assumes the `cd-publish.yml` workflow has already pushed the `:{sha}` images for this commit (it runs first, on merge to main, before the user tags). If the tag fires immediately and the publish hasn't completed, the `docker pull` will fail and the release errors — the operator should wait for `cd-publish.yml` to complete before tagging. Future iteration: add a `workflow_run` dependency.
 
-- [ ] **Step 13: Verify chart packages cleanly**
+- [x] **Step 13: Verify chart packages cleanly**
 
 ```bash
 helm package deploy/helm --destination /tmp/
@@ -672,7 +672,7 @@ tar tzf /tmp/psykl-0.1.0.tgz | head -20
 
 Expected: `psykl-0.1.0.tgz` exists, contains `Chart.yaml`, `values.yaml`, and all template files.
 
-- [ ] **Step 14: Commit DevTask 11**
+- [x] **Step 14: Commit DevTask 11**
 
 ```bash
 git add deploy/helm/ .github/workflows/cd-release.yml

@@ -1,0 +1,31 @@
+# Default values for the psykl Helm chart.
+# Override via `helm install psykl ./deploy/helm -f my-values.yaml` or `--set`.
+
+serviceTask:
+  image:
+    repository: ghcr.io/jonpham/psykl-service-task
+    tag: latest # CD overrides this to :{semver} when packaging for a tagged release
+    pullPolicy: IfNotPresent
+  replicas: 1 # PSYKL is single-user multi-device per Premise 8; horizontal scaling unnecessary
+  port: 3000
+  env:
+    PGLITE_DATA_DIR: /var/lib/psykl/pglite
+    PORT: '3000'
+    CORS_ORIGIN: '' # set per-environment (e.g., to the web_client public URL)
+  persistence:
+    size: 1Gi
+    storageClassName: '' # default StorageClass; override per cluster
+
+webClient:
+  image:
+    repository: ghcr.io/jonpham/psykl-web_client
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 80
+
+ingress:
+  enabled: false # M4+ flips this to true with real host configuration
+  className: ''
+  host: psykl.local
+  tls: false

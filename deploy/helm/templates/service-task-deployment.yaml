@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-service-task
+  labels:
+    {{- include "psykl.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.serviceTask.replicas }}
+  selector:
+    matchLabels:
+      {{- include "psykl.serviceTask.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "psykl.serviceTask.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: service-task
+          image: "{{ .Values.serviceTask.image.repository }}:{{ .Values.serviceTask.image.tag }}"
+          imagePullPolicy: {{ .Values.serviceTask.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.serviceTask.port }}
+              protocol: TCP
+          env:
+            {{- range $k, $v := .Values.serviceTask.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: pglite-data
+              mountPath: /var/lib/psykl/pglite
+          readinessProbe:
+            httpGet:
+              path: /tasks
+              port: http
+              httpHeaders:
+                - name: X-User-Id
+                  value: readiness
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /tasks
+              port: http
+              httpHeaders:
+                - name: X-User-Id
+                  value: liveness
+            initialDelaySeconds: 15
+            periodSeconds: 30
+      volumes:
+        - name: pglite-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-pglite-data

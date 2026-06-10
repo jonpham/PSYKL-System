@@ -1,0 +1,15 @@
+apiVersion: v2
+name: psykl
+description: PSYKL-System — time-independent planning around energy cycles.
+type: application
+version: 0.1.0
+appVersion: '0.1.0'
+home: https://github.com/jonpham/PSYKL-System
+sources:
+  - https://github.com/jonpham/PSYKL-System
+maintainers:
+  - name: Jonathan Pham
+keywords:
+  - planning
+  - productivity
+  - self-hosted
