@@ -1,6 +1,6 @@
 ---
 status: TODO # TODO | IN-PROGRESS | DONE | BLOCKED
-issue: # GH#N once a GitHub Issue is manually created from this brief
+issue: GH#38
 branches: # one entry per DevTask once branches are cut (each branches off spec/m2-s1-... per AGENTS.md revised workflow + M1 DESIGN.md Decision #10)
   -
 prs: # one entry per DevTask PR (each targets the Spec branch, not main, per the revised workflow)
