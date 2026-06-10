@@ -61,6 +61,16 @@ Unique index: `(user_id, idempotency_key)`.
 ## API
 
 ```http
+POST /tasks
+Headers: user_id, Idempotency-Key
+Body: { id: string, title: string, updated_at: string }
+Response 201: TaskResponse
+Errors: 400 invalid body or non-UUID-v7 id, 401 missing user_id, 409 same idempotency key with different body
+```
+
+`id` is required and client-supplied in M2 so offline-created Tasks have stable entity identity before network sync. The server validates the value as UUID v7 and persists it; it no longer generates Task IDs on create. `Idempotency-Key` remains a separate operation identity header for retry dedupe.
+
+```http
 PATCH /tasks/:id
 Headers: user_id, Idempotency-Key
 Body: { title?: string, completed_at?: string | null, updated_at: string }
@@ -111,10 +121,10 @@ Static analysis: existing `pnpm verify:static`.
 
 Unit:
 
-| File                                                         | Assertion                                                                                   |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `packages/shared-types/src/schemas/task.unit.test.ts`        | evolved schemas accept complete/uncomplete/tombstone shapes and reject missing `updated_at` |
-| `components/service-task/src/task/task.service.unit.test.ts` | timestamp comparison, stale-write return, and 5-minute skew clamp                           |
+| File                                                         | Assertion                                                                                                                                     |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/shared-types/src/schemas/task.unit.test.ts`        | evolved schemas accept complete/uncomplete/tombstone shapes, require UUID v7 `id` and `updated_at` on create, and reject missing `updated_at` |
+| `components/service-task/src/task/task.service.unit.test.ts` | timestamp comparison, stale-write return, and 5-minute skew clamp                                                                             |
 
 Integration:
 
@@ -141,8 +151,9 @@ This Spec contains 4 DevTasks. The Spec integration branch is `spec/m2-s1-servic
 **Affected:** `packages/shared-types/src/schemas/task.ts`, `packages/shared-types/src/schemas/task.unit.test.ts`, `packages/shared-types/src/index.ts`, `components/service-task/src/db/schema/task.ts`, `components/service-task/tests/integration/task-crud.integration.test.ts`, Drizzle migration output, generated OpenAPI.
 
 - [ ] Step 1: Write failing shared schema tests for `completed_at`, `updated_at`, `server_updated_at`, `deleted_at`, `TaskPatchInputSchema`, and `TaskDeleteInputSchema`.
+- [ ] Step 1a: Write failing shared schema tests proving `TaskInputSchema` requires client-supplied UUID v7 `id` and `updated_at`, and rejects UUID v4/non-UUID IDs.
 - [ ] Step 2: Run `pnpm --filter @psykl/shared-types test:unit -- task.unit.test.ts`; expected failure: new schemas or fields are missing.
-- [ ] Step 3: Extend shared Zod schemas and exports with the exact snake_case wire fields.
+- [ ] Step 3: Extend shared Zod schemas and exports with the exact snake_case wire fields; `TaskInputSchema` is `{ id, title, updated_at }`.
 - [ ] Step 4: Write failing migration integration coverage by seeding an M1-shape `tasks` row and applying migration `0002`; assert `updated_at = created_at` and `server_updated_at` is present.
 - [ ] Step 5: Update Drizzle task schema and generate migration `0002`.
 - [ ] Step 6: Run `pnpm --filter @psykl/shared-types test:unit`, `pnpm --filter @psykl/service-task test:integration`, and `pnpm verify:prepare`.
@@ -198,6 +209,7 @@ This Spec contains 4 DevTasks. The Spec integration branch is `spec/m2-s1-servic
 ## Decisions made during spec drafting
 
 - M2-P11 linting/tooling tightening is explicitly deferred beyond this spec. Reason: M2 already changes cross-package runtime contracts, generated API types, service tests, PWA storage, Service Worker behavior, and end-to-end harnesses. Broad lint/import-order/commit-style enforcement would add noisy cross-repo churn before the offline contract is stable. Revisit after Spec 6 or in a dedicated hygiene initiative.
+- `POST /tasks` requires client-supplied UUID v7 `id` in M2. This is Task entity identity for offline-created rows and is distinct from the header-based `Idempotency-Key`, which remains the mutation operation identity for retry dedupe.
 
 ## Open Questions / Risks
 

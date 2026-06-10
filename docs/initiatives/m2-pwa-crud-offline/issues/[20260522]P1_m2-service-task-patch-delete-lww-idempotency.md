@@ -25,7 +25,7 @@ As a **developer (and downstream PWA sync engine)**, I want to be able to **PATC
 
 ## Features (DevTasks composing this Spec)
 
-1. **DevTask M2-1 — Drizzle migration 0002 (Task schema evolution).** Adds nullable `completed_at`, NOT NULL `updated_at` (client-stamped intent timestamp), NOT NULL `server_updated_at` (server-stamped audit timestamp), and nullable `deleted_at` (tombstone marker) columns to the `tasks` table. Migration is additive; existing M1 rows are backfilled in-migration (`updated_at = created_at`, `server_updated_at = now()`). Extends Zod schemas in `packages/shared-types/src/schemas/` for `Task`, `TaskInput`, `TaskResponse`, plus new `TaskPatchInput`. Regenerates `openapi.json`. ~5 production behavior source files.
+1. **DevTask M2-1 — Drizzle migration 0002 (Task schema evolution).** Adds nullable `completed_at`, NOT NULL `updated_at` (client-stamped intent timestamp), NOT NULL `server_updated_at` (server-stamped audit timestamp), and nullable `deleted_at` (tombstone marker) columns to the `tasks` table. Migration is additive; existing M1 rows are backfilled in-migration (`updated_at = created_at`, `server_updated_at = now()`). Extends Zod schemas in `packages/shared-types/src/schemas/` for `Task`, `TaskInput`, `TaskResponse`, plus new `TaskPatchInput`. `TaskInput` now requires client-supplied UUID v7 `id` and `updated_at`; the `id` is Task entity identity for offline creates and is distinct from the `Idempotency-Key` operation identity header. Regenerates `openapi.json`. ~5 production behavior source files.
 2. **DevTask M2-2 — PATCH /tasks/:id with LWW guard.** New NestJS controller method + service method. LWW comparison reads current `updated_at` and compares against body's `updated_at`. Future-skew clamp at +5 minutes (Decision #44). Stale writes return HTTP 200 with current server state (no error; client reconciles). Integration tests for happy path, stale-write reconciliation, future-skew clamp at boundary and above, missing-row 404. ~6 production behavior source files.
 3. **DevTask M2-3 — DELETE /tasks/:id with tombstone semantics.** Soft-delete only — sets `deleted_at` from client-supplied value (subject to skew clamp). Default `GET /tasks` filters tombstones; new `?include_deleted=1` query param returns them for sync engine pull paths. Integration + Component contract tests. ~5 production behavior source files.
 4. **DevTask M2-4 — Idempotency middleware.** New `idempotency` table (Drizzle migration 0003) keyed by `(user_id, idempotency_key)` with `response_snapshot` and `expires_at` columns. NestJS interceptor reads `Idempotency-Key` HTTP header on POST/PATCH/DELETE, dedupes within 24h TTL by returning the cached response without re-applying the write. NestJS scheduled task cleans up expired rows hourly. Integration tests for first-write, retry-within-TTL, retry-after-TTL, different-body-same-key (409). ~6 production behavior source files.
@@ -57,7 +57,7 @@ _Steps_
 10. Inspect Drizzle migration files in `components/service-task/drizzle/migrations/`: two new SQL files (one for Task schema evolution, one for `idempotency` table), both checked in for replay.
 
 _Expectation_
-The PWA's future sync engine can safely PATCH/DELETE tasks with idempotent retries, observe LWW resolution against stale writes, and rely on tombstones for cross-device delete propagation. M1 rows survive the migration with sensible defaults populated. No data loss.
+The PWA's future sync engine can safely create Tasks with stable client-generated UUID v7 entity IDs, PATCH/DELETE tasks with idempotent retries, observe LWW resolution against stale writes, and rely on tombstones for cross-device delete propagation. M1 rows survive the migration with sensible defaults populated. No data loss.
 
 ## Affected Components
 
@@ -95,6 +95,7 @@ Also references **M1 Decision #13** (Drizzle directory layout) and **M1 Decision
 - **ADR-M2-002:** Soft-delete via `deleted_at` tombstones is the project-lifetime model for the `Task` entity. Hard-delete (garbage-collect old tombstones) is explicitly deferred — revisit only if storage becomes a concern. See Decision #45.
 - **ADR-M2-003:** LWW comparison uses client-supplied `updated_at`, not `server_updated_at`. Server time is preserved only for audit. The PSYKL retrospective work (M3+) MUST query `updated_at` / `completed_at` for accurate energy-pattern signal, not server time. See Decision #43.
 - **ADR-M2-004:** Migration 0002 backfills existing M1 rows in-place (UPDATE statement inside the migration SQL). No data migration script needed; the backfill is part of the migration itself. See M2 DESIGN.md Recommended Approach → Migration section.
+- **ADR-M2-005:** `Task.id` is required in `POST /tasks` from M2 onward and must be UUID v7. This is the Task entity identity needed for offline create. `Idempotency-Key` remains a separate required header for mutation operation identity and retry dedupe.
 
 ## Change Log
 
