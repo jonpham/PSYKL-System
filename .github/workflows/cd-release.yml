@@ -1,0 +1,100 @@
+name: CD Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write # for GitHub Release creation
+  packages: write # for re-tagging GHCR images
+
+jobs:
+  release:
+    name: Tag images with semver, package helm chart, create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute version (strip leading "v")
+        id: version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          echo "Releasing version: $VERSION (tag: $GITHUB_REF_NAME)"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-tag service-task image with :{semver}
+        run: |
+          docker pull ghcr.io/jonpham/psykl-service-task:${{ github.sha }}
+          docker tag ghcr.io/jonpham/psykl-service-task:${{ github.sha }} ghcr.io/jonpham/psykl-service-task:${{ steps.version.outputs.version }}
+          docker push ghcr.io/jonpham/psykl-service-task:${{ steps.version.outputs.version }}
+
+      - name: Re-tag web_client image with :{semver}
+        run: |
+          docker pull ghcr.io/jonpham/psykl-web_client:${{ github.sha }}
+          docker tag ghcr.io/jonpham/psykl-web_client:${{ github.sha }} ghcr.io/jonpham/psykl-web_client:${{ steps.version.outputs.version }}
+          docker push ghcr.io/jonpham/psykl-web_client:${{ steps.version.outputs.version }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Lint Helm chart
+        run: helm lint deploy/helm
+
+      - name: Set chart version + appVersion to match the tag
+        run: |
+          sed -i "s/^version: .*/version: ${{ steps.version.outputs.version }}/" deploy/helm/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"${{ steps.version.outputs.version }}\"/" deploy/helm/Chart.yaml
+
+      - name: Set image tags in values.yaml to the semver
+        run: |
+          sed -i "s|tag: latest|tag: ${{ steps.version.outputs.version }}|g" deploy/helm/values.yaml
+
+      - name: Package Helm chart
+        run: |
+          mkdir -p dist
+          helm package deploy/helm --destination dist/
+
+      - name: Generate release notes
+        run: |
+          {
+            echo "# PSYKL-System ${{ steps.version.outputs.ref }}"
+            echo ""
+            echo "## Container images"
+            echo "- \`ghcr.io/jonpham/psykl-service-task:${{ steps.version.outputs.version }}\`"
+            echo "- \`ghcr.io/jonpham/psykl-web_client:${{ steps.version.outputs.version }}\`"
+            echo ""
+            echo "## Helm chart"
+            echo "Install with:"
+            echo '```bash'
+            echo "helm install psykl psykl-${{ steps.version.outputs.version }}.tgz"
+            echo '```'
+            echo ""
+            echo "## Changelog"
+            echo "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ steps.version.outputs.ref }}/CHANGELOG.md)."
+          } > release-notes.md
+
+      - name: Create GitHub Release with helm chart attached
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.ref }}
+          name: ${{ steps.version.outputs.ref }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+          files: |
+            dist/psykl-${{ steps.version.outputs.version }}.tgz

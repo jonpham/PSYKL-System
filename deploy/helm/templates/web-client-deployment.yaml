@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web-client
+  labels:
+    {{- include "psykl.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.webClient.replicas }}
+  selector:
+    matchLabels:
+      {{- include "psykl.webClient.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "psykl.webClient.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: web-client
+          image: "{{ .Values.webClient.image.repository }}:{{ .Values.webClient.image.tag }}"
+          imagePullPolicy: {{ .Values.webClient.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.webClient.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 30

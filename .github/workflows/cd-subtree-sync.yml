@@ -1,0 +1,49 @@
+name: CD Subtree Sync
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  subtree-sync:
+    name: Mirror component subtrees to their downstream repos
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: web_client
+            prefix: components/web_client
+            mirror: jonpham/PSYKL-Client_WEB-PWA
+          - component: service-task
+            prefix: components/service-task
+            mirror: jonpham/PSYKL-API_Tasks
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # subtree split needs full history
+
+      - name: Configure git
+        run: |
+          git config user.name "psykl-subtree-sync[bot]"
+          git config user.email "actions@github.com"
+
+      - name: Split the subtree
+        id: split
+        run: |
+          SPLIT_SHA=$(git subtree split --prefix=${{ matrix.prefix }} HEAD)
+          echo "SPLIT_SHA=$SPLIT_SHA" >> $GITHUB_OUTPUT
+          echo "Split sha for ${{ matrix.prefix }}: $SPLIT_SHA"
+
+      - name: Force-push subtree to mirror (per Decision #16; AGENTS.md force-push exception)
+        env:
+          SUBTREE_PUSH_TOKEN: ${{ secrets.SUBTREE_PUSH_TOKEN }}
+        run: |
+          git push --force \
+            "https://x-access-token:${SUBTREE_PUSH_TOKEN}@github.com/${{ matrix.mirror }}.git" \
+            ${{ steps.split.outputs.SPLIT_SHA }}:refs/heads/main

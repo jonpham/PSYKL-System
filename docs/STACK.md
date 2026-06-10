@@ -2,7 +2,7 @@
 
 > Durable reference for the technology choices shipped in PSYKL-System. Captures **what is implemented**, not what is planned. Initiative-level design docs at `docs/initiatives/{initiative}/DESIGN.md` carry plans; this file records reality.
 
-## M1 Bootstrap (Specs 1–5 shipped; Spec 6 pending)
+## M1 Bootstrap (all six Specs shipped)
 
 | Layer                             | Choice                                                                                                                                                                 |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -37,16 +37,19 @@
 | UI Component folder layout        | Per-component directory (`src/components/<Name>/`) with colocated tests and `index.ts` re-export; root-page exception for `App.tsx`                                    |
 | Test file locations               | Static + Unit + UI Component colocated next to source; Integration in per-component `tests/integration/`; E2E in repo-root `e2e/`                                      |
 | Branching convention              | Sibling-default DevTask branches off the Spec integration branch; stacking allowed only when DevTask K+1 depends on K's unmerged work; rebase-before-PR mandatory      |
+| Container registry                | GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`)                                                                                          |
+| CD publish on merge               | `.github/workflows/cd-publish.yml` — builds + pushes both images to GHCR with `:{sha}` + `:latest` tags on every merge to `main`                                       |
+| Subtree mirror repos              | `jonpham/PSYKL-Client_WEB-PWA` (web_client), `jonpham/PSYKL-API_Tasks` (service-task); force-pushed via `cd-subtree-sync.yml` on every merge to `main`                 |
+| Subtree-push secret               | `SUBTREE_PUSH_TOKEN` — fine-grained PAT, `contents: write` on both mirror repos, stored as a monorepo Actions secret                                                   |
+| Helm chart location               | `deploy/helm/` (`Chart.yaml`, `values.yaml`, templates for service-task Deployment+Service+PVC and web-client Deployment+Service, optional Ingress)                    |
+| Tagged-release workflow           | `.github/workflows/cd-release.yml` — on `v*.*.*` tag: re-tag GHCR images with `:{semver}`, package Helm chart, create GitHub Release with `.tgz` attached              |
+| Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
 ## Pending (planned, not shipped)
 
-| Layer                | Choice                                                                                                                   | Lands in  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------- |
-| CD release pipeline  | GitHub Container Registry (`ghcr.io/jonpham/psykl-{service-task,web_client}`); subtree mirrors to component-mirror repos | M1 Spec 6 |
-| Helm chart location  | `deploy/helm/`                                                                                                           | M1 Spec 6 |
-| Container registry   | GitHub Container Registry (`ghcr.io/jonpham/psykl-*`)                                                                    | M1 Spec 6 |
-| Subtree mirror repos | `jonpham/psykl-web_client`, `jonpham/psykl-service-task`                                                                 | M1 Spec 6 |
-| Offline-first store  | TBD (IndexedDB shape + sync queue + last-write-wins implementation)                                                      | M2        |
-| Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD                                                             | M3        |
-| Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)                                                                   | M4        |
+| Layer                | Choice                                                              | Lands in |
+| -------------------- | ------------------------------------------------------------------- | -------- |
+| Offline-first store  | TBD (IndexedDB shape + sync queue + last-write-wins implementation) | M2       |
+| Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD        | M3       |
+| Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)              | M4       |
