@@ -27,6 +27,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # subtree split needs full history
+          # Don't leave GITHUB_TOKEN as an http.extraheader in the local git config.
+          # The force-push step uses SUBTREE_PUSH_TOKEN embedded in the remote URL, and
+          # GitHub's auth picks the extraheader over URL credentials when both are present —
+          # causing the push to authenticate as github-actions[bot] (no cross-repo access)
+          # instead of the PAT. Caught in the M1 Spec 6 first-run + second-run failures.
+          persist-credentials: false
 
       - name: Configure git
         run: |
