@@ -8,6 +8,13 @@
       "when": 1779400504823,
       "tag": "0000_initial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781125886224,
+      "tag": "0001_fuzzy_sister_grimm",
+      "breakpoints": true
     }
   ]
 }

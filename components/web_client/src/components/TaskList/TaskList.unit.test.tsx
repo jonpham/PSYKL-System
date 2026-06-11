@@ -9,12 +9,20 @@ const sampleTasks: Task[] = [
     user_id: 'local',
     title: 'one',
     created_at: '2026-05-20T12:00:00.000Z',
+    completed_at: null,
+    updated_at: '2026-05-20T12:00:00.000Z',
+    server_updated_at: '2026-05-20T12:00:00.500Z',
+    deleted_at: null,
   },
   {
     id: '01940000-0000-7000-8000-000000000002',
     user_id: 'local',
     title: 'two',
     created_at: '2026-05-20T12:01:00.000Z',
+    completed_at: null,
+    updated_at: '2026-05-20T12:01:00.000Z',
+    server_updated_at: '2026-05-20T12:01:00.500Z',
+    deleted_at: null,
   },
 ];
 

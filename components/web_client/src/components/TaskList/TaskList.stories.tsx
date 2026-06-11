@@ -23,12 +23,20 @@ const sampleTasks: Task[] = [
     user_id: 'local',
     title: 'first',
     created_at: new Date('2026-05-27T10:00:00Z').toISOString(),
+    completed_at: null,
+    updated_at: new Date('2026-05-27T10:00:00Z').toISOString(),
+    server_updated_at: new Date('2026-05-27T10:00:00.500Z').toISOString(),
+    deleted_at: null,
   },
   {
     id: '01940000-0000-7000-8000-000000000002',
     user_id: 'local',
     title: 'second',
     created_at: new Date('2026-05-27T11:00:00Z').toISOString(),
+    completed_at: null,
+    updated_at: new Date('2026-05-27T11:00:00Z').toISOString(),
+    server_updated_at: new Date('2026-05-27T11:00:00.500Z').toISOString(),
+    deleted_at: null,
   },
 ];
 
