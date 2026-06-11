@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { Task } from '../../api/client';
-import { TaskList } from './TaskList';
+import type { Task } from '../../../api/client';
+import { TaskList } from '../TaskList';
 
 const sampleTasks: Task[] = [
   {
