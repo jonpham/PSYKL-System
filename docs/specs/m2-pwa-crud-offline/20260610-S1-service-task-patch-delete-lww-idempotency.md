@@ -164,12 +164,12 @@ This Spec contains 4 DevTasks. The Spec integration branch is `spec/m2-s1-servic
 **Branch:** `feat/m2-s1-dt2-task-patch-lww`
 **Affected:** `components/service-task/src/task/task.service.ts`, `components/service-task/src/task/task.controller.ts`, `components/service-task/src/task/task.service.unit.test.ts`, `components/service-task/src/task/task.controller.contract.test.ts`, `components/service-task/tests/integration/task-crud.integration.test.ts`.
 
-- [ ] Step 1: Write failing service unit tests for newer update wins, stale update returns current row, and client timestamp beyond +5 minutes is clamped.
-- [ ] Step 2: Write failing contract tests for `PATCH /tasks/:id` success, stale-write `200`, invalid body `400`, missing row `404`, and missing `user_id` `401`.
-- [ ] Step 3: Implement `patchTask(userId, taskId, input)` with LWW comparison against current `updated_at`.
-- [ ] Step 4: Wire `PATCH /tasks/:id` through the controller and DTO validation.
-- [ ] Step 5: Run `pnpm --filter @psykl/service-task test:unit`, `pnpm --filter @psykl/service-task test:integration`, and `pnpm --filter @psykl/service-task test:component`.
-- [ ] Step 6: Commit with `feat: add task patch with lww guard`.
+- [x] Step 1: Write failing service unit tests for newer update wins, stale update returns current row, and client timestamp beyond +5 minutes is clamped.
+- [x] Step 2: Write failing contract tests for `PATCH /tasks/:id` success, stale-write `200`, invalid body `400`, missing row `404`, and missing `user_id` `401`.
+- [x] Step 3: Implement `patchTask(userId, taskId, input)` with LWW comparison against current `updated_at`.
+- [x] Step 4: Wire `PATCH /tasks/:id` through the controller and DTO validation.
+- [x] Step 5: Run `pnpm --filter @psykl/service-task test:unit`, `pnpm --filter @psykl/service-task test:integration`, and `pnpm --filter @psykl/service-task test:component`.
+- [x] Step 6: Commit with `feat: add task patch with lww guard`.
 
 ### DevTask M2-3: Add DELETE tombstones and include_deleted reads
 

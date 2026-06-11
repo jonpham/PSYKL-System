@@ -28,6 +28,13 @@ describe('UserIdGuard (Component-layer contract)', () => {
     await request(app.getHttpServer()).get('/tasks').expect(401);
   });
 
+  it('rejects PATCH /tasks/:id with no X-User-Id header (401)', async () => {
+    await request(app.getHttpServer())
+      .patch('/tasks/0193e1c0-1234-7000-8000-000000000000')
+      .send({ title: 'x', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(401);
+  });
+
   it('rejects POST /tasks with empty X-User-Id header (403)', async () => {
     await request(app.getHttpServer()).post('/tasks').set('X-User-Id', '').send({ title: 'x' }).expect(403);
   });

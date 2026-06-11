@@ -92,4 +92,63 @@ describe('TaskController contract', () => {
     expect(aliceTitles).toEqual(expect.arrayContaining(['a1', 'a2']));
     expect(aliceTitles).not.toContain('b1');
   });
+
+  it('PATCH /tasks/:id with valid body returns 200 and the patched record', async () => {
+    const id = '0193e1c0-1234-7000-8000-000000000010';
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'local')
+      .send({ id, title: 'before', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .patch(`/tasks/${id}`)
+      .set('X-User-Id', 'local')
+      .send({ title: 'after', updated_at: '2026-05-20T12:05:00.000Z' })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      id,
+      user_id: 'local',
+      title: 'after',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+  });
+
+  it('PATCH /tasks/:id with stale updated_at returns 200 and current record', async () => {
+    const id = '0193e1c0-1234-7000-8000-000000000011';
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'local')
+      .send({ id, title: 'current', updated_at: '2026-05-20T12:05:00.000Z' })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .patch(`/tasks/${id}`)
+      .set('X-User-Id', 'local')
+      .send({ title: 'stale', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      id,
+      title: 'current',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+  });
+
+  it('PATCH /tasks/:id with invalid body returns 400', async () => {
+    await request(app.getHttpServer())
+      .patch('/tasks/0193e1c0-1234-7000-8000-000000000012')
+      .set('X-User-Id', 'local')
+      .send({ title: '' })
+      .expect(400);
+  });
+
+  it('PATCH /tasks/:id with missing row returns 404', async () => {
+    await request(app.getHttpServer())
+      .patch('/tasks/0193e1c0-1234-7000-8000-000000000013')
+      .set('X-User-Id', 'local')
+      .send({ title: 'missing', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(404);
+  });
 });

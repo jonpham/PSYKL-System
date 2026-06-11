@@ -1,6 +1,6 @@
 import { extendZodWithOpenApi, OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
-import { TaskInputSchema, TaskResponseSchema } from './schemas/task.js';
+import { TaskInputSchema, TaskPatchInputSchema, TaskResponseSchema, UuidV7Schema } from './schemas/task.js';
 
 extendZodWithOpenApi(z);
 
@@ -20,7 +20,13 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
   const registry = new OpenAPIRegistry();
 
   const taskInput = registry.register('TaskInput', TaskInputSchema);
+  const taskPatchInput = registry.register('TaskPatchInput', TaskPatchInputSchema);
   const taskResponse = registry.register('Task', TaskResponseSchema);
+  const taskIdParam = z.object({
+    id: UuidV7Schema.openapi({
+      example: '018fe3f0-7f1a-7b52-8f33-4f4a03a8b8f9',
+    }),
+  });
   const userIdHeader = z.object({
     'X-User-Id': z.string().openapi({
       param: {
@@ -60,6 +66,24 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
       },
       401: { description: 'Missing X-User-Id header' },
       403: { description: 'Malformed X-User-Id header' },
+    },
+  });
+
+  registry.registerPath({
+    method: 'patch',
+    path: '/tasks/{id}',
+    summary: 'Patch a Task with Last-Write-Wins reconciliation',
+    request: {
+      params: taskIdParam,
+      headers: userIdHeader,
+      body: { content: { 'application/json': { schema: taskPatchInput } } },
+    },
+    responses: {
+      200: { description: 'OK', content: { 'application/json': { schema: taskResponse } } },
+      400: { description: 'Bad request - body fails TaskPatchInput validation' },
+      401: { description: 'Missing X-User-Id header' },
+      403: { description: 'Malformed X-User-Id header' },
+      404: { description: 'Task not found for current user' },
     },
   });
 

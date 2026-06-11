@@ -1,5 +1,11 @@
-import { Body, Controller, Get, Inject, Post, Req } from '@nestjs/common';
-import { TaskInputSchema, type TaskInput, type TaskResponse } from '@psykl/shared-types';
+import { Body, Controller, Get, Inject, Param, Patch, Post, Req } from '@nestjs/common';
+import {
+  TaskInputSchema,
+  TaskPatchInputSchema,
+  type TaskInput,
+  type TaskPatchInput,
+  type TaskResponse,
+} from '@psykl/shared-types';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { TaskService } from './task.service.js';
 
@@ -22,5 +28,14 @@ export class TaskController {
   @Get()
   async list(@Req() req: RequestWithUser): Promise<TaskResponse[]> {
     return this.tasks.listTasks(req.userId!);
+  }
+
+  @Patch(':id')
+  async patch(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(TaskPatchInputSchema)) body: TaskPatchInput,
+  ): Promise<TaskResponse> {
+    return this.tasks.patchTask(req.userId!, id, body);
   }
 }
