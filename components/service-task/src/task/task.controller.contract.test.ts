@@ -93,6 +93,10 @@ describe('TaskController contract', () => {
     expect(aliceTitles).not.toContain('b1');
   });
 
+  it('GET /tasks rejects unparseable include_deleted values', async () => {
+    await request(app.getHttpServer()).get('/tasks?include_deleted=true').set('X-User-Id', 'local').expect(400);
+  });
+
   it('PATCH /tasks/:id with valid body returns 200 and the patched record', async () => {
     const id = '0193e1c0-1234-7000-8000-000000000010';
     await request(app.getHttpServer())
@@ -149,6 +153,75 @@ describe('TaskController contract', () => {
       .patch('/tasks/0193e1c0-1234-7000-8000-000000000013')
       .set('X-User-Id', 'local')
       .send({ title: 'missing', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(404);
+  });
+
+  it('DELETE /tasks/:id returns 200, tombstones the Task, and default GET hides it', async () => {
+    const id = '0193e1c0-1234-7000-8000-000000000020';
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'local')
+      .send({ id, title: 'to delete', updated_at: '2026-05-20T12:00:00.000Z' })
+      .expect(201);
+
+    const deleteRes = await request(app.getHttpServer())
+      .delete(`/tasks/${id}`)
+      .set('X-User-Id', 'local')
+      .send({
+        deleted_at: '2026-05-20T12:05:00.000Z',
+        updated_at: '2026-05-20T12:05:00.000Z',
+      })
+      .expect(200);
+
+    expect(deleteRes.body).toMatchObject({
+      id,
+      deleted_at: '2026-05-20T12:05:00.000Z',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+
+    const defaultGet = await request(app.getHttpServer()).get('/tasks').set('X-User-Id', 'local').expect(200);
+    expect((defaultGet.body as Array<{ id: string }>).map((task) => task.id)).not.toContain(id);
+
+    const withDeleted = await request(app.getHttpServer())
+      .get('/tasks?include_deleted=1')
+      .set('X-User-Id', 'local')
+      .expect(200);
+    expect((withDeleted.body as Array<{ id: string }>).map((task) => task.id)).toContain(id);
+  });
+
+  it('DELETE /tasks/:id with stale updated_at returns 200 and current row', async () => {
+    const id = '0193e1c0-1234-7000-8000-000000000021';
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .set('X-User-Id', 'local')
+      .send({ id, title: 'current', updated_at: '2026-05-20T12:05:00.000Z' })
+      .expect(201);
+
+    const deleteRes = await request(app.getHttpServer())
+      .delete(`/tasks/${id}`)
+      .set('X-User-Id', 'local')
+      .send({
+        deleted_at: '2026-05-20T12:00:00.000Z',
+        updated_at: '2026-05-20T12:00:00.000Z',
+      })
+      .expect(200);
+
+    expect(deleteRes.body).toMatchObject({
+      id,
+      title: 'current',
+      deleted_at: null,
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+  });
+
+  it('DELETE /tasks/:id with missing row returns 404', async () => {
+    await request(app.getHttpServer())
+      .delete('/tasks/0193e1c0-1234-7000-8000-000000000022')
+      .set('X-User-Id', 'local')
+      .send({
+        deleted_at: '2026-05-20T12:00:00.000Z',
+        updated_at: '2026-05-20T12:00:00.000Z',
+      })
       .expect(404);
   });
 });

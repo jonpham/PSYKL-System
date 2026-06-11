@@ -173,4 +173,55 @@ describe('Drizzle + pglite Task CRUD', () => {
       vi.useRealTimers();
     }
   });
+
+  it('soft deletes a Task with a tombstone timestamp', async () => {
+    const id = uuidv7();
+    await db.insert(schema.tasks).values({
+      id,
+      userId: 'local',
+      title: 'delete me',
+      updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+    });
+
+    const service = new (await import('../../src/task/task.service.js')).TaskService(db);
+    const deleted = await service.deleteTask('local', id, {
+      deleted_at: '2026-05-20T12:05:00.000Z',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+
+    expect(deleted).toMatchObject({
+      id,
+      title: 'delete me',
+      deleted_at: '2026-05-20T12:05:00.000Z',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+  });
+
+  it('hides tombstoned Tasks from default lists and returns them when includeDeleted is true', async () => {
+    const visibleId = uuidv7();
+    const deletedId = uuidv7();
+    await db.insert(schema.tasks).values([
+      {
+        id: visibleId,
+        userId: 'local',
+        title: 'visible',
+        updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+      },
+      {
+        id: deletedId,
+        userId: 'local',
+        title: 'deleted',
+        updatedAt: new Date('2026-05-20T12:05:00.000Z'),
+        deletedAt: new Date('2026-05-20T12:05:00.000Z'),
+      },
+    ]);
+
+    const service = new (await import('../../src/task/task.service.js')).TaskService(db);
+    const defaultRows = await service.listTasks('local');
+    const rowsWithDeleted = await service.listTasks('local', { includeDeleted: true });
+
+    expect(defaultRows.map((task) => task.id)).toContain(visibleId);
+    expect(defaultRows.map((task) => task.id)).not.toContain(deletedId);
+    expect(rowsWithDeleted.map((task) => task.id)).toEqual(expect.arrayContaining([visibleId, deletedId]));
+  });
 });

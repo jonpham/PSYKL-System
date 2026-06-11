@@ -176,12 +176,12 @@ This Spec contains 4 DevTasks. The Spec integration branch is `spec/m2-s1-servic
 **Branch:** `feat/m2-s1-dt3-task-delete-tombstones`
 **Affected:** `components/service-task/src/task/task.service.ts`, `components/service-task/src/task/task.controller.ts`, `components/service-task/src/task/task.controller.contract.test.ts`, `components/service-task/tests/integration/task-crud.integration.test.ts`.
 
-- [ ] Step 1: Write failing integration tests proving `DELETE` sets `deleted_at`, default `GET /tasks` hides the row, and `GET /tasks?include_deleted=1` returns it.
-- [ ] Step 2: Write failing contract tests for delete success, delete stale-write reconciliation, missing row `404`, and unparseable `include_deleted` `400`.
-- [ ] Step 3: Implement `deleteTask()` as a soft delete through the same LWW helper as PATCH.
-- [ ] Step 4: Add `include_deleted` parsing and default tombstone filtering to list tasks.
-- [ ] Step 5: Run `pnpm --filter @psykl/service-task test:integration` and `pnpm --filter @psykl/service-task test:component`.
-- [ ] Step 6: Commit with `feat: add task tombstone deletes`.
+- [x] Step 1: Write failing integration tests proving `DELETE` sets `deleted_at`, default `GET /tasks` hides the row, and `GET /tasks?include_deleted=1` returns it.
+- [x] Step 2: Write failing contract tests for delete success, delete stale-write reconciliation, missing row `404`, and unparseable `include_deleted` `400`.
+- [x] Step 3: Implement `deleteTask()` as a soft delete through the same LWW helper as PATCH.
+- [x] Step 4: Add `include_deleted` parsing and default tombstone filtering to list tasks.
+- [x] Step 5: Run `pnpm --filter @psykl/service-task test:integration` and `pnpm --filter @psykl/service-task test:component`.
+- [x] Step 6: Commit with `feat: add task tombstone deletes`.
 
 ### DevTask M2-4: Add idempotency for POST/PATCH/DELETE
 

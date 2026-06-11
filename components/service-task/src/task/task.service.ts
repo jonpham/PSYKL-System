@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { TaskInput, TaskPatchInput, TaskResponse } from '@psykl/shared-types';
-import { and, eq } from 'drizzle-orm';
+import type { TaskDeleteInput, TaskInput, TaskPatchInput, TaskResponse } from '@psykl/shared-types';
+import { and, eq, isNull } from 'drizzle-orm';
 import { schema, type Db } from '../db/index.js';
 
 export const DB_TOKEN = Symbol('DB');
@@ -22,8 +22,15 @@ export class TaskService {
     return this.toResponse(row);
   }
 
-  async listTasks(userId: string): Promise<TaskResponse[]> {
-    const rows = await this.db.select().from(schema.tasks).where(eq(schema.tasks.userId, userId));
+  async listTasks(userId: string, options: { includeDeleted?: boolean } = {}): Promise<TaskResponse[]> {
+    const rows = await this.db
+      .select()
+      .from(schema.tasks)
+      .where(
+        options.includeDeleted
+          ? eq(schema.tasks.userId, userId)
+          : and(eq(schema.tasks.userId, userId), isNull(schema.tasks.deletedAt)),
+      );
 
     return rows.map((row) => this.toResponse(row));
   }
@@ -43,6 +50,31 @@ export class TaskService {
         ...(input.completed_at !== undefined
           ? { completedAt: input.completed_at === null ? null : new Date(input.completed_at) }
           : {}),
+        updatedAt,
+        serverUpdatedAt: new Date(),
+      })
+      .where(and(eq(schema.tasks.id, taskId), eq(schema.tasks.userId, userId)))
+      .returning();
+
+    if (!row) {
+      throw new NotFoundException('Task not found');
+    }
+
+    return this.toResponse(row);
+  }
+
+  async deleteTask(userId: string, taskId: string, input: TaskDeleteInput): Promise<TaskResponse> {
+    const current = await this.findTaskForUser(userId, taskId);
+    const updatedAt = this.clampFutureTimestamp(new Date(input.updated_at));
+
+    if (updatedAt.getTime() <= current.updatedAt!.getTime()) {
+      return this.toResponse(current);
+    }
+
+    const [row] = await this.db
+      .update(schema.tasks)
+      .set({
+        deletedAt: this.clampFutureTimestamp(new Date(input.deleted_at)),
         updatedAt,
         serverUpdatedAt: new Date(),
       })
