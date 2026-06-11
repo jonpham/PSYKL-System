@@ -15,6 +15,13 @@
       "when": 1781125886224,
       "tag": "0001_fuzzy_sister_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781145096137,
+      "tag": "0002_typical_shotgun",
+      "breakpoints": true
     }
   ]
 }

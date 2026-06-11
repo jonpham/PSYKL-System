@@ -46,10 +46,24 @@
 | Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
+## M2 PWA CRUD + Offline-First (Spec 1 shipped)
+
+| Layer                         | Choice                                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Task create identity          | Client-supplied UUID v7 `Task.id` required on `POST /tasks`; distinct from idempotency operation identity                                  |
+| Task mutation endpoints       | `PATCH /tasks/:id` and `DELETE /tasks/:id` in `service-task`                                                                               |
+| Conflict resolution           | Last-Write-Wins using client-supplied `updated_at`; timestamps more than five minutes ahead of server time are clamped before comparison   |
+| Delete model                  | Soft-delete tombstones via nullable `deleted_at`; default `GET /tasks` hides tombstones and `GET /tasks?include_deleted=1` includes them   |
+| Idempotency                   | Required `Idempotency-Key` header on `POST`, `PATCH`, and `DELETE`; response replay keyed by `(user_id, idempotency_key)` with 24-hour TTL |
+| Idempotency persistence       | Drizzle-managed `idempotency` table in pglite with request hash, status code, response body, expiry, and created timestamp                 |
+| Service contract verification | Zod schema Unit tests, Drizzle+pglite Integration tests, NestJS HTTP Component contract tests, generated OpenAPI through `verify:prepare`  |
+| PWA mutation key generation   | `web_client` uses UUID v7 for per-operation `Idempotency-Key` when creating Tasks through the typed OpenAPI client                         |
+
 ## Pending (planned, not shipped)
 
-| Layer                | Choice                                                              | Lands in |
-| -------------------- | ------------------------------------------------------------------- | -------- |
-| Offline-first store  | TBD (IndexedDB shape + sync queue + last-write-wins implementation) | M2       |
-| Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD        | M3       |
-| Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)              | M4       |
+| Layer                | Choice                                                       | Lands in |
+| -------------------- | ------------------------------------------------------------ | -------- |
+| Offline-first store  | TBD (IndexedDB shape + sync queue implementation)            | M2       |
+| Sync engine          | TBD (client-side operation queue and replay against M2 API)  | M2       |
+| Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD | M3       |
+| Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)       | M4       |

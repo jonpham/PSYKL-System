@@ -42,6 +42,17 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
       },
     }),
   });
+  const mutatingHeaders = userIdHeader.extend({
+    'Idempotency-Key': z
+      .string()
+      .min(1)
+      .openapi({
+        param: {
+          name: 'Idempotency-Key',
+          in: 'header',
+        },
+      }),
+  });
   const listTasksQuery = z.object({
     include_deleted: z
       .enum(['0', '1'])
@@ -60,7 +71,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
     path: '/tasks',
     summary: 'Create a Task',
     request: {
-      headers: userIdHeader,
+      headers: mutatingHeaders,
       body: { content: { 'application/json': { schema: taskInput } } },
     },
     responses: {
@@ -68,6 +79,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
       400: { description: 'Bad request - body fails TaskInput validation' },
       401: { description: 'Missing X-User-Id header' },
       403: { description: 'Malformed X-User-Id header' },
+      409: { description: 'Same Idempotency-Key was used with a different request body' },
     },
   });
 
@@ -95,7 +107,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
     summary: 'Patch a Task with Last-Write-Wins reconciliation',
     request: {
       params: taskIdParam,
-      headers: userIdHeader,
+      headers: mutatingHeaders,
       body: { content: { 'application/json': { schema: taskPatchInput } } },
     },
     responses: {
@@ -104,6 +116,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
       401: { description: 'Missing X-User-Id header' },
       403: { description: 'Malformed X-User-Id header' },
       404: { description: 'Task not found for current user' },
+      409: { description: 'Same Idempotency-Key was used with a different request body' },
     },
   });
 
@@ -113,7 +126,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
     summary: 'Soft delete a Task with a tombstone',
     request: {
       params: taskIdParam,
-      headers: userIdHeader,
+      headers: mutatingHeaders,
       body: { content: { 'application/json': { schema: taskDeleteInput } } },
     },
     responses: {
@@ -122,6 +135,7 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
       401: { description: 'Missing X-User-Id header' },
       403: { description: 'Malformed X-User-Id header' },
       404: { description: 'Task not found for current user' },
+      409: { description: 'Same Idempotency-Key was used with a different request body' },
     },
   });
 

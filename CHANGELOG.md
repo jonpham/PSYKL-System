@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-_No unreleased changes._
+- Completed M2 Spec 1 service-task PATCH/DELETE + LWW + Idempotency ([feature doc](docs/features/%5B20260610%5DGH38_m2-service-task-patch-delete-lww-idempotency.md)): `Task.id` is now client-supplied UUID v7 entity identity on create; Task rows carry `completed_at`, `updated_at`, `server_updated_at`, and `deleted_at`; `PATCH /tasks/:id` and `DELETE /tasks/:id` use client `updated_at` for Last-Write-Wins reconciliation with stale writes returning the current row; soft-delete tombstones are hidden from default `GET /tasks` and exposed through `include_deleted=1`; mutating Task routes require `Idempotency-Key` and replay matching responses for 24 hours or return `409` on same-key/different-body conflicts. Constituent PRs: [#44](https://github.com/jonpham/PSYKL-System/pull/44), [#45](https://github.com/jonpham/PSYKL-System/pull/45), [#46](https://github.com/jonpham/PSYKL-System/pull/46), [#47](https://github.com/jonpham/PSYKL-System/pull/47).
 
 ## [0.1.0] - 2026-06-10
 

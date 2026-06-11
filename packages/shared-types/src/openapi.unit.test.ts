@@ -28,6 +28,21 @@ describe('buildOpenApiDocument', () => {
     expect(findUserId(deleteParams)).toMatchObject({ required: true });
   });
 
+  it('declares Idempotency-Key header as required only on mutating endpoints', () => {
+    const doc = buildOpenApiDocument();
+    const postParams = doc.paths?.['/tasks']?.post?.parameters ?? [];
+    const getParams = doc.paths?.['/tasks']?.get?.parameters ?? [];
+    const patchParams = doc.paths?.['/tasks/{id}']?.patch?.parameters ?? [];
+    const deleteParams = doc.paths?.['/tasks/{id}']?.delete?.parameters ?? [];
+    const findIdempotencyKey = (params: typeof postParams) =>
+      params.find((parameter) => parameter.name === 'Idempotency-Key');
+
+    expect(findIdempotencyKey(postParams)).toMatchObject({ required: true });
+    expect(findIdempotencyKey(patchParams)).toMatchObject({ required: true });
+    expect(findIdempotencyKey(deleteParams)).toMatchObject({ required: true });
+    expect(findIdempotencyKey(getParams)).toBeUndefined();
+  });
+
   it('declares PATCH /tasks/{id} path parameter and body schema', () => {
     const doc = buildOpenApiDocument();
     const patchOperation = doc.paths?.['/tasks/{id}']?.patch;
