@@ -47,7 +47,7 @@ No new API surface. Uses Spec 1 endpoints through Spec 3 enqueue/replay.
 - Modify `src/components/TaskList/TaskList.tsx`.
 - Add private nested `TaskRow` component under `TaskList/TaskRow/`.
 - Add loading skeleton component under `TaskList/TaskListSkeleton/`.
-- Add `src/components/EmptyState/`.
+- Add private nested empty-state component under `TaskList/EmptyState/`.
 - Extend `src/components/Toast/`.
 - Update stories, unit tests, and MSW handlers.
 
@@ -55,17 +55,17 @@ No new API surface. Uses Spec 1 endpoints through Spec 3 enqueue/replay.
 
 Unit:
 
-| File                     | Assertion                                                       |
-| ------------------------ | --------------------------------------------------------------- |
-| `TaskRow.unit.test.tsx`  | edit, complete/uncomplete, and delete confirmation event wiring |
-| `TaskList.unit.test.tsx` | skeleton, empty state, queued state rendering                   |
+| File                                                                                    | Assertion                                                       |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `components/web_client/src/components/TaskList/TaskRow/__tests__/TaskRow.unit.test.tsx` | edit, complete/uncomplete, and delete confirmation event wiring |
+| `components/web_client/src/components/TaskList/__tests__/TaskList.unit.test.tsx`        | skeleton, empty state, queued state rendering                   |
 
 Component:
 
-| File                   | Assertion                                                       |
-| ---------------------- | --------------------------------------------------------------- |
-| `TaskList.stories.tsx` | edit, complete, delete, offline queue, stale-write notification |
-| `Toast.stories.tsx`    | offline banner and permanent-fail toast states                  |
+| File                                                                           | Assertion                                                       |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `components/web_client/src/components/TaskList/__tests__/TaskList.stories.tsx` | edit, complete, delete, offline queue, stale-write notification |
+| `components/web_client/src/components/Toast/__tests__/Toast.stories.tsx`       | offline banner and permanent-fail toast states                  |
 
 End-to-End: deferred to Spec 6.
 
@@ -76,7 +76,7 @@ Spec integration branch: `spec/m2-s5-pwa-crud-ui-polish`.
 ### DevTask M2-11: Add edit, complete, and delete affordances
 
 **Branch:** `feat/m2-s5-dt11-task-crud-affordances`
-**Affected:** `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/TaskList.unit.test.tsx`, `components/web_client/src/components/TaskList/TaskList.stories.tsx`, `components/web_client/src/components/TaskList/TaskRow/TaskRow.tsx`, `components/web_client/src/components/TaskList/TaskRow/TaskRow.unit.test.tsx`, `components/web_client/src/components/TaskList/TaskRow/index.ts`, `components/web_client/src/test/msw-handlers.ts`.
+**Affected:** `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.unit.test.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.stories.tsx`, `components/web_client/src/components/TaskList/TaskRow/TaskRow.tsx`, `components/web_client/src/components/TaskList/TaskRow/__tests__/TaskRow.unit.test.tsx`, `components/web_client/src/components/TaskList/TaskRow/index.ts`, `components/web_client/src/test/msw-handlers.ts`.
 
 - [ ] Step 1: Write failing `TaskRow` tests for click-title-to-edit, Enter save, blur save, Escape cancel, complete toggle, uncomplete toggle, and two-click delete confirmation within 3 seconds.
 - [ ] Step 2: Write failing Storybook play functions proving each mutation enqueues the expected operation and does not call `fetch` directly from the component.
@@ -89,7 +89,7 @@ Spec integration branch: `spec/m2-s5-pwa-crud-ui-polish`.
 ### DevTask M2-12: Add skeleton, empty state, and toast polish
 
 **Branch:** `feat/m2-s5-dt12-task-ui-polish`
-**Affected:** `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/TaskList.stories.tsx`, `components/web_client/src/components/TaskList/TaskListSkeleton/TaskListSkeleton.tsx`, `components/web_client/src/components/TaskList/TaskListSkeleton/index.ts`, `components/web_client/src/components/EmptyState/EmptyState.tsx`, `components/web_client/src/components/EmptyState/index.ts`, `components/web_client/src/components/Toast/Toast.tsx`, `components/web_client/src/components/Toast/Toast.stories.tsx`.
+**Affected:** `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.stories.tsx`, `components/web_client/src/components/TaskList/TaskListSkeleton/TaskListSkeleton.tsx`, `components/web_client/src/components/TaskList/TaskListSkeleton/index.ts`, `components/web_client/src/components/TaskList/EmptyState/EmptyState.tsx`, `components/web_client/src/components/TaskList/EmptyState/index.ts`, `components/web_client/src/components/Toast/Toast.tsx`, `components/web_client/src/components/Toast/__tests__/Toast.stories.tsx`.
 
 - [ ] Step 1: Write failing unit tests for IDB hydration loading skeleton and empty state when all tasks are tombstoned.
 - [ ] Step 2: Write failing Storybook tests for offline banner, permanent-fail toast, and stale-write replacement toast.

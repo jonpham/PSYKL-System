@@ -1,6 +1,7 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
-import { describe, expect, it, vi } from 'vitest';
 import { lastValueFrom, of, throwError } from 'rxjs';
+import { describe, expect, it, vi } from 'vitest';
+
 import { IdempotencyInterceptor } from '../idempotency.interceptor.js';
 import type { IdempotencyService } from '../idempotency.service.js';
 

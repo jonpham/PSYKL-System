@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
-import { HttpResponse, http } from 'msw';
-import App from '../../../App';
+import { http, HttpResponse } from 'msw';
+
 import type { Task } from '../../../api/client';
+import App from '../../../App';
 import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {

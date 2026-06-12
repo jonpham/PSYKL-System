@@ -63,13 +63,13 @@ M2 ships a feel-finished UX. Every action has a clear affordance, a fast optimis
 ## Affected Components
 
 - `components/web_client/` (extended):
-  - `src/components/TaskItem.tsx` (new or refactored — inline edit, complete checkbox, delete button with confirmation step).
-  - `src/components/TaskItem.component.test.tsx` (new — edit / complete / delete / cancel paths).
-  - `src/components/Skeleton.tsx` (new — gray pulsing placeholder rows).
-  - `src/components/EmptyState.tsx` (new — empty-list messaging).
-  - `src/components/Toast.tsx` (extended — variants: error, info, offline-banner).
-  - `src/components/Toast.component.test.tsx` (new — variant + dismissal tests).
-  - `src/components/TaskList.tsx` (extended — render skeleton / empty / list depending on hydration + count).
+  - `src/components/TaskList/TaskRow/TaskRow.tsx` (new — inline edit, complete checkbox, delete button with confirmation step).
+  - `src/components/TaskList/TaskRow/__tests__/TaskRow.unit.test.tsx` (new — edit / complete / delete / cancel paths).
+  - `src/components/TaskList/Skeleton/Skeleton.tsx` (new — gray pulsing placeholder rows, private to TaskList until a second consumer exists).
+  - `src/components/TaskList/EmptyState/EmptyState.tsx` (new — empty-list messaging, private to TaskList until a second consumer exists).
+  - `src/components/Toast/Toast.tsx` (extended — variants: error, info, offline-banner).
+  - `src/components/Toast/__tests__/Toast.stories.tsx` (component coverage — variant + dismissal states).
+  - `src/components/TaskList/TaskList.tsx` (extended — render skeleton / empty / list depending on hydration + count).
   - `src/api/mutations.ts` (extended — `editTitle()`, `toggleCompleted()`, `softDelete()` helpers that call `replay.enqueue()`).
   - `e2e/m2-pwa-crud.e2e.spec.ts` (new — happy-path E2E for create / edit / complete / delete).
 

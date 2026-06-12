@@ -1,5 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+
+import { schema } from '../../db/index.js';
 import {
   taskControllerHarness,
   taskCreateBody,
@@ -8,7 +10,6 @@ import {
   validIdempotencyKey,
   validTaskId,
 } from './task.controller.contract-support.js';
-import { schema } from '../../db/index.js';
 
 describe('TaskController contract: idempotency', () => {
   const api = taskControllerHarness();

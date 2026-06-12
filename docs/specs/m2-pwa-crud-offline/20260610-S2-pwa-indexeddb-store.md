@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN_PROGRESS
 issue: P2
 pr:
 completed_at:
@@ -7,7 +7,7 @@ created_at: 2026-06-10
 initiative: m2-pwa-crud-offline
 spec_number: 2
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
 step_gating: false
 honors_decisions: [37, 38, 39, 40, 46, 55]
 ---
@@ -49,9 +49,9 @@ No new API surface. Cold-start hydration calls existing `GET /tasks?include_dele
 ### `components/web_client/`
 
 - Create `src/db/idb.ts` with `openPsyklDb()`, typed helpers, and upgrade path.
-- Create `src/db/idb.unit.test.ts` using `fake-indexeddb`.
-- Create `src/db/idb.integration.test.ts` for upgrade and persistence behavior.
-- Create `src/hooks/useTasks.ts` and `src/hooks/useTasks.unit.test.tsx`.
+- Create `src/db/__tests__/idb.unit.test.ts` using `fake-indexeddb`.
+- Create `tests/integration/idb.integration.test.ts` for upgrade and persistence behavior.
+- Create `src/hooks/useTasks.ts` and `src/hooks/__tests__/useTasks.unit.test.tsx`.
 - Modify `src/App.tsx`, `src/components/TaskList/TaskList.tsx`, and `src/components/TaskCreateForm/TaskCreateForm.tsx` so reads use `useTasks()`.
 - Modify Storybook stories and MSW handlers for hydration.
 
@@ -61,23 +61,23 @@ Static: `pnpm verify:static`.
 
 Unit:
 
-| File                                                     | Assertion                                                    |
-| -------------------------------------------------------- | ------------------------------------------------------------ |
-| `components/web_client/src/db/idb.unit.test.ts`          | opens DB, creates all stores, writes/reads/deletes task rows |
-| `components/web_client/src/hooks/useTasks.unit.test.tsx` | subscription updates render after IDB writes                 |
+| File                                                               | Assertion                                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `components/web_client/src/db/__tests__/idb.unit.test.ts`          | opens DB, creates all stores, writes/reads/deletes task rows |
+| `components/web_client/src/hooks/__tests__/useTasks.unit.test.tsx` | subscription updates render after IDB writes                 |
 
 Integration:
 
-| File                                                   | Assertion                                                               |
-| ------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `components/web_client/src/db/idb.integration.test.ts` | versioned upgrade path creates stores without losing existing task rows |
+| File                                                              | Assertion                                                               |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `components/web_client/tests/integration/idb.integration.test.ts` | versioned upgrade path creates stores without losing existing task rows |
 
 Component:
 
-| File                                                                             | Assertion                                                      |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `components/web_client/src/components/TaskList/TaskList.stories.tsx`             | cold-start hydration renders server tasks from IDB             |
-| `components/web_client/src/components/TaskCreateForm/TaskCreateForm.stories.tsx` | create form observes IDB updates instead of direct fetch state |
+| File                                                                                       | Assertion                                                      |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `components/web_client/src/components/TaskList/__tests__/TaskList.stories.tsx`             | cold-start hydration renders server tasks from IDB             |
+| `components/web_client/src/components/TaskCreateForm/__tests__/TaskCreateForm.stories.tsx` | create form observes IDB updates instead of direct fetch state |
 
 End-to-End: deferred to Spec 6.
 
@@ -88,20 +88,20 @@ Spec integration branch: `spec/m2-s2-pwa-indexeddb-store`.
 ### DevTask M2-5: Add IDB database and store helpers
 
 **Branch:** `feat/m2-s2-dt5-idb-store`
-**Affected:** `components/web_client/src/db/idb.ts`, `components/web_client/src/db/idb.unit.test.ts`, `components/web_client/src/db/idb.integration.test.ts`, `components/web_client/package.json`, lockfile.
+**Affected:** `components/web_client/src/db/idb.ts`, `components/web_client/src/db/idb.types.ts`, `components/web_client/src/db/__tests__/idb.unit.test.ts`, `components/web_client/tests/integration/idb.integration.test.ts`, `components/web_client/package.json`, lockfile.
 
-- [ ] Step 1: Add `idb` and `fake-indexeddb` dependencies.
-- [ ] Step 2: Write failing unit tests for opening database version 1 and all four stores.
-- [ ] Step 3: Write failing tests for `putTask`, `listTasks`, `getTask`, `deleteTask`, `enqueueSyncOp`, `listSyncQueue`, and `putMeta`.
-- [ ] Step 4: Implement `src/db/idb.ts` with typed store helpers.
-- [ ] Step 5: Write upgrade integration test proving a version 0/empty database upgrades to version 1 and preserves inserted tasks across reopen.
-- [ ] Step 6: Run `pnpm --filter @psykl/web-client test:unit` and targeted IDB integration command used by the component package.
-- [ ] Step 7: Commit with `feat: add pwa indexeddb task store`.
+- [x] Step 1: Add `idb` and `fake-indexeddb` dependencies.
+- [x] Step 2: Write failing unit tests for opening database version 1 and all four stores.
+- [x] Step 3: Write failing tests for `putTask`, `listTasks`, `getTask`, `deleteTask`, `enqueueSyncOp`, `listSyncQueue`, and `putMeta`.
+- [x] Step 4: Implement `src/db/idb.ts` with typed store helpers.
+- [x] Step 5: Write upgrade integration test proving a version 0/empty database upgrades to version 1 and preserves inserted tasks across reopen.
+- [x] Step 6: Run `pnpm --filter @psykl/web-client test:unit` and targeted IDB integration command used by the component package.
+- [x] Step 7: Commit with `feat: add pwa indexeddb task store`.
 
 ### DevTask M2-6: Add useTasks and refactor UI reads
 
 **Branch:** `feat/m2-s2-dt6-use-tasks-store`
-**Affected:** `components/web_client/src/hooks/useTasks.ts`, `components/web_client/src/hooks/useTasks.unit.test.tsx`, `components/web_client/src/App.tsx`, `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/TaskList.unit.test.tsx`, `components/web_client/src/components/TaskList/TaskList.stories.tsx`, `components/web_client/src/components/TaskCreateForm/TaskCreateForm.tsx`, `components/web_client/src/test/msw-handlers.ts`.
+**Affected:** `components/web_client/src/hooks/useTasks.ts`, `components/web_client/src/hooks/__tests__/useTasks.unit.test.tsx`, `components/web_client/src/App.tsx`, `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.unit.test.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.stories.tsx`, `components/web_client/src/components/TaskCreateForm/TaskCreateForm.tsx`, `components/web_client/src/test/msw-handlers.ts`.
 
 - [ ] Step 1: Write failing hook tests proving subscribers render the IDB snapshot and rerender on same-tab event.
 - [ ] Step 2: Write failing hook test proving BroadcastChannel messages trigger snapshot reload.

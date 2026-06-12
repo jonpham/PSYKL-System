@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { schema, type Db } from '../../src/db/index.js';
+
+import { type Db, schema } from '../../src/db/index.js';
 import { createIntegrationDb, insertTask } from './task.integration-support.js';
 
 describe('Drizzle + pglite Task persistence', () => {

@@ -49,19 +49,19 @@ No new API. Service Worker caches `GET /tasks` with stale-while-revalidate and r
 
 Unit:
 
-| File                                                     | Assertion                                                                                       |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `components/web_client/src/sw-registration.unit.test.ts` | safely no-ops when `registration.sync` is unavailable and registers `psykl-sync` when available |
+| File                                                                  | Assertion                                                                                       |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `components/web_client/src/sw/__tests__/sw-registration.unit.test.ts` | safely no-ops when `registration.sync` is unavailable and registers `psykl-sync` when available |
 
 Component:
 
-| File                                                             | Assertion                                                           |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `components/web_client/src/sw.lifecycle.component.test.ts`       | real Chromium installs and activates the Service Worker             |
-| `components/web_client/src/sw.cache.component.test.ts`           | cached app shell and stale-while-revalidate task reads work offline |
-| `components/web_client/src/sw.background-sync.component.test.ts` | synthetic sync event runs replay and respects existing lock         |
+| File                                                | Assertion                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| `e2e/m2-service-worker-lifecycle.e2e.spec.ts`       | real Chromium installs and activates the Service Worker             |
+| `e2e/m2-service-worker-cache.e2e.spec.ts`           | cached app shell and stale-while-revalidate task reads work offline |
+| `e2e/m2-service-worker-background-sync.e2e.spec.ts` | synthetic sync event runs replay and respects existing lock         |
 
-End-to-End: deferred to Spec 6.
+End-to-End: Service Worker browser coverage lands in this spec because the behavior requires real Chromium; multi-device offline sync remains deferred to Spec 6.
 
 ## DevTasks
 
@@ -70,7 +70,7 @@ Spec integration branch: `spec/m2-s4-service-worker-background-sync`.
 ### DevTask M2-9: Switch to injectManifest and own src/sw.ts
 
 **Branch:** `feat/m2-s4-dt9-injectmanifest-sw`
-**Affected:** `components/web_client/vite.config.ts`, `components/web_client/src/sw.ts`, `components/web_client/src/sw.lifecycle.component.test.ts`, `components/web_client/src/sw.cache.component.test.ts`, `components/web_client/package.json`, lockfile.
+**Affected:** `components/web_client/vite.config.ts`, `components/web_client/src/sw.ts`, `e2e/m2-service-worker-lifecycle.e2e.spec.ts`, `e2e/m2-service-worker-cache.e2e.spec.ts`, `components/web_client/package.json`, lockfile.
 
 - [ ] Step 1: Write failing Playwright component test proving a built PWA registers a Service Worker from `src/sw.ts`.
 - [ ] Step 2: Write failing cache test proving app shell navigation works offline after first load.
@@ -82,7 +82,7 @@ Spec integration branch: `spec/m2-s4-service-worker-background-sync`.
 ### DevTask M2-10: Register Background Sync and handle sync events
 
 **Branch:** `feat/m2-s4-dt10-background-sync`
-**Affected:** `components/web_client/src/sw-registration.ts`, `components/web_client/src/sw-registration.unit.test.ts`, `components/web_client/src/sw.ts`, `components/web_client/src/sw.background-sync.component.test.ts`, `components/web_client/src/sync/replay.ts`.
+**Affected:** `components/web_client/src/sw/sw-registration.ts`, `components/web_client/src/sw/__tests__/sw-registration.unit.test.ts`, `components/web_client/src/sw.ts`, `e2e/m2-service-worker-background-sync.e2e.spec.ts`, `components/web_client/src/sync/replay.ts`.
 
 - [ ] Step 1: Write failing unit tests for `registerPsyklSync()` success, unsupported API no-op, and registration rejection logging.
 - [ ] Step 2: Write failing component test that dispatches a `sync` event with tag `psykl-sync` and proves `replay()` drains one queued op.

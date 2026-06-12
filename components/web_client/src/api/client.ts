@@ -1,4 +1,5 @@
 import createClient from 'openapi-fetch';
+
 import type { paths } from './types';
 
 const baseUrl = (import.meta.env['VITE_API_URL'] as string | undefined) ?? 'http://localhost:3000';

@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, it } from 'vitest';
+
 import { AppModule } from '../../app.module.js';
 import { UserIdGuard } from '../user-id.guard.js';
 

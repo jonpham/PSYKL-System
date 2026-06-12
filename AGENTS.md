@@ -173,7 +173,7 @@ e2e/m1-task-crud.e2e.spec.ts               ← E2E
 
 #### Test Structure Convention
 
-Mechanical style rules belong in static analysis, not only agent instructions. ESLint enforces the source file line cap and one declaration per `const`/`let`/`var` statement so non-agent contributors get the same feedback locally and in continuous integration.
+Mechanical style rules live in [`docs/STYLE.md`](docs/STYLE.md) and are enforced through static analysis where possible.
 
 **API Component tests use Given / When / Then.** Applies to service Unit tests (`*.unit.test.ts`), service Component contract tests (`*.contract.test.ts`), and service Integration tests (`tests/integration/*.integration.test.ts`).
 
@@ -312,6 +312,7 @@ Docs live in `docs/`:
 | `docs/PRODUCT.md`                                  | Canonical product brief (premise, differentiator, MVP, future features, surfaces, constraints, milestone roadmap) |
 | `docs/PROJECT_STATUS.md`                           | Live status — active initiative / spec / task, locked-in stack, open design surfaces, future review areas         |
 | `docs/BACKLOG_IDEAS.md`                            | Someday/maybe learning experiments and side-quests outside the milestone roadmap                                  |
+| `docs/STYLE.md`                                    | Code style preferences and static-tool ownership for rules not fully captured by Prettier                         |
 | `docs/features/`                                   | Completed features describing system behavior with GitHub issue & PR links                                        |
 | `docs/initiatives/{initiative}/`                   | gstack initiative planning, discovery, and design review artifacts (DESIGN.md + MILESTONE.md per initiative)      |
 | `docs/specs/{initiative}/`                         | Active superpowers implementation plans and specs for that initiative                                             |
@@ -324,6 +325,8 @@ Docs live in `docs/`:
 ---
 
 ## Code Standards
+
+Code style lives in [`docs/STYLE.md`](docs/STYLE.md). Keep durable style rules there, then enforce them in ESLint or Prettier when practical so agents and non-agent contributors get the same feedback locally and in continuous integration.
 
 ### Git Conventions
 

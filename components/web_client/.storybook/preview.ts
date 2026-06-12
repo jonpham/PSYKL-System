@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/react';
 import { initialize, mswLoader } from 'msw-storybook-addon';
+
 import { handlers, resetStore } from '../src/test/msw-handlers';
 
 // Initialize MSW for the Storybook browser runtime. The service worker is
