@@ -53,6 +53,38 @@ describe('TaskService patch conflict resolution', () => {
     expect(updateSet).not.toHaveBeenCalled();
   });
 
+  it('clears deleted_at when a newer PATCH resurrects a tombstoned Task', async () => {
+    const currentRow = taskRow({
+      title: 'deleted',
+      updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+      deletedAt: new Date('2026-05-20T12:00:00.000Z'),
+    });
+    const updatedRow = taskRow({
+      title: 'resurrected',
+      updatedAt: new Date('2026-05-20T12:05:00.000Z'),
+      deletedAt: null,
+    });
+    const updateSet = vi.fn(() => ({
+      where: vi.fn(() => ({
+        returning: vi.fn(async () => [updatedRow]),
+      })),
+    }));
+    const service = new TaskService(mockPatchDb([currentRow], updateSet));
+
+    // Given
+    const newerPatch = {
+      title: 'resurrected',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    };
+
+    // When
+    const patched = await service.patchTask('local', currentRow.id, newerPatch);
+
+    // Then
+    expect(patched.deleted_at).toBeNull();
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ deletedAt: null }));
+  });
+
   it('clamps PATCH updated_at to server now when client timestamp is more than five minutes in the future', async () => {
     const now = new Date('2026-05-20T12:00:00.000Z');
     vi.useFakeTimers();

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   taskControllerHarness,
   taskCreateBody,
+  taskDeleteBody,
   taskPatchBody,
+  validIdempotencyKey,
   validTaskId,
 } from './task.controller.contract-support.js';
 
@@ -21,7 +23,7 @@ describe('TaskController contract: update', () => {
       const id = validTaskId('010');
       await api
         .postTask({
-          idempotencyKey: 'contract-patch-create-valid',
+          idempotencyKey: validIdempotencyKey('010'),
           body: taskCreateBody({ id, title: 'before', updated_at: '2026-05-20T12:00:00.000Z' }),
         })
         .expect(201);
@@ -30,7 +32,7 @@ describe('TaskController contract: update', () => {
       const patchBody = taskPatchBody({ title: 'after', updated_at: '2026-05-20T12:05:00.000Z' });
 
       // When
-      const res = await api.patchTask({ id, idempotencyKey: 'contract-patch-valid', body: patchBody }).expect(200);
+      const res = await api.patchTask({ id, idempotencyKey: validIdempotencyKey('011'), body: patchBody }).expect(200);
 
       // Then
       expect(res.body).toMatchObject({
@@ -45,7 +47,7 @@ describe('TaskController contract: update', () => {
       const id = validTaskId('011');
       await api
         .postTask({
-          idempotencyKey: 'contract-patch-create-stale',
+          idempotencyKey: validIdempotencyKey('012'),
           body: taskCreateBody({ id, title: 'current', updated_at: '2026-05-20T12:05:00.000Z' }),
         })
         .expect(201);
@@ -57,7 +59,9 @@ describe('TaskController contract: update', () => {
       });
 
       // When
-      const res = await api.patchTask({ id, idempotencyKey: 'contract-patch-stale', body: olderPatchBody }).expect(200);
+      const res = await api
+        .patchTask({ id, idempotencyKey: validIdempotencyKey('013'), body: olderPatchBody })
+        .expect(200);
 
       // Then
       expect(res.body).toMatchObject({
@@ -67,24 +71,60 @@ describe('TaskController contract: update', () => {
       });
     });
 
+    it('clears deleted_at and returns the Task to default lists when a newer PATCH resurrects it', async () => {
+      const id = validTaskId('014');
+      await api
+        .postTask({
+          idempotencyKey: validIdempotencyKey('016'),
+          body: taskCreateBody({ id, title: 'deleted', updated_at: '2026-05-20T12:00:00.000Z' }),
+        })
+        .expect(201);
+      await api
+        .deleteTask({
+          id,
+          idempotencyKey: validIdempotencyKey('017'),
+          body: taskDeleteBody({
+            deleted_at: '2026-05-20T12:05:00.000Z',
+            updated_at: '2026-05-20T12:05:00.000Z',
+          }),
+        })
+        .expect(200);
+
+      // Given
+      const patchBody = taskPatchBody({ title: 'resurrected', updated_at: '2026-05-20T12:10:00.000Z' });
+
+      // When
+      const res = await api.patchTask({ id, idempotencyKey: validIdempotencyKey('018'), body: patchBody }).expect(200);
+
+      // Then
+      expect(res.body).toMatchObject({
+        id,
+        title: 'resurrected',
+        deleted_at: null,
+        updated_at: '2026-05-20T12:10:00.000Z',
+      });
+      const defaultGet = await api.getTasks().expect(200);
+      expect((defaultGet.body as Array<{ id: string }>).map((task) => task.id)).toContain(id);
+    });
+
     it('returns 400 when body is invalid', async () => {
-      const id = validTaskId('012');
+      const id = validTaskId('015');
 
       // Given
       const invalidBody = { title: '' };
 
       // When / Then
-      await api.patchTask({ id, idempotencyKey: 'contract-patch-invalid', body: invalidBody }).expect(400);
+      await api.patchTask({ id, idempotencyKey: validIdempotencyKey('019'), body: invalidBody }).expect(400);
     });
 
     it('returns 404 when task does not exist', async () => {
-      const id = validTaskId('013');
+      const id = validTaskId('016');
 
       // Given
       const patchBody = taskPatchBody({ title: 'missing' });
 
       // When / Then
-      await api.patchTask({ id, idempotencyKey: 'contract-patch-missing', body: patchBody }).expect(404);
+      await api.patchTask({ id, idempotencyKey: validIdempotencyKey('025'), body: patchBody }).expect(404);
     });
   });
 });

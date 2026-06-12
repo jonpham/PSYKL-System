@@ -12,7 +12,12 @@ export class TaskService {
   async createTask(userId: string, input: TaskInput): Promise<TaskResponse> {
     const [row] = await this.db
       .insert(schema.tasks)
-      .values({ id: input.id, userId, title: input.title, updatedAt: new Date(input.updated_at) })
+      .values({
+        id: input.id,
+        userId,
+        title: input.title,
+        updatedAt: this.clampFutureTimestamp(new Date(input.updated_at)),
+      })
       .returning();
 
     if (!row) {
@@ -50,6 +55,7 @@ export class TaskService {
         ...(input.completed_at !== undefined
           ? { completedAt: input.completed_at === null ? null : new Date(input.completed_at) }
           : {}),
+        deletedAt: null,
         updatedAt,
         serverUpdatedAt: new Date(),
       })
@@ -74,7 +80,7 @@ export class TaskService {
     const [row] = await this.db
       .update(schema.tasks)
       .set({
-        deletedAt: this.clampFutureTimestamp(new Date(input.deleted_at)),
+        deletedAt: updatedAt,
         updatedAt,
         serverUpdatedAt: new Date(),
       })

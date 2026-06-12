@@ -111,3 +111,7 @@ export function taskDeleteBody(overrides: Partial<TaskDeleteBody> = {}): TaskDel
 export function validTaskId(suffix: string): string {
   return `0193e1c0-1234-7000-8000-000000000${suffix}`;
 }
+
+export function validIdempotencyKey(suffix: string): string {
+  return `0193e1c0-5678-7000-8000-000000000${suffix}`;
+}

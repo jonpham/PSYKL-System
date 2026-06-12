@@ -3,6 +3,7 @@ import {
   taskControllerHarness,
   taskCreateBody,
   taskDeleteBody,
+  validIdempotencyKey,
   validTaskId,
 } from './task.controller.contract-support.js';
 
@@ -21,7 +22,7 @@ describe('TaskController contract: delete', () => {
       const id = validTaskId('020');
       await api
         .postTask({
-          idempotencyKey: 'contract-delete-create-success',
+          idempotencyKey: validIdempotencyKey('020'),
           body: taskCreateBody({ id, title: 'to delete', updated_at: '2026-05-20T12:00:00.000Z' }),
         })
         .expect(201);
@@ -34,7 +35,7 @@ describe('TaskController contract: delete', () => {
 
       // When
       const deleteRes = await api
-        .deleteTask({ id, idempotencyKey: 'contract-delete-success', body: deleteBody })
+        .deleteTask({ id, idempotencyKey: validIdempotencyKey('021'), body: deleteBody })
         .expect(200);
 
       // Then
@@ -55,7 +56,7 @@ describe('TaskController contract: delete', () => {
       const id = validTaskId('021');
       await api
         .postTask({
-          idempotencyKey: 'contract-delete-create-stale',
+          idempotencyKey: validIdempotencyKey('022'),
           body: taskCreateBody({ id, title: 'current', updated_at: '2026-05-20T12:05:00.000Z' }),
         })
         .expect(201);
@@ -68,7 +69,7 @@ describe('TaskController contract: delete', () => {
 
       // When
       const deleteRes = await api
-        .deleteTask({ id, idempotencyKey: 'contract-delete-stale', body: olderDeleteBody })
+        .deleteTask({ id, idempotencyKey: validIdempotencyKey('023'), body: olderDeleteBody })
         .expect(200);
 
       // Then
@@ -80,14 +81,33 @@ describe('TaskController contract: delete', () => {
       });
     });
 
+    it('returns 400 when deleted_at differs from updated_at', async () => {
+      const id = validTaskId('023');
+      await api
+        .postTask({
+          idempotencyKey: validIdempotencyKey('025'),
+          body: taskCreateBody({ id, title: 'coherence', updated_at: '2026-05-20T12:00:00.000Z' }),
+        })
+        .expect(201);
+
+      // Given
+      const incoherentDeleteBody = taskDeleteBody({
+        deleted_at: '2026-05-20T12:00:00.000Z',
+        updated_at: '2026-05-20T12:05:00.000Z',
+      });
+
+      // When / Then
+      await api.deleteTask({ id, idempotencyKey: validIdempotencyKey('026'), body: incoherentDeleteBody }).expect(400);
+    });
+
     it('returns 404 when task does not exist', async () => {
-      const id = validTaskId('022');
+      const id = validTaskId('024');
 
       // Given
       const deleteBody = taskDeleteBody();
 
       // When / Then
-      await api.deleteTask({ id, idempotencyKey: 'contract-delete-missing', body: deleteBody }).expect(404);
+      await api.deleteTask({ id, idempotencyKey: validIdempotencyKey('027'), body: deleteBody }).expect(404);
     });
   });
 });
