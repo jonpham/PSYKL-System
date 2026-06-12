@@ -12,9 +12,9 @@
     "format:check": "prettier --check . --ignore-path ../../.prettierignore",
     "openapi:view": "pnpm run build:openapi && pnpm dlx @scalar/cli document serve openapi.json -p 3003",
     "typecheck": "pnpm --filter @psykl/shared-types build && tsc --noEmit",
-    "test:unit": "vitest run --reporter=verbose src/**/*.unit.test.ts",
+    "test:unit": "vitest run --reporter=verbose $(find src -path '*/__tests__/*.unit.test.ts' | sort)",
     "test:integration": "vitest run --reporter=verbose tests/integration",
-    "test:component": "pnpm --filter @psykl/shared-types build && vitest run --reporter=verbose src/**/*.contract.test.ts",
+    "test:component": "pnpm --filter @psykl/shared-types build && vitest run --reporter=verbose $(find src -path '*/__tests__/*.contract.test.ts' | sort)",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push"
   },

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
 import { HttpResponse, http } from 'msw';
-import App from '../../App';
-import type { Task } from '../../api/client';
-import { TaskList } from './TaskList';
+import App from '../../../App';
+import type { Task } from '../../../api/client';
+import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {
   title: 'PSYKL/TaskList',
@@ -23,12 +23,20 @@ const sampleTasks: Task[] = [
     user_id: 'local',
     title: 'first',
     created_at: new Date('2026-05-27T10:00:00Z').toISOString(),
+    completed_at: null,
+    updated_at: new Date('2026-05-27T10:00:00Z').toISOString(),
+    server_updated_at: new Date('2026-05-27T10:00:00.500Z').toISOString(),
+    deleted_at: null,
   },
   {
     id: '01940000-0000-7000-8000-000000000002',
     user_id: 'local',
     title: 'second',
     created_at: new Date('2026-05-27T11:00:00Z').toISOString(),
+    completed_at: null,
+    updated_at: new Date('2026-05-27T11:00:00Z').toISOString(),
+    server_updated_at: new Date('2026-05-27T11:00:00.500Z').toISOString(),
+    deleted_at: null,
   },
 ];
 

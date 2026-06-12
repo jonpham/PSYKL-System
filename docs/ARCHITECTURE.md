@@ -117,6 +117,47 @@ The M1 service + PWA establishes the local and CI version of all five layers of 
   - For `web_client`: **UI Component tests** authored as Storybook 8 stories with play functions, executed via `@storybook/test-runner` against the built Storybook static. `msw-storybook-addon` initializes Mock Service Worker inside the story preview so the same handler set from `src/test/msw-handlers.ts` stubs the `service-task` boundary in both Vitest setup and Storybook. Each play function doubles as a Manual Visual Check surface when run interactively via `pnpm --filter @psykl/web-client storybook`.
 - **End-to-End:** Playwright Chromium drives the Docker Compose stack through the PWA against the real `service-task` boundary and a clean pglite database supplied by the E2E overlay.
 
+## M2 Offline-First Service Contract
+
+M2 Spec 1 extends `service-task` so offline-capable clients can create stable local entities and replay mutations safely.
+
+### Task Identity And Timestamps
+
+`POST /tasks` now requires a client-supplied UUID v7 `id` and `updated_at`. `Task.id` is entity identity: clients create it before sync so queued offline creates, local IndexedDB rows, and server rows refer to the same Task. `Idempotency-Key` is separate operation identity for retry dedupe.
+
+The Task row now stores:
+
+- `completed_at`: nullable client-supplied completion timestamp.
+- `updated_at`: required client-supplied intent timestamp used for Last-Write-Wins comparison.
+- `server_updated_at`: server-stamped audit timestamp.
+- `deleted_at`: nullable tombstone timestamp.
+
+The M2 migration backfills existing M1 rows by setting `updated_at = created_at` before making `updated_at` required.
+
+### Last-Write-Wins Mutation Model
+
+`PATCH /tasks/:id` and `DELETE /tasks/:id` compare the incoming client `updated_at` against the stored `updated_at`.
+
+- Newer writes update the row and refresh `server_updated_at`.
+- Stale writes return `200` with the current server row.
+- Client timestamps more than five minutes ahead of server time are clamped before comparison.
+
+Deletes are soft deletes. `DELETE /tasks/:id` sets `deleted_at`; default `GET /tasks` excludes tombstones, while `GET /tasks?include_deleted=1` includes them for sync pull paths.
+
+### Idempotent Mutations
+
+Mutating Task routes (`POST`, `PATCH`, `DELETE`) require `Idempotency-Key`. A NestJS global interceptor handles idempotency at the request/response boundary so it can cache the serialized controller response and status code.
+
+The `idempotency` table is keyed by `(user_id, idempotency_key)` and stores:
+
+- `request_hash`: hash of method, path, and request body.
+- `status_code`: response status to replay.
+- `response_body`: serialized response body to replay.
+- `expires_at`: 24-hour TTL.
+- `created_at`: audit timestamp.
+
+Matching retries within the TTL replay the cached response without re-applying the mutation. Same user/key with a different request hash returns `409`. Expired keys are treated as misses and can apply again.
+
 ## Architecture Decision Records
 
 ### ADR-M1-001: pnpm Workspace
@@ -238,6 +279,22 @@ Build `service-task` and `web_client` container images in parallel via a job mat
 ### ADR-M1-029: Tagged-Release Workflow
 
 `.github/workflows/cd-release.yml` triggers on `v*.*.*` tag pushes and performs five ordered steps: (1) pull the `:{sha}` images that `cd-publish.yml` produced for the tagged commit, (2) re-tag them as `:{semver}` and push the new tag (third tag per Decision #30's three-tag strategy), (3) sync `Chart.yaml`'s `version` + `appVersion` and `values.yaml`'s image `tag:` to the semver via `sed` in-workflow (no commit back to `main` — the source-tree values stay at `0.1.0` as authoritative chart sources), (4) package the chart, (5) create a GitHub Release via `softprops/action-gh-release@v2` with the packaged `.tgz` attached as a release asset. The workflow assumes `cd-publish.yml` has completed for the tagged commit; operator-side ordering of "wait for publish before tagging" is documented in the Spec 6 feature doc's release procedure.
+
+### ADR-M2-001: Client-Supplied UUID v7 Task Identity
+
+From M2 onward, `POST /tasks` requires `Task.id` as a client-supplied UUID v7. Offline-created Tasks need stable identity before network sync. This is separate from mutation idempotency.
+
+### ADR-M2-002: Header-Based Mutation Idempotency
+
+Use `Idempotency-Key` on `POST`, `PATCH`, and `DELETE` as operation identity. Store response snapshots by `(user_id, idempotency_key)` for 24 hours. Matching retries replay the cached status/body; different bodies with the same key return `409`.
+
+### ADR-M2-003: Last-Write-Wins Uses Client `updated_at`
+
+Use client-supplied `updated_at` as the conflict-resolution timestamp because it represents user intent time across offline devices. `server_updated_at` remains an audit field, not the conflict clock.
+
+### ADR-M2-004: Tombstones For Task Deletes
+
+Represent deletes as `deleted_at` tombstones so future sync clients can observe and propagate deletions across devices. Default reads hide tombstones; sync reads opt into them with `include_deleted=1`.
 
 ### ADR-M1-030: Helm Templates Excluded from Prettier
 

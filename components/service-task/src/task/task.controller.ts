@@ -1,5 +1,25 @@
-import { Body, Controller, Get, Inject, Post, Req } from '@nestjs/common';
-import { TaskInputSchema, type TaskInput, type TaskResponse } from '@psykl/shared-types';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
+import {
+  TaskDeleteInputSchema,
+  TaskInputSchema,
+  TaskPatchInputSchema,
+  type TaskDeleteInput,
+  type TaskInput,
+  type TaskPatchInput,
+  type TaskResponse,
+} from '@psykl/shared-types';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { TaskService } from './task.service.js';
 
@@ -20,7 +40,40 @@ export class TaskController {
   }
 
   @Get()
-  async list(@Req() req: RequestWithUser): Promise<TaskResponse[]> {
-    return this.tasks.listTasks(req.userId!);
+  async list(
+    @Req() req: RequestWithUser,
+    @Query('include_deleted') includeDeleted: string | undefined,
+  ): Promise<TaskResponse[]> {
+    return this.tasks.listTasks(req.userId!, { includeDeleted: this.parseIncludeDeleted(includeDeleted) });
+  }
+
+  @Patch(':id')
+  async patch(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(TaskPatchInputSchema)) body: TaskPatchInput,
+  ): Promise<TaskResponse> {
+    return this.tasks.patchTask(req.userId!, id, body);
+  }
+
+  @Delete(':id')
+  async delete(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(TaskDeleteInputSchema)) body: TaskDeleteInput,
+  ): Promise<TaskResponse> {
+    return this.tasks.deleteTask(req.userId!, id, body);
+  }
+
+  private parseIncludeDeleted(value: string | undefined): boolean {
+    if (value === undefined || value === '0') {
+      return false;
+    }
+
+    if (value === '1') {
+      return true;
+    }
+
+    throw new BadRequestException('include_deleted must be 0 or 1');
   }
 }

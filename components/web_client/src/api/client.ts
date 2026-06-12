@@ -22,5 +22,16 @@ export const taskRequestParams = {
   },
 } as const;
 
+export function taskMutationRequestParams(idempotencyKey: string) {
+  return {
+    params: {
+      header: {
+        'X-User-Id': 'local',
+        'Idempotency-Key': idempotencyKey,
+      },
+    },
+  } as const;
+}
+
 export type Task = paths['/tasks']['get']['responses']['200']['content']['application/json'][number];
 export type TaskInput = NonNullable<paths['/tasks']['post']['requestBody']>['content']['application/json'];
