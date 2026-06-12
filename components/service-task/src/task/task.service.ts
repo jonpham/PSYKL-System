@@ -55,6 +55,7 @@ export class TaskService {
         ...(input.completed_at !== undefined
           ? { completedAt: input.completed_at === null ? null : new Date(input.completed_at) }
           : {}),
+        deletedAt: null,
         updatedAt,
         serverUpdatedAt: new Date(),
       })

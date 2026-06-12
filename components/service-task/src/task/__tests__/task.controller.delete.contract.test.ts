@@ -81,14 +81,33 @@ describe('TaskController contract: delete', () => {
       });
     });
 
+    it('returns 400 when deleted_at differs from updated_at', async () => {
+      const id = validTaskId('023');
+      await api
+        .postTask({
+          idempotencyKey: validIdempotencyKey('025'),
+          body: taskCreateBody({ id, title: 'coherence', updated_at: '2026-05-20T12:00:00.000Z' }),
+        })
+        .expect(201);
+
+      // Given
+      const incoherentDeleteBody = taskDeleteBody({
+        deleted_at: '2026-05-20T12:00:00.000Z',
+        updated_at: '2026-05-20T12:05:00.000Z',
+      });
+
+      // When / Then
+      await api.deleteTask({ id, idempotencyKey: validIdempotencyKey('026'), body: incoherentDeleteBody }).expect(400);
+    });
+
     it('returns 404 when task does not exist', async () => {
-      const id = validTaskId('022');
+      const id = validTaskId('024');
 
       // Given
       const deleteBody = taskDeleteBody();
 
       // When / Then
-      await api.deleteTask({ id, idempotencyKey: validIdempotencyKey('024'), body: deleteBody }).expect(404);
+      await api.deleteTask({ id, idempotencyKey: validIdempotencyKey('027'), body: deleteBody }).expect(404);
     });
   });
 });

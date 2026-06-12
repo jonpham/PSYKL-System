@@ -62,7 +62,11 @@ export const TaskDeleteInputSchema = z
     deleted_at: TimestampSchema,
     updated_at: TimestampSchema,
   })
-  .strict();
+  .strict()
+  .refine((input) => input.deleted_at === input.updated_at, {
+    message: 'deleted_at must equal updated_at',
+    path: ['deleted_at'],
+  });
 
 export type TaskDeleteInput = z.infer<typeof TaskDeleteInputSchema>;
 
