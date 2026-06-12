@@ -10,7 +10,7 @@ export interface SyncQueueEntry {
   id: string;
   task_id: string;
   op: 'create' | 'patch' | 'delete';
-  body: JsonValue;
+  body: unknown;
   idempotency_key: string;
   attempts: number;
   next_attempt_at: string;
