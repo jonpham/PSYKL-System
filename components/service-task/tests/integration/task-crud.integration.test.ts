@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migrate } from 'drizzle-orm/pglite/migrator';
 import { v7 as uuidv7 } from 'uuid';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createDb, schema, type Db } from '../../src/db/index.js';
 
 describe('Drizzle + pglite Task CRUD', () => {
@@ -99,5 +99,78 @@ describe('Drizzle + pglite Task CRUD', () => {
     expect(row?.serverUpdatedAt).toBeInstanceOf(Date);
     expect(row?.completedAt).toBeNull();
     expect(row?.deletedAt).toBeNull();
+  });
+
+  it('patches a Task when updated_at is newer than the stored row', async () => {
+    const id = uuidv7();
+    await db.insert(schema.tasks).values({
+      id,
+      userId: 'local',
+      title: 'old',
+      updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+    });
+
+    const service = new (await import('../../src/task/task.service.js')).TaskService(db);
+    const patched = await service.patchTask('local', id, {
+      title: 'new',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+
+    expect(patched).toMatchObject({
+      id,
+      title: 'new',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+  });
+
+  it('returns current Task state when PATCH updated_at is stale', async () => {
+    const id = uuidv7();
+    await db.insert(schema.tasks).values({
+      id,
+      userId: 'local',
+      title: 'current',
+      updatedAt: new Date('2026-05-20T12:05:00.000Z'),
+    });
+
+    const service = new (await import('../../src/task/task.service.js')).TaskService(db);
+    const patched = await service.patchTask('local', id, {
+      title: 'stale',
+      updated_at: '2026-05-20T12:00:00.000Z',
+    });
+
+    expect(patched).toMatchObject({
+      id,
+      title: 'current',
+      updated_at: '2026-05-20T12:05:00.000Z',
+    });
+  });
+
+  it('clamps PATCH updated_at more than five minutes in the future', async () => {
+    const id = uuidv7();
+    await db.insert(schema.tasks).values({
+      id,
+      userId: 'local',
+      title: 'old',
+      updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+    });
+
+    const now = new Date('2026-05-20T12:10:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    try {
+      const service = new (await import('../../src/task/task.service.js')).TaskService(db);
+      const patched = await service.patchTask('local', id, {
+        title: 'clamped',
+        updated_at: '2026-05-20T12:16:00.000Z',
+      });
+
+      expect(patched).toMatchObject({
+        id,
+        title: 'clamped',
+        updated_at: '2026-05-20T12:10:00.000Z',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
