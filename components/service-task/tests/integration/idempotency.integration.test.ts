@@ -112,4 +112,30 @@ describe('IdempotencyService + pglite', () => {
     // When / Then
     await expect(service.findCachedResponse('local', 'integration-expired', secondHash)).resolves.toBeNull();
   });
+
+  it('does not delete a fresh reservation when cleaning up a stale expired row', async () => {
+    const staleHash = service.hashRequest({ method: 'POST', path: '/tasks', body: { title: 'expired stale' } });
+    const freshHash = service.hashRequest({ method: 'POST', path: '/tasks', body: { title: 'fresh pending' } });
+    await cacheResponse('integration-expired-race', staleHash, { title: 'expired stale' });
+    await db
+      .update(schema.idempotency)
+      .set({ expiresAt: new Date('2026-05-20T11:00:00.000Z') })
+      .where(eq(schema.idempotency.idempotencyKey, 'integration-expired-race'));
+    const [staleRow] = await db
+      .select()
+      .from(schema.idempotency)
+      .where(eq(schema.idempotency.idempotencyKey, 'integration-expired-race'));
+    await db.delete(schema.idempotency).where(eq(schema.idempotency.idempotencyKey, 'integration-expired-race'));
+    await service.reserveRequest('local', 'integration-expired-race', freshHash);
+
+    // Given
+    expect(staleRow).toBeDefined();
+
+    // When
+    await (service as any).deleteExpiredRecord(staleRow);
+    const state = await service.reserveRequest('local', 'integration-expired-race', freshHash);
+
+    // Then
+    expect(state).toEqual({ kind: 'pending' });
+  });
 });

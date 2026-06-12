@@ -80,7 +80,7 @@ export class TaskService {
     const [row] = await this.db
       .update(schema.tasks)
       .set({
-        deletedAt: this.clampFutureTimestamp(new Date(input.deleted_at)),
+        deletedAt: updatedAt,
         updatedAt,
         serverUpdatedAt: new Date(),
       })

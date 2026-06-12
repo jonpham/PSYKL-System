@@ -1,6 +1,7 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
 import { schema, type Db } from '../db/index.js';
+import type { IdempotencyRow } from '../db/schema/idempotency.js';
 import { DB_TOKEN } from '../task/task.service.js';
 import {
   IDEMPOTENCY_TTL_MS,
@@ -31,7 +32,7 @@ export class IdempotencyService {
     }
 
     if (row.expiresAt.getTime() <= Date.now()) {
-      await this.deleteRecord(userId, idempotencyKey);
+      await this.deleteExpiredRecord(row);
       return null;
     }
 
@@ -73,7 +74,7 @@ export class IdempotencyService {
     }
 
     if (row.expiresAt.getTime() <= Date.now()) {
-      await this.deleteRecord(userId, idempotencyKey);
+      await this.deleteExpiredRecord(row);
       return this.reserveRequest(userId, idempotencyKey, requestHash);
     }
 
@@ -141,9 +142,16 @@ export class IdempotencyService {
     );
   }
 
-  private async deleteRecord(userId: string, idempotencyKey: string): Promise<void> {
+  private async deleteExpiredRecord(row: IdempotencyRow): Promise<void> {
     await this.db
       .delete(schema.idempotency)
-      .where(and(eq(schema.idempotency.userId, userId), eq(schema.idempotency.idempotencyKey, idempotencyKey)));
+      .where(
+        and(
+          eq(schema.idempotency.userId, row.userId),
+          eq(schema.idempotency.idempotencyKey, row.idempotencyKey),
+          eq(schema.idempotency.requestHash, row.requestHash),
+          eq(schema.idempotency.expiresAt, row.expiresAt),
+        ),
+      );
   }
 }
