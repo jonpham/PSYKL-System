@@ -115,7 +115,7 @@ When invoking `superpowers:subagent-driven-development` or dispatching long-live
 
 ### Test Discipline (TDD + Full Test Pyramid)
 
-- **TDD is mandatory.** Order: failing test → implementation → green → refactor. Never the reverse.
+- **TDD is mandatory.** Order: failing test → implementation → green → refactor. Never the reverse. For user-facing Specs, first commit the intended End-to-End scenario as an inactive Playwright test (`test.skip` / `test.describe.skip`) when behavior does not exist yet, then activate it as implementation lands.
 - **Five-layer pyramid, established from M1 and run on every PR in CI** (fastest at base, slowest at top):
   1. **Static Analysis** — lint + format + compile + type-check (TS: ESLint + Prettier + `tsc`; Swift: SwiftLint + swift-format + swiftc). Runs FIRST; failure blocks every other layer.
   2. **Unit** — pure functions, classes, single UI Components in isolation. No I/O, no network.
@@ -130,47 +130,89 @@ When invoking `superpowers:subagent-driven-development` or dispatching long-live
 
 Convention applies to every `components/*` and every `packages/*`. One CI glob catches each layer.
 
-| Layer           | Location                                                                                                                                                                                      | Pattern                                                                      | Run                                                         |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Static Analysis | Per-package root configs (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`)                                                                                                          | n/a — all source                                                             | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
-| Unit            | Colocated in `src/`                                                                                                                                                                           | `*.unit.test.{ts,tsx}`                                                       | `pnpm -r test:unit`                                         |
-| Integration     | Per-component `tests/integration/` (skipped for packages with no service-level concerns)                                                                                                      | `*.integration.test.ts`                                                      | `pnpm -r test:integration`                                  |
-| Component       | Colocated next to boundary. Services: contract tests by the controller. UI apps: **Storybook 8 + `@storybook/test-runner` + play functions + `msw-storybook-addon`** (per Decisions #33/#34). | `*.contract.test.ts` (services); `*.stories.tsx` w/ play functions (UI apps) | `pnpm -r test:component`                                    |
-| E2E             | Repo-root `e2e/` (Apple-native may use per-component `e2e/` in M3)                                                                                                                            | `*.e2e.spec.ts`                                                              | `pnpm test:e2e`                                             |
+| Layer           | Location                                                                                                                                                                           | Pattern                                                                      | Run                                                         |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Static Analysis | Per-package root configs (`eslint.config.js`, `prettier.config.js`, `tsconfig.json`)                                                                                               | n/a — all source                                                             | `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check` |
+| Unit            | Child `__tests__/` directory under the source boundary or UI Component directory.                                                                                                  | `*.unit.test.{ts,tsx}`                                                       | `pnpm -r test:unit`                                         |
+| Integration     | Per-component `tests/integration/` (skipped for packages with no service-level concerns)                                                                                           | `*.integration.test.ts`                                                      | `pnpm -r test:integration`                                  |
+| Component       | Child `__tests__/` directory under the source boundary or UI Component directory. UI apps use **Storybook 8 + `@storybook/test-runner` + play functions + `msw-storybook-addon`**. | `*.contract.test.ts` (services); `*.stories.tsx` w/ play functions (UI apps) | `pnpm -r test:component`                                    |
+| E2E             | Repo-root `e2e/` (Apple-native may use per-component `e2e/` in M3)                                                                                                                 | `*.e2e.spec.ts`                                                              | `pnpm test:e2e`                                             |
 
 Example layout (one tree covers both system components):
 
 ```
 components/service-task/src/
   task/
+    __tests__/
+      task.controller.create-list.contract.test.ts ← Component
+      task.service.create-list.unit.test.ts        ← Unit
     task.controller.ts
-    task.controller.contract.test.ts       ← Component
     task.service.ts
-    task.service.unit.test.ts              ← Unit
   auth/
+    __tests__/
+      user-id.guard.contract.test.ts       ← Component (negative-path default-deny)
     user-id.guard.ts
-    user-id.guard.contract.test.ts         ← Component (negative-path default-deny)
 components/service-task/tests/integration/
-  task-crud.integration.test.ts            ← Integration
+  task-persistence.integration.test.ts     ← Integration
+  task-soft-delete.integration.test.ts     ← Integration
 
 components/web_client/src/components/TaskList/
+  __tests__/
+    TaskList.unit.test.tsx                 ← Unit
+    TaskList.stories.tsx                   ← Component (Storybook play function, MSW)
   TaskList.tsx
-  TaskList.unit.test.tsx                   ← Unit
-  TaskList.stories.tsx                     ← Component (Storybook play function, MSW)
   index.ts                                 ← re-export
   TaskRow/                                 ← Nesting: child consumed only by TaskList
+    __tests__/
+      TaskRow.unit.test.tsx
     TaskRow.tsx
-    TaskRow.unit.test.tsx
     index.ts
 
 e2e/m1-task-crud.e2e.spec.ts               ← E2E
 ```
 
+#### Test Structure Convention
+
+Mechanical style rules belong in static analysis, not only agent instructions. ESLint enforces the source file line cap and one declaration per `const`/`let`/`var` statement so non-agent contributors get the same feedback locally and in continuous integration.
+
+**API Component tests use Given / When / Then.** Applies to service Unit tests (`*.unit.test.ts`), service Component contract tests (`*.contract.test.ts`), and service Integration tests (`tests/integration/*.integration.test.ts`).
+
+- Put required setup that is not the test-specific condition above `// Given`.
+- Put the unique input, state, or condition that drives the assertion below `// Given`.
+- Use `// When` for the action under test when a response or result is captured.
+- Use `// Then` for assertions.
+- Use `// When / Then` for status-only assertions where the request/result and assertion are one fluent chain.
+- Prefer route-scoped `describe()` blocks for HTTP contract tests, such as `describe('POST /tasks')`.
+- Prefer request helpers and payload builders over repeated raw `supertest` boilerplate.
+
+API Component tests may include short documentation comments when the behavior under test is implemented outside the immediately tested file. These comments are part of the test's documentation role: high-level tests should explain behavior and point readers to the lower-level implementation owner.
+
+Use this form:
+
+```ts
+/**
+ * Behavior enforced by:
+ * components/service-task/src/idempotency/idempotency.interceptor.ts
+ */
+```
+
+- Prefer one ownership comment per `describe()` block when several tests exercise the same lower-level behavior.
+- Reference the responsible file/module.
+- Keep comments factual and focused on ownership boundaries.
+- Do not comment obvious controller-local behavior.
+
+**UI Component tests use Arrange / Act / Assert.** Applies to UI Component Unit tests (`*.unit.test.tsx`) and Storybook play functions (`*.stories.tsx`).
+
+- `// Arrange` sets up render state, props, handlers, and mocked boundaries.
+- `// Act` performs user interaction or lifecycle triggers.
+- `// Assert` verifies visible behavior or callback effects.
+- Use comments where they improve scanning; avoid comments that merely repeat the next line.
+
 #### UI Component Folder Layout
 
 > "UI Component" = React/SwiftUI/etc. presentation unit inside a system application, distinct from the top-level `components/` directory (e.g., `web_client`, `service-task`).
 
-- Every UI Component gets its own directory from creation: `<Name>.tsx`, colocated tests (`*.unit.test.tsx`, `*.stories.tsx`), helpers, styles, and `index.ts` re-export. No flat files in `src/components/`.
+- Every UI Component gets its own directory from creation: `<Name>.tsx`, child `__tests__/` directory for `*.unit.test.tsx` and `*.stories.tsx`, helpers, styles, and `index.ts` re-export. No flat files in `src/components/`.
 - **Nesting rule:** if a UI Component is consumed by exactly one parent, nest it as a subdirectory of that parent (see `TaskRow/` under `TaskList/` in the example above). Promote back up to `src/components/<Name>/` only when a second consumer appears.
 - **Root-page exception:** top-level pages / routes (`App.tsx`, `src/pages/*`) may stay flat — they're the application shell with no parent.
 

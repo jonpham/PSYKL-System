@@ -13,12 +13,13 @@ export default [
       '**/tsconfig.tsbuildinfo',
       '**/storybook-static/**',
       '**/public/mockServiceWorker.js',
+      '**/src/api/types.ts',
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.js', '**/*.ts'],
+    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -26,9 +27,13 @@ export default [
         ...globals.node,
       },
     },
+    rules: {
+      'max-lines': ['error', { max: 150, skipBlankLines: true, skipComments: true }],
+      'one-var': ['error', 'never'],
+    },
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',

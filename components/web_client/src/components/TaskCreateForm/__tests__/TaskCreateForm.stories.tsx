@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from '@storybook/test';
-import { TaskCreateForm } from './TaskCreateForm';
+import { TaskCreateForm } from '../TaskCreateForm';
 
 const meta: Meta<typeof TaskCreateForm> = {
   title: 'PSYKL/TaskCreateForm',

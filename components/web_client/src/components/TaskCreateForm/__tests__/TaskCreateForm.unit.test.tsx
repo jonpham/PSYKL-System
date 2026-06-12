@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { TaskCreateForm } from './TaskCreateForm';
+import { TaskCreateForm } from '../TaskCreateForm';
 
 describe('TaskCreateForm (Unit)', () => {
   it('renders an input and a Create button', () => {

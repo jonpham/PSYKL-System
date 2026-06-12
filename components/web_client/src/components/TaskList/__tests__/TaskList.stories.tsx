@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
 import { HttpResponse, http } from 'msw';
-import App from '../../App';
-import type { Task } from '../../api/client';
-import { TaskList } from './TaskList';
+import App from '../../../App';
+import type { Task } from '../../../api/client';
+import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {
   title: 'PSYKL/TaskList',
