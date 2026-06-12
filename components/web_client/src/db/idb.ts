@@ -2,16 +2,18 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Task } from '../api/client';
 
 const databaseName = 'psykl';
-const databaseVersion = 1;
+export const CURRENT_SCHEMA_VERSION = 1;
 
 type JsonValue = boolean | number | string | null | JsonValue[] | { [key: string]: JsonValue };
 
 export interface SyncQueueEntry {
   id: string;
   task_id: string;
-  type: 'task.create' | 'task.patch' | 'task.delete';
-  payload: JsonValue;
+  op: 'create' | 'patch' | 'delete';
+  body: JsonValue;
   idempotency_key: string;
+  attempts: number;
+  next_attempt_at: string;
   created_at: string;
 }
 
@@ -60,29 +62,10 @@ interface PsyklDbSchema extends DBSchema {
 export type PsyklDb = IDBPDatabase<PsyklDbSchema>;
 
 export async function openPsyklDb(): Promise<PsyklDb> {
-  return openDB<PsyklDbSchema>(databaseName, databaseVersion, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains('failed_ops')) {
-        const failedOps = db.createObjectStore('failed_ops', { keyPath: 'id' });
-        failedOps.createIndex('created_at', 'created_at');
-        failedOps.createIndex('task_id', 'task_id');
-      }
-
-      if (!db.objectStoreNames.contains('sync_meta')) {
-        db.createObjectStore('sync_meta', { keyPath: 'key' });
-      }
-
-      if (!db.objectStoreNames.contains('sync_queue')) {
-        const syncQueue = db.createObjectStore('sync_queue', { keyPath: 'id' });
-        syncQueue.createIndex('created_at', 'created_at');
-        syncQueue.createIndex('task_id', 'task_id');
-      }
-
-      if (!db.objectStoreNames.contains('tasks')) {
-        const tasks = db.createObjectStore('tasks', { keyPath: 'id' });
-        tasks.createIndex('deleted_at', 'deleted_at');
-        tasks.createIndex('updated_at', 'updated_at');
-        tasks.createIndex('user_id', 'user_id');
+  return openDB<PsyklDbSchema>(databaseName, CURRENT_SCHEMA_VERSION, {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        createV1Stores(db);
       }
     },
   });
@@ -122,6 +105,24 @@ export async function putMeta(entry: SyncMetaEntry, db?: PsyklDb): Promise<void>
   return withDb(db, async (database) => {
     await database.put('sync_meta', entry);
   });
+}
+
+export async function getMeta(key: string, db?: PsyklDb): Promise<SyncMetaEntry | undefined> {
+  return withDb(db, async (database) => database.get('sync_meta', key));
+}
+
+function createV1Stores(db: PsyklDb): void {
+  const failedOps = db.createObjectStore('failed_ops', { keyPath: 'id' });
+  failedOps.createIndex('created_at', 'created_at');
+  failedOps.createIndex('task_id', 'task_id');
+  db.createObjectStore('sync_meta', { keyPath: 'key' });
+  const syncQueue = db.createObjectStore('sync_queue', { keyPath: 'id' });
+  syncQueue.createIndex('created_at', 'created_at');
+  syncQueue.createIndex('task_id', 'task_id');
+  const tasks = db.createObjectStore('tasks', { keyPath: 'id' });
+  tasks.createIndex('deleted_at', 'deleted_at');
+  tasks.createIndex('updated_at', 'updated_at');
+  tasks.createIndex('user_id', 'user_id');
 }
 
 async function withDb<T>(db: PsyklDb | undefined, callback: (database: PsyklDb) => Promise<T>): Promise<T> {
