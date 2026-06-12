@@ -158,6 +158,28 @@ The `idempotency` table is keyed by `(user_id, idempotency_key)` and stores:
 
 Matching retries within the TTL replay the cached response without re-applying the mutation. Same user/key with a different request hash returns `409`. Expired keys are treated as misses and can apply again.
 
+## M2 PWA IndexedDB Read Model
+
+M2 Spec 2 makes `components/web_client` read Tasks from browser storage instead of React-owned fetch state.
+
+The PWA owns an IndexedDB database named `psykl`, opened through the `idb` package. Schema version 1 creates four stores:
+
+- `tasks`: server Task wire rows keyed by `id`, with `user_id`, `updated_at`, and `deleted_at` indexes.
+- `sync_queue`: future offline mutation operations keyed by operation `id`, with `task_id` and `created_at` indexes.
+- `sync_meta`: key/value metadata for future sync state.
+- `failed_ops`: future permanent-failure records keyed by operation `id`, with `created_at` and `task_id` indexes.
+
+`useTasks()` is the React boundary over that external store. It uses `useSyncExternalStore` so render snapshots come from IndexedDB, not from component-local fetched state. Cold-start hydration calls `GET /tasks?include_deleted=1`, writes returned rows into IndexedDB, and reloads the snapshot. Tombstoned rows remain stored locally for reconciliation but are filtered out of the visible Task list.
+
+Task writes in M2 Spec 2 still call the service directly. After a successful create, `TaskCreateForm` writes the returned Task row into IndexedDB and calls `notifyTasksChanged()`. Spec 3 replaces that direct mutation path with the sync queue.
+
+Store invalidation is deliberately small:
+
+- Same-tab writers call `notifyTasksChanged()`.
+- Cross-tab updates use `BroadcastChannel('psykl-idb')`.
+
+Storybook Component tests and Vitest tests reset the IndexedDB database between scenarios so local browser storage does not leak across tests.
+
 ## Architecture Decision Records
 
 ### ADR-M1-001: pnpm Workspace
@@ -295,6 +317,26 @@ Use client-supplied `updated_at` as the conflict-resolution timestamp because it
 ### ADR-M2-004: Tombstones For Task Deletes
 
 Represent deletes as `deleted_at` tombstones so future sync clients can observe and propagate deletions across devices. Default reads hide tombstones; sync reads opt into them with `include_deleted=1`.
+
+### ADR-M2-005: IndexedDB Is The PWA Read Source Of Truth
+
+Use browser IndexedDB as the Task read source of truth in `web_client`. Network reads hydrate the local store; UI Components render local snapshots. This removes drift between fetched React state and future offline sync state.
+
+### ADR-M2-006: React Reads IndexedDB Through `useSyncExternalStore`
+
+Expose Task snapshots through `useTasks()`, implemented with React `useSyncExternalStore`. The hook is the boundary between React rendering and the external IndexedDB store.
+
+### ADR-M2-007: BroadcastChannel Handles Cross-Tab Store Invalidation
+
+Use explicit same-tab notifications for local writes and `BroadcastChannel('psykl-idb')` for cross-tab invalidation. Avoid adding a third-party state-sync library while the browser already provides the needed primitive.
+
+### ADR-M2-008: IndexedDB Upgrade Logic Lives With Store Helpers
+
+Keep schema-version creation and future upgrade checks in `components/web_client/src/db/idb.ts`, next to typed store helpers. Future versions append cumulative `oldVersion < N` checks so migrations remain ordered and reviewable.
+
+### ADR-M2-009: fake-indexeddb Covers Browser Storage Tests Below E2E
+
+Use `fake-indexeddb` for fast Unit and Integration coverage of IndexedDB behavior in Vitest. Storybook Component tests provide browser-runtime coverage for the visible PWA paths, and M2 Spec 6 adds full End-to-End offline coverage.
 
 ### ADR-M1-030: Helm Templates Excluded from Prettier
 

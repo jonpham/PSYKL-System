@@ -1,12 +1,8 @@
-import type { Task } from '../../api/client';
+import { useTasks } from '../../hooks/useTasks';
 
-interface TaskListProps {
-  tasks: Task[];
-  loading: boolean;
-  error: string | null;
-}
+export function TaskList() {
+  const { error, loading, tasks } = useTasks();
 
-export function TaskList({ tasks, loading, error }: TaskListProps) {
   if (loading) {
     return <p>Loading...</p>;
   }

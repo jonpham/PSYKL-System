@@ -1,8 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Task } from '../../../api/client';
 import { TaskList } from '../TaskList';
+
+const mockUseTasks = vi.hoisted(() => vi.fn());
+
+vi.mock('../../../hooks/useTasks', () => ({
+  useTasks: mockUseTasks,
+}));
 
 const sampleTasks: Task[] = [
   {
@@ -28,27 +34,53 @@ const sampleTasks: Task[] = [
 ];
 
 describe('TaskList (Unit)', () => {
+  beforeEach(() => {
+    mockUseTasks.mockReturnValue({
+      error: null,
+      loading: false,
+      tasks: sampleTasks,
+    });
+  });
+
   it('renders each task title', () => {
-    render(<TaskList tasks={sampleTasks} loading={false} error={null} />);
+    render(<TaskList />);
 
     expect(screen.getByText('one')).toBeInTheDocument();
     expect(screen.getByText('two')).toBeInTheDocument();
   });
 
   it('renders an empty-state message when there are no tasks', () => {
-    render(<TaskList tasks={[]} loading={false} error={null} />);
+    mockUseTasks.mockReturnValue({
+      error: null,
+      loading: false,
+      tasks: [],
+    });
+
+    render(<TaskList />);
 
     expect(screen.getByText(/no tasks yet/i)).toBeInTheDocument();
   });
 
   it('renders a loading state when loading is true', () => {
-    render(<TaskList tasks={[]} loading={true} error={null} />);
+    mockUseTasks.mockReturnValue({
+      error: null,
+      loading: true,
+      tasks: [],
+    });
+
+    render(<TaskList />);
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 
   it('renders an error message when error is set', () => {
-    render(<TaskList tasks={[]} loading={false} error="boom" />);
+    mockUseTasks.mockReturnValue({
+      error: 'boom',
+      loading: false,
+      tasks: [],
+    });
+
+    render(<TaskList />);
 
     expect(screen.getByText(/boom/i)).toBeInTheDocument();
   });

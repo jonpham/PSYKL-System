@@ -46,7 +46,7 @@
 | Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
-## M2 PWA CRUD + Offline-First (Spec 1 shipped)
+## M2 PWA CRUD + Offline-First (Specs 1-2 shipped)
 
 | Layer                         | Choice                                                                                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -58,12 +58,18 @@
 | Idempotency persistence       | Drizzle-managed `idempotency` table in pglite with request hash, status code, response body, expiry, and created timestamp                 |
 | Service contract verification | Zod schema Unit tests, Drizzle+pglite Integration tests, NestJS HTTP Component contract tests, generated OpenAPI through `verify:prepare`  |
 | PWA mutation key generation   | `web_client` uses UUID v7 for per-operation `Idempotency-Key` when creating Tasks through the typed OpenAPI client                         |
+| Browser data store            | IndexedDB database `psykl` through the `idb` package, schema version 1                                                                     |
+| PWA local stores              | `tasks`, `sync_queue`, `sync_meta`, and `failed_ops`; Task rows mirror the service wire shape                                              |
+| PWA read source of truth      | `useTasks()` hook backed by React `useSyncExternalStore` over IndexedDB snapshots                                                          |
+| PWA cold-start hydration      | `GET /tasks?include_deleted=1` writes server rows, including tombstones, into IndexedDB before rendering visible non-deleted Tasks         |
+| PWA store invalidation        | Same-tab `notifyTasksChanged()` plus `BroadcastChannel('psykl-idb')` for cross-tab invalidation                                            |
+| Browser storage test shim     | `fake-indexeddb` for web_client Unit and Integration tests                                                                                 |
 
 ## Pending (planned, not shipped)
 
 | Layer                | Choice                                                       | Lands in |
 | -------------------- | ------------------------------------------------------------ | -------- |
-| Offline-first store  | TBD (IndexedDB shape + sync queue implementation)            | M2       |
 | Sync engine          | TBD (client-side operation queue and replay against M2 API)  | M2       |
+| Service worker sync  | TBD (app-shell caching plus Background Sync integration)     | M2       |
 | Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD | M3       |
 | Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)       | M4       |
