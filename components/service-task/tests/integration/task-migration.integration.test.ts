@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/pglite';
 import { migrate } from 'drizzle-orm/pglite/migrator';
 import { v7 as uuidv7 } from 'uuid';
 import { describe, expect, it } from 'vitest';
+
 import { schema } from '../../src/db/index.js';
 
 describe('Drizzle + pglite Task migrations', () => {

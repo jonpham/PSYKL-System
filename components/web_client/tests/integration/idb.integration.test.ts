@@ -1,8 +1,10 @@
 import 'fake-indexeddb/auto';
+
 import { deleteDB } from 'idb';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { Task } from '../api/client';
-import { getTask, openPsyklDb, putTask } from './idb';
+
+import type { Task } from '../../src/api/client';
+import { getTask, openPsyklDb, putTask } from '../../src/db/idb';
 
 const databaseName = 'psykl';
 

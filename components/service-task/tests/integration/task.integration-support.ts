@@ -1,5 +1,6 @@
 import { v7 as uuidv7 } from 'uuid';
-import { createDb, schema, type Db } from '../../src/db/index.js';
+
+import { createDb, type Db, schema } from '../../src/db/index.js';
 import { TaskService } from '../../src/task/task.service.js';
 
 export async function createIntegrationDb(): Promise<Db> {

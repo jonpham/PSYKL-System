@@ -1,7 +1,9 @@
 import 'fake-indexeddb/auto';
+
 import { deleteDB } from 'idb';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { Task } from '../api/client';
+
+import type { Task } from '../../api/client';
 import {
   CURRENT_SCHEMA_VERSION,
   deleteTask,
@@ -13,7 +15,7 @@ import {
   openPsyklDb,
   putMeta,
   putTask,
-} from './idb';
+} from '../idb';
 
 const databaseName = 'psykl';
 

@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom/vitest';
-import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+
 import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+
 import { handlers, resetStore } from './msw-handlers';
 
 export const server = setupServer(...handlers);

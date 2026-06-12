@@ -61,13 +61,13 @@ The PWA's offline-first promise is real. Edits never block on network. The queue
 
 - `components/web_client/` (extended):
   - `src/sync/replay.ts` (new — shared replay module).
-  - `src/sync/replay.unit.test.ts`, `src/sync/replay.integration.test.ts` (new test files).
+  - `src/sync/__tests__/replay.unit.test.ts`, `tests/integration/replay.integration.test.ts` (new test files).
   - `src/sync/lock.ts` (new — IDB-backed replay lock with 30s stale timeout).
   - `src/sync/triggers.ts` (new — page-side `online` / `visibilitychange` / post-write trigger registration).
-  - `src/sync/triggers.component.test.tsx` (new — trigger contract tests).
-  - `src/components/TaskList.tsx` (extended — opacity + dot rendering for queued rows).
-  - `src/components/PendingIndicator.tsx` (new — the dot component, reusable).
-  - `src/components/Toast.tsx` (new — toast surface, also used in Spec 5).
+  - `src/sync/__tests__/triggers.unit.test.ts` (new — trigger contract tests).
+  - `src/components/TaskList/TaskList.tsx` (extended — opacity + dot rendering for queued rows).
+  - `src/components/TaskList/PendingIndicator/PendingIndicator.tsx` (new — the dot component, private to TaskList until a second consumer exists).
+  - `src/components/Toast/Toast.tsx` (new — toast surface, also used in Spec 5).
   - `src/hooks/useSyncEvents.ts` (new — subscription to `sync:*` events for UI consumers).
 
 ## Design Decisions

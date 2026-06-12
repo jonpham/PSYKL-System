@@ -59,13 +59,14 @@ The PWA's UI is fully IDB-backed for reads. Network is only used for the initial
 
 - `components/web_client/` (extended):
   - `src/db/idb.ts` (new — `idb` integration, store schemas, upgrade callback).
-  - `src/db/idb.unit.test.ts`, `src/db/idb.integration.test.ts` (new test files).
+  - `src/db/idb.types.ts` (new — shared IDB row and schema types).
+  - `src/db/__tests__/idb.unit.test.ts`, `tests/integration/idb.integration.test.ts` (new test files).
   - `src/hooks/useTasks.ts` (new — `useSyncExternalStore` wrapper).
-  - `src/hooks/useTasks.component.test.tsx` (new — hook contract tests).
+  - `src/hooks/__tests__/useTasks.unit.test.tsx` (new — hook subscription tests).
   - `src/db/events.ts` (new — `EventTarget` + `BroadcastChannel` subscription bus).
   - `src/api/hydrate.ts` (new — cold-start hydration from `GET /tasks`).
-  - `src/components/TaskList.tsx` (refactor — read from `useTasks()` instead of inline fetch).
-  - `src/components/TaskCreateForm.tsx` (refactor — write to IDB directly; sync wiring comes in Spec 3).
+  - `src/components/TaskList/TaskList.tsx` (refactor — read from `useTasks()` instead of inline fetch).
+  - `src/components/TaskCreateForm/TaskCreateForm.tsx` (refactor — write to IDB directly; sync wiring comes in Spec 3).
   - `package.json` (add `idb`, `fake-indexeddb` dependencies).
 
 ## Design Decisions

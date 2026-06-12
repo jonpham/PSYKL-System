@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -27,9 +28,14 @@ export default [
         ...globals.node,
       },
     },
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
     rules: {
       'max-lines': ['error', { max: 150, skipBlankLines: true, skipComments: true }],
       'one-var': ['error', 'never'],
+      'simple-import-sort/exports': 'error',
+      'simple-import-sort/imports': 'error',
     },
   },
   {
