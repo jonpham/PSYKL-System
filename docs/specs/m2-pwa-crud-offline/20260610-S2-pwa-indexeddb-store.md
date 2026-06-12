@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN_PROGRESS
 issue: P2
 pr:
 completed_at:
@@ -7,7 +7,7 @@ created_at: 2026-06-10
 initiative: m2-pwa-crud-offline
 spec_number: 2
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
 step_gating: false
 honors_decisions: [37, 38, 39, 40, 46, 55]
 ---
@@ -90,13 +90,13 @@ Spec integration branch: `spec/m2-s2-pwa-indexeddb-store`.
 **Branch:** `feat/m2-s2-dt5-idb-store`
 **Affected:** `components/web_client/src/db/idb.ts`, `components/web_client/src/db/idb.unit.test.ts`, `components/web_client/src/db/idb.integration.test.ts`, `components/web_client/package.json`, lockfile.
 
-- [ ] Step 1: Add `idb` and `fake-indexeddb` dependencies.
-- [ ] Step 2: Write failing unit tests for opening database version 1 and all four stores.
-- [ ] Step 3: Write failing tests for `putTask`, `listTasks`, `getTask`, `deleteTask`, `enqueueSyncOp`, `listSyncQueue`, and `putMeta`.
-- [ ] Step 4: Implement `src/db/idb.ts` with typed store helpers.
-- [ ] Step 5: Write upgrade integration test proving a version 0/empty database upgrades to version 1 and preserves inserted tasks across reopen.
-- [ ] Step 6: Run `pnpm --filter @psykl/web-client test:unit` and targeted IDB integration command used by the component package.
-- [ ] Step 7: Commit with `feat: add pwa indexeddb task store`.
+- [x] Step 1: Add `idb` and `fake-indexeddb` dependencies.
+- [x] Step 2: Write failing unit tests for opening database version 1 and all four stores.
+- [x] Step 3: Write failing tests for `putTask`, `listTasks`, `getTask`, `deleteTask`, `enqueueSyncOp`, `listSyncQueue`, and `putMeta`.
+- [x] Step 4: Implement `src/db/idb.ts` with typed store helpers.
+- [x] Step 5: Write upgrade integration test proving a version 0/empty database upgrades to version 1 and preserves inserted tasks across reopen.
+- [x] Step 6: Run `pnpm --filter @psykl/web-client test:unit` and targeted IDB integration command used by the component package.
+- [x] Step 7: Commit with `feat: add pwa indexeddb task store`.
 
 ### DevTask M2-6: Add useTasks and refactor UI reads
 
