@@ -43,6 +43,18 @@ describe('buildOpenApiDocument', () => {
     expect(findIdempotencyKey(getParams)).toBeUndefined();
   });
 
+  it('declares Idempotency-Key as UUID v7 on mutating endpoints', () => {
+    const doc = buildOpenApiDocument();
+    const postParams = doc.paths?.['/tasks']?.post?.parameters ?? [];
+    const idempotencyKey = postParams.find((parameter) => parameter.name === 'Idempotency-Key');
+
+    expect(idempotencyKey).toMatchObject({
+      schema: expect.objectContaining({
+        pattern: expect.stringContaining('-7'),
+      }),
+    });
+  });
+
   it('declares PATCH /tasks/{id} path parameter and body schema', () => {
     const doc = buildOpenApiDocument();
     const patchOperation = doc.paths?.['/tasks/{id}']?.patch;

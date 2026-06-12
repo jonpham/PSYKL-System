@@ -3,6 +3,7 @@ import {
   taskControllerHarness,
   taskCreateBody,
   taskPatchBody,
+  validIdempotencyKey,
   validTaskId,
 } from './task.controller.contract-support.js';
 
@@ -21,7 +22,7 @@ describe('TaskController contract: update', () => {
       const id = validTaskId('010');
       await api
         .postTask({
-          idempotencyKey: 'contract-patch-create-valid',
+          idempotencyKey: validIdempotencyKey('010'),
           body: taskCreateBody({ id, title: 'before', updated_at: '2026-05-20T12:00:00.000Z' }),
         })
         .expect(201);
@@ -30,7 +31,7 @@ describe('TaskController contract: update', () => {
       const patchBody = taskPatchBody({ title: 'after', updated_at: '2026-05-20T12:05:00.000Z' });
 
       // When
-      const res = await api.patchTask({ id, idempotencyKey: 'contract-patch-valid', body: patchBody }).expect(200);
+      const res = await api.patchTask({ id, idempotencyKey: validIdempotencyKey('011'), body: patchBody }).expect(200);
 
       // Then
       expect(res.body).toMatchObject({
@@ -45,7 +46,7 @@ describe('TaskController contract: update', () => {
       const id = validTaskId('011');
       await api
         .postTask({
-          idempotencyKey: 'contract-patch-create-stale',
+          idempotencyKey: validIdempotencyKey('012'),
           body: taskCreateBody({ id, title: 'current', updated_at: '2026-05-20T12:05:00.000Z' }),
         })
         .expect(201);
@@ -57,7 +58,9 @@ describe('TaskController contract: update', () => {
       });
 
       // When
-      const res = await api.patchTask({ id, idempotencyKey: 'contract-patch-stale', body: olderPatchBody }).expect(200);
+      const res = await api
+        .patchTask({ id, idempotencyKey: validIdempotencyKey('013'), body: olderPatchBody })
+        .expect(200);
 
       // Then
       expect(res.body).toMatchObject({
@@ -74,7 +77,7 @@ describe('TaskController contract: update', () => {
       const invalidBody = { title: '' };
 
       // When / Then
-      await api.patchTask({ id, idempotencyKey: 'contract-patch-invalid', body: invalidBody }).expect(400);
+      await api.patchTask({ id, idempotencyKey: validIdempotencyKey('014'), body: invalidBody }).expect(400);
     });
 
     it('returns 404 when task does not exist', async () => {
@@ -84,7 +87,7 @@ describe('TaskController contract: update', () => {
       const patchBody = taskPatchBody({ title: 'missing' });
 
       // When / Then
-      await api.patchTask({ id, idempotencyKey: 'contract-patch-missing', body: patchBody }).expect(404);
+      await api.patchTask({ id, idempotencyKey: validIdempotencyKey('015'), body: patchBody }).expect(404);
     });
   });
 });

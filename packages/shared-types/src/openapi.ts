@@ -43,15 +43,12 @@ export function buildOpenApiDocument(): ReturnType<OpenApiGeneratorV31['generate
     }),
   });
   const mutatingHeaders = userIdHeader.extend({
-    'Idempotency-Key': z
-      .string()
-      .min(1)
-      .openapi({
-        param: {
-          name: 'Idempotency-Key',
-          in: 'header',
-        },
-      }),
+    'Idempotency-Key': UuidV7Schema.openapi({
+      param: {
+        name: 'Idempotency-Key',
+        in: 'header',
+      },
+    }),
   });
   const listTasksQuery = z.object({
     include_deleted: z

@@ -12,7 +12,12 @@ export class TaskService {
   async createTask(userId: string, input: TaskInput): Promise<TaskResponse> {
     const [row] = await this.db
       .insert(schema.tasks)
-      .values({ id: input.id, userId, title: input.title, updatedAt: new Date(input.updated_at) })
+      .values({
+        id: input.id,
+        userId,
+        title: input.title,
+        updatedAt: this.clampFutureTimestamp(new Date(input.updated_at)),
+      })
       .returning();
 
     if (!row) {

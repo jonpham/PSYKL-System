@@ -6,7 +6,8 @@ import {
   type ExecutionContext,
   type NestInterceptor,
 } from '@nestjs/common';
-import { from, mergeMap, of, type Observable } from 'rxjs';
+import { UuidV7Schema } from '@psykl/shared-types';
+import { catchError, from, mergeMap, of, throwError, type Observable } from 'rxjs';
 import { IdempotencyService } from './idempotency.service.js';
 
 interface RequestWithIdempotency {
@@ -49,18 +50,32 @@ export class IdempotencyInterceptor implements NestInterceptor {
       body: request.body ?? null,
     });
 
-    return from(this.idempotency.findCachedResponse(userId, idempotencyKey, requestHash)).pipe(
-      mergeMap((cached) => {
-        if (cached) {
-          response.status(cached.statusCode);
-          return of(cached.responseBody);
+    return from(this.idempotency.reserveRequest(userId, idempotencyKey, requestHash)).pipe(
+      mergeMap((state) => {
+        if (state.kind === 'cached') {
+          response.status(state.cached.statusCode);
+          return of(state.cached.responseBody);
+        }
+
+        if (state.kind === 'pending') {
+          return from(this.idempotency.waitForCachedResponse(userId, idempotencyKey, requestHash)).pipe(
+            mergeMap((cached) => {
+              response.status(cached.statusCode);
+              return of(cached.responseBody);
+            }),
+          );
         }
 
         return next.handle().pipe(
           mergeMap(async (body) => {
-            await this.idempotency.saveResponse(userId, idempotencyKey, requestHash, response.statusCode, body);
+            await this.idempotency.completeRequest(userId, idempotencyKey, requestHash, response.statusCode, body);
             return body;
           }),
+          catchError((error: unknown) =>
+            from(this.idempotency.releaseRequest(userId, idempotencyKey, requestHash)).pipe(
+              mergeMap(() => throwError(() => error)),
+            ),
+          ),
         );
       }),
     );
@@ -80,7 +95,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
       throw new BadRequestException('Idempotency-Key header is required');
     }
 
-    return value.trim();
+    const parsed = UuidV7Schema.safeParse(value.trim());
+    if (!parsed.success) {
+      throw new BadRequestException('Idempotency-Key must be a UUID v7');
+    }
+
+    return parsed.data;
   }
 
   private routePath(request: RequestWithIdempotency): string {

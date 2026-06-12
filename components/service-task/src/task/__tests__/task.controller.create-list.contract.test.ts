@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { taskControllerHarness, taskCreateBody, validTaskId } from './task.controller.contract-support.js';
+import {
+  taskControllerHarness,
+  taskCreateBody,
+  validIdempotencyKey,
+  validTaskId,
+} from './task.controller.contract-support.js';
 
 describe('TaskController contract: create and list', () => {
   const api = taskControllerHarness();
@@ -18,7 +23,7 @@ describe('TaskController contract: create and list', () => {
       // When
       const res = await api
         .postTask({
-          idempotencyKey: 'contract-post-valid',
+          idempotencyKey: validIdempotencyKey('000'),
           body: taskCreateBody({ id, title, updated_at: updatedAt }),
         })
         .expect(201);
@@ -46,7 +51,7 @@ describe('TaskController contract: create and list', () => {
       // When / Then
       await api
         .postTask({
-          idempotencyKey: 'contract-post-empty-title',
+          idempotencyKey: validIdempotencyKey('001'),
           body: taskCreateBody({ id, title: emptyTitle, updated_at: updatedAt }),
         })
         .expect(400);
@@ -62,7 +67,7 @@ describe('TaskController contract: create and list', () => {
       // When / Then
       await api
         .postTask({
-          idempotencyKey: 'contract-post-bad-id',
+          idempotencyKey: validIdempotencyKey('002'),
           body: taskCreateBody({ id: invalidId, title, updated_at: updatedAt }),
         })
         .expect(400);
@@ -80,7 +85,7 @@ describe('TaskController contract: create and list', () => {
       };
 
       // When / Then
-      await api.postTask({ idempotencyKey: 'contract-post-extra-fields', body: bodyWithExtraField }).expect(400);
+      await api.postTask({ idempotencyKey: validIdempotencyKey('003'), body: bodyWithExtraField }).expect(400);
     });
   });
 
@@ -89,21 +94,21 @@ describe('TaskController contract: create and list', () => {
       await api
         .postTask({
           userId: 'alice',
-          idempotencyKey: 'contract-list-alice-1',
+          idempotencyKey: validIdempotencyKey('004'),
           body: taskCreateBody({ id: validTaskId('003'), title: 'a1' }),
         })
         .expect(201);
       await api
         .postTask({
           userId: 'alice',
-          idempotencyKey: 'contract-list-alice-2',
+          idempotencyKey: validIdempotencyKey('005'),
           body: taskCreateBody({ id: validTaskId('004'), title: 'a2' }),
         })
         .expect(201);
       await api
         .postTask({
           userId: 'bob',
-          idempotencyKey: 'contract-list-bob-1',
+          idempotencyKey: validIdempotencyKey('006'),
           body: taskCreateBody({ id: validTaskId('005'), title: 'b1' }),
         })
         .expect(201);
