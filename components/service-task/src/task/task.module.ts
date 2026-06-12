@@ -12,6 +12,6 @@ import { DB_TOKEN, TaskService } from './task.service.js';
       useFactory: async () => createDb(),
     },
   ],
-  exports: [TaskService],
+  exports: [TaskService, DB_TOKEN],
 })
 export class TaskModule {}

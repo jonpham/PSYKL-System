@@ -1,7 +1,7 @@
 import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
-import { apiClient, taskRequestParams, type Task, type TaskInput } from '../../api/client';
+import { apiClient, taskMutationRequestParams, type Task, type TaskInput } from '../../api/client';
 
 interface TaskCreateFormProps {
   onCreated: (task: Task) => void;
@@ -29,7 +29,7 @@ export function TaskCreateForm({ onCreated }: TaskCreateFormProps) {
         updated_at: new Date().toISOString(),
       };
       const { data, error } = await apiClient.POST('/tasks', {
-        ...taskRequestParams,
+        ...taskMutationRequestParams(uuidv7()),
         body: taskInput,
       });
 
