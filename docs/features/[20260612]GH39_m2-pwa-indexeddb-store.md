@@ -6,7 +6,7 @@ branches:
   - feat/m2-s2-dt6-use-tasks-store
 prs:
   - https://github.com/jonpham/PSYKL-System/pull/53
-  - pending-current-pr
+  - https://github.com/jonpham/PSYKL-System/pull/54
 completed_at: 2026-06-12
 created_at: 2026-06-12
 initiative: m2-pwa-crud-offline
@@ -41,7 +41,7 @@ As a user, I want the PWA to load my Tasks from local storage instead of waiting
 - Original issue brief: `docs/initiatives/m2-pwa-crud-offline/issues/[20260522]P2_m2-pwa-indexeddb-store.md` (deleted by this PR).
 - Execution spec: `docs/specs/m2-pwa-crud-offline/20260610-S2-pwa-indexeddb-store.md` (deleted by this PR).
 - GitHub issue: [#39](https://github.com/jonpham/PSYKL-System/issues/39).
-- Constituent DevTask PRs: [#53](https://github.com/jonpham/PSYKL-System/pull/53), plus the current final DevTask PR.
+- Constituent DevTask PRs: [#53](https://github.com/jonpham/PSYKL-System/pull/53) and [#54](https://github.com/jonpham/PSYKL-System/pull/54).
 
 ## Implementation Notes
 
@@ -104,4 +104,4 @@ Expectation: the PWA's visible Task list is backed by IndexedDB snapshots. Netwo
 | Date       | PR                                                     | Summary                                                                    |
 | ---------- | ------------------------------------------------------ | -------------------------------------------------------------------------- |
 | 2026-06-12 | [#53](https://github.com/jonpham/PSYKL-System/pull/53) | M2-5: IndexedDB database, typed store helpers, Unit and Integration tests. |
-| 2026-06-12 | pending-current-pr                                     | M2-6: `useTasks()`, hydration, notifications, UI read refactor, stories.   |
+| 2026-06-12 | [#54](https://github.com/jonpham/PSYKL-System/pull/54) | M2-6: `useTasks()`, hydration, notifications, UI read refactor, stories.   |
