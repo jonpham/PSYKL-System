@@ -43,38 +43,32 @@ const sampleTasks: Task[] = [
 
 /** Empty state — Manual Visual Check surface. */
 export const EmptyState: Story = {
-  args: {
-    tasks: [],
-    loading: false,
-    error: null,
-  },
+  render: () => <App />,
 };
 
 /** Loading state — Manual Visual Check surface. */
 export const Loading: Story = {
-  args: {
-    tasks: [],
-    loading: true,
-    error: null,
-  },
+  render: () => <TaskList />,
 };
 
 /** Error state — Manual Visual Check surface. */
 export const ErrorState: Story = {
-  args: {
-    tasks: [],
-    loading: false,
-    error: 'Failed to load tasks',
+  parameters: {
+    msw: {
+      handlers: [http.get('*/tasks', () => HttpResponse.error())],
+    },
   },
+  render: () => <App />,
 };
 
 /** Pre-populated list — Manual Visual Check surface. */
 export const WithTasks: Story = {
-  args: {
-    tasks: sampleTasks,
-    loading: false,
-    error: null,
+  parameters: {
+    msw: {
+      handlers: [http.get('*/tasks', () => HttpResponse.json(sampleTasks))],
+    },
   },
+  render: () => <App />,
 };
 
 /**
@@ -82,9 +76,9 @@ export const WithTasks: Story = {
  * TaskList.component.test.tsx). Renders the full `App` so the TaskList is
  * driven through the real create→list integration. The play function:
  *
- *  1. Awaits the MSW-stubbed GET /tasks → asserts the empty-state copy.
+ *  1. Awaits MSW hydration through IndexedDB → asserts the empty-state copy.
  *  2. Types a title, clicks Create → asserts the first task appears and the
- *     empty-state copy is gone.
+ *     empty-state copy is gone after local notification.
  *  3. Types a second title, clicks Create → asserts both tasks are listed.
  */
 export const IntegratedWithCreateForm: Story = {
@@ -116,17 +110,14 @@ export const IntegratedWithCreateForm: Story = {
 
 /**
  * Renders the full `App` with a per-story MSW override that makes `GET /tasks`
- * fail with a network error. Covers the `App.tsx` `useEffect` error branch
- * (`catch` → `setError('Failed to load tasks')`) which the default handlers
- * and other stories don't exercise.
+ * fail with a network error. Covers the `useTasks()` hydration error branch
+ * which the default handlers and other stories don't exercise.
  *
  * Uses `HttpResponse.error()` (network failure) rather than a 500 status
  * because openapi-fetch only surfaces non-2xx responses as `loadError` when
  * the OpenAPI document declares the error response shape; an undeclared
- * 500 falls through with `data: undefined` and skips App.tsx's error
- * branch. A network failure throws, hitting the catch reliably. Status-
- * code-aware error handling is M2 work; see the AGENTS.md test pyramid
- * + DESIGN.md follow-up.
+ * 500 falls through with `data: undefined` and skips the hook's error branch.
+ * A network failure throws, hitting the catch reliably.
  */
 export const AppLoadError: Story = {
   parameters: {

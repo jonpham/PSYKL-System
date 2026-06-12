@@ -2,13 +2,11 @@ import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
-import { apiClient, type Task, type TaskInput, taskMutationRequestParams } from '../../api/client';
+import { apiClient, type TaskInput, taskMutationRequestParams } from '../../api/client';
+import { putTask } from '../../db/idb';
+import { notifyTasksChanged } from '../../hooks/useTasks';
 
-interface TaskCreateFormProps {
-  onCreated: (task: Task) => void;
-}
-
-export function TaskCreateForm({ onCreated }: TaskCreateFormProps) {
+export function TaskCreateForm() {
   const [title, setTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -39,7 +37,8 @@ export function TaskCreateForm({ onCreated }: TaskCreateFormProps) {
       }
 
       if (data) {
-        onCreated(data);
+        await putTask(data);
+        await notifyTasksChanged();
         setTitle('');
       }
     } catch {
