@@ -7,7 +7,7 @@ created_at: 2026-06-10
 initiative: m2-pwa-crud-offline
 spec_number: 3
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
 branch: spec/m2-s3-sync-engine
 step_gating: false
 honors_decisions: [40, 41, 42, 43, 47, 48, 52, 55]
@@ -22,7 +22,7 @@ honors_decisions: [40, 41, 42, 43, 47, 48, 52, 55]
 
 **Architecture:** `src/sync/replay.ts` owns enqueue, replay, idempotency key use, backoff, and reconciliation. `sync_meta.replay_lock` prevents concurrent replay between page and Service Worker contexts. Page-side triggers run replay after writes, on online, and on focus.
 
-**Tech Stack:** React, `idb`, MSW, `crypto.randomUUID`, browser events, Vitest, Storybook test-runner.
+**Tech Stack:** React, `idb`, MSW, `uuid` v7, browser events, Vitest, Storybook test-runner.
 
 ---
 
@@ -68,9 +68,11 @@ No new endpoint. Replay calls existing POST/PATCH/DELETE with `Idempotency-Key`.
 
 Unit:
 
-| File                                                           | Assertion                                                        |
-| -------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `components/web_client/src/sync/__tests__/replay.unit.test.ts` | FIFO ordering, backoff, permanent-fail routing, lock acquisition |
+| File                                                                      | Assertion                                                  |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `components/web_client/src/sync/__tests__/replay-lock.unit.test.ts`       | Lock acquisition, fresh-lock yielding, stale-lock stealing |
+| `components/web_client/src/sync/__tests__/replay.unit.test.ts`            | FIFO ordering, UUID v7 idempotency key generation, backoff |
+| `components/web_client/src/sync/__tests__/replay-failed-ops.unit.test.ts` | Permanent-fail routing and failed-op warning/cap behavior  |
 
 Integration:
 
@@ -96,12 +98,12 @@ Spec integration branch: `spec/m2-s3-sync-engine`.
 **Branch:** `feat/m2-s3-dt7-sync-replay-module`
 **Affected:** `components/web_client/src/sync/replay.ts`, `components/web_client/src/sync/__tests__/replay.unit.test.ts`, `components/web_client/tests/integration/replay.integration.test.ts`, `components/web_client/src/db/idb.ts`, `components/web_client/src/test/msw-handlers.ts`.
 
-- [ ] Step 1: Write failing lock tests: first caller acquires, second caller yields, stale lock after 30 seconds can be stolen.
-- [ ] Step 2: Write failing queue tests for FIFO replay, generated idempotency key, 5xx backoff, network error backoff, and 4xx permanent fail.
-- [ ] Step 3: Implement `enqueue()`, `replay()`, `acquireReplayLock()`, `releaseReplayLock()`, and failed-op cap behavior.
-- [ ] Step 4: Add MSW integration test proving replay sends `Idempotency-Key`, stores server response into `tasks`, and deletes queue row.
-- [ ] Step 5: Run `pnpm --filter @psykl/web-client test:unit`.
-- [ ] Step 6: Commit with `feat: add shared sync replay module`.
+- [x] Step 1: Write failing lock tests: first caller acquires, second caller yields, stale lock after 30 seconds can be stolen.
+- [x] Step 2: Write failing queue tests for FIFO replay, generated idempotency key, 5xx backoff, network error backoff, and 4xx permanent fail.
+- [x] Step 3: Implement `enqueue()`, `replay()`, `acquireReplayLock()`, `releaseReplayLock()`, and failed-op cap behavior.
+- [x] Step 4: Add MSW integration test proving replay sends `Idempotency-Key`, stores server response into `tasks`, and deletes queue row.
+- [x] Step 5: Run `pnpm --filter @psykl/web-client test:unit`.
+- [x] Step 6: Commit with `feat: add shared sync replay module`.
 
 ### DevTask M2-8: Add page triggers, pending affordances, and permanent-fail toast
 
