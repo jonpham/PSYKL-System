@@ -16,6 +16,7 @@ export default meta;
 type Story = StoryObj<typeof Toast>;
 
 export const PermanentSyncFailure: Story = {
+  render: () => <Toast />,
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 

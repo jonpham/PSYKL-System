@@ -2,9 +2,11 @@ import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
-import { apiClient, type TaskInput, taskMutationRequestParams } from '../../api/client';
+import type { Task, TaskInput } from '../../api/client';
 import { putTask } from '../../db/idb';
 import { notifyTasksChanged } from '../../hooks/useTasks';
+import { enqueueWithReplay } from '../../sync/page-triggers';
+import { enqueue, replay } from '../../sync/replay';
 
 export function TaskCreateForm() {
   const [title, setTitle] = useState('');
@@ -22,25 +24,33 @@ export function TaskCreateForm() {
     setSubmitting(true);
     setErrorMessage(null);
     try {
+      const now = new Date().toISOString();
       const taskInput: TaskInput = {
         id: uuidv7(),
         title: trimmedTitle,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       };
-      const { data, error } = await apiClient.POST('/tasks', {
-        ...taskMutationRequestParams(uuidv7()),
-        body: taskInput,
+      const optimisticTask: Task = {
+        id: taskInput.id,
+        user_id: 'local',
+        title: taskInput.title,
+        created_at: now,
+        completed_at: null,
+        updated_at: taskInput.updated_at,
+        server_updated_at: now,
+        deleted_at: null,
+      };
+
+      await putTask(optimisticTask);
+      await enqueueWithReplay({
+        enqueue: () => enqueue({ body: taskInput, op: 'create', taskId: taskInput.id }),
+        replay: async () => {
+          await notifyTasksChanged();
+          await replay();
+          await notifyTasksChanged();
+        },
       });
-
-      if (error) {
-        throw new Error('Failed to create task');
-      }
-
-      if (data) {
-        await putTask(data);
-        await notifyTasksChanged();
-        setTitle('');
-      }
+      setTitle('');
     } catch {
       setErrorMessage('Failed to create task');
     } finally {
