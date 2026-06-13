@@ -3,13 +3,59 @@
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
-**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 is prepared for execution.
+**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 DevTask M2-7 is in review.
 **Last completed spec:** M2 Spec 2 — PWA IndexedDB store + `useSyncExternalStore` ([`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)).
 **Active spec for execution:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md), draft PR [#56](https://github.com/jonpham/PSYKL-System/pull/56)).
-**Next executable step:** Complete M2 Spec 3 DevTask M2-7: add shared replay module and IndexedDB replay lock.
-**Active skill:** N/A — Spec 3 worktree prepared; execution should start with `superpowers:executing-plans` plus `superpowers:test-driven-development`.
-**Branch:** `spec/m2-s3-sync-engine`.
+**Next executable step:** Merge M2 Spec 3 DevTask M2-7 PR [#57](https://github.com/jonpham/PSYKL-System/pull/57), then clean up and wait for explicit approval before starting DevTask M2-8.
+**Active skill:** Paused after `superpowers:executing-plans` for M2 Spec 3 DevTask M2-7. Resume with PR cleanup after #57 merges; start DevTask M2-8 only after user approval.
+**Branch:** `feat/m2-s3-dt7-sync-replay-module` in worktree `worktrees/m2-s3-sync-engine`; PR #57 targets `spec/m2-s3-sync-engine`.
 **Known blockers:** None.
+
+## Continuation Handoff — 2026-06-12
+
+Paused for the day after completing M2 Spec 3 DevTask M2-7.
+
+Current state:
+
+- Worktree: `worktrees/m2-s3-sync-engine`
+- Current branch: `feat/m2-s3-dt7-sync-replay-module`
+- Integration branch: `spec/m2-s3-sync-engine`
+- DevTask PR: [#57 — `feat: add shared sync replay module`](https://github.com/jonpham/PSYKL-System/pull/57)
+- Spec integration PR: [#56 — M2 Spec 3 draft integration](https://github.com/jonpham/PSYKL-System/pull/56)
+- PR #57 status at handoff: open, mergeable, all GitHub checks green (`static-checking`, `unit-tests`, `integration-tests`, `component-tests`, `e2e`)
+
+What changed in DevTask M2-7:
+
+- Added shared sync replay module for `enqueue()`, `replay()`, `acquireReplayLock()`, and `releaseReplayLock()`.
+- Used UUID v7 operation IDs and UUID v7 `Idempotency-Key` values through the existing `uuid` package, because the service contract rejects non-v7 keys.
+- Added IndexedDB helpers for sync queue deletion, metadata deletion, failed-op insert/list/delete, and replay task reconciliation.
+- Added FIFO replay behavior that stops after a transient retry so later mutations cannot overtake earlier queued operations.
+- Added an atomic IndexedDB lock release path so a stale owner cannot delete a newer owner lock.
+- Added permanent-failure handling: 4xx responses move rows to `failed_ops`, emit `sync:permanent-fail`, preserve structured errors, warn at 50 failed rows, and cap at 100 rows.
+- Extended MSW Task mutation handlers to require `Idempotency-Key` and support `PATCH`/`DELETE` for replay tests.
+- Marked M2-7 complete in [`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md).
+
+Review and verification:
+
+- Ran `superpowers:requesting-code-review` on the DevTask diff. Reviewer found two Critical issues: FIFO replay continuing after transient failure and lock release race. Both were fixed in commit `1f44b5b`.
+- Local verification passed after fixes:
+  - `pnpm verify:static`
+  - `pnpm verify:unit`
+  - `pnpm verify:integration`
+  - `pnpm verify:component`
+- GitHub CI passed for PR #57.
+
+Commits on PR #57:
+
+- `c389023` — `feat: add shared sync replay module`
+- `1f44b5b` — `fix: preserve sync replay ordering`
+
+Tomorrow's first steps:
+
+1. Re-check PR #57 status with `gh pr view 57 --json state,mergeStateStatus,statusCheckRollup,url`.
+2. If still green, merge PR #57 into `spec/m2-s3-sync-engine`.
+3. Clean up the merged DevTask branch locally/remotely and fast-forward the Spec 3 worktree to the updated integration branch.
+4. Stop for explicit approval before starting DevTask M2-8: page triggers, pending affordances, and permanent-fail toast.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 
