@@ -7,7 +7,7 @@
 **Last completed spec:** M2 Spec 3 — Sync engine ([`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)).
 **Active spec for execution:** N/A — M2 Spec 3 implementation is complete locally on `feat/m2-s3-dt8-sync-page-triggers`; Spec integration PR [#56](https://github.com/jonpham/PSYKL-System/pull/56) remains draft until DevTask M2-8 is reviewed/merged.
 **Next executable step:** Finish DevTask M2-8 branch verification, publish/open the stacked PR targeting `feat/m2-s3-dt7-sync-replay-module` or the updated Spec branch as appropriate, then finalize Spec PR #56.
-**Active skill:** `superpowers:executing-plans` for M2 Spec 3 DevTask M2-8, paused at final verification / branch finish.
+**Active skill:** `superpowers:executing-plans` for M2 Spec 3 DevTask M2-8, paused at the required transition to `superpowers:finishing-a-development-branch`.
 **Branch:** `feat/m2-s3-dt8-sync-page-triggers` in worktree `worktrees/m2-s3-sync-engine`, stacked on merged DevTask M2-7 branch `feat/m2-s3-dt7-sync-replay-module`.
 **Known blockers:** None.
 
@@ -23,7 +23,7 @@ Current state:
 - DevTask M2-7 PR: [#57 — `feat: add shared sync replay module`](https://github.com/jonpham/PSYKL-System/pull/57) (merged)
 - DevTask M2-8 PR: pending
 - Spec integration PR: [#56 — M2 Spec 3 draft integration](https://github.com/jonpham/PSYKL-System/pull/56)
-- DevTask M2-8 status at handoff: local commits complete; final verification in progress.
+- DevTask M2-8 status at handoff: local commits complete; final verification passed.
 
 What changed in DevTask M2-7:
 
@@ -65,7 +65,7 @@ Commits on DevTask branches:
 
 Next steps:
 
-1. Complete final verification.
+1. Confirm transition from `superpowers:executing-plans` to `superpowers:finishing-a-development-branch`.
 2. Push/open the DevTask M2-8 stacked PR after user approval.
 3. Merge M2-8 into the Spec 3 integration branch.
 4. Mark Spec PR #56 ready for review.
