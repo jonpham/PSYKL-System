@@ -3,12 +3,12 @@
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
-**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete.
+**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 is prepared for execution.
 **Last completed spec:** M2 Spec 2 — PWA IndexedDB store + `useSyncExternalStore` ([`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)).
-**Active spec for execution:** N/A — Spec 2 integration PR [#55](https://github.com/jonpham/PSYKL-System/pull/55) is under review for merge to `main`.
-**Next executable spec:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md)).
-**Active skill:** `superpowers:receiving-code-review` addressing Spec integration PR #55 review findings.
-**Branch:** `spec/m2-s2-pwa-indexeddb-store`.
+**Active spec for execution:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md)).
+**Next executable step:** Complete M2 Spec 3 DevTask M2-7: add shared replay module and IndexedDB replay lock.
+**Active skill:** N/A — Spec 3 worktree prepared; execution should start with `superpowers:executing-plans` plus `superpowers:test-driven-development`.
+**Branch:** `spec/m2-s3-sync-engine`.
 **Known blockers:** None.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
@@ -38,11 +38,11 @@ See [`docs/STACK.md`](STACK.md) for the canonical shipped stack table. Architect
 
 ## Initiative Summary
 
-| Initiative                            | Theme                                                             | Status                               | Initiative Doc                                                                         |
-| ------------------------------------- | ----------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync      | 🟡 In execution — Specs 1-2 complete | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
-| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives     | ⚪ Sketched                          | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
-| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host | ⚪ Sketched                          | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
+| Initiative                            | Theme                                                             | Status                            | Initiative Doc                                                                         |
+| ------------------------------------- | ----------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------- |
+| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync      | 🟡 In execution — Spec 3 prepared | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
+| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives     | ⚪ Sketched                       | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
+| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host | ⚪ Sketched                       | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
 
 Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started
 

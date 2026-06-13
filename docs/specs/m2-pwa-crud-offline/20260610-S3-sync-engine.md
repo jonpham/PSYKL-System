@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN_PROGRESS
 issue: P3
 pr:
 completed_at:
@@ -8,6 +8,7 @@ initiative: m2-pwa-crud-offline
 spec_number: 3
 devtasks_total: 2
 devtasks_complete: 0
+branch: spec/m2-s3-sync-engine
 step_gating: false
 honors_decisions: [40, 41, 42, 43, 47, 48, 52, 55]
 ---
