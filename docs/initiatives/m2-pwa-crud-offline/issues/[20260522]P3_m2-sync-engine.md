@@ -48,7 +48,7 @@ _Steps_
 3. Run `pnpm --filter web_client test:component` — page-side trigger tests pass: `online` event triggers replay, `visibilitychange` triggers replay, post-write triggers replay, opacity+dot render for queued tasks, toast appears on `sync:permanent-fail`.
 4. Open PWA at `:5173`. Toggle DevTools → Network → "Offline" ON.
 5. Click "Create Task", type a title, submit. Confirm: task appears in the list IMMEDIATELY (no spinner, no network), rendered at 60% opacity with the small dot indicator.
-6. Inspect DevTools → Application → IndexedDB → `psykl` → `sync_queue` — one row exists with `op_type=create`, the new task's payload, and an `Idempotency-Key`-shaped `op_id`.
+6. Inspect DevTools → Application → IndexedDB → `psykl` → `sync_queue` — one row exists with `op=create`, the new task body, and UUID v7-shaped `id` and `idempotency_key` values.
 7. Toggle "Offline" OFF.
 8. Within ~1 second, the row's opacity returns to full and the dot disappears. `sync_queue` is empty. Network shows one POST `/tasks` with `Idempotency-Key` header.
 9. Repeat steps 5-8 but, before going back online, perform 3 quick edits to the new task's title. `sync_queue` shows one `create` + three `patch` rows. Going online drains them in order; final server state matches final client state.

@@ -72,7 +72,7 @@ async function hydrateTasks(): Promise<void> {
   setSnapshot({ ...snapshot, loading: true });
 
   try {
-    const { data, error } = await apiClient.GET('/tasks', {
+    const { data, error, response } = await apiClient.GET('/tasks', {
       params: {
         header: {
           'X-User-Id': 'local',
@@ -83,7 +83,7 @@ async function hydrateTasks(): Promise<void> {
       },
     });
 
-    if (error) {
+    if (!response.ok || error) {
       throw new Error('Failed to hydrate tasks');
     }
 

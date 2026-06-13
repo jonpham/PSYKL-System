@@ -87,6 +87,27 @@ describe('useTasks', () => {
     expect(result.current.error).toBeNull();
     expect(result.current.tasks).toEqual([visibleTask]);
   });
+
+  it('reports a hydration error on non-OK status when no IndexedDB snapshot exists', async () => {
+    // Arrange
+    let includeDeleted: string | null = null;
+    server.use(
+      http.get('*/tasks', ({ request }) => {
+        includeDeleted = new URL(request.url).searchParams.get('include_deleted');
+
+        return new HttpResponse(null, { status: 500 });
+      }),
+    );
+
+    // Act
+    const { result } = renderHook(() => useTasks());
+
+    // Assert
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(includeDeleted).toBe('1');
+    expect(result.current.error).toBe('Failed to load tasks');
+    expect(result.current.tasks).toEqual([]);
+  });
 });
 
 function taskFactory(overrides: Partial<Task>): Task {

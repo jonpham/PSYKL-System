@@ -5,10 +5,10 @@
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
 **Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete.
 **Last completed spec:** M2 Spec 2 — PWA IndexedDB store + `useSyncExternalStore` ([`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)).
-**Active spec for execution:** N/A — Spec 2 close-out is in final DevTask review.
+**Active spec for execution:** N/A — Spec 2 integration PR [#55](https://github.com/jonpham/PSYKL-System/pull/55) is under review for merge to `main`.
 **Next executable spec:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md)).
-**Active skill:** `superpowers:executing-plans` completing M2 Spec 2 close-out.
-**Branch:** `feat/m2-s2-dt6-use-tasks-store`, branched from `spec/m2-s2-pwa-indexeddb-store`.
+**Active skill:** `superpowers:receiving-code-review` addressing Spec integration PR #55 review findings.
+**Branch:** `spec/m2-s2-pwa-indexeddb-store`.
 **Known blockers:** None.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
