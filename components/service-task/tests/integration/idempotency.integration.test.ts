@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { createDb, schema, type Db } from '../../src/db/index.js';
+
+import { createDb, type Db, schema } from '../../src/db/index.js';
 import { IdempotencyService } from '../../src/idempotency/idempotency.service.js';
 
 describe('IdempotencyService + pglite', () => {

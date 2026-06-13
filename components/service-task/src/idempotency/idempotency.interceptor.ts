@@ -1,13 +1,14 @@
 import {
   BadRequestException,
-  Inject,
-  Injectable,
   type CallHandler,
   type ExecutionContext,
+  Inject,
+  Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
 import { UuidV7Schema } from '@psykl/shared-types';
-import { catchError, from, mergeMap, of, throwError, type Observable } from 'rxjs';
+import { catchError, from, mergeMap, type Observable, of, throwError } from 'rxjs';
+
 import { IdempotencyService } from './idempotency.service.js';
 
 interface RequestWithIdempotency {

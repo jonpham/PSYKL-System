@@ -2,8 +2,9 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll } from 'vitest';
-import { UserIdGuard } from '../../auth/user-id.guard.js';
+
 import { AppModule } from '../../app.module.js';
+import { UserIdGuard } from '../../auth/user-id.guard.js';
 import type { Db } from '../../db/index.js';
 import { DB_TOKEN } from '../task.service.js';
 

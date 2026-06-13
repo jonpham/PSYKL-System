@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
+
+import type { Db } from '../../db/index.js';
 import { TaskService } from '../task.service.js';
 import { taskRow } from './task.service.unit-support.js';
-import type { Db } from '../../db/index.js';
 
 function mockDeleteDb(selectRows: unknown[], updateSet: ReturnType<typeof vi.fn>): Db {
   const where = vi.fn(async () => selectRows);

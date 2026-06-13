@@ -1,4 +1,4 @@
-import { expect, type Browser, type Page, test } from '@playwright/test';
+import { type Browser, expect, type Page, test } from '@playwright/test';
 
 test.describe.skip('M2 inactive: offline Task sync end-to-end behavior', () => {
   test('offline-created Task syncs when the device returns online', async ({ browser }) => {

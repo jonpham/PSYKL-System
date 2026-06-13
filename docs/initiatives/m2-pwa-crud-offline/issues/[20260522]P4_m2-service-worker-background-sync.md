@@ -65,7 +65,7 @@ The PWA loads its shell instantly even with no network. Queued writes sync in th
   - `vite.config.ts` (extended — switch from `generateSW` minimal to `injectManifest`; configure `registerType: 'autoUpdate'`, precache globs, runtime SWR caching for `/tasks`).
   - `src/main.tsx` (extended — register the SW + register Background Sync after enqueue).
   - `src/sync/background-sync.ts` (new — Background Sync registration helper called by `replay.enqueue()`).
-  - `src/sw.component.test.ts` (new — Playwright-driven Component-layer tests for SW lifecycle + sync event).
+  - `e2e/m2-service-worker-background-sync.e2e.spec.ts` (new — Playwright-driven browser coverage for SW lifecycle + sync event).
   - `package.json` (add `workbox-window` for the page-side registration helper if not already present).
 
 ## Design Decisions

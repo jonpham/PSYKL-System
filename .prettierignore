@@ -5,6 +5,7 @@ playwright-report
 test-results
 **/drizzle/migrations
 openapi.json
+pnpm-lock.yaml
 tsconfig.tsbuildinfo
 storybook-static
 **/storybook-static

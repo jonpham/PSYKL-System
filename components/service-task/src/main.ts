@@ -1,7 +1,9 @@
 import 'reflect-metadata';
+
 import { NestFactory } from '@nestjs/core';
-import { UserIdGuard } from './auth/user-id.guard.js';
+
 import { AppModule } from './app.module.js';
+import { UserIdGuard } from './auth/user-id.guard.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

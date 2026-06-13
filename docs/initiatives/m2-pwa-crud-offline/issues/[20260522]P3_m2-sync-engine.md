@@ -48,7 +48,7 @@ _Steps_
 3. Run `pnpm --filter web_client test:component` — page-side trigger tests pass: `online` event triggers replay, `visibilitychange` triggers replay, post-write triggers replay, opacity+dot render for queued tasks, toast appears on `sync:permanent-fail`.
 4. Open PWA at `:5173`. Toggle DevTools → Network → "Offline" ON.
 5. Click "Create Task", type a title, submit. Confirm: task appears in the list IMMEDIATELY (no spinner, no network), rendered at 60% opacity with the small dot indicator.
-6. Inspect DevTools → Application → IndexedDB → `psykl` → `sync_queue` — one row exists with `op_type=create`, the new task's payload, and an `Idempotency-Key`-shaped `op_id`.
+6. Inspect DevTools → Application → IndexedDB → `psykl` → `sync_queue` — one row exists with `op=create`, the new task body, and UUID v7-shaped `id` and `idempotency_key` values.
 7. Toggle "Offline" OFF.
 8. Within ~1 second, the row's opacity returns to full and the dot disappears. `sync_queue` is empty. Network shows one POST `/tasks` with `Idempotency-Key` header.
 9. Repeat steps 5-8 but, before going back online, perform 3 quick edits to the new task's title. `sync_queue` shows one `create` + three `patch` rows. Going online drains them in order; final server state matches final client state.
@@ -61,13 +61,13 @@ The PWA's offline-first promise is real. Edits never block on network. The queue
 
 - `components/web_client/` (extended):
   - `src/sync/replay.ts` (new — shared replay module).
-  - `src/sync/replay.unit.test.ts`, `src/sync/replay.integration.test.ts` (new test files).
+  - `src/sync/__tests__/replay.unit.test.ts`, `tests/integration/replay.integration.test.ts` (new test files).
   - `src/sync/lock.ts` (new — IDB-backed replay lock with 30s stale timeout).
   - `src/sync/triggers.ts` (new — page-side `online` / `visibilitychange` / post-write trigger registration).
-  - `src/sync/triggers.component.test.tsx` (new — trigger contract tests).
-  - `src/components/TaskList.tsx` (extended — opacity + dot rendering for queued rows).
-  - `src/components/PendingIndicator.tsx` (new — the dot component, reusable).
-  - `src/components/Toast.tsx` (new — toast surface, also used in Spec 5).
+  - `src/sync/__tests__/triggers.unit.test.ts` (new — trigger contract tests).
+  - `src/components/TaskList/TaskList.tsx` (extended — opacity + dot rendering for queued rows).
+  - `src/components/TaskList/PendingIndicator/PendingIndicator.tsx` (new — the dot component, private to TaskList until a second consumer exists).
+  - `src/components/Toast/Toast.tsx` (new — toast surface, also used in Spec 5).
   - `src/hooks/useSyncEvents.ts` (new — subscription to `sync:*` events for UI consumers).
 
 ## Design Decisions

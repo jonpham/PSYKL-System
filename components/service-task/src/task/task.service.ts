@@ -1,7 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { TaskDeleteInput, TaskInput, TaskPatchInput, TaskResponse } from '@psykl/shared-types';
 import { and, eq, isNull } from 'drizzle-orm';
-import { schema, type Db } from '../db/index.js';
+
+import { type Db, schema } from '../db/index.js';
 
 export const DB_TOKEN = Symbol('DB');
 
