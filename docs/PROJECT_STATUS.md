@@ -5,7 +5,7 @@
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
 **Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 is prepared for execution.
 **Last completed spec:** M2 Spec 2 — PWA IndexedDB store + `useSyncExternalStore` ([`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)).
-**Active spec for execution:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md)).
+**Active spec for execution:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md), draft PR [#56](https://github.com/jonpham/PSYKL-System/pull/56)).
 **Next executable step:** Complete M2 Spec 3 DevTask M2-7: add shared replay module and IndexedDB replay lock.
 **Active skill:** N/A — Spec 3 worktree prepared; execution should start with `superpowers:executing-plans` plus `superpowers:test-driven-development`.
 **Branch:** `spec/m2-s3-sync-engine`.

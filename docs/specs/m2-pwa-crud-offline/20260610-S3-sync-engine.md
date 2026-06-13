@@ -1,7 +1,7 @@
 ---
 status: IN_PROGRESS
 issue: P3
-pr:
+pr: https://github.com/jonpham/PSYKL-System/pull/56
 completed_at:
 created_at: 2026-06-10
 initiative: m2-pwa-crud-offline
