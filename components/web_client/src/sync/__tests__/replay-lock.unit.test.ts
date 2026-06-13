@@ -69,6 +69,34 @@ describe('replay lock', () => {
     });
   });
 
+  it('lets a second caller steal a lock at exactly 30 seconds', async () => {
+    // Given
+    await acquireReplayLock({ now: () => new Date(nowIso), owner: 'page' });
+
+    // When
+    const acquired = await acquireReplayLock({
+      now: () => new Date('2026-06-12T16:00:30.000Z'),
+      owner: 'service-worker',
+    });
+
+    // Then
+    expect(acquired).toBe(true);
+    await expect(getMeta('replay_lock')).resolves.toMatchObject({
+      value: { owner: 'service-worker' },
+    });
+  });
+
+  it('releases the lock for the owning caller', async () => {
+    // Given
+    await acquireReplayLock({ now: () => new Date(nowIso), owner: 'page' });
+
+    // When
+    await releaseReplayLock({ owner: 'page' });
+
+    // Then
+    await expect(getMeta('replay_lock')).resolves.toBeUndefined();
+  });
+
   it('only releases the lock for the owning caller', async () => {
     // Given
     await acquireReplayLock({ now: () => new Date(nowIso), owner: 'page' });

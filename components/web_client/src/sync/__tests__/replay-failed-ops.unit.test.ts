@@ -20,6 +20,8 @@ describe('failed sync operations', () => {
   it('moves a 4xx response to failed_ops and deletes the queue row', async () => {
     // Given
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const listener = vi.fn();
+    globalThis.addEventListener('sync:permanent-fail', listener);
     await enqueueFailure(0);
 
     // When
@@ -42,6 +44,36 @@ describe('failed sync operations', () => {
         error: 'invalid task',
         failed_at: nowIso,
         id: 'op-000',
+      }),
+    ]);
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: expect.objectContaining({
+          error: 'invalid task',
+          id: 'op-000',
+          status: 400,
+        }),
+      }),
+    );
+    globalThis.removeEventListener('sync:permanent-fail', listener);
+  });
+
+  it('stores structured permanent-fail errors as JSON', async () => {
+    // Given
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await enqueueFailure(0);
+
+    // When
+    await replay({
+      now: () => new Date(nowIso),
+      owner: 'page',
+      transport: vi.fn().mockResolvedValue({ error: { code: 'invalid_title' }, status: 400 }),
+    });
+
+    // Then
+    await expect(listFailedOps()).resolves.toEqual([
+      expect.objectContaining({
+        error: '{"code":"invalid_title"}',
       }),
     ]);
   });

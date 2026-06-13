@@ -1,13 +1,11 @@
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task } from '../api/client';
-import { deleteMeta, deleteSyncOp, enqueueSyncOp, getMeta, listSyncQueue, openPsyklDb, putTask } from '../db/idb';
+import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTask } from '../db/idb';
 import type { PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { moveToFailedOps } from './replay.failed-ops';
+import { acquireReplayLock, releaseReplayLock } from './replay.lock';
 import { sendEntry } from './replay.transport';
-
-const replayLockKey = 'replay_lock';
-const staleLockMs = 30_000;
 
 type EnqueueInput = { body: unknown; op: SyncQueueEntry['op']; taskId: string };
 
@@ -27,8 +25,7 @@ type ReplayTransportResult = {
   error?: unknown;
   status: number;
 };
-
-type ReplayLockValue = { heartbeat_at: string; owner: string };
+type ReplayEntryOutcome = 'failed' | 'replayed' | 'retried';
 
 async function enqueue(input: EnqueueInput, options: ReplayOptions = {}): Promise<SyncQueueEntry> {
   const now = options.now?.() ?? new Date();
@@ -56,45 +53,14 @@ async function replay(options: ReplayOptions = {}): Promise<ReplayResult> {
 
   try {
     for (const entry of await dueEntries(options)) {
-      await replayEntry(entry, options, result);
+      const outcome = await replayEntry(entry, options, result);
+      if (outcome === 'retried') {
+        break;
+      }
     }
     return result;
   } finally {
     await releaseReplayLock({ ...options, owner });
-  }
-}
-
-async function acquireReplayLock(options: ReplayOptions = {}): Promise<boolean> {
-  const owner = options.owner ?? uuidv7();
-  const now = options.now?.() ?? new Date();
-  const database = options.db ?? (await openPsyklDb());
-  try {
-    const transaction = database.transaction('sync_meta', 'readwrite');
-    const existing = await transaction.store.get(replayLockKey);
-    const lock = parseReplayLock(existing?.value);
-    if (lock && Date.parse(lock.heartbeat_at) + staleLockMs >= now.getTime()) {
-      await transaction.done;
-      return lock.owner === owner;
-    }
-
-    await transaction.store.put({
-      key: replayLockKey,
-      value: { owner, heartbeat_at: now.toISOString() },
-    });
-    await transaction.done;
-    return true;
-  } finally {
-    if (!options.db) {
-      database.close();
-    }
-  }
-}
-
-async function releaseReplayLock(options: Pick<ReplayOptions, 'db' | 'owner'>): Promise<void> {
-  const existing = await getMeta(replayLockKey, options.db);
-  const lock = parseReplayLock(existing?.value);
-  if (lock?.owner === options.owner) {
-    await deleteMeta(replayLockKey, options.db);
   }
 }
 
@@ -104,28 +70,33 @@ async function dueEntries(options: ReplayOptions): Promise<SyncQueueEntry[]> {
   return queue.filter((entry) => Date.parse(entry.next_attempt_at) <= now.getTime());
 }
 
-async function replayEntry(entry: SyncQueueEntry, options: ReplayOptions, result: ReplayResult): Promise<void> {
+async function replayEntry(
+  entry: SyncQueueEntry,
+  options: ReplayOptions,
+  result: ReplayResult,
+): Promise<ReplayEntryOutcome> {
   try {
     const response = await (options.transport ?? sendEntry)(entry);
     if (response.status >= 200 && response.status < 300 && response.data) {
       await putTask(response.data, options.db);
       await deleteSyncOp(entry.id, options.db);
       result.replayed += 1;
-      return;
+      return 'replayed';
     }
     if (response.status >= 400 && response.status < 500) {
       await moveToFailedOps(entry, options, response.status, response.error);
       result.failed += 1;
-      return;
+      return 'failed';
     }
   } catch {
     await scheduleRetry(entry, options);
     result.retried += 1;
-    return;
+    return 'retried';
   }
 
   await scheduleRetry(entry, options);
   result.retried += 1;
+  return 'retried';
 }
 
 async function scheduleRetry(entry: SyncQueueEntry, options: ReplayOptions): Promise<void> {
@@ -139,17 +110,6 @@ async function scheduleRetry(entry: SyncQueueEntry, options: ReplayOptions): Pro
     },
     options.db,
   );
-}
-
-function parseReplayLock(value: unknown): ReplayLockValue | undefined {
-  if (!value || typeof value !== 'object' || !('owner' in value) || !('heartbeat_at' in value)) {
-    return undefined;
-  }
-  const lock = value as Record<string, unknown>;
-  if (typeof lock['owner'] !== 'string' || typeof lock['heartbeat_at'] !== 'string') {
-    return undefined;
-  }
-  return { heartbeat_at: lock['heartbeat_at'], owner: lock['owner'] };
 }
 
 export { acquireReplayLock, enqueue, releaseReplayLock, replay };
