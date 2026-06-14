@@ -151,16 +151,17 @@ docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
 
 Or use the root pass-through scripts (same effect):
 
-| Root script             | Equivalent                      |
-| ----------------------- | ------------------------------- |
-| `pnpm build`            | `pnpm -r build`                 |
-| `pnpm lint`             | `pnpm -r lint`                  |
-| `pnpm format:check`     | `pnpm -r format:check`          |
-| `pnpm typecheck`        | `pnpm -r typecheck`             |
-| `pnpm test:unit`        | `pnpm -r test:unit`             |
-| `pnpm test:integration` | `pnpm -r test:integration`      |
-| `pnpm test:component`   | `pnpm -r test:component`        |
-| `pnpm test:e2e`         | `pnpm --filter @psykl/e2e test` |
+| Root script             | Equivalent                         |
+| ----------------------- | ---------------------------------- |
+| `pnpm build`            | `pnpm -r build`                    |
+| `pnpm lint`             | `pnpm -r lint`                     |
+| `pnpm format:check`     | `pnpm -r format:check`             |
+| `pnpm typecheck`        | `pnpm -r typecheck`                |
+| `pnpm test:unit`        | `pnpm -r test:unit`                |
+| `pnpm test:integration` | `pnpm -r test:integration`         |
+| `pnpm test:component`   | `pnpm -r test:component`           |
+| `pnpm test:e2e`         | `pnpm --filter @psykl/e2e test`    |
+| `pnpm test:e2e:ui`      | `pnpm --filter @psykl/e2e test:ui` |
 
 The GitHub Actions workflows call root verification scripts. Commands with multi-step shell behavior delegate to reusable scripts under `scripts/`:
 

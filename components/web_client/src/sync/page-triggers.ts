@@ -11,7 +11,7 @@ type EnqueueWithReplayInput<T> = {
 
 async function enqueueWithReplay<T>(input: EnqueueWithReplayInput<T>): Promise<T> {
   const result = await input.enqueue();
-  await runReplay(input.replay ?? replayQueue);
+  void runReplay(input.replay ?? replayQueue);
   return result;
 }
 
