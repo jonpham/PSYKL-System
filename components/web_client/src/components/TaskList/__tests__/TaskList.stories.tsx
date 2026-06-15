@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 import type { Task } from '../../../api/client';
 import App from '../../../App';
-import { enqueueSyncOp, putTask } from '../../../db/idb';
+import { enqueueSyncOp, listSyncQueue, putTask } from '../../../db/idb';
 import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {
@@ -105,6 +105,7 @@ export const IntegratedWithCreateForm: Story = {
 
       expect(await canvas.findByText('second')).toBeInTheDocument();
       expect(canvas.getByText('first')).toBeInTheDocument();
+      await waitFor(async () => expect(await listSyncQueue()).toHaveLength(0));
     });
   },
 };
