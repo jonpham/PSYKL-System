@@ -3,13 +3,13 @@
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
-**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 implementation is complete on its integration branch pending Spec PR #56 review/merge.
+**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-3 are complete on the current Spec 4 base; Spec 4 DevTask M2-9 is complete locally.
 **Last completed spec on this integration branch:** M2 Spec 3 — Sync engine ([`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)).
-**Active spec for execution:** N/A — M2 Spec 3 integration PR [#56](https://github.com/jonpham/PSYKL-System/pull/56) is under final code-review/CI cleanup before marking ready for review.
-**Next executable step:** Finish PR #56 review fixes and CI, mark PR #56 ready for review/merge, then start M2 Spec 4 — Service Worker + Background Sync.
-**Active skill:** `superpowers:receiving-code-review` addressing Spec integration PR #56 review findings.
-**Branch:** `spec/m2-s3-sync-engine` in worktree `worktrees/m2-s3-sync-engine`.
-**Known blockers:** PR #56 review fixes and rerun CI.
+**Active spec for execution:** M2 Spec 4/6 — Service Worker + Background Sync (`docs/specs/m2-pwa-crud-offline/20260610-S4-service-worker-background-sync.md`), DevTask M2-9/10 complete locally.
+**Next executable step:** Stop for user review/approval at the DevTask boundary; next DevTask is M2-10 — Background Sync registration + Service Worker `sync` event handling.
+**Active skill:** `superpowers:executing-plans` with `superpowers:test-driven-development`.
+**Branch:** `spec/m2-s4-sw-bg-sync` in worktree `worktrees/m2-s4-sw-bg-sync`.
+**Known blockers:** None for DevTask M2-9 local verification. DevTask M2-10 requires explicit user approval before starting.
 
 ## Continuation Handoff — 2026-06-15
 

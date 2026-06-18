@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IN-PROGRESS
 issue: P4
 pr:
 completed_at:
@@ -7,7 +7,8 @@ created_at: 2026-06-10
 initiative: m2-pwa-crud-offline
 spec_number: 4
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
+branch: spec/m2-s4-sw-bg-sync
 step_gating: false
 honors_decisions: [36, 49, 51, 52, 55]
 ---
@@ -65,19 +66,19 @@ End-to-End: Service Worker browser coverage lands in this spec because the behav
 
 ## DevTasks
 
-Spec integration branch: `spec/m2-s4-service-worker-background-sync`.
+Spec integration branch: `spec/m2-s4-sw-bg-sync`.
 
 ### DevTask M2-9: Switch to injectManifest and own src/sw.ts
 
 **Branch:** `feat/m2-s4-dt9-injectmanifest-sw`
 **Affected:** `components/web_client/vite.config.ts`, `components/web_client/src/sw.ts`, `e2e/m2-service-worker-lifecycle.e2e.spec.ts`, `e2e/m2-service-worker-cache.e2e.spec.ts`, `components/web_client/package.json`, lockfile.
 
-- [ ] Step 1: Write failing Playwright component test proving a built PWA registers a Service Worker from `src/sw.ts`.
-- [ ] Step 2: Write failing cache test proving app shell navigation works offline after first load.
-- [ ] Step 3: Write failing cache test proving `GET /tasks` uses stale-while-revalidate.
-- [ ] Step 4: Configure `vite-plugin-pwa` `injectManifest`, add Workbox dependencies if needed, and implement `src/sw.ts` without `skipWaiting()` so sessions stay coherent.
-- [ ] Step 5: Run `pnpm --filter @psykl/web-client test:component`.
-- [ ] Step 6: Commit with `feat: own the pwa service worker`.
+- [x] Step 1: Write failing Playwright component test proving a built PWA registers a Service Worker from `src/sw.ts`.
+- [x] Step 2: Write failing cache test proving app shell navigation works offline after first load.
+- [x] Step 3: Write failing cache test proving `GET /tasks` uses stale-while-revalidate.
+- [x] Step 4: Configure `vite-plugin-pwa` `injectManifest`, add Workbox dependencies if needed, and implement `src/sw.ts` without `skipWaiting()` so sessions stay coherent.
+- [x] Step 5: Run `pnpm --filter @psykl/web-client test:component`.
+- [x] Step 6: Commit with `feat: own the pwa service worker`.
 
 ### DevTask M2-10: Register Background Sync and handle sync events
 
