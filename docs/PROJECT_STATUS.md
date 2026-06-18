@@ -3,27 +3,27 @@
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
-**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 is complete locally pending DevTask M2-8 PR publication and Spec PR finalization.
-**Last completed spec:** M2 Spec 3 — Sync engine ([`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)).
-**Active spec for execution:** N/A — M2 Spec 3 implementation is complete locally on `feat/m2-s3-dt8-sync-page-triggers`; Spec integration PR [#56](https://github.com/jonpham/PSYKL-System/pull/56) remains draft until DevTask M2-8 is reviewed/merged.
-**Next executable step:** Finish DevTask M2-8 branch verification, publish/open the stacked PR targeting `feat/m2-s3-dt7-sync-replay-module` or the updated Spec branch as appropriate, then finalize Spec PR #56.
-**Active skill:** `superpowers:executing-plans` for M2 Spec 3 DevTask M2-8, paused at the required transition to `superpowers:finishing-a-development-branch`.
-**Branch:** `feat/m2-s3-dt8-sync-page-triggers` in worktree `worktrees/m2-s3-sync-engine`, stacked on merged DevTask M2-7 branch `feat/m2-s3-dt7-sync-replay-module`.
-**Known blockers:** None.
+**Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete; Spec 3 implementation is complete on its integration branch pending Spec PR #56 review/merge.
+**Last completed spec on this integration branch:** M2 Spec 3 — Sync engine ([`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)).
+**Active spec for execution:** N/A — M2 Spec 3 integration PR [#56](https://github.com/jonpham/PSYKL-System/pull/56) is under final code-review/CI cleanup before marking ready for review.
+**Next executable step:** Finish PR #56 review fixes and CI, mark PR #56 ready for review/merge, then start M2 Spec 4 — Service Worker + Background Sync.
+**Active skill:** `superpowers:receiving-code-review` addressing Spec integration PR #56 review findings.
+**Branch:** `spec/m2-s3-sync-engine` in worktree `worktrees/m2-s3-sync-engine`.
+**Known blockers:** PR #56 review fixes and rerun CI.
 
-## Continuation Handoff — 2026-06-13
+## Continuation Handoff — 2026-06-15
 
-Current work block completed M2 Spec 3 DevTask M2-8 locally.
+Current work block is finalizing M2 Spec 3 integration PR #56 after DevTask M2-8 merged.
 
 Current state:
 
 - Worktree: `worktrees/m2-s3-sync-engine`
-- Current branch: `feat/m2-s3-dt8-sync-page-triggers`
+- Current branch: `spec/m2-s3-sync-engine`
 - Integration branch: `spec/m2-s3-sync-engine`
 - DevTask M2-7 PR: [#57 — `feat: add shared sync replay module`](https://github.com/jonpham/PSYKL-System/pull/57) (merged)
-- DevTask M2-8 PR: pending
+- DevTask M2-8 PR: [#58 — `feat: trigger sync replay from the pwa`](https://github.com/jonpham/PSYKL-System/pull/58) (merged)
 - Spec integration PR: [#56 — M2 Spec 3 draft integration](https://github.com/jonpham/PSYKL-System/pull/56)
-- DevTask M2-8 status at handoff: local commits complete; final verification passed.
+- DevTask M2-8 status at handoff: merged into the Spec integration branch.
 
 What changed in DevTask M2-7:
 
@@ -49,7 +49,7 @@ Review and verification:
 What changed in DevTask M2-8:
 
 - Added page replay triggers for `online`, `visibilitychange` back to visible, and post-enqueue replay.
-- Routed Task creates through optimistic IndexedDB writes plus `sync_queue` enqueue.
+- Routed Task creates through atomic optimistic IndexedDB writes plus `sync_queue` enqueue.
 - Added pending-row affordance: 60% opacity and pending-sync dot for Tasks with queued operations.
 - Added `Toast` for `sync:permanent-fail`.
 - Added Storybook play coverage for pending rows and permanent-failure toast.
@@ -62,13 +62,15 @@ Commits on DevTask branches:
 - `d09fb63` — `test: cover page sync triggers`
 - `b49a98e` — `test: cover sync pending and failure UI`
 - `f7930e1` — `feat: trigger sync replay from the pwa`
+- `3699104` — `fix: keep task create available during replay`
+- `d3a0311` — `test: stabilize sync story replay cleanup`
 
 Next steps:
 
-1. Confirm transition from `superpowers:executing-plans` to `superpowers:finishing-a-development-branch`.
-2. Push/open the DevTask M2-8 stacked PR after user approval.
-3. Merge M2-8 into the Spec 3 integration branch.
-4. Mark Spec PR #56 ready for review.
+1. Finish `superpowers:receiving-code-review` fixes for PR #56.
+2. Push the updated Spec integration branch and confirm CI.
+3. Mark Spec PR #56 ready for review/merge.
+4. After PR #56 merges to `main`, start a new session for M2 Spec 4.
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 
@@ -97,11 +99,11 @@ See [`docs/STACK.md`](STACK.md) for the canonical shipped stack table. Architect
 
 ## Initiative Summary
 
-| Initiative                            | Theme                                                             | Status                                  | Initiative Doc                                                                         |
-| ------------------------------------- | ----------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------- |
-| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync      | 🟡 In execution — Spec 3 local complete | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
-| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives     | ⚪ Sketched                             | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
-| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host | ⚪ Sketched                             | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
+| Initiative                            | Theme                                                             | Status                                 | Initiative Doc                                                                         |
+| ------------------------------------- | ----------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------- |
+| M2 — PWA CRUD + offline-first         | Complete Task Create/Read/Update/Delete + offline-first sync      | 🟡 In execution — Spec 3 PR finalizing | [`m2-pwa-crud-offline/`](initiatives/m2-pwa-crud-offline/)                             |
+| M3 — Apple-native + product discovery | iOS, iPadOS, macOS clients + PSYKL execution + retrospectives     | ⚪ Sketched                            | [`m3-apple-native-product-discovery/`](initiatives/m3-apple-native-product-discovery/) |
+| M4 — Multi-user auth + homelab        | Real authentication, multi-user data isolation, homelab self-host | ⚪ Sketched                            | [`m4-multi-user-auth-homelab/`](initiatives/m4-multi-user-auth-homelab/)               |
 
 Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started
 
@@ -109,14 +111,14 @@ Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started
 
 Generated by `superpowers:writing-plans` on 2026-06-10 from the M2 design, milestone doc, and issue briefs.
 
-| Spec | Title                                         | Execution spec                                                                                                                                  | DevTasks         |
-| ---- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| M2-1 | service-task PATCH/DELETE + LWW + Idempotency | [`[20260610]GH38_m2-service-task-patch-delete-lww-idempotency.md`](features/%5B20260610%5DGH38_m2-service-task-patch-delete-lww-idempotency.md) | Complete         |
-| M2-2 | PWA IndexedDB store + useSyncExternalStore    | [`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)                                             | Complete         |
-| M2-3 | Sync engine                                   | [`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)                                                             | Complete locally |
-| M2-4 | Service Worker + Background Sync              | [`20260610-S4-service-worker-background-sync.md`](specs/m2-pwa-crud-offline/20260610-S4-service-worker-background-sync.md)                      | M2-9..M2-10      |
-| M2-5 | PWA CRUD UI polish                            | [`20260610-S5-pwa-crud-ui-polish.md`](specs/m2-pwa-crud-offline/20260610-S5-pwa-crud-ui-polish.md)                                              | M2-11..M2-12     |
-| M2-6 | Multi-device E2E + offline harness            | [`20260610-S6-multi-device-e2e-harness.md`](specs/m2-pwa-crud-offline/20260610-S6-multi-device-e2e-harness.md)                                  | M2-13            |
+| Spec | Title                                         | Execution spec                                                                                                                                  | DevTasks          |
+| ---- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| M2-1 | service-task PATCH/DELETE + LWW + Idempotency | [`[20260610]GH38_m2-service-task-patch-delete-lww-idempotency.md`](features/%5B20260610%5DGH38_m2-service-task-patch-delete-lww-idempotency.md) | Complete          |
+| M2-2 | PWA IndexedDB store + useSyncExternalStore    | [`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)                                             | Complete          |
+| M2-3 | Sync engine                                   | [`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)                                                             | PR #56 finalizing |
+| M2-4 | Service Worker + Background Sync              | [`20260610-S4-service-worker-background-sync.md`](specs/m2-pwa-crud-offline/20260610-S4-service-worker-background-sync.md)                      | M2-9..M2-10       |
+| M2-5 | PWA CRUD UI polish                            | [`20260610-S5-pwa-crud-ui-polish.md`](specs/m2-pwa-crud-offline/20260610-S5-pwa-crud-ui-polish.md)                                              | M2-11..M2-12      |
+| M2-6 | Multi-device E2E + offline harness            | [`20260610-S6-multi-device-e2e-harness.md`](specs/m2-pwa-crud-offline/20260610-S6-multi-device-e2e-harness.md)                                  | M2-13             |
 
 ## Remaining Planning Gates
 

@@ -1,16 +1,17 @@
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task } from '../api/client';
-import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTask } from '../db/idb';
+import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTask, putTaskAndEnqueueSyncOp } from '../db/idb';
 import type { PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { moveToFailedOps } from './replay.failed-ops';
-import { acquireReplayLock, releaseReplayLock } from './replay.lock';
+import { acquireReplayLock, refreshReplayLock, releaseReplayLock } from './replay.lock';
 import { sendEntry } from './replay.transport';
 
-type EnqueueInput = { body: unknown; op: SyncQueueEntry['op']; taskId: string };
+type EnqueueInput = { body: unknown; op: SyncQueueEntry['op']; optimisticTask?: Task; taskId: string };
 
 type ReplayOptions = {
   db?: PsyklDb;
+  heartbeatIntervalMs?: number;
   now?: () => Date;
   owner?: string;
   transport?: ReplayTransport;
@@ -39,7 +40,11 @@ async function enqueue(input: EnqueueInput, options: ReplayOptions = {}): Promis
     next_attempt_at: now.toISOString(),
     created_at: now.toISOString(),
   };
-  await enqueueSyncOp(entry, options.db);
+  if (input.optimisticTask) {
+    await putTaskAndEnqueueSyncOp(input.optimisticTask, entry, options.db);
+  } else {
+    await enqueueSyncOp(entry, options.db);
+  }
   return entry;
 }
 
@@ -51,6 +56,7 @@ async function replay(options: ReplayOptions = {}): Promise<ReplayResult> {
     return result;
   }
 
+  const stopHeartbeat = startReplayHeartbeat({ ...options, owner });
   try {
     for (const entry of await dueEntries(options)) {
       const outcome = await replayEntry(entry, options, result);
@@ -60,8 +66,18 @@ async function replay(options: ReplayOptions = {}): Promise<ReplayResult> {
     }
     return result;
   } finally {
+    stopHeartbeat();
     await releaseReplayLock({ ...options, owner });
   }
+}
+
+function startReplayHeartbeat(options: ReplayOptions & { owner: string }): () => void {
+  const interval = setInterval(() => {
+    void refreshReplayLock(options).catch((error) => {
+      console.error('Sync replay heartbeat failed', error);
+    });
+  }, options.heartbeatIntervalMs ?? 10_000);
+  return () => clearInterval(interval);
 }
 
 async function dueEntries(options: ReplayOptions): Promise<SyncQueueEntry[]> {
@@ -112,5 +128,5 @@ async function scheduleRetry(entry: SyncQueueEntry, options: ReplayOptions): Pro
   );
 }
 
-export { acquireReplayLock, enqueue, releaseReplayLock, replay };
+export { acquireReplayLock, enqueue, refreshReplayLock, releaseReplayLock, replay };
 export type { EnqueueInput, ReplayOptions, ReplayResult, ReplayTransport, ReplayTransportResult };

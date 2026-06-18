@@ -1,28 +1,34 @@
+import { notifyTasksChanged } from '../hooks/useTasks';
 import { replay as replayQueue } from './replay';
 
 type PageSyncTriggers = {
+  notify?: () => Promise<unknown>;
   replay?: () => Promise<unknown>;
 };
 
 type EnqueueWithReplayInput<T> = {
   enqueue: () => Promise<T>;
+  notify?: () => Promise<unknown>;
   replay?: () => Promise<unknown>;
 };
 
 async function enqueueWithReplay<T>(input: EnqueueWithReplayInput<T>): Promise<T> {
   const result = await input.enqueue();
-  void runReplay(input.replay ?? replayQueue);
+  const notify = input.notify ?? notifyTasksChanged;
+  await notify();
+  void runReplay(input.replay ?? replayQueue, notify);
   return result;
 }
 
 function registerPageSyncTriggers(input: PageSyncTriggers = {}): () => void {
+  const notify = input.notify ?? notifyTasksChanged;
   const replay = input.replay ?? replayQueue;
   const onOnline = () => {
-    void runReplay(replay);
+    void runReplay(replay, notify);
   };
   const onVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
-      void runReplay(replay);
+      void runReplay(replay, notify);
     }
   };
 
@@ -35,9 +41,10 @@ function registerPageSyncTriggers(input: PageSyncTriggers = {}): () => void {
   };
 }
 
-async function runReplay(replay: () => Promise<unknown>): Promise<void> {
+async function runReplay(replay: () => Promise<unknown>, notify: () => Promise<unknown>): Promise<void> {
   try {
     await replay();
+    await notify();
   } catch (error) {
     console.error('Sync replay failed', error);
   }

@@ -182,7 +182,7 @@ Storybook Component tests and Vitest tests reset the IndexedDB database between 
 
 ## M2 PWA Sync Engine
 
-M2 Spec 3 makes the PWA mutation path local-first. Task creates now write an optimistic Task row into IndexedDB, enqueue a `sync_queue` operation, and trigger replay instead of waiting for a successful `POST /tasks` round trip.
+M2 Spec 3 makes the PWA mutation path local-first. Task creates now write an optimistic Task row and its `sync_queue` operation in one IndexedDB transaction, then trigger replay instead of waiting for a successful `POST /tasks` round trip.
 
 `components/web_client/src/sync/replay.ts` is shared browser code. The page bundle imports it now; Spec 4 imports the same module from the Service Worker. Replay sends existing `POST`, `PATCH`, and `DELETE` Task requests through the typed OpenAPI client and reuses the queued row's `Idempotency-Key` on every retry.
 
@@ -190,13 +190,15 @@ Replay drains due queue rows in First-In-First-Out order. Successful responses r
 
 Permanent 4xx failures move the operation from `sync_queue` to `failed_ops`, preserve serialized error detail, emit `sync:permanent-fail`, warn when `failed_ops` reaches 50 rows, and cap the store at 100 rows by evicting oldest records. The UI listens for that event through `Toast`.
 
-Replay coordination uses `sync_meta.replay_lock`, an IndexedDB row with `{ owner, heartbeat_at }`. A fresh lock makes other replay callers yield; a lock is stale after 30 seconds and can be stolen. This lock works in both page and Service Worker contexts.
+Replay coordination uses `sync_meta.replay_lock`, an IndexedDB row with `{ owner, heartbeat_at }`. A fresh lock makes other replay callers yield; replay refreshes the heartbeat every 10 seconds while it owns the lock; a lock is stale after 30 seconds and can be stolen. This lock works in both page and Service Worker contexts.
 
 Page-side replay triggers are intentionally small:
 
 - `online` event.
 - `visibilitychange` when the document becomes visible.
 - immediately after enqueue.
+
+Page-trigger replay publishes `notifyTasksChanged()` after local enqueue and after replay completes so visible Task rows and pending-sync affordances reflect both optimistic writes and queue drain.
 
 `TaskList` checks `sync_queue.task_id` for visible Tasks and renders queued rows at 60% opacity with a pending-sync dot.
 

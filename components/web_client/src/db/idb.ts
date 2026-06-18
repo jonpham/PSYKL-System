@@ -42,6 +42,25 @@ async function enqueueSyncOp(entry: SyncQueueEntry, db?: PsyklDb): Promise<void>
   });
 }
 
+async function putTaskAndEnqueueSyncOp(task: Task, entry: SyncQueueEntry, db?: PsyklDb): Promise<void> {
+  return withDb(db, async (database) => {
+    const transaction = database.transaction(['tasks', 'sync_queue'], 'readwrite');
+    try {
+      await transaction.objectStore('tasks').put(task);
+      await transaction.objectStore('sync_queue').put(entry);
+      await transaction.done;
+    } catch (error) {
+      try {
+        transaction.abort();
+      } catch {
+        // The transaction may already be aborting after a failed request.
+      }
+      await transaction.done.catch(() => undefined);
+      throw error;
+    }
+  });
+}
+
 async function deleteSyncOp(id: string, db?: PsyklDb): Promise<void> {
   return withDb(db, async (database) => {
     await database.delete('sync_queue', id);
@@ -126,4 +145,5 @@ export {
   putFailedOp,
   putMeta,
   putTask,
+  putTaskAndEnqueueSyncOp,
 };

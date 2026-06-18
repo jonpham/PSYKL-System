@@ -57,6 +57,31 @@ async function releaseReplayLock(options: Pick<ReplayLockOptions, 'db' | 'owner'
   }
 }
 
+async function refreshReplayLock(options: ReplayLockOptions & { owner: string }): Promise<boolean> {
+  const now = options.now?.() ?? new Date();
+  const database = options.db ?? (await openPsyklDb());
+  try {
+    const transaction = database.transaction('sync_meta', 'readwrite');
+    const existing = await transaction.store.get(replayLockKey);
+    const lock = parseReplayLock(existing?.value);
+    if (lock?.owner !== options.owner) {
+      await transaction.done;
+      return false;
+    }
+
+    await transaction.store.put({
+      key: replayLockKey,
+      value: { owner: options.owner, heartbeat_at: now.toISOString() },
+    });
+    await transaction.done;
+    return true;
+  } finally {
+    if (!options.db) {
+      database.close();
+    }
+  }
+}
+
 function parseReplayLock(value: unknown): ReplayLockValue | undefined {
   if (!value || typeof value !== 'object' || !('owner' in value) || !('heartbeat_at' in value)) {
     return undefined;
@@ -68,5 +93,5 @@ function parseReplayLock(value: unknown): ReplayLockValue | undefined {
   return { heartbeat_at: lock['heartbeat_at'], owner: lock['owner'] };
 }
 
-export { acquireReplayLock, releaseReplayLock };
+export { acquireReplayLock, refreshReplayLock, releaseReplayLock };
 export type { ReplayLockOptions };
