@@ -5,8 +5,8 @@ branches:
   - feat/m2-s4-dt9-injectmanifest-sw
   - feat/m2-s4-dt10-background-sync
 prs:
-  - pending
-  - pending
+  - [#59](https://github.com/jonpham/PSYKL-System/pull/59)
+  - [#60](https://github.com/jonpham/PSYKL-System/pull/60)
 completed_at: 2026-06-18
 created_at: 2026-06-18
 initiative: m2-pwa-crud-offline
@@ -85,7 +85,7 @@ Expectation: The PWA shell survives offline navigation, default Task reads use t
 
 ## Change Log
 
-| Date       | PR      | Summary                                                                   |
-| ---------- | ------- | ------------------------------------------------------------------------- |
-| 2026-06-18 | pending | M2-9: owned Service Worker, app-shell cache, and Task-read runtime cache. |
-| 2026-06-18 | pending | M2-10: Background Sync registration, Service Worker sync event replay.    |
+| Date       | PR                                                     | Summary                                                                   |
+| ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| 2026-06-18 | [#59](https://github.com/jonpham/PSYKL-System/pull/59) | M2-9: owned Service Worker, app-shell cache, and Task-read runtime cache. |
+| 2026-06-18 | [#60](https://github.com/jonpham/PSYKL-System/pull/60) | M2-10: Background Sync registration, Service Worker sync event replay.    |
