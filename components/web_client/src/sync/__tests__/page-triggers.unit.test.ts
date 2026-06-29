@@ -65,4 +65,16 @@ describe('page sync triggers', () => {
     await vi.waitFor(() => expect(notify).toHaveBeenCalledTimes(2));
     expect(replay.mock.invocationCallOrder[0]).toBeLessThan(notify.mock.invocationCallOrder[1] ?? 0);
   });
+
+  it('registers Background Sync after enqueueing a mutation', async () => {
+    const enqueue = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const notify = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const registerSync = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    const replay = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+
+    await enqueueWithReplay({ enqueue, notify, registerSync, replay });
+
+    expect(registerSync).toHaveBeenCalledTimes(1);
+    expect(enqueue.mock.invocationCallOrder[0]).toBeLessThan(registerSync.mock.invocationCallOrder[0] ?? 0);
+  });
 });
