@@ -202,6 +202,23 @@ Page-trigger replay publishes `notifyTasksChanged()` after local enqueue and aft
 
 `TaskList` checks `sync_queue.task_id` for visible Tasks and renders queued rows at 60% opacity with a pending-sync dot.
 
+## M2 PWA Service Worker And Background Sync
+
+M2 Spec 4 makes the PWA Service Worker owned source code instead of generated Workbox output. `components/web_client/vite.config.ts` uses `vite-plugin-pwa` `injectManifest`, and `components/web_client/src/sw.ts` imports Workbox helpers directly.
+
+The Service Worker:
+
+- precaches the app shell through `precacheAndRoute(self.__WB_MANIFEST)`;
+- serves single-page-app navigations from cached `index.html`;
+- uses stale-while-revalidate for default `GET /tasks` reads;
+- deliberately does not cache `GET /tasks?include_deleted=1`, which remains sync-engine-only;
+- handles Background Sync events with tag `psykl-sync`;
+- imports the same `src/sync/replay.ts` module used by page replay triggers.
+
+`components/web_client/src/sw/sw-registration.ts` registers the `psykl-sync` tag after enqueue when Chromium exposes `registration.sync`. Browsers without Background Sync keep the Spec 3 page-side replay path: post-enqueue, online, and visibility-change triggers.
+
+Service Worker replay uses owner `service-worker` when calling the shared replay module. The existing IndexedDB `sync_meta.replay_lock` row prevents concurrent page and Service Worker drains.
+
 ## Architecture Decision Records
 
 ### ADR-M1-001: pnpm Workspace
@@ -375,6 +392,22 @@ When a due queue row hits a transient failure, update its retry schedule and sto
 ### ADR-M2-013: Permanent Failure Toast Without Inspector UI
 
 Preserve permanent failures in `failed_ops` and surface a toast through `sync:permanent-fail`. A full failed-operation inspector remains deferred until real dogfood usage proves it is needed.
+
+### ADR-M2-014: Owned Service Worker Through injectManifest
+
+Use `vite-plugin-pwa` `injectManifest` so `web_client` owns `src/sw.ts` and can define app-shell navigation handling, Task read caching, and Background Sync event handling in source control. `generateSW` remains too limiting for custom sync behavior.
+
+### ADR-M2-015: No skipWaiting During Service Worker Upgrade
+
+Do not call `skipWaiting()`. A live PWA session stays on one Service Worker version until all controlled clients close, avoiding mid-session replay or fetch-handler swaps. The tradeoff is a one-session lag before newly deployed Service Worker code takes over.
+
+### ADR-M2-016: Single Background Sync Tag
+
+Use the literal tag `psykl-sync` for the whole queue. Per-operation tags were rejected because the queue is already ordered and durable in IndexedDB; multiple tags would add lifecycle coordination without improving replay semantics.
+
+### ADR-M2-017: Shared Replay Module In Page And Service Worker
+
+The Service Worker imports `components/web_client/src/sync/replay.ts` and calls `replay({ owner: 'service-worker' })` from its `sync` listener. Page and Service Worker contexts therefore share request construction, retry behavior, permanent-failure handling, and IndexedDB locking.
 
 ### ADR-M1-030: Helm Templates Excluded from Prettier
 

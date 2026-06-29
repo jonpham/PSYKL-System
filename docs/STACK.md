@@ -46,7 +46,7 @@
 | Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
-## M2 PWA CRUD + Offline-First (Specs 1-3 shipped)
+## M2 PWA CRUD + Offline-First (Specs 1-4 shipped)
 
 | Layer                         | Choice                                                                                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -71,11 +71,16 @@
 | PWA mutation path             | Task creates write optimistic local rows, enqueue `create` operations, and trigger replay instead of calling `POST /tasks` directly        |
 | Pending sync UI               | Task rows with matching `sync_queue.task_id` render at 60% opacity with a pending-sync dot                                                 |
 | Sync failure UI               | `Toast` listens for `sync:permanent-fail` and renders an alert                                                                             |
+| Service Worker strategy       | `vite-plugin-pwa` `injectManifest` with owned `components/web_client/src/sw.ts`; no `skipWaiting()`                                        |
+| App-shell offline behavior    | Service Worker precaches the app shell and serves single-page-app navigations from cached `index.html`                                     |
+| Runtime Task read cache       | Service Worker uses Workbox stale-while-revalidate for default `GET /tasks`; `include_deleted=1` stays uncached for sync reads             |
+| Background Sync tag           | Chromium Background Sync registration uses the literal `psykl-sync` tag                                                                    |
+| Service Worker replay         | Service Worker `sync` events call the shared `src/sync/replay.ts` module with owner `service-worker`                                       |
+| Service Worker tests          | Real Playwright Chromium Component tests under `components/web_client/tests/component/*.pw.spec.ts`                                        |
 
 ## Pending (planned, not shipped)
 
 | Layer                | Choice                                                       | Lands in |
 | -------------------- | ------------------------------------------------------------ | -------- |
-| Service worker sync  | TBD (app-shell caching plus Background Sync integration)     | M2       |
 | Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD | M3       |
 | Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)       | M4       |

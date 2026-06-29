@@ -121,6 +121,7 @@ Open `http://localhost:5173`. The page should render the PSYKL shell with an emp
 | `pnpm --filter @psykl/web-client codegen`         | Generate `src/api/types.ts` from `components/service-task/openapi.json`                                                                  |
 | `pnpm --filter @psykl/web-client build`           | Production build (`tsc -b && vite build`)                                                                                                |
 | `pnpm --filter @psykl/web-client preview`         | Serve the production build for smoke-testing                                                                                             |
+| `pnpm --filter @psykl/web-client test:component`  | Run Storybook UI Component tests and real Chromium Service Worker Component tests                                                        |
 | `pnpm --filter @psykl/web-client storybook`       | Run Storybook dev server on `:6006` (Manual Visual Check surface for UI Components)                                                      |
 | `pnpm --filter @psykl/web-client build-storybook` | Build Storybook static into `storybook-static/`                                                                                          |
 
@@ -142,7 +143,7 @@ pnpm -r format:check                               # Layer 1: Prettier check
 pnpm -r typecheck                                  # Layer 1: tsc --noEmit (project-references)
 pnpm -r test:unit                                  # Layer 2: Vitest/Jest unit tests
 pnpm -r test:integration                           # Layer 3: in-process pglite integration tests
-pnpm -r test:component                             # Layer 4: service contract tests + UI Component tests (Storybook test-runner)
+pnpm -r test:component                             # Layer 4: service contract tests + UI Component tests + Service Worker browser tests
 
 docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
 pnpm test:e2e                                      # Layer 5: Playwright Chromium against the running stack
@@ -171,8 +172,8 @@ The GitHub Actions workflows call root verification scripts. Commands with multi
 | `pnpm verify:static`                     | Lint, format check, and typecheck               |
 | `pnpm verify:unit`                       | Unit tests                                      |
 | `pnpm verify:integration`                | Integration tests                               |
-| `pnpm verify:component:install-browsers` | Installs Chromium for Storybook tests           |
-| `pnpm verify:component`                  | Component tests                                 |
+| `pnpm verify:component:install-browsers` | Installs Chromium for Component tests           |
+| `pnpm verify:component`                  | Component tests, including Service Worker tests |
 | `pnpm verify:e2e:install-browsers`       | Installs Chromium for E2E tests                 |
 | `pnpm verify:e2e:up`                     | Builds and starts the Docker Compose E2E stack  |
 | `pnpm verify:e2e:wait`                   | service-task + web-client readiness checks      |
@@ -184,13 +185,13 @@ The GitHub Actions workflows call root verification scripts. Commands with multi
 
 Pull Requests to `main` and Spec integration branches (`spec/**`) run two GitHub Actions workflows:
 
-| Check name               | Coverage                                                |
-| ------------------------ | ------------------------------------------------------- |
-| `CI / static-checking`   | Static Analysis: lint, format check, and typecheck      |
-| `CI / unit-tests`        | Unit tests                                              |
-| `CI / integration-tests` | Integration tests                                       |
-| `CI / component-tests`   | Component tests, including Storybook UI Component tests |
-| `CI E2E / e2e`           | Docker Compose stack plus Playwright Chromium E2E       |
+| Check name               | Coverage                                                                 |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `CI / static-checking`   | Static Analysis: lint, format check, and typecheck                       |
+| `CI / unit-tests`        | Unit tests                                                               |
+| `CI / integration-tests` | Integration tests                                                        |
+| `CI / component-tests`   | Component tests, including Storybook UI and Service Worker browser tests |
+| `CI E2E / e2e`           | Docker Compose stack plus Playwright Chromium E2E                        |
 
 For this private repository, GitHub branch-protection enforcement is out of scope unless the repository becomes public or GitHub Pro is enabled. Treat these checks as the manual merge gate: do not merge PRs until the visible workflow checks are green.
 
