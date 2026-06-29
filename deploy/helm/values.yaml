@@ -1,6 +1,8 @@
 # Default values for the psykl Helm chart.
 # Override via `helm install psykl ./deploy/helm -f my-values.yaml` or `--set`.
 
+imagePullSecrets: []
+
 serviceTask:
   image:
     repository: ghcr.io/jonpham/psykl-service-task
