@@ -27,6 +27,8 @@ RUN pnpm --filter @psykl/service-task build:openapi
 RUN pnpm --filter @psykl/web-client codegen
 
 # Build the Vite app.
+ARG VITE_API_URL=http://localhost:3000
+ENV VITE_API_URL=$VITE_API_URL
 RUN pnpm --filter @psykl/web-client build
 
 # ----- Runtime stage -----

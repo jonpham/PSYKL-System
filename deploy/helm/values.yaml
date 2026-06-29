@@ -28,6 +28,10 @@ webClient:
 
 ingress:
   enabled: false # M4+ flips this to true with real host configuration
+  annotations: {}
   className: ''
   host: psykl.local
   tls: false
+  pathType: Prefix
+  apiPath: /api
+  webPath: /

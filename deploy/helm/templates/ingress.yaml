@@ -5,6 +5,10 @@ metadata:
   name: {{ .Release.Name }}-ingress
   labels:
     {{- include "psykl.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
@@ -13,15 +17,15 @@ spec:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
-          - path: /api
-            pathType: Prefix
+          - path: {{ .Values.ingress.apiPath }}
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
                 name: {{ .Release.Name }}-service-task
                 port:
                   number: {{ .Values.serviceTask.port }}
-          - path: /
-            pathType: Prefix
+          - path: {{ .Values.ingress.webPath }}
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
                 name: {{ .Release.Name }}-web-client

@@ -48,5 +48,7 @@ jobs:
           tags: |
             ghcr.io/jonpham/psykl-${{ matrix.component }}:${{ github.sha }}
             ghcr.io/jonpham/psykl-${{ matrix.component }}:latest
+          build-args: |
+            VITE_API_URL=/api
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}

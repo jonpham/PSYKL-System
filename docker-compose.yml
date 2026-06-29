@@ -32,6 +32,8 @@ services:
     build:
       context: .
       dockerfile: components/web_client/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
     image: psykl-web-client:local
     container_name: psykl-web-client
     depends_on:
