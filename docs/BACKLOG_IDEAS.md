@@ -27,6 +27,25 @@ Format: each idea is its own subsection with a short rationale, rough cost, and 
 
 ---
 
+## Infrastructure / deploy
+
+### Automate the robin image-tag bump (write-back)
+
+**What:** Remove the manual step in the homelab deploy flow where an operator hand-edits the semver image `tag:` in `PSYKL-GitOps/apps/psykl/values-robin.yaml` after cutting a release. Two candidate mechanisms: (a) a cross-repo GitHub Action in `PSYKL-System` that commits the new tag into the GitOps repo on release (precedent: the `SUBTREE_PUSH_TOKEN` cross-repo push in `cd-subtree-sync.yml`), or (b) ArgoCD Image Updater watching GHCR and writing back to git.
+
+**Why:** Today deploying a new version to robin is: cut `vX.Y.Z` → manually bump the pin → ArgoCD syncs. The manual bump is easy to forget and adds friction as deploys get more frequent. See `README.md` → Deploy to k3s and ADR-M2-010 for the current flow and the rationale for the immutable-semver pin.
+
+**Rough cost:** 0.5-1 day (Action approach); more for Image Updater (adds a cluster component + config).
+
+**Triggers to promote:** any of —
+- Homelab redeploys become frequent enough that the manual bump is a real chore.
+- A CI-driven release cadence is adopted where hands-off rollout is expected.
+- Multiple clusters/environments appear and hand-editing per-cluster values doesn't scale.
+
+**Deferred:** intentionally — for a single-user single-cluster homelab the manual, git-auditable bump is acceptable and keeps the cross-repo credential surface minimal (decided 2026-07-23).
+
+---
+
 ## (Add more learning experiments, tinkering ideas, or stretch goals below)
 
 Each entry should answer: What is it? Why bother? Cost? What triggers promotion?
