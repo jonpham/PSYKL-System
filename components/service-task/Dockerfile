@@ -45,6 +45,12 @@ RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV PGLITE_DATA_DIR=/var/lib/psykl/pglite
+
+# Build provenance: the git commit this image was built from, surfaced at GET /version.
+# Defaults to "dev" for local builds; CI passes --build-arg GIT_SHA=${{ github.sha }}.
+ARG GIT_SHA=dev
+ENV GIT_SHA=${GIT_SHA}
+
 EXPOSE 3000
 
 # Create the pglite data directory so the volume mount has a valid target.

@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: components/service-task/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
     image: psykl-service-task:local
     container_name: psykl-service-task
     environment:
@@ -34,6 +36,7 @@ services:
       dockerfile: components/web_client/Dockerfile
       args:
         VITE_API_URL: http://localhost:3000
+        VITE_GIT_SHA: ${VITE_GIT_SHA:-dev}
     image: psykl-web-client:local
     container_name: psykl-web-client
     depends_on:
