@@ -393,6 +393,37 @@ then bump the pin.
 > pinning to it silently rolls robin backward and can break `/api` routing. Always pin to a release
 > cut from the `main` commit you actually want deployed.
 
+### Confirm *which version* is deployed
+
+A deploy is only a success if the intended version (`X.Y.Z`) is the one actually running.
+"Pods are up + endpoints return 200" is necessary but **not** sufficient — it proves *a* version is
+healthy, not *which* one. Confirm the version with these, strongest last:
+
+```bash
+# 1. Running image tag — the primary signal. Expect  …:X.Y.Z
+kubectl -n psykl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"  "}{.spec.containers[0].image}{"\n"}{end}'
+
+# 2. Running image digest — airtight identity, cross-check against the registry
+kubectl -n psykl get pods -o jsonpath='{range .items[*]}{.status.containerStatuses[0].imageID}{"\n"}{end}'
+docker manifest inspect ghcr.io/jonpham/psykl-service-task:X.Y.Z --verbose | grep -m1 digest
+#   (or: gh api /users/jonpham/packages/container/psykl-service-task/versions \
+#          --jq '.[] | select(.metadata.container.tags[]? == "X.Y.Z") | .name')
+# The pod's @sha256:… must equal the registry's :X.Y.Z digest.
+
+# 3. GitOps provenance — ArgoCD synced the values commit that set the pin, and the Release exists
+kubectl -n argocd get application psykl -o jsonpath='sync={.status.sync.status}  revisions={.status.sync.revisions}{"\n"}'
+gh release view vX.Y.Z --repo jonpham/PSYKL-System   # Release + psykl-X.Y.Z.tgz asset
+```
+
+> **Do NOT use the `app.kubernetes.io/version` label as the version signal.** In this GitOps setup
+> ArgoCD renders the chart from `deploy/helm @ main`, so that label reflects `Chart.AppVersion` in
+> `main`'s `Chart.yaml` (currently `0.1.0`) — **not** the deployed image tag. It will read `0.1.0`
+> even while robin runs a `:0.2.0` (or later) image. The image tag/digest on the running pods is the
+> only trustworthy version source: `service-task` exposes no `/version` endpoint and its
+> `package.json` is `0.0.0`. (A future option to make the label truthful is to point the
+> `psykl-app.yaml` chart source `targetRevision` at the release tag instead of `main` — see the note
+> in [ADR-M2-010](docs/ARCHITECTURE.md).)
+
 ### Validate the deploy
 
 Run against robin (prefix each with `KUBECONFIG=~/.kube/k3s-10.0.1.206-robin.yaml`, or export it):
