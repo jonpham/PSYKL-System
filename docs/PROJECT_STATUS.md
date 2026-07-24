@@ -4,12 +4,14 @@
 
 **Active initiative:** M2 — PWA CRUD + offline-first (`docs/initiatives/m2-pwa-crud-offline/`).
 **Initiative status:** 🟡 In execution. [`DESIGN.md`](initiatives/m2-pwa-crud-offline/DESIGN.md) was drafted via `/office-hours` (adapted), reviewed via scoped `/plan-eng-review`, and promoted during `superpowers:writing-plans` on 2026-06-10. Architectural decisions #34-#56 are closed. Specs 1-2 are complete.
-**Last completed spec:** M2 Spec 2 — PWA IndexedDB store + `useSyncExternalStore` ([`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)).
-**Active spec for execution:** N/A — Spec 2 integration PR [#55](https://github.com/jonpham/PSYKL-System/pull/55) is under review for merge to `main`.
-**Next executable spec:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md)).
-**Active skill:** `superpowers:receiving-code-review` addressing Spec integration PR #55 review findings.
-**Branch:** `spec/m2-s2-pwa-indexeddb-store`.
+**Last completed spec:** M2 Spec 2 — PWA IndexedDB store + `useSyncExternalStore` ([`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)); integration PR [#55](https://github.com/jonpham/PSYKL-System/pull/55) merged to `main`.
+**Active spec for execution:** N/A — current work is an out-of-Spec **homelab deploy** track (see below), not an app-feature Spec.
+**Next executable spec:** M2 Spec 3 — Sync engine ([`20260610-S3-sync-engine.md`](specs/m2-pwa-crud-offline/20260610-S3-sync-engine.md)); draft integration PR [#56](https://github.com/jonpham/PSYKL-System/pull/56) exists (with Spec 4 stacked in [#62](https://github.com/jonpham/PSYKL-System/pull/62)).
+**Active skill:** none — plain infra/docs work (homelab deploy runbook), lightweight `docs:`/`infra:` PRs to `main`.
+**Branch:** `docs/robin-k3s-deploy-runbook`.
 **Known blockers:** None.
+
+**Homelab deploy track (2026-07-23, out-of-Spec, concurrent with M2):** PSYKL is deployed to a k3s cluster (Proxmox VM **robin**, `10.0.1.206`, LAN-only at `psykl.lan.witty-m.com`) via ArgoCD from a separate GitOps repo (`PSYKL-GitOps`). The two 2026-06-29 helm-hardening commits on `main` (`feat(helm): support image pull secrets`, `fix(helm): support robin ingress api path`) were the undocumented start of this. This session validated the live deploy (all ArgoCD apps Synced/Healthy), documented the flow in [`README.md` → Deploy to k3s](../README.md#deploy-to-k3s-homelab--robin) + [ADR-M2-010](ARCHITECTURE.md), and adopted **semver** as the go-forward image-pin scheme (manual bump). **Next step:** cut `v0.2.0` off `main` and repin `PSYKL-GitOps/apps/psykl/values-robin.yaml` from the raw SHA to `0.2.0` (currently still SHA `4b4aae4`). Milestone **M4 was rescoped to auth + multi-tenant isolation only** — homelab deployment is now handled. Image-tag write-back automation is deferred ([`BACKLOG_IDEAS.md`](BACKLOG_IDEAS.md)).
 
 ## How to Pick Up This Project (for any AI agent, mid-2026 or later)
 

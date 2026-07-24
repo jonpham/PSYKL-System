@@ -221,6 +221,8 @@ M1's CD release pipeline is wired (M1 Spec 6 — [feature doc](docs/features/%5B
 - **On every `v*.*.*` tag push:** `.github/workflows/cd-release.yml` re-tags the existing `:{sha}` images with the semver, packages the Helm chart at `deploy/helm/`, and creates a GitHub Release with the packaged `.tgz` attached as a release asset.
 - **Helm chart at `deploy/helm/`:** single chart, multi-Deployment — `service-task` (Deployment + Service + PVC for pglite persistence) and `web_client` (Deployment + Service), single-replica per Premise 8, optional Ingress disabled by default. Install a published release with `gh release download v0.X.Y --pattern '*.tgz' && helm install psykl ./psykl-0.X.Y.tgz`.
   For details see [`docs/STACK.md`](docs/STACK.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ADR-M1-026 through ADR-M1-030.
+- **Homelab GitOps deploy (robin/k3s):** the chart is deployed to a k3s cluster via ArgoCD from a
+  separate GitOps repo — see [Deploy to k3s (homelab / robin)](#deploy-to-k3s-homelab--robin) below.
 
 ---
 
@@ -311,6 +313,149 @@ If a release step fails, do **not** delete or move the `vX.Y.Z` tag — the fail
 | GitHub Release missing the `.tgz` asset                                                 | `softprops/action-gh-release@v2` step failed but earlier steps passed; re-running the workflow will re-upload | Re-run the workflow from the Actions tab; manually attach the asset only if re-run still fails |
 | `cd-subtree-sync.yml` 403                                                               | `SUBTREE_PUSH_TOKEN` expired or its repo-access list drifted (see ADR-M1-027 in `docs/ARCHITECTURE.md`)       | Regenerate the PAT, update the Actions secret, re-run the failed workflow                      |
 | `cd-publish.yml` `Cache export is not supported for the docker driver`                  | `docker/setup-buildx-action@v3` step missing from a new matrix leg (see ADR-M1-026)                           | Add the buildx-setup step to the new matrix leg                                                |
+
+---
+
+## Deploy to k3s (homelab / robin)
+
+The homelab deployment is a GitOps flow driven by ArgoCD, targeting **robin** — a k3s cluster on a
+Proxmox VM at `10.0.1.206`, served LAN-only at `http://psykl.lan.witty-m.com`.
+
+### What lives in which repo (read this first)
+
+The deployment is split across **three repos**. Knowing which is which saves you the hunt — for
+example, the per-cluster Helm values (`values-robin.yaml`) are **not** in this app repo and **not**
+in HOME-LAB; they live in the GitOps repo.
+
+| Repo | Role | Deployment-relevant paths |
+| --- | --- | --- |
+| **`PSYKL-System`** (this repo) | App source + the **Helm chart** (templates + default values). Nothing cluster-specific. | `deploy/helm/`, `.github/workflows/cd-*.yml` |
+| **`PSYKL-GitOps`** ([repo](https://github.com/jonpham/PSYKL-GitOps)) | Cluster **desired state**: the ArgoCD `Application` manifests and the **per-cluster Helm value overrides** (image tag pin, ingress host, CORS, pull secret). | `clusters/robin/psykl-app.yaml`, `apps/psykl/values-robin.yaml` |
+| **`HOME-LAB`** | One-time **bootstrap** of the VM + k3s + ArgoCD + repo credentials + the `ghcr-pull` image-pull secret, and the single ArgoCD root Application. | `platforms/robin-k3s/`, `ansible/roles/k3s-platform/`, [`docs/ROBIN-K3S-RECOVERY.md`](https://github.com/jonpham/HOME-LAB/blob/main/docs/ROBIN-K3S-RECOVERY.md) |
+
+**Why the split:** the chart is reusable across any cluster (this repo owns it); the values that
+make it "robin" are cluster config (the GitOps repo owns them); and the cluster itself is
+infrastructure (HOME-LAB owns it). This is the standard "app repo separate from config repo" GitOps
+pattern — app changes and deploy-config changes have independent lifecycles and review.
+
+### How ArgoCD assembles the deploy
+
+`clusters/robin/psykl-app.yaml` is a **multi-source** ArgoCD `Application`: it pulls the chart from
+`PSYKL-System/deploy/helm @ main` and overlays the values from
+`PSYKL-GitOps/apps/psykl/values-robin.yaml`. Sync is **automated** (`prune: true`, `selfHeal:
+true`). The `psykl` app, plus `ingress-nginx`, are children of the `robin-root` app-of-apps that
+HOME-LAB bootstraps (which syncs `clusters/robin/kustomization.yaml`).
+
+Consequences:
+
+- **Chart-template edits** (this repo, `deploy/helm/`) and **values edits** (GitOps repo) both
+  auto-sync on merge to `main` of their respective repos.
+- **The running image version is pinned in `values-robin.yaml` and updated manually** — see below.
+  A merge to this repo's `main` builds new images but does **not** roll robin forward on its own.
+
+### One-time operator setup (this workstation)
+
+- **kubeconfig:** robin's kubeconfig is a standalone file, not merged into your default context:
+
+  ```bash
+  export KUBECONFIG=~/.kube/k3s-10.0.1.206-robin.yaml   # prefix the commands below, or merge it in
+  kubectl config get-contexts
+  ```
+
+- No `argocd` CLI is required; inspect ArgoCD via `kubectl -n argocd`.
+- The `ghcr-pull` image-pull secret in the `psykl` namespace is created by HOME-LAB's Ansible
+  bootstrap, not by this flow. If image pulls fail with `ImagePullBackOff`, re-check that secret
+  (see `HOME-LAB/docs/ROBIN-K3S-RECOVERY.md`).
+
+### Deploy a new version to robin (semver, manual bump)
+
+robin pins an **immutable semver image tag** (not `:latest`, not a raw commit SHA) so rollouts are
+deterministic and git-auditable. Deploying a new version is a deliberate two-step: cut a release,
+then bump the pin.
+
+1. **Cut a release** (`vX.Y.Z`) per the [Release](#release) procedure above. This produces
+   `ghcr.io/jonpham/psykl-service-task:X.Y.Z` and `…/psykl-web_client:X.Y.Z` in GHCR.
+2. **Bump the pin in the GitOps repo.** In `PSYKL-GitOps`, edit `apps/psykl/values-robin.yaml` —
+   set both `serviceTask.image.tag` and `webClient.image.tag` to `X.Y.Z` — on a branch, open a PR,
+   and merge (operator-approved) to that repo's `main`.
+3. **ArgoCD auto-syncs** and rolls the new image out. Watch it:
+
+   ```bash
+   kubectl -n argocd get application psykl -o jsonpath='{.status.sync.status} {.status.health.status}{"\n"}'
+   kubectl -n psykl rollout status deploy/psykl-service-task
+   kubectl -n psykl rollout status deploy/psykl-web-client
+   ```
+
+> **Gotcha — do not point the pin at a stale semver.** `cd-release.yml` re-tags the `:{sha}` image
+> that `cd-publish.yml` built on merge to `main`, so a release tag can only be cut on a `main`
+> commit — you cannot release an unmerged branch. And an older release tag (e.g. an early `v0.1.0`)
+> will **not** contain later chart/image changes (ingress `apiPath`, `VITE_API_URL=/api`, etc.);
+> pinning to it silently rolls robin backward and can break `/api` routing. Always pin to a release
+> cut from the `main` commit you actually want deployed.
+
+### Confirm *which version* is deployed
+
+A deploy is only a success if the intended version (`X.Y.Z`) is the one actually running.
+"Pods are up + endpoints return 200" is necessary but **not** sufficient — it proves *a* version is
+healthy, not *which* one. Confirm the version with these, strongest last:
+
+```bash
+# 1. Running image tag — the primary signal. Expect  …:X.Y.Z
+kubectl -n psykl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"  "}{.spec.containers[0].image}{"\n"}{end}'
+
+# 2. Running image digest — airtight identity, cross-check against the registry
+kubectl -n psykl get pods -o jsonpath='{range .items[*]}{.status.containerStatuses[0].imageID}{"\n"}{end}'
+docker manifest inspect ghcr.io/jonpham/psykl-service-task:X.Y.Z --verbose | grep -m1 digest
+#   (or: gh api /users/jonpham/packages/container/psykl-service-task/versions \
+#          --jq '.[] | select(.metadata.container.tags[]? == "X.Y.Z") | .name')
+# The pod's @sha256:… must equal the registry's :X.Y.Z digest.
+
+# 3. GitOps provenance — ArgoCD synced the values commit that set the pin, and the Release exists
+kubectl -n argocd get application psykl -o jsonpath='sync={.status.sync.status}  revisions={.status.sync.revisions}{"\n"}'
+gh release view vX.Y.Z --repo jonpham/PSYKL-System   # Release + psykl-X.Y.Z.tgz asset
+```
+
+> **Do NOT use the `app.kubernetes.io/version` label as the version signal.** In this GitOps setup
+> ArgoCD renders the chart from `deploy/helm @ main`, so that label reflects `Chart.AppVersion` in
+> `main`'s `Chart.yaml` (currently `0.1.0`) — **not** the deployed image tag. It will read `0.1.0`
+> even while robin runs a `:0.2.0` (or later) image. The image tag/digest on the running pods is the
+> only trustworthy version source: `service-task` exposes no `/version` endpoint and its
+> `package.json` is `0.0.0`. (A future option to make the label truthful is to point the
+> `psykl-app.yaml` chart source `targetRevision` at the release tag instead of `main` — see the note
+> in [ADR-M2-010](docs/ARCHITECTURE.md).)
+
+### Validate the deploy
+
+Run against robin (prefix each with `KUBECONFIG=~/.kube/k3s-10.0.1.206-robin.yaml`, or export it):
+
+```bash
+# 1. Workloads healthy
+kubectl -n psykl get pods,svc,ingress,pvc          # pods 1/1 Running, PVC Bound, ingress present
+
+# 2. Running image matches the pin in values-robin.yaml
+kubectl -n psykl get pods -o jsonpath='{range .items[*]}{.spec.containers[0].image}{"\n"}{end}'
+
+# 3. ArgoCD reconciled
+kubectl -n argocd get applications                 # psykl (+ ingress-nginx, robin-root) Synced/Healthy
+
+# 4. App reachable through the ingress
+curl -s -o /dev/null -w 'API  HTTP %{http_code}\n' \
+  -H 'Host: psykl.lan.witty-m.com' -H 'X-User-Id: local' http://10.0.1.206/api/tasks   # expect 200 + JSON
+curl -s -o /dev/null -w 'web  HTTP %{http_code}\n' \
+  -H 'Host: psykl.lan.witty-m.com' http://10.0.1.206/                                   # expect 200 text/html
+```
+
+Catch chart/values drift **before** ArgoCD does by rendering locally against the same values:
+
+```bash
+helm template psykl deploy/helm -f ../PSYKL-GitOps/apps/psykl/values-robin.yaml   # renders cleanly (6 resources)
+```
+
+### Rebuild the cluster
+
+Rebuilding robin itself (Proxmox VM, k3s, ArgoCD, credentials, the `ghcr-pull` secret) is HOME-LAB's
+job — see [`HOME-LAB/docs/ROBIN-K3S-RECOVERY.md`](https://github.com/jonpham/HOME-LAB/blob/main/docs/ROBIN-K3S-RECOVERY.md).
+This runbook covers only the application deploy on top of a bootstrapped cluster.
 
 ---
 
