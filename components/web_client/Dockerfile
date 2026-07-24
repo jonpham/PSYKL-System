@@ -29,6 +29,10 @@ RUN pnpm --filter @psykl/web-client codegen
 # Build the Vite app.
 ARG VITE_API_URL=http://localhost:3000
 ENV VITE_API_URL=$VITE_API_URL
+# Build provenance: the git commit this bundle was built from, surfaced in the
+# app's version footer. Defaults to "dev"; CI passes --build-arg VITE_GIT_SHA=${{ github.sha }}.
+ARG VITE_GIT_SHA=dev
+ENV VITE_GIT_SHA=$VITE_GIT_SHA
 RUN pnpm --filter @psykl/web-client build
 
 # ----- Runtime stage -----
