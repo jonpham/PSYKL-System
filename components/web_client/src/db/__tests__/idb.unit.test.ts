@@ -15,6 +15,7 @@ import {
   openPsyklDb,
   putMeta,
   putTask,
+  putTaskAndEnqueueSyncOp,
 } from '../idb';
 
 const databaseName = 'psykl';
@@ -102,6 +103,27 @@ describe('sync helpers', () => {
       attempts: 0,
       next_attempt_at: '2026-06-12T16:00:01.000Z',
     });
+  });
+
+  it('rolls back the optimistic Task when the paired queue write fails', async () => {
+    // Given
+    const invalidQueueBody = () => undefined;
+
+    // When / Then
+    await expect(
+      putTaskAndEnqueueSyncOp(task, {
+        id: 'op-invalid-body',
+        task_id: task.id,
+        op: 'create',
+        body: invalidQueueBody,
+        idempotency_key: '0196f0a4-8b5a-7000-8000-000000000004',
+        created_at: '2026-06-12T16:00:01.000Z',
+        attempts: 0,
+        next_attempt_at: '2026-06-12T16:00:01.000Z',
+      }),
+    ).rejects.toThrow();
+    await expect(getTask(task.id)).resolves.toBeUndefined();
+    await expect(listSyncQueue()).resolves.toEqual([]);
   });
 
   it('stores sync metadata by key', async () => {

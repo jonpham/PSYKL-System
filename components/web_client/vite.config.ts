@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['favicon.ico'],
       manifest: {
         name: 'PSYKL-System',
@@ -22,12 +25,13 @@ export default defineConfig({
           { src: '/pwa-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      // M1 ships the manifest only. Service worker and offline cache are M2 work.
       injectRegister: false,
       devOptions: {
         enabled: true,
       },
-      workbox: { globPatterns: [] },
+      injectManifest: {
+        globPatterns: ['**/*.{html,js,css,png,webmanifest}'],
+      },
     }),
   ],
   server: {

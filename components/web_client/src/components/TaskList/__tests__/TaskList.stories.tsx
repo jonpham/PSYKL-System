@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 import type { Task } from '../../../api/client';
 import App from '../../../App';
+import { enqueueSyncOp, listSyncQueue, putTask } from '../../../db/idb';
 import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {
@@ -104,6 +105,7 @@ export const IntegratedWithCreateForm: Story = {
 
       expect(await canvas.findByText('second')).toBeInTheDocument();
       expect(canvas.getByText('first')).toBeInTheDocument();
+      await waitFor(async () => expect(await listSyncQueue()).toHaveLength(0));
     });
   },
 };
@@ -129,5 +131,47 @@ export const AppLoadError: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(await canvas.findByRole('alert')).toHaveTextContent(/failed to load tasks/i);
+  },
+};
+
+export const PendingQueuedTask: Story = {
+  loaders: [
+    async () => {
+      await putTask({
+        id: '01940000-0000-7000-8000-000000000010',
+        user_id: 'local',
+        title: 'queued task',
+        created_at: new Date('2026-05-27T12:00:00Z').toISOString(),
+        completed_at: null,
+        updated_at: new Date('2026-05-27T12:00:00Z').toISOString(),
+        server_updated_at: new Date('2026-05-27T12:00:00.500Z').toISOString(),
+        deleted_at: null,
+      });
+      await enqueueSyncOp({
+        id: '01940000-0000-7000-8000-000000000011',
+        task_id: '01940000-0000-7000-8000-000000000010',
+        op: 'create',
+        body: {
+          id: '01940000-0000-7000-8000-000000000010',
+          title: 'queued task',
+          updated_at: new Date('2026-05-27T12:00:00Z').toISOString(),
+        },
+        idempotency_key: '01940000-0000-7000-8000-000000000012',
+        attempts: 0,
+        next_attempt_at: new Date('2026-05-27T12:00:00Z').toISOString(),
+        created_at: new Date('2026-05-27T12:00:00Z').toISOString(),
+      });
+      return {};
+    },
+  ],
+  render: () => <TaskList />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step('Queued task renders as pending', async () => {
+      const item = await canvas.findByRole('listitem', { name: /queued task pending sync/i });
+      expect(item).toHaveStyle({ opacity: '0.6' });
+      expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
+    });
   },
 };

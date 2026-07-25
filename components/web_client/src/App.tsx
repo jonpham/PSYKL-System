@@ -1,5 +1,6 @@
 import { TaskCreateForm } from './components/TaskCreateForm';
 import { TaskList } from './components/TaskList';
+import { Toast } from './components/Toast';
 import { VersionFooter } from './components/VersionFooter';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
     >
       <h1>PSYKL</h1>
       <p>Time-independent planning. M1 bootstrap shell.</p>
+      <Toast />
       <section data-testid="task-ui-slot">
         <TaskCreateForm />
         <TaskList />

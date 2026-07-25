@@ -18,6 +18,7 @@
     "test:integration": "pnpm -r test:integration",
     "test:component": "pnpm -r test:component",
     "test:e2e": "pnpm --filter @psykl/e2e test",
+    "test:e2e:ui": "pnpm --filter @psykl/e2e test:ui",
     "verify:prepare": "pnpm --filter @psykl/shared-types build && pnpm --filter @psykl/service-task build:openapi && pnpm --filter @psykl/web-client codegen",
     "verify:static": "pnpm lint && pnpm format:check && pnpm typecheck",
     "verify:unit": "pnpm test:unit",

@@ -23,6 +23,9 @@ export const handlers = [
     if (request.headers.get('x-user-id') !== 'local') {
       return new HttpResponse(null, { status: 401 });
     }
+    if (!request.headers.get('idempotency-key')) {
+      return new HttpResponse(null, { status: 400 });
+    }
 
     const body = (await request.json()) as { id?: string; title?: string; updated_at?: string };
     if (!body.id || !body.title || !body.updated_at || body.title.length > 200) {
@@ -43,5 +46,66 @@ export const handlers = [
     store = [task, ...store];
 
     return HttpResponse.json(task, { status: 201 });
+  }),
+
+  http.patch('*/tasks/:id', async ({ params, request }) => {
+    if (request.headers.get('x-user-id') !== 'local') {
+      return new HttpResponse(null, { status: 401 });
+    }
+    if (!request.headers.get('idempotency-key')) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const id = String(params['id']);
+    const existing = store.find((task) => task.id === id);
+    if (!existing) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    const body = (await request.json()) as { completed_at?: string | null; title?: string; updated_at?: string };
+    if (!body.updated_at) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const nextTask: Task = {
+      ...existing,
+      completed_at: body.completed_at ?? existing.completed_at,
+      title: body.title ?? existing.title,
+      updated_at: body.updated_at,
+      server_updated_at: new Date().toISOString(),
+    };
+    store = store.map((task) => (task.id === id ? nextTask : task));
+
+    return HttpResponse.json(nextTask);
+  }),
+
+  http.delete('*/tasks/:id', async ({ params, request }) => {
+    if (request.headers.get('x-user-id') !== 'local') {
+      return new HttpResponse(null, { status: 401 });
+    }
+    if (!request.headers.get('idempotency-key')) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const id = String(params['id']);
+    const existing = store.find((task) => task.id === id);
+    if (!existing) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    const body = (await request.json()) as { deleted_at?: string; updated_at?: string };
+    if (!body.deleted_at || !body.updated_at) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const nextTask: Task = {
+      ...existing,
+      deleted_at: body.deleted_at,
+      updated_at: body.updated_at,
+      server_updated_at: new Date().toISOString(),
+    };
+    store = store.map((task) => (task.id === id ? nextTask : task));
+
+    return HttpResponse.json(nextTask);
   }),
 ];

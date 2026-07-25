@@ -46,7 +46,7 @@
 | Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
-## M2 PWA CRUD + Offline-First (Specs 1-2 shipped)
+## M2 PWA CRUD + Offline-First (Specs 1-4 shipped)
 
 | Layer                         | Choice                                                                                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -64,12 +64,23 @@
 | PWA cold-start hydration      | `GET /tasks?include_deleted=1` writes server rows, including tombstones, into IndexedDB before rendering visible non-deleted Tasks         |
 | PWA store invalidation        | Same-tab `notifyTasksChanged()` plus `BroadcastChannel('psykl-idb')` for cross-tab invalidation                                            |
 | Browser storage test shim     | `fake-indexeddb` for web_client Unit and Integration tests                                                                                 |
+| Sync replay module            | `components/web_client/src/sync/replay.ts`; shared page/Service Worker replay loop for queued mutations                                    |
+| Sync replay coordination      | IndexedDB `sync_meta.replay_lock` row with 30-second stale timeout                                                                         |
+| Sync queue replay order       | FIFO across due `sync_queue` rows; transient failures back off and stop that replay pass                                                   |
+| Permanent sync failures       | 4xx responses move rows to `failed_ops`, emit `sync:permanent-fail`, warn at 50 rows, and cap at 100 rows                                  |
+| PWA mutation path             | Task creates write optimistic local rows, enqueue `create` operations, and trigger replay instead of calling `POST /tasks` directly        |
+| Pending sync UI               | Task rows with matching `sync_queue.task_id` render at 60% opacity with a pending-sync dot                                                 |
+| Sync failure UI               | `Toast` listens for `sync:permanent-fail` and renders an alert                                                                             |
+| Service Worker strategy       | `vite-plugin-pwa` `injectManifest` with owned `components/web_client/src/sw.ts`; no `skipWaiting()`                                        |
+| App-shell offline behavior    | Service Worker precaches the app shell and serves single-page-app navigations from cached `index.html`                                     |
+| Runtime Task read cache       | Service Worker uses Workbox stale-while-revalidate for default `GET /tasks`; `include_deleted=1` stays uncached for sync reads             |
+| Background Sync tag           | Chromium Background Sync registration uses the literal `psykl-sync` tag                                                                    |
+| Service Worker replay         | Service Worker `sync` events call the shared `src/sync/replay.ts` module with owner `service-worker`                                       |
+| Service Worker tests          | Real Playwright Chromium Component tests under `components/web_client/tests/component/*.pw.spec.ts`                                        |
 
 ## Pending (planned, not shipped)
 
 | Layer                | Choice                                                       | Lands in |
 | -------------------- | ------------------------------------------------------------ | -------- |
-| Sync engine          | TBD (client-side operation queue and replay against M2 API)  | M2       |
-| Service worker sync  | TBD (app-shell caching plus Background Sync integration)     | M2       |
 | Apple-native clients | SwiftUI multiplatform (iOS / iPadOS / macOS) — toolchain TBD | M3       |
 | Multi-user auth      | TBD (OAuth provider vs magic-link vs password+session)       | M4       |
