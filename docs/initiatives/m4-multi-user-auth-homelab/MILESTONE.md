@@ -1,8 +1,15 @@
-# Milestone M4 — Multi-user Auth + Homelab Multi-instance
+# Milestone M4 — Multi-user Auth + Multi-tenant Isolation
 
 **Status:** Open (sketch — design doc to be drafted via `/office-hours` after M3 ships)
 **Design doc:** _not yet drafted_
 **Effort:** TBD
+
+> **Rescoped 2026-07-23 → auth-only.** The homelab deployment scope originally bundled here has
+> been handled ahead of M4: the Helm chart is deployed to a k3s cluster (robin) via ArgoCD from a
+> separate GitOps repo, and the deploy + validation flow is documented in
+> [`README.md` → Deploy to k3s (homelab / robin)](../../../README.md#deploy-to-k3s-homelab--robin).
+> M4 now covers only authentication + multi-tenant data isolation, and reuses that validated deploy
+> flow rather than defining a new one.
 
 ## Description
 
@@ -17,14 +24,16 @@ This is the milestone that turns PSYKL-System from a single-user dogfood tool in
 - The data-model premise from `/office-hours` (every record has `user_id` from M1) means no schema migration — the `user_id` column just starts carrying a real value instead of `"local"`
 - Per-user data isolation enforced at the middleware layer (already enforced by `user_id` matching since M1; M4 just connects the value to authenticated identity)
 - Account-level settings (timezone, default PSYKL length, notification preferences)
-- Homelab deployment guide using the helm chart from M1
+- ~~Homelab deployment guide using the helm chart from M1~~ — **done ahead of M4** (2026-07-23);
+  the robin/k3s ArgoCD GitOps deploy is validated + documented in `README.md`. M4 adds only the
+  auth/multi-tenant configuration on top of the existing flow.
 
 ## Success Criteria (preliminary, refine during design)
 
 - A user can register on a fresh `service-task` instance, log in, create tasks, and have those tasks isolated from other users on the same instance.
 - A second user on the same instance cannot see or modify the first user's tasks (enforced and tested).
-- The helm chart deployed to a homelab Kubernetes cluster serves multiple authenticated users.
-- Documentation for self-hosters: how to deploy, how to configure auth, how to back up, how to upgrade.
+- The helm chart deployed to a homelab Kubernetes cluster (deploy flow already validated on robin/k3s) serves multiple authenticated users.
+- Documentation for self-hosters: how to configure auth, how to back up, how to upgrade. (Deploy itself is already documented in `README.md` → Deploy to k3s.)
 
 ## What gets deferred to M5+
 

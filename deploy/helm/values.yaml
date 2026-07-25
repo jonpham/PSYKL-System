@@ -1,6 +1,8 @@
 # Default values for the psykl Helm chart.
 # Override via `helm install psykl ./deploy/helm -f my-values.yaml` or `--set`.
 
+imagePullSecrets: []
+
 serviceTask:
   image:
     repository: ghcr.io/jonpham/psykl-service-task
@@ -26,6 +28,10 @@ webClient:
 
 ingress:
   enabled: false # M4+ flips this to true with real host configuration
+  annotations: {}
   className: ''
   host: psykl.local
   tls: false
+  pathType: Prefix
+  apiPath: /api
+  webPath: /

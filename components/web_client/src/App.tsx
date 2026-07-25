@@ -1,6 +1,7 @@
 import { TaskCreateForm } from './components/TaskCreateForm';
 import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
+import { VersionFooter } from './components/VersionFooter';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <TaskCreateForm />
         <TaskList />
       </section>
+      <VersionFooter />
     </main>
   );
 }
