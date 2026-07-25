@@ -10,9 +10,22 @@ if (!root) {
 }
 
 registerPageSyncTriggers();
+registerServiceWorker();
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 );
+
+function registerServiceWorker(): void {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
+      console.error('Failed to register PSYKL Service Worker', error);
+    });
+  });
+}

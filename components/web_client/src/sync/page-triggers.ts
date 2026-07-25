@@ -1,4 +1,5 @@
 import { notifyTasksChanged } from '../hooks/useTasks';
+import { registerPsyklSync } from '../sw/sw-registration';
 import { replay as replayQueue } from './replay';
 
 type PageSyncTriggers = {
@@ -9,11 +10,13 @@ type PageSyncTriggers = {
 type EnqueueWithReplayInput<T> = {
   enqueue: () => Promise<T>;
   notify?: () => Promise<unknown>;
+  registerSync?: () => Promise<unknown>;
   replay?: () => Promise<unknown>;
 };
 
 async function enqueueWithReplay<T>(input: EnqueueWithReplayInput<T>): Promise<T> {
   const result = await input.enqueue();
+  await (input.registerSync ?? registerPsyklSync)();
   const notify = input.notify ?? notifyTasksChanged;
   await notify();
   void runReplay(input.replay ?? replayQueue, notify);
