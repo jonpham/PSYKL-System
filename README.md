@@ -327,11 +327,11 @@ The deployment is split across **three repos**. Knowing which is which saves you
 example, the per-cluster Helm values (`values-robin.yaml`) are **not** in this app repo and **not**
 in HOME-LAB; they live in the GitOps repo.
 
-| Repo | Role | Deployment-relevant paths |
-| --- | --- | --- |
-| **`PSYKL-System`** (this repo) | App source + the **Helm chart** (templates + default values). Nothing cluster-specific. | `deploy/helm/`, `.github/workflows/cd-*.yml` |
-| **`PSYKL-GitOps`** ([repo](https://github.com/jonpham/PSYKL-GitOps)) | Cluster **desired state**: the ArgoCD `Application` manifests and the **per-cluster Helm value overrides** (image tag pin, ingress host, CORS, pull secret). | `clusters/robin/psykl-app.yaml`, `apps/psykl/values-robin.yaml` |
-| **`HOME-LAB`** | One-time **bootstrap** of the VM + k3s + ArgoCD + repo credentials + the `ghcr-pull` image-pull secret, and the single ArgoCD root Application. | `platforms/robin-k3s/`, `ansible/roles/k3s-platform/`, [`docs/ROBIN-K3S-RECOVERY.md`](https://github.com/jonpham/HOME-LAB/blob/main/docs/ROBIN-K3S-RECOVERY.md) |
+| Repo                                                                 | Role                                                                                                                                                         | Deployment-relevant paths                                                                                                                                       |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`PSYKL-System`** (this repo)                                       | App source + the **Helm chart** (templates + default values). Nothing cluster-specific.                                                                      | `deploy/helm/`, `.github/workflows/cd-*.yml`                                                                                                                    |
+| **`PSYKL-GitOps`** ([repo](https://github.com/jonpham/PSYKL-GitOps)) | Cluster **desired state**: the ArgoCD `Application` manifests and the **per-cluster Helm value overrides** (image tag pin, ingress host, CORS, pull secret). | `clusters/robin/psykl-app.yaml`, `apps/psykl/values-robin.yaml`                                                                                                 |
+| **`HOME-LAB`**                                                       | One-time **bootstrap** of the VM + k3s + ArgoCD + repo credentials + the `ghcr-pull` image-pull secret, and the single ArgoCD root Application.              | `platforms/robin-k3s/`, `ansible/roles/k3s-platform/`, [`docs/ROBIN-K3S-RECOVERY.md`](https://github.com/jonpham/HOME-LAB/blob/main/docs/ROBIN-K3S-RECOVERY.md) |
 
 **Why the split:** the chart is reusable across any cluster (this repo owns it); the values that
 make it "robin" are cluster config (the GitOps repo owns them); and the cluster itself is
@@ -393,11 +393,11 @@ then bump the pin.
 > pinning to it silently rolls robin backward and can break `/api` routing. Always pin to a release
 > cut from the `main` commit you actually want deployed.
 
-### Confirm *which version* is deployed
+### Confirm _which version_ is deployed
 
 A deploy is only a success if the intended version (`X.Y.Z`) is the one actually running.
-"Pods are up + endpoints return 200" is necessary but **not** sufficient — it proves *a* version is
-healthy, not *which* one. Confirm the version with these, strongest last:
+"Pods are up + endpoints return 200" is necessary but **not** sufficient — it proves _a_ version is
+healthy, not _which_ one. Confirm the version with these, strongest last:
 
 ```bash
 # 1. Running image tag — the primary signal. Expect  …:X.Y.Z
@@ -450,6 +450,27 @@ Catch chart/values drift **before** ArgoCD does by rendering locally against the
 ```bash
 helm template psykl deploy/helm -f ../PSYKL-GitOps/apps/psykl/values-robin.yaml   # renders cleanly (6 resources)
 ```
+
+### Data & persistence
+
+Task data lives **server-side** in `service-task`'s embedded pglite (Postgres), written to
+`/var/lib/psykl/pglite` — a PersistentVolumeClaim (`psykl-pglite-data`, `ReadWriteOnce`,
+storageClass `local-path`) physically stored on robin's local disk at
+`/var/lib/rancher/k3s/storage/…`. The PWA also keeps a per-device IndexedDB cache (M2 Spec 2) that
+hydrates from the server; the server PVC is the source of truth.
+
+- **Deploys preserve data.** A version bump is a rolling pod swap that re-mounts the same PVC — the
+  PVC's lifecycle is independent of pods, and ArgoCD `prune` won't remove it while the chart still
+  declares it. Todos survive.
+- **What would lose data:** deleting the PVC (via `helm uninstall`, deleting the ArgoCD
+  Application, or **renaming the Helm release / PVC template** — the PV reclaim policy is `Delete`,
+  so the on-disk data goes with it), or losing the robin node's disk. Never rename the release or
+  PVC template without migrating data first.
+- **Backups:** the robin VM is captured by HOME-LAB's Proxmox Backup Server job `daily-all-guests`
+  (`all = true`, daily 02:30, guest-agent fs-freeze → filesystem-consistent, client-side encrypted,
+  restore-tested). RPO ≈ 24h. This is a **whole-VM** backup, not a `pg_dump`: a normal restore rolls
+  all of robin back to the snapshot; to recover only the pglite directory, use PBS **file-level
+  restore**. See `HOME-LAB/docs/10-BACKUP-OPERATIONS.md`.
 
 ### Rebuild the cluster
 
