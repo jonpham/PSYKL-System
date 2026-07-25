@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { listSyncQueue } from '../../db/idb';
 import { useTasks } from '../../hooks/useTasks';
+import { EmptyState } from './EmptyState';
+import { TaskListSkeleton } from './TaskListSkeleton';
 import { TaskRow } from './TaskRow';
 
 export function TaskList() {
@@ -35,7 +37,7 @@ export function TaskList() {
   }, [tasks]);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <TaskListSkeleton />;
   }
 
   if (error) {
@@ -43,7 +45,7 @@ export function TaskList() {
   }
 
   if (tasks.length === 0) {
-    return <p>No tasks yet. Create one above.</p>;
+    return <EmptyState />;
   }
 
   return (

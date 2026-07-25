@@ -516,7 +516,7 @@ For uncompleted Specs, feature-doc-shaped Markdown files exist at `docs/initiati
 | M2-2 PWA IndexedDB store + useSyncExternalStore    | [`docs/features/[20260612]GH39_m2-pwa-indexeddb-store.md`](../../features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)                                             |
 | M2-3 Sync engine (shared replay + page triggers)   | [`issues/[20260522]P3_m2-sync-engine.md`](./issues/%5B20260522%5DP3_m2-sync-engine.md)                                                                              |
 | M2-4 Service Worker + Background Sync              | [`../../features/[20260618]GH41_m2-service-worker-background-sync.md`](../../features/%5B20260618%5DGH41_m2-service-worker-background-sync.md)                      |
-| M2-5 PWA CRUD UI polish                            | [`issues/[20260522]P5_m2-pwa-crud-ui-polish.md`](./issues/%5B20260522%5DP5_m2-pwa-crud-ui-polish.md)                                                                |
+| M2-5 PWA CRUD UI polish                            | [`../../features/[20260724]P5_m2-pwa-crud-ui-polish.md`](../../features/%5B20260724%5DP5_m2-pwa-crud-ui-polish.md)                                                  |
 | M2-6 Multi-device E2E + offline harness            | [`issues/[20260522]P6_m2-multi-device-e2e-harness.md`](./issues/%5B20260522%5DP6_m2-multi-device-e2e-harness.md)                                                    |
 
 ## GSTACK REVIEW REPORT

@@ -39,3 +39,38 @@ export const PermanentSyncFailure: Story = {
     });
   },
 };
+
+export const OfflineBanner: Story = {
+  render: () => <Toast />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step('Going offline shows the banner', async () => {
+      window.dispatchEvent(new Event('offline'));
+      await waitFor(() => {
+        expect(canvas.getByRole('status')).toHaveTextContent(/offline/i);
+      });
+    });
+
+    await step('Going back online clears the banner', async () => {
+      window.dispatchEvent(new Event('online'));
+      await waitFor(() => {
+        expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      });
+    });
+  },
+};
+
+export const StaleWriteReplacement: Story = {
+  render: () => <Toast />,
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step('A superseded write shows the replacement toast', async () => {
+      window.dispatchEvent(new CustomEvent('sync:stale-write', { detail: { task: { title: 'groceries' } } }));
+      await waitFor(() => {
+        expect(canvas.getByRole('alert')).toHaveTextContent(/groceries.*replaced your change/i);
+      });
+    });
+  },
+};
