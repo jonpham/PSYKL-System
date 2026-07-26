@@ -42,6 +42,8 @@ test.describe('M1: PSYKL Task CRUD via PWA', () => {
       await expect(page.getByText(title)).toBeVisible();
     }
 
-    await expect(page.getByRole('listitem').locator('span')).toHaveText([...titles].reverse());
+    // The Task title now renders inside its inline-edit button (aria-label "Edit <title>")
+    // rather than a bare <span> since the M2 Spec 5 TaskRow affordances landed.
+    await expect(page.getByRole('listitem').getByRole('button', { name: /^edit /i })).toHaveText([...titles].reverse());
   });
 });
