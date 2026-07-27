@@ -85,6 +85,19 @@ test.describe.skip('Task list offline sync', () => {
     await expectTaskVisible(device.page, updatedTitle);
     expect(patchAttempts).toBeGreaterThanOrEqual(2);
   });
+
+  test('a queued change shows a pending-sync dot until it syncs', async ({ browser }) => {
+    const device = await openDevice(browser);
+    const title = `queued ${Date.now()}`;
+
+    // Offline keeps the create queued past the 2s pending threshold, so the row
+    // surfaces the pending-sync dot; the dot never appears for fast online syncs.
+    await device.context.setOffline(true);
+    await createTask(device.page, title);
+
+    const row = device.page.getByRole('listitem').filter({ hasText: title });
+    await expect(row.locator('[aria-label="Pending sync"]')).toBeVisible();
+  });
 });
 
 async function openDevice(browser: Browser, userId = uniqueUserId()) {

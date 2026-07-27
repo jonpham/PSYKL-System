@@ -1,9 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
 
-// This suite is the plain-language record of what a user can do with the Task
-// list in the PWA. Each `test(...)` title reads as a user story; collapsed to
-// their titles, these tests describe the client's supported behaviors.
-
 test.describe('Task list', () => {
   test.beforeEach(async ({ page }) => {
     const userId = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -84,22 +80,6 @@ test.describe('Task list', () => {
     await expect(page.getByText(title)).not.toBeVisible();
     await page.reload();
     await expect(page.getByText(title)).not.toBeVisible();
-  });
-
-  // Skipped until Spec 6's offline harness can hold a mutation unsynced past the
-  // 2-second pending threshold. Documents the intended behavior: a "pending
-  // sync" dot appears on a row whose change has not yet reached the server, so
-  // the user knows their work is queued (e.g. while offline). Online syncs
-  // complete within the threshold and never surface the dot.
-  test.skip('a user sees a pending-sync dot while a change stays unsynced', async ({ page }) => {
-    await page.goto('/');
-    const title = `queued ${Date.now()}`;
-    await createTask(page, title);
-
-    // Requires offline / stalled-network control (Spec 6) to keep the create op
-    // queued for longer than the 2s threshold.
-    const row = page.getByRole('listitem').filter({ hasText: title });
-    await expect(row.locator('[aria-label="Pending sync"]')).toBeVisible();
   });
 });
 
