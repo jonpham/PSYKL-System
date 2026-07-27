@@ -7,7 +7,7 @@ created_at: 2026-06-10
 initiative: m2-pwa-crud-offline
 spec_number: 5
 devtasks_total: 2
-devtasks_complete: 0
+devtasks_complete: 1
 step_gating: false
 honors_decisions: [35, 47, 48, 55]
 ---
@@ -78,13 +78,13 @@ Spec integration branch: `spec/m2-s5-pwa-crud-ui-polish`.
 **Branch:** `feat/m2-s5-dt11-task-crud-affordances`
 **Affected:** `components/web_client/src/components/TaskList/TaskList.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.unit.test.tsx`, `components/web_client/src/components/TaskList/__tests__/TaskList.stories.tsx`, `components/web_client/src/components/TaskList/TaskRow/TaskRow.tsx`, `components/web_client/src/components/TaskList/TaskRow/__tests__/TaskRow.unit.test.tsx`, `components/web_client/src/components/TaskList/TaskRow/index.ts`, `components/web_client/src/test/msw-handlers.ts`.
 
-- [ ] Step 1: Write failing `TaskRow` tests for click-title-to-edit, Enter save, blur save, Escape cancel, complete toggle, uncomplete toggle, and two-click delete confirmation within 3 seconds.
-- [ ] Step 2: Write failing Storybook play functions proving each mutation enqueues the expected operation and does not call `fetch` directly from the component.
-- [ ] Step 3: Implement `TaskRow` as a private child of `TaskList`.
-- [ ] Step 4: Wire Task row actions to `enqueue()` with correct `updated_at`, `completed_at`, and `deleted_at` values.
-- [ ] Step 5: Add stale-write reconciliation story where server returns a newer row and IDB rerender replaces the local edit.
-- [ ] Step 6: Run `pnpm --filter @psykl/web-client test:unit` and `pnpm --filter @psykl/web-client test:component`.
-- [ ] Step 7: Commit with `feat: add pwa task edit complete delete controls`.
+- [x] Step 1: Write failing `TaskRow` tests for click-title-to-edit, Enter save, blur save, Escape cancel, complete toggle, uncomplete toggle, and two-click delete confirmation within 3 seconds.
+- [x] Step 2: Write failing Storybook play functions proving each mutation enqueues the expected operation and does not call `fetch` directly from the component.
+- [x] Step 3: Implement `TaskRow` as a private child of `TaskList`.
+- [x] Step 4: Wire Task row actions to `enqueue()` with correct `updated_at`, `completed_at`, and `deleted_at` values.
+- [x] Step 5: Add stale-write reconciliation story where server returns a newer row and IDB rerender replaces the local edit.
+- [x] Step 6: Run `pnpm --filter @psykl/web-client test:unit` and `pnpm --filter @psykl/web-client test:component`.
+- [x] Step 7: Commit with `feat: add pwa task edit complete delete controls`.
 
 ### DevTask M2-12: Add skeleton, empty state, and toast polish
 

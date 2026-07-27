@@ -40,7 +40,7 @@ No new API surface.
 ## Implementation Components
 
 - Modify `e2e/playwright.config.ts` if two-context helpers need shared setup.
-- Create `e2e/m2-offline-sync.e2e.spec.ts`.
+- Create `e2e/task_list-offline-sync.e2e.spec.ts`.
 - Create `e2e/helpers/multi-device.ts`.
 - Possibly modify `components/web_client/src/testids.ts` if stable selectors are not already available; prefer accessible roles first.
 
@@ -48,12 +48,12 @@ No new API surface.
 
 End-to-End:
 
-| File                              | Assertion                                             |
-| --------------------------------- | ----------------------------------------------------- |
-| `e2e/m2-offline-sync.e2e.spec.ts` | offline create syncs when online returns              |
-| `e2e/m2-offline-sync.e2e.spec.ts` | two-context LWW conflict returns newest client update |
-| `e2e/m2-offline-sync.e2e.spec.ts` | delete tombstone propagates to second context         |
-| `e2e/m2-offline-sync.e2e.spec.ts` | network drop mid-PATCH retries idempotently           |
+| File                                     | Assertion                                             |
+| ---------------------------------------- | ----------------------------------------------------- |
+| `e2e/task_list-offline-sync.e2e.spec.ts` | offline create syncs when online returns              |
+| `e2e/task_list-offline-sync.e2e.spec.ts` | two-context LWW conflict returns newest client update |
+| `e2e/task_list-offline-sync.e2e.spec.ts` | delete tombstone propagates to second context         |
+| `e2e/task_list-offline-sync.e2e.spec.ts` | network drop mid-PATCH retries idempotently           |
 
 Static, unit, integration, and component layers run unchanged as part of full verification.
 
@@ -64,7 +64,7 @@ Spec integration branch: `spec/m2-s6-multi-device-e2e-harness`.
 ### DevTask M2-13: Add two-context M2 E2E coverage
 
 **Branch:** `feat/m2-s6-dt13-multi-device-e2e`
-**Affected:** `e2e/m2-offline-sync.e2e.spec.ts`, `e2e/helpers/multi-device.ts`, `e2e/playwright.config.ts`, optionally `components/web_client/src/testids.ts`.
+**Affected:** `e2e/task_list-offline-sync.e2e.spec.ts`, `e2e/helpers/multi-device.ts`, `e2e/playwright.config.ts`, optionally `components/web_client/src/testids.ts`.
 
 - [ ] Step 1: Write failing helper test or first E2E setup proving two browser contexts share one backend but have isolated browser storage.
 - [ ] Step 2: Write failing E2E: device A creates task offline, returns online, task appears after sync and survives reload.
@@ -73,7 +73,7 @@ Spec integration branch: `spec/m2-s6-multi-device-e2e-harness`.
 - [ ] Step 5: Write failing E2E: network drops mid-PATCH, replay sends same `Idempotency-Key`, server applies the write once.
 - [ ] Step 6: Implement `openTwoDevices()` and helper methods for `setOffline`, `createTask`, `editTask`, `completeTask`, `deleteTask`, and `expectTaskVisible`.
 - [ ] Step 7: Add any stable selectors only where accessible roles are insufficient.
-- [ ] Step 8: Run `pnpm test:e2e -- m2-offline-sync.e2e.spec.ts`.
+- [ ] Step 8: Run `pnpm test:e2e -- task_list-offline-sync.e2e.spec.ts`.
 - [ ] Step 9: Run manual sabotage checks from the P6 issue brief locally during review: invert LWW comparison and confirm conflict test fails; disable idempotency cache and confirm retry test fails; revert both before commit.
 - [ ] Step 10: Add final Spec close-out docs in the Spec integration PR: feature doc, `CHANGELOG.md`, durable docs, M2 status handoff, and delete the P6 issue brief plus this spec at close-out.
 - [ ] Step 11: Run full verification: `pnpm verify:prepare`, `pnpm verify:static`, `pnpm verify:unit`, `pnpm verify:integration`, `pnpm verify:component`, `pnpm verify:e2e`.

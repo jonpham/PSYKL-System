@@ -1,6 +1,9 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
 
-test.describe.skip('M2 inactive: offline Task sync end-to-end behavior', () => {
+// Skipped until Spec 6's offline / multi-device harness lands (see the S6
+// execution spec). Activated there; kept here so the intended offline sync
+// behaviors are documented as soon as they are user-visible.
+test.describe.skip('Task list offline sync', () => {
   test('offline-created Task syncs when the device returns online', async ({ browser }) => {
     const device = await openDevice(browser);
     const title = `offline create ${Date.now()}`;
@@ -81,6 +84,19 @@ test.describe.skip('M2 inactive: offline Task sync end-to-end behavior', () => {
 
     await expectTaskVisible(device.page, updatedTitle);
     expect(patchAttempts).toBeGreaterThanOrEqual(2);
+  });
+
+  test('a queued change shows a pending-sync dot until it syncs', async ({ browser }) => {
+    const device = await openDevice(browser);
+    const title = `queued ${Date.now()}`;
+
+    // Offline keeps the create queued past the 2s pending threshold, so the row
+    // surfaces the pending-sync dot; the dot never appears for fast online syncs.
+    await device.context.setOffline(true);
+    await createTask(device.page, title);
+
+    const row = device.page.getByRole('listitem').filter({ hasText: title });
+    await expect(row.locator('[aria-label="Pending sync"]')).toBeVisible();
   });
 });
 

@@ -24,7 +24,7 @@ As a **developer**, I want **every Pull Request to run the full 5-layer test pyr
 3. **Docker Compose E2E workflow.** `.github/workflows/ci-e2e.yml` installs Playwright Chromium, builds the Compose stack with `docker-compose.e2e.yml`, waits for both service boundaries, runs Playwright E2E tests, uploads the Playwright report on failure, prints Compose logs on failure, and always tears the stack down.
 4. **Root verification command surface.** Root `verify:*` scripts in `package.json` are the developer-facing source of truth for CI commands. GitHub Actions call those commands instead of duplicating test invocations in workflow YAML.
 5. **Reusable E2E shell helpers.** Multi-step shell behavior that developers may need locally lives under `scripts/`: Compose up/down/logs and service readiness checks.
-6. **Baseline Playwright E2E package.** The root `e2e/` workspace contains Playwright configuration and `m1-task-crud.e2e.spec.ts`, covering task creation and list rendering through the running PWA.
+6. **Baseline Playwright E2E package.** The root `e2e/` workspace contains Playwright configuration and `task_list.e2e.spec.ts`, covering task creation and list rendering through the running PWA.
 7. **Private-repository scope.** README and close-out docs record that branch-protection enforcement and required status checks are out of scope while the repository is private without GitHub Pro; the visible workflow checks are the manual merge gate.
 
 ## Source Artifacts Consolidated
@@ -46,7 +46,7 @@ As a **developer**, I want **every Pull Request to run the full 5-layer test pyr
 
 ## Verification Steps
 
-**Associated E2E test:** `e2e/m1-task-crud.e2e.spec.ts`.
+**Associated E2E test:** `e2e/task_list.e2e.spec.ts`.
 
 **Manual verification**
 
