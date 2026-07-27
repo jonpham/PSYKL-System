@@ -63,7 +63,10 @@ test.describe('Task list', () => {
     const title = `finish report ${Date.now()}`;
     await createTask(page, title);
 
-    await page.getByRole('checkbox', { name: markCompleteName(title) }).check();
+    // click() (not check()): the checkbox is controlled and only flips checked
+    // after the optimistic update round-trips through IndexedDB, so check()'s
+    // synchronous state assertion would fail. toBeChecked() auto-waits.
+    await page.getByRole('checkbox', { name: markCompleteName(title) }).click();
 
     await expect(page.getByRole('checkbox', { name: markIncompleteName(title) })).toBeChecked();
     await page.reload();
