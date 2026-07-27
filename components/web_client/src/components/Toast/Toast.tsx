@@ -55,7 +55,7 @@ function Toast() {
           role="status"
           style={{ ...bannerStyle, background: '#eef3fb', border: '1px solid #6b8fc7', color: '#20365c' }}
         >
-          You’re offline. Changes will sync when you reconnect.
+          You're offline. Changes will sync when you reconnect.
         </div>
       ) : null}
       {message ? (
