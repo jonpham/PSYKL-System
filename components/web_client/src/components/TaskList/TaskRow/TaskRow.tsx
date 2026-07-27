@@ -4,8 +4,12 @@ import type { Task } from '../../../api/client';
 import type { SyncQueueEntry } from '../../../db/idb.types';
 import { enqueueWithReplay } from '../../../sync/page-triggers';
 import { enqueue, replay } from '../../../sync/replay';
+import { useDelayedFlag } from './useDelayedFlag';
 
 const CONFIRM_DELETE_WINDOW_MS = 3000;
+// Only surface the pending-sync affordance once a row has been unsynced for this
+// long, so fast online syncs don't flash a distracting dimmed row + dot.
+const PENDING_AFFORDANCE_DELAY_MS = 2000;
 
 interface TaskRowProps {
   isPending?: boolean;
@@ -18,6 +22,7 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const cancelEditRef = useRef(false);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showPending = useDelayedFlag(isPending, PENDING_AFFORDANCE_DELAY_MS);
 
   useEffect(() => {
     return () => {
@@ -81,13 +86,13 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
 
   return (
     <li
-      aria-label={isPending ? `${task.title} pending sync` : task.title}
+      aria-label={showPending ? `${task.title} pending sync` : task.title}
       style={{
         alignItems: 'center',
         borderBottom: '1px solid #eee',
         display: 'flex',
         gap: '0.5rem',
-        opacity: isPending ? 0.6 : 1,
+        opacity: showPending ? 0.6 : 1,
         padding: '0.5rem 0',
       }}
     >
@@ -138,7 +143,7 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
         </button>
       )}
 
-      {isPending ? (
+      {showPending ? (
         <span aria-label="Pending sync" style={{ color: '#8a6d00', fontSize: '0.85em' }}>
           ●
         </span>

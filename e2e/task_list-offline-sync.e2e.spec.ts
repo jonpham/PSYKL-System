@@ -1,6 +1,9 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
 
-test.describe.skip('M2 inactive: offline Task sync end-to-end behavior', () => {
+// Skipped until Spec 6's offline / multi-device harness lands (see the S6
+// execution spec). Activated there; kept here so the intended offline sync
+// behaviors are documented as soon as they are user-visible.
+test.describe.skip('Task list offline sync', () => {
   test('offline-created Task syncs when the device returns online', async ({ browser }) => {
     const device = await openDevice(browser);
     const title = `offline create ${Date.now()}`;

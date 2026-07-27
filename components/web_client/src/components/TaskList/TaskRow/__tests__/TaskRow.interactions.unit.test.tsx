@@ -105,12 +105,44 @@ describe('TaskRow delete confirmation (Unit)', () => {
 });
 
 describe('TaskRow pending sync affordance (Unit)', () => {
-  it('marks the row and shows a pending indicator when isPending', () => {
-    // Given / When
+  it('shows the pending affordance only after the 2s threshold', () => {
+    // Given a row that is pending
+    vi.useFakeTimers();
     renderRow(true);
 
-    // Then
+    // Then before the threshold there is no dot and the row label is plain
+    expect(screen.queryByLabelText(/^pending sync$/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'walk the dog' })).toBeInTheDocument();
+
+    // When the threshold elapses
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    // Then the dimmed row + dot appear
     const item = screen.getByRole('listitem', { name: /walk the dog pending sync/i });
     expect(within(item).getByLabelText(/^pending sync$/i)).toBeInTheDocument();
+  });
+
+  it('never shows the dot if the row stops being pending before the threshold', () => {
+    // Given a row that is pending
+    vi.useFakeTimers();
+    const view = renderRow(true);
+
+    // When it syncs (stops pending) before the threshold elapses
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    view.rerender(
+      <ul>
+        <TaskRow isPending={false} task={baseTask} />
+      </ul>,
+    );
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    // Then the dot never appears
+    expect(screen.queryByLabelText(/^pending sync$/i)).not.toBeInTheDocument();
   });
 });

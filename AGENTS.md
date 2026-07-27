@@ -123,6 +123,7 @@ When invoking `superpowers:subagent-driven-development` or dispatching long-live
   4. **Component** — the system component as a black box against its boundaries. Services: API contract tests (status codes, response shapes, header enforcement including `user_id` default-deny). UI apps: **UI Component tests** drive the application against stubbed back-ends.
   5. **End-to-End** — the full stack (Compose or platform equivalent) driven by the real client. Platform-specific driver (PWA → Playwright; Apple-native → XCUITest / Swift Testing).
 - **Tests live in the same PR as the implementation they cover.** Implementation without tests is a working-agreement violation; reject at review.
+- **Every new user-visible UI behavior ships with an E2E test in the same PR.** As soon as a behavior can reach a user (which must be assumed the moment the change merges), an End-to-End test documents the expected user story and guards against regression. If the full flow is not yet exercisable (e.g., it needs an offline/multi-device harness that lands later), commit the test **skipped** (`test.skip` / `test.describe.skip`) — or keep the UI off the E2E surface — rather than omitting it. Collapsed to their titles, the E2E tests are the plain-language record of what the client lets a user do; write each `test(...)` title as a user story, not in technical terms.
 - **Tests exercise real behavior, not stubs.** Integration tests touch the real in-process DB; E2E tests run the real stack. Component-layer mocks are explicit and intentional (out-of-control services, faked back-ends for UI tests). Mocking core domain logic is a smell.
 - **Negative-path tests are required for default-deny behavior** (e.g., `user_id` middleware Component tests proving header-less requests are rejected).
 
@@ -168,7 +169,7 @@ components/web_client/src/components/TaskList/
     TaskRow.tsx
     index.ts
 
-e2e/m1-task-crud.e2e.spec.ts               ← E2E
+e2e/task_list.e2e.spec.ts                  ← E2E
 ```
 
 #### Test Structure Convention
@@ -327,6 +328,10 @@ Docs live in `docs/`:
 ## Code Standards
 
 Code style lives in [`docs/STYLE.md`](docs/STYLE.md). Keep durable style rules there, then enforce them in ESLint or Prettier when practical so agents and non-agent contributors get the same feedback locally and in continuous integration.
+
+### Naming
+
+- **No milestone tokens in codebase filenames or identifiers.** Milestone/initiative labels (`m1`, `m2`, `M3`, …) belong only in planning artifacts under `docs/*` (design docs, spec docs, feature docs, retrospectives) and in doc filenames. Source files, test files (including E2E specs), fixtures, and code identifiers must be named for the behavior or surface they cover, not the milestone that introduced them — behavior outlives the milestone, and a file named `m1-task-crud.e2e.spec.ts` reads as stale the moment M2 changes it. Example: `e2e/task_list.e2e.spec.ts`, not `e2e/m1-task-crud.e2e.spec.ts`.
 
 ### Git Conventions
 

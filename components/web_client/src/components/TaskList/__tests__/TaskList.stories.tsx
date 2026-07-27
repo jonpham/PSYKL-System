@@ -168,10 +168,15 @@ export const PendingQueuedTask: Story = {
   play: async ({ canvasElement, step }) => {
     const canvas = within(canvasElement);
 
-    await step('Queued task renders as pending', async () => {
-      const item = await canvas.findByRole('listitem', { name: /queued task pending sync/i });
-      expect(item).toHaveStyle({ opacity: '0.6' });
-      expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
+    await step('Queued task surfaces the pending affordance after the 2s threshold', async () => {
+      const item = await canvas.findByRole('listitem', { name: /queued task/i });
+      await waitFor(
+        () => {
+          expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
+          expect(item).toHaveStyle({ opacity: '0.6' });
+        },
+        { timeout: 3000 },
+      );
     });
   },
 };
