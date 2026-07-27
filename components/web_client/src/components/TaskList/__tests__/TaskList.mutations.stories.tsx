@@ -57,7 +57,7 @@ export const EditTitleEnqueuesPatch: Story = {
 
     // Act
     await userEvent.click(canvas.getByRole('button', { name: /edit seed task/i }));
-    const input = canvas.getByRole('textbox', { name: /edit title/i });
+    const input = await canvas.findByRole('textbox', { name: /edit title/i });
     await userEvent.clear(input);
     await userEvent.type(input, 'seed task edited{Enter}');
 
@@ -117,7 +117,9 @@ export const DeleteEnqueuesDelete: Story = {
 
     // Act
     await userEvent.click(canvas.getByRole('button', { name: /^delete seed task/i }));
-    await userEvent.click(canvas.getByRole('button', { name: /confirm delete seed task/i }));
+    // findByRole (not getByRole): the first click arms the confirm state, so wait
+    // for the re-rendered "Confirm delete" label rather than racing the render.
+    await userEvent.click(await canvas.findByRole('button', { name: /confirm delete seed task/i }));
 
     // Assert
     await waitFor(async () => {
@@ -163,7 +165,7 @@ export const StaleWriteReconciliation: Story = {
 
     // Act
     await userEvent.click(canvas.getByRole('button', { name: /edit seed task/i }));
-    const input = canvas.getByRole('textbox', { name: /edit title/i });
+    const input = await canvas.findByRole('textbox', { name: /edit title/i });
     await userEvent.clear(input);
     await userEvent.type(input, 'local edit{Enter}');
 
