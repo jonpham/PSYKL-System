@@ -6,6 +6,7 @@ import type { PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { moveToFailedOps } from './replay.failed-ops';
 import { acquireReplayLock, refreshReplayLock, releaseReplayLock } from './replay.lock';
 import { sendEntry } from './replay.transport';
+import { emitStaleWriteIfSuperseded } from './stale-write';
 
 type EnqueueInput = { body: unknown; op: SyncQueueEntry['op']; optimisticTask?: Task; taskId: string };
 
@@ -94,6 +95,7 @@ async function replayEntry(
   try {
     const response = await (options.transport ?? sendEntry)(entry);
     if (response.status >= 200 && response.status < 300 && response.data) {
+      emitStaleWriteIfSuperseded(entry, response.data);
       await putTask(response.data, options.db);
       await deleteSyncOp(entry.id, options.db);
       result.replayed += 1;
