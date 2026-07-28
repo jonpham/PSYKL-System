@@ -66,6 +66,32 @@ describe('page sync triggers', () => {
     expect(replay.mock.invocationCallOrder[0]).toBeLessThan(notify.mock.invocationCallOrder[1] ?? 0);
   });
 
+  it('notifies the UI and resolves before Background Sync registration settles', async () => {
+    const enqueue = vi.fn<() => Promise<string>>().mockResolvedValue('queued');
+    const notify = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    let finishRegisterSync: () => void = () => undefined;
+    const registerSync = vi.fn<() => Promise<void>>().mockReturnValue(
+      new Promise((resolve) => {
+        finishRegisterSync = resolve;
+      }),
+    );
+    let finishReplay: () => void = () => undefined;
+    const replay = vi.fn<() => Promise<void>>().mockReturnValue(
+      new Promise((resolve) => {
+        finishReplay = resolve;
+      }),
+    );
+
+    const result = enqueueWithReplay({ enqueue, notify, registerSync, replay });
+
+    await expect(result).resolves.toBe('queued');
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(enqueue.mock.invocationCallOrder[0]).toBeLessThan(notify.mock.invocationCallOrder[0] ?? 0);
+    expect(notify.mock.invocationCallOrder[0]).toBeLessThan(registerSync.mock.invocationCallOrder[0] ?? 0);
+    finishRegisterSync();
+    finishReplay();
+  });
+
   it('registers Background Sync after enqueueing a mutation', async () => {
     const enqueue = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
     const notify = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);

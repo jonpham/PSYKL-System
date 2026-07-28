@@ -202,6 +202,8 @@ Page-trigger replay publishes `notifyTasksChanged()` after local enqueue and aft
 
 `TaskList` checks `sync_queue.task_id` for visible Tasks and renders queued rows at 60% opacity with a pending-sync dot.
 
+`enqueueWithReplay()` notifies IndexedDB subscribers before Background Sync registration. This keeps optimistic rows visible and form controls responsive when the browser is offline or `navigator.serviceWorker.ready` is slow. Background Sync registration remains best-effort; page replay still runs after enqueue, online events, and visibility changes.
+
 ## M2 PWA Service Worker And Background Sync
 
 M2 Spec 4 makes the PWA Service Worker owned source code instead of generated Workbox output. `components/web_client/vite.config.ts` uses `vite-plugin-pwa` `injectManifest`, and `components/web_client/src/sw.ts` imports Workbox helpers directly.
@@ -218,6 +220,22 @@ The Service Worker:
 `components/web_client/src/sw/sw-registration.ts` registers the `psykl-sync` tag after enqueue when Chromium exposes `registration.sync`. Browsers without Background Sync keep the Spec 3 page-side replay path: post-enqueue, online, and visibility-change triggers.
 
 Service Worker replay uses owner `service-worker` when calling the shared replay module. The existing IndexedDB `sync_meta.replay_lock` row prevents concurrent page and Service Worker drains.
+
+## M2 Multi-Device End-to-End Harness
+
+M2 Spec 6 activates the repo-root Playwright suite for the complete offline-first Task flow. `e2e/task_list-offline-sync.e2e.spec.ts` drives the production PWA served by the Docker Compose E2E stack and the real `service-task` backed by pglite.
+
+The harness opens two `browser.newContext()` instances in one Chromium browser to simulate two devices. Each context has isolated IndexedDB, cookies, Service Workers, and network state, while route interception injects the same `X-User-Id` when a test needs both devices to share one backend account.
+
+E2E helpers inspect browser-local IndexedDB stores from inside the page context. This lets tests assert storage isolation, queued operations, and queue drain without adding debug-only service endpoints or resetting data inside product code.
+
+The active E2E cases prove:
+
+- offline-created Tasks render optimistically, queue, replay when online returns, and survive reload;
+- two devices editing one Task converge on the newer client `updated_at`;
+- delete tombstones propagate through hydration and hide Tasks from default lists;
+- dropped `PATCH` responses retry with the same `Idempotency-Key`, replay the cached server response, and reject same-key/different-body reuse with `409`;
+- pending queued rows show the delayed pending-sync affordance.
 
 ## Architecture Decision Records
 
@@ -408,6 +426,18 @@ Use the literal tag `psykl-sync` for the whole queue. Per-operation tags were re
 ### ADR-M2-017: Shared Replay Module In Page And Service Worker
 
 The Service Worker imports `components/web_client/src/sync/replay.ts` and calls `replay({ owner: 'service-worker' })` from its `sync` listener. Page and Service Worker contexts therefore share request construction, retry behavior, permanent-failure handling, and IndexedDB locking.
+
+### ADR-M2-018: Multi-Device E2E Uses Two Browser Contexts
+
+Use two isolated Playwright browser contexts in one Chromium browser to simulate two devices. Contexts isolate storage, cookies, Service Workers, and offline state while keeping startup cost low.
+
+### ADR-M2-019: E2E Reads Browser IndexedDB Directly
+
+Inspect IndexedDB from inside the Playwright page context for End-to-End assertions about local storage and queue state. Do not add debug endpoints or product-only reset APIs for these checks.
+
+### ADR-M2-020: Optimistic UI Notification Precedes Background Sync Registration
+
+Notify IndexedDB subscribers immediately after enqueue before registering Background Sync. Service Worker readiness can be slow or unavailable while offline; optimistic UI must not wait for it.
 
 ### ADR-M1-030: Helm Templates Excluded from Prettier
 

@@ -16,9 +16,9 @@ type EnqueueWithReplayInput<T> = {
 
 async function enqueueWithReplay<T>(input: EnqueueWithReplayInput<T>): Promise<T> {
   const result = await input.enqueue();
-  await (input.registerSync ?? registerPsyklSync)();
   const notify = input.notify ?? notifyTasksChanged;
   await notify();
+  void (input.registerSync ?? registerPsyklSync)();
   void runReplay(input.replay ?? replayQueue, notify);
   return result;
 }

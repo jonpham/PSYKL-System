@@ -1,61 +1,89 @@
-import { type Browser, expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-// Skipped until Spec 6's offline / multi-device harness lands (see the S6
-// execution spec). Activated there; kept here so the intended offline sync
-// behaviors are documented as soon as they are user-visible.
-test.describe.skip('Task list offline sync', () => {
+import { listLocalSyncQueue, listLocalTasks } from './helpers/idb-storage';
+import {
+  createTask,
+  deleteTask,
+  editTask,
+  expectServerTaskHidden,
+  expectServerTaskVisible,
+  expectTaskHidden,
+  expectTaskVisible,
+  openDevice,
+  openTwoDevices,
+  reloadAndExpectTaskVisible,
+  setOffline,
+  type TaskRow,
+  triggerQueuedReplay,
+} from './helpers/multi-device';
+
+test.describe('Task list offline sync', () => {
+  test('two devices share one backend account but keep isolated browser storage', async ({ browser }) => {
+    const { first, second, userId } = await openTwoDevices(browser);
+    const title = `shared backend ${Date.now()}`;
+
+    await createTask(first, title);
+    await expectTaskVisible(first, title);
+    await expectServerTaskVisible(userId, title);
+
+    await expect(listLocalTasks(second)).resolves.toEqual([]);
+    await reloadAndExpectTaskVisible(second, title);
+    await expect(listLocalTasks(second)).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ title })]));
+  });
+
   test('offline-created Task syncs when the device returns online', async ({ browser }) => {
     const device = await openDevice(browser);
     const title = `offline create ${Date.now()}`;
 
-    await device.context.setOffline(true);
-    await createTask(device.page, title);
-    await expectTaskVisible(device.page, title);
+    await setOffline(device, true);
+    await createTask(device, title);
+    await expectTaskVisible(device, title);
+    await expect(listLocalSyncQueue(device)).resolves.toHaveLength(1);
 
-    await device.context.setOffline(false);
-    await device.page.reload();
+    await setOffline(device, false);
+    await triggerQueuedReplay(device);
 
-    await expectTaskVisible(device.page, title);
+    await expectServerTaskVisible(device.userId, title);
+    await reloadAndExpectTaskVisible(device, title);
+    await expect(listLocalSyncQueue(device)).resolves.toHaveLength(0);
   });
 
   test('newer client edit wins when two devices edit the same Task', async ({ browser }) => {
-    const userId = uniqueUserId();
-    const first = await openDevice(browser, userId);
-    const second = await openDevice(browser, userId);
+    const { first, second, userId } = await openTwoDevices(browser);
     const originalTitle = `conflict seed ${Date.now()}`;
     const olderTitle = `older edit ${Date.now()}`;
     const newerTitle = `newer edit ${Date.now()}`;
 
-    await createTask(first.page, originalTitle);
-    await second.page.reload();
-    await expectTaskVisible(second.page, originalTitle);
+    await createTask(first, originalTitle);
+    await expectServerTaskVisible(userId, originalTitle);
+    await reloadAndExpectTaskVisible(second, originalTitle);
 
-    await first.context.setOffline(true);
-    await editTask(first.page, originalTitle, olderTitle);
-    await editTask(second.page, originalTitle, newerTitle);
-    await first.context.setOffline(false);
-    await first.page.reload();
-    await second.page.reload();
+    await setOffline(first, true);
+    await editTask(first, originalTitle, olderTitle);
+    await expectTaskVisible(first, olderTitle);
+    await editTask(second, originalTitle, newerTitle);
+    await expectServerTaskVisible(userId, newerTitle);
+    await setOffline(first, false);
+    await triggerQueuedReplay(first);
 
-    await expectTaskVisible(first.page, newerTitle);
-    await expectTaskVisible(second.page, newerTitle);
-    await expect(first.page.getByText(olderTitle)).not.toBeVisible();
+    await reloadAndExpectTaskVisible(first, newerTitle);
+    await reloadAndExpectTaskVisible(second, newerTitle);
+    await expectTaskHidden(first, olderTitle);
   });
 
   test('delete on one device propagates and hides the Task on another device', async ({ browser }) => {
-    const userId = uniqueUserId();
-    const first = await openDevice(browser, userId);
-    const second = await openDevice(browser, userId);
+    const { first, second, userId } = await openTwoDevices(browser);
     const title = `delete sync ${Date.now()}`;
 
-    await createTask(first.page, title);
-    await second.page.reload();
-    await expectTaskVisible(second.page, title);
+    await createTask(first, title);
+    await expectServerTaskVisible(userId, title);
+    await reloadAndExpectTaskVisible(second, title);
 
-    await deleteTask(first.page, title);
+    await deleteTask(first, title);
+    await expectServerTaskHidden(userId, title);
     await second.page.reload();
 
-    await expect(second.page.getByText(title)).not.toBeVisible();
+    await expectTaskHidden(second, title);
   });
 
   test('network drop during PATCH retries with one idempotent server write', async ({ browser }) => {
@@ -63,27 +91,53 @@ test.describe.skip('Task list offline sync', () => {
     const originalTitle = `retry seed ${Date.now()}`;
     const updatedTitle = `retry result ${Date.now()}`;
     let patchAttempts = 0;
+    const idempotencyKeys: string[] = [];
+    const serverResponses: TaskRow[] = [];
 
-    await createTask(device.page, originalTitle);
+    await createTask(device, originalTitle);
+    const originalTask = await expectServerTaskVisible(device.userId, originalTitle);
     await device.page.route('http://localhost:3000/tasks/**', async (route) => {
       if (route.request().method() !== 'PATCH') {
         await route.continue();
         return;
       }
       patchAttempts += 1;
+      idempotencyKeys.push(route.request().headers()['idempotency-key'] ?? '');
       if (patchAttempts === 1) {
+        const response = await route.fetch({ headers: { ...route.request().headers(), 'X-User-Id': device.userId } });
+        serverResponses.push((await response.json()) as TaskRow);
         await route.abort();
         return;
       }
-      await route.continue();
+      const response = await route.fetch({ headers: { ...route.request().headers(), 'X-User-Id': device.userId } });
+      serverResponses.push((await response.json()) as TaskRow);
+      await route.fulfill({ response });
     });
 
-    await editTask(device.page, originalTitle, updatedTitle);
-    await expectTaskVisible(device.page, updatedTitle);
-    await device.page.reload();
+    await editTask(device, originalTitle, updatedTitle);
+    await expectTaskVisible(device, updatedTitle);
+    await triggerQueuedReplay(device);
 
-    await expectTaskVisible(device.page, updatedTitle);
-    expect(patchAttempts).toBeGreaterThanOrEqual(2);
+    await expect.poll(async () => patchAttempts, { timeout: 10_000 }).toBeGreaterThanOrEqual(2);
+    await reloadAndExpectTaskVisible(device, updatedTitle);
+
+    expect(Array.from(new Set(idempotencyKeys))).toHaveLength(1);
+    expect(serverResponses).toHaveLength(2);
+    expect(serverResponses[1]).toEqual(serverResponses[0]);
+
+    const conflictingReplay = await fetch(`http://localhost:3000/tasks/${originalTask.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKeys[0] ?? '',
+        'X-User-Id': device.userId,
+      },
+      body: JSON.stringify({
+        title: `conflicting retry ${Date.now()}`,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+    expect(conflictingReplay.status).toBe(409);
   });
 
   test('a queued change shows a pending-sync dot until it syncs', async ({ browser }) => {
@@ -92,53 +146,10 @@ test.describe.skip('Task list offline sync', () => {
 
     // Offline keeps the create queued past the 2s pending threshold, so the row
     // surfaces the pending-sync dot; the dot never appears for fast online syncs.
-    await device.context.setOffline(true);
-    await createTask(device.page, title);
+    await setOffline(device, true);
+    await createTask(device, title);
 
     const row = device.page.getByRole('listitem').filter({ hasText: title });
     await expect(row.locator('[aria-label="Pending sync"]')).toBeVisible();
   });
 });
-
-async function openDevice(browser: Browser, userId = uniqueUserId()) {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await page.route('http://localhost:3000/**', async (route) => {
-    await route.continue({
-      headers: {
-        ...route.request().headers(),
-        'X-User-Id': userId,
-      },
-    });
-  });
-  await page.goto('/');
-  return { context, page };
-}
-
-async function createTask(page: Page, title: string): Promise<void> {
-  await page.getByRole('textbox', { name: /title/i }).fill(title);
-  await page.getByRole('button', { name: /create/i }).click();
-}
-
-async function editTask(page: Page, currentTitle: string, nextTitle: string): Promise<void> {
-  await page.getByText(currentTitle).click();
-  await page.getByRole('textbox', { name: /title/i }).fill(nextTitle);
-  await page.getByRole('textbox', { name: /title/i }).press('Enter');
-}
-
-async function deleteTask(page: Page, title: string): Promise<void> {
-  await page
-    .getByRole('listitem')
-    .filter({ hasText: title })
-    .getByRole('button', { name: /delete/i })
-    .click();
-  await page.getByRole('button', { name: /confirm delete/i }).click();
-}
-
-async function expectTaskVisible(page: Page, title: string): Promise<void> {
-  await expect(page.getByText(title)).toBeVisible();
-}
-
-function uniqueUserId(): string {
-  return `e2e-m2-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}

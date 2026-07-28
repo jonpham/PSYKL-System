@@ -1,5 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
+import { listLocalSyncQueue } from './helpers/idb-storage';
+
 test.describe('Task list', () => {
   test.beforeEach(async ({ page }) => {
     const userId = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -45,6 +47,7 @@ test.describe('Task list', () => {
     const edited = `final ${Date.now()}`;
     await createTask(page, original);
     await expect(page.getByText(original)).toBeVisible();
+    await expectSyncQueueEmpty(page);
 
     await editTaskTitle(page, original, edited);
 
@@ -58,6 +61,7 @@ test.describe('Task list', () => {
     await page.goto('/');
     const title = `finish report ${Date.now()}`;
     await createTask(page, title);
+    await expectSyncQueueEmpty(page);
 
     // click() (not check()): the checkbox is controlled and only flips checked
     // after the optimistic update round-trips through IndexedDB, so check()'s
@@ -74,6 +78,7 @@ test.describe('Task list', () => {
     const title = `obsolete ${Date.now()}`;
     await createTask(page, title);
     await expect(page.getByText(title)).toBeVisible();
+    await expectSyncQueueEmpty(page);
 
     await deleteTask(page, title);
 
@@ -98,6 +103,10 @@ async function editTaskTitle(page: Page, currentTitle: string, nextTitle: string
 async function deleteTask(page: Page, title: string): Promise<void> {
   await page.getByRole('button', { name: new RegExp(`^delete ${escapeRegExp(title)}$`, 'i') }).click();
   await page.getByRole('button', { name: new RegExp(`^confirm delete ${escapeRegExp(title)}$`, 'i') }).click();
+}
+
+async function expectSyncQueueEmpty(page: Page): Promise<void> {
+  await expect.poll(async () => listLocalSyncQueue({ page }), { timeout: 10_000 }).toEqual([]);
 }
 
 function taskTitleButtons(page: Page) {
