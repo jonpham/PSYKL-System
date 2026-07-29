@@ -37,7 +37,7 @@ As a user, I want the PWA to load my Tasks from local storage instead of waiting
 
 ## Source Artifacts Consolidated
 
-- Initiative design: `docs/initiatives/m2-pwa-crud-offline/DESIGN.md`.
+- Initiative design: consolidated into this feature doc, `docs/ARCHITECTURE.md`, and `docs/retrospectives/2026-07-29-m2-pwa-crud-offline.md`; deleted at M2 initiative close-out.
 - Original issue brief: `docs/initiatives/m2-pwa-crud-offline/issues/[20260522]P2_m2-pwa-indexeddb-store.md` (deleted by this PR).
 - Execution spec: `docs/specs/m2-pwa-crud-offline/20260610-S2-pwa-indexeddb-store.md` (deleted by this PR).
 - GitHub issue: [#39](https://github.com/jonpham/PSYKL-System/issues/39).

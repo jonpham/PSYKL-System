@@ -105,8 +105,8 @@ Surface order is intentional: the PWA carries cross-device dogfood, product iter
 | Milestone | Theme                                                                                            | Status   | Initiative dir                                        |
 | --------- | ------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------- |
 | M1        | Bootstrap — vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | Designed | `docs/initiatives/m1-bootstrap/`                      |
-| M2        | Complete Task Create/Read/Update/Delete + offline-first PWA                                      | Sketched | `docs/initiatives/m2-pwa-crud-offline/`               |
+| M2        | Complete Task Create/Read/Update/Delete + offline-first PWA                                      | Done     | `docs/features/`                                      |
 | M3        | Apple-native clients (iOS, iPadOS, macOS) + product discovery (PSYKL execution + retrospectives) | Sketched | `docs/initiatives/m3-apple-native-product-discovery/` |
 | M4        | Multi-user authentication + homelab multi-instance support                                       | Sketched | `docs/initiatives/m4-multi-user-auth-homelab/`        |
 
-Each initiative directory carries a `MILESTONE.md` summary suitable for the corresponding GitHub Milestone description, and (once designed) a `DESIGN.md` with full scope, premises, alternatives considered, and success criteria.
+Each active or future initiative directory carries a `MILESTONE.md` summary suitable for the corresponding GitHub Milestone description, and (once designed) a `DESIGN.md` with full scope, premises, alternatives considered, and success criteria. Completed initiatives are consolidated into durable feature docs, architecture docs, changelog entries, and retrospectives.

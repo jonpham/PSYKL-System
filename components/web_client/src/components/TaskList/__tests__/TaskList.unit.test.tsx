@@ -84,4 +84,32 @@ describe('TaskList (Unit)', () => {
 
     expect(screen.getByText(/boom/i)).toBeInTheDocument();
   });
+
+  it('renders a loading skeleton with stable-height placeholder rows when loading', () => {
+    mockUseTasks.mockReturnValue({
+      error: null,
+      loading: true,
+      tasks: [],
+    });
+
+    render(<TaskList />);
+
+    expect(screen.getByRole('status', { name: /loading tasks/i })).toBeInTheDocument();
+    const placeholders = screen.getAllByTestId('task-skeleton-row');
+    expect(placeholders.length).toBeGreaterThan(0);
+    placeholders.forEach((row) => expect(row).toHaveStyle({ height: '2.5rem' }));
+  });
+
+  it('renders the empty-state copy when all tasks are tombstoned (none visible)', () => {
+    // useTasks() filters tombstoned rows, so an all-tombstoned store surfaces as [].
+    mockUseTasks.mockReturnValue({
+      error: null,
+      loading: false,
+      tasks: [],
+    });
+
+    render(<TaskList />);
+
+    expect(screen.getByText('No tasks yet. Create your first one.')).toBeInTheDocument();
+  });
 });

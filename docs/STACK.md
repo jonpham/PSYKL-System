@@ -46,7 +46,7 @@
 | Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
-## M2 PWA CRUD + Offline-First (Specs 1-4 shipped)
+## M2 PWA CRUD + Offline-First (Specs 1-6 complete)
 
 | Layer                         | Choice                                                                                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -77,6 +77,10 @@
 | Background Sync tag           | Chromium Background Sync registration uses the literal `psykl-sync` tag                                                                    |
 | Service Worker replay         | Service Worker `sync` events call the shared `src/sync/replay.ts` module with owner `service-worker`                                       |
 | Service Worker tests          | Real Playwright Chromium Component tests under `components/web_client/tests/component/*.pw.spec.ts`                                        |
+| CRUD UI mutation surface      | `TaskRow` under `TaskList` supports inline edit, complete/uncomplete, and two-click delete; all mutations enqueue local-first sync ops     |
+| Offline/user feedback UI      | Loading skeleton, empty state, offline banner, permanent-fail toast, stale-write toast, and delayed pending-sync dot                       |
+| Multi-device E2E harness      | Playwright opens two isolated browser contexts against one Compose stack and one `user_id`; helper assertions inspect each context's IDB   |
+| Offline sync E2E coverage     | Active E2E covers offline create replay, Last-Write-Wins convergence, tombstone propagation, idempotent retry, and pending-sync affordance |
 
 ## Pending (planned, not shipped)
 
