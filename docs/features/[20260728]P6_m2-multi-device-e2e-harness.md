@@ -43,7 +43,7 @@ As a developer, I can run one End-to-End suite that proves PSYKL's offline-first
 
 ## Source Artifacts Consolidated
 
-- Initiative design: `docs/initiatives/m2-pwa-crud-offline/DESIGN.md`.
+- Initiative design: consolidated into this feature doc, `docs/ARCHITECTURE.md`, and `docs/retrospectives/2026-07-29-m2-pwa-crud-offline.md`; deleted at M2 initiative close-out.
 - Original issue brief: `docs/initiatives/m2-pwa-crud-offline/issues/[20260522]P6_m2-multi-device-e2e-harness.md` (deleted by this PR).
 - Execution spec: `docs/specs/m2-pwa-crud-offline/20260610-S6-multi-device-e2e-harness.md` (deleted by this PR).
 

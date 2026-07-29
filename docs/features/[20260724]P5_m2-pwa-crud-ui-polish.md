@@ -45,7 +45,7 @@ As a user, I can edit a task inline, mark it complete, delete it with confirmati
 
 ## Source Artifacts Consolidated
 
-- Initiative design: `docs/initiatives/m2-pwa-crud-offline/DESIGN.md`.
+- Initiative design: consolidated into this feature doc, `docs/ARCHITECTURE.md`, and `docs/retrospectives/2026-07-29-m2-pwa-crud-offline.md`; deleted at M2 initiative close-out.
 - Original issue brief: `docs/initiatives/m2-pwa-crud-offline/issues/[20260522]P5_m2-pwa-crud-ui-polish.md` (deleted by this PR).
 - Execution spec: `docs/specs/m2-pwa-crud-offline/20260610-S5-pwa-crud-ui-polish.md` (deleted by this PR).
 

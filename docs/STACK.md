@@ -46,7 +46,7 @@
 | Image tag strategy                | Three-tag per Decision #30: on merge → `:{sha}` + `:latest`; on tag → additionally `:{semver}`. Helm `values.yaml` defaults to `:latest`; release pipeline overrides   |
 | LICENSE                           | MIT                                                                                                                                                                    |
 
-## M2 PWA CRUD + Offline-First (Specs 1-6 complete on spec/m2-pwa)
+## M2 PWA CRUD + Offline-First (Specs 1-6 complete)
 
 | Layer                         | Choice                                                                                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
