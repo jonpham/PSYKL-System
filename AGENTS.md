@@ -335,10 +335,10 @@ Code style lives in [`docs/STYLE.md`](docs/STYLE.md). Keep durable style rules t
 
 ### Git Conventions
 
-- **Branch naming:**
-  - Spec integration branch: `spec/m{N}-s{M}-{spec-slug}` (e.g., `spec/m1-s2-service-task-minimal-api`).
-  - DevTask branch: `(feat|bug|infra|chore)/m{N}-s{M}-dt{K}-{short-slug}` (e.g., `feat/m1-s2-dt3-nestjs-handlers`).
-  - Initiative planning branch: `feat/plan-{initiative-slug}` (e.g., `feat/plan-m2-pwa-crud-offline`); doc-changes only.
+- **Branch naming:** `{tag}` is the initiative's short purpose tag (e.g. `psykl-loop`). Shipped milestones M1/M2 used ordinal tokens (`m1`, `m2`) in their branch names; those names are history and are not rewritten. See `docs/PRODUCT.md` → Milestone Roadmap for why milestones from `psykl-loop` onward are tagged rather than numbered.
+  - Spec integration branch: `spec/{tag}-s{M}-{spec-slug}` (e.g., `spec/psykl-loop-s1-cycle-entity`).
+  - DevTask branch: `(feat|bug|infra|chore)/{tag}-s{M}-dt{K}-{short-slug}` (e.g., `feat/psykl-loop-s1-dt3-cycle-endpoints`).
+  - Initiative planning branch: `feat/plan-{tag}` (e.g., `feat/plan-psykl-loop`); doc-changes only.
 - **Spec/DevTask branching workflow (Spec PRs are long-lived integration branches; DevTask PRs are small reviewable units).**
   - At the start of each Spec, create `spec/m{N}-s{M}-{slug}` off `main` and open a **draft PR against `main`**. This is the long-lived Spec PR; it stays open until every DevTask in the Spec has merged into the Spec branch, then the Spec PR is finalized and merged into `main` as the whole-Spec review.
   - Each DevTask branches off the **active Spec integration branch** (not off `main`) **when it has no dependency on unmerged DevTask work**, and opens a PR **targeting that Spec branch** (not `main`). DevTask PRs are where small focused review happens.

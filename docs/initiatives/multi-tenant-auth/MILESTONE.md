@@ -1,14 +1,20 @@
-# Milestone M4 — Multi-user Auth + Multi-tenant Isolation
+# Milestone `multi-tenant-auth` — Multi-user Auth + Multi-tenant Isolation
 
-**Status:** Open (sketch — design doc to be drafted via `/office-hours` after M3 ships)
+**Status:** Deferred (sketch — no design doc drafted)
 **Design doc:** _not yet drafted_
 **Effort:** TBD
 
+> **Deferred 2026-08-12.** This milestone is **not sequenced** — it has no position in a milestone
+> order and no date. Per Premise 6 below, it was always gated on a demand signal rather than on a
+> calendar; the current focus is growing the PWA into a semi-mature product
+> ([`psykl-loop`](../psykl-loop/MILESTONE.md)). It becomes real when somebody actually wants to
+> self-host PSYKL-System.
+
 > **Rescoped 2026-07-23 → auth-only.** The homelab deployment scope originally bundled here has
-> been handled ahead of M4: the Helm chart is deployed to a k3s cluster (robin) via ArgoCD from a
+> been handled ahead of this milestone: the Helm chart is deployed to a k3s cluster (robin) via ArgoCD from a
 > separate GitOps repo, and the deploy + validation flow is documented in
 > [`README.md` → Deploy to k3s (homelab / robin)](../../../README.md#deploy-to-k3s-homelab--robin).
-> M4 now covers only authentication + multi-tenant data isolation, and reuses that validated deploy
+> This milestone now covers only authentication + multi-tenant data isolation, and reuses that validated deploy
 > flow rather than defining a new one.
 
 ## Description
@@ -22,10 +28,10 @@ This is the milestone that turns PSYKL-System from a single-user dogfood tool in
 - Authentication on `service-task` (token-based; specific scheme — Open Authorization (OAuth) provider, magic-link email, password+session — decided during design)
 - User registration / login flows in the PWA and iOS clients
 - The data-model premise from `/office-hours` (every record has `user_id` from M1) means no schema migration — the `user_id` column just starts carrying a real value instead of `"local"`
-- Per-user data isolation enforced at the middleware layer (already enforced by `user_id` matching since M1; M4 just connects the value to authenticated identity)
+- Per-user data isolation enforced at the middleware layer (already enforced by `user_id` matching since M1; this milestone just connects the value to authenticated identity)
 - Account-level settings (timezone, default PSYKL length, notification preferences)
-- ~~Homelab deployment guide using the helm chart from M1~~ — **done ahead of M4** (2026-07-23);
-  the robin/k3s ArgoCD GitOps deploy is validated + documented in `README.md`. M4 adds only the
+- ~~Homelab deployment guide using the helm chart from M1~~ — **done ahead of this milestone** (2026-07-23);
+  the robin/k3s ArgoCD GitOps deploy is validated + documented in `README.md`. This milestone adds only the
   auth/multi-tenant configuration on top of the existing flow.
 
 ## Success Criteria (preliminary, refine during design)
@@ -35,7 +41,7 @@ This is the milestone that turns PSYKL-System from a single-user dogfood tool in
 - The helm chart deployed to a homelab Kubernetes cluster (deploy flow already validated on robin/k3s) serves multiple authenticated users.
 - Documentation for self-hosters: how to configure auth, how to back up, how to upgrade. (Deploy itself is already documented in `README.md` → Deploy to k3s.)
 
-## What gets deferred to M5+
+## What this milestone does not cover
 
 - Server-side retro aggregation across multiple devices for one user (still parked from `/office-hours`)
 - Apple Watch integration
@@ -45,6 +51,6 @@ This is the milestone that turns PSYKL-System from a single-user dogfood tool in
 
 ## Prerequisites
 
-- M3 complete.
+- A decision to un-defer this milestone.
 - Demand signal for multi-user / self-hosted PSYKL-System (per Premise 6 — don't build this until somebody actually wants to self-host).
-- `/office-hours` design doc for M4 written and APPROVED.
+- An `/office-hours` design doc written and APPROVED.
