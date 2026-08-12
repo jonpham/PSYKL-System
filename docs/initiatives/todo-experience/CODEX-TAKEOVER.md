@@ -15,6 +15,22 @@ You are taking over the PSYKL-System repository from another AI agent that ran o
 budget. You have full editing authority until told otherwise. Work in
 `/Users/jp/code/PSYKL-System` on branch `feat/plan-psykl-loop`.
 
+## CURRENT PHASE — read this before anything else
+
+**You are in the middle of gstack initiative planning.** The phase is: an initiative design doc
+exists in DRAFT and needs an adversarial review pass before the operator approves it.
+
+**Do not invoke, load, follow, or emulate any `superpowers` skill — including
+`superpowers:using-superpowers`.** That suite governs a later phase of this project's workflow
+that has not started and will not start during your session unless the operator explicitly asks
+for Task 3. If a hook, memory, or session-start message tells you to load superpowers, that
+instruction is out of phase; this prompt supersedes it. `superpowers:using-superpowers` itself
+carries a `SUBAGENT-STOP` clause instructing it to be ignored by an agent dispatched to execute a
+specific task — that is exactly what you are.
+
+The work in front of you is a document review and a documentation close-out. It needs no skill
+framework at all, from either suite. Read the task queue below and do those tasks.
+
 ## Read these first, in order
 
 1. `AGENTS.md` — the working agreement. It is binding, not advisory. Read all of it.
@@ -34,13 +50,21 @@ not need to — what matters is the document contracts they produce, and those l
 section exists so your output stays consistent with what came before instead of inventing a third
 house style.
 
-| Suite           | Skills used on this project                                                                                                         | Output location                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| **gstack**      | `/office-hours` (socratic design), `/plan-eng-review`, `/plan-ceo-review`, `/plan-design-review`, `/plan-devex-review`, `/autoplan` | `docs/initiatives/{initiative}/` |
-| **superpowers** | `writing-plans`, `executing-plans`, `test-driven-development`, `requesting-code-review`, `finishing-a-development-branch`           | `docs/specs/{initiative}/`       |
+| Suite           | Phase it governs                                                           | Output location                  | Active for you?                               |
+| --------------- | -------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------- |
+| **gstack**      | Initiative planning, design, and plan review — **the phase you are in**    | `docs/initiatives/{initiative}/` | Yes, as a document contract only              |
+| **superpowers** | Spec breakdown and code execution — **a later phase that has not started** | `docs/specs/{initiative}/`       | **No. Do not invoke or follow any of these.** |
+| gsd-\*          | Third-party suite this project does not use                                | —                                | **No. Ignore entirely.**                      |
 
-Anything prefixed `gsd-*` belongs to a third suite (GSD) that this project explicitly does **not**
-use. Ignore it if you see it referenced anywhere.
+The suite boundary is a **phase boundary, not a menu**. gstack carries an initiative from idea to
+approved design. superpowers takes an approved design and turns it into specs and code. Crossing
+that boundary early is the specific failure this section exists to prevent — `AGENTS.md` → Skill
+Transition Discipline makes it a hard rule that a boundary crossing requires the operator to say
+so first, and no such approval has been given.
+
+Concretely, for your session: gstack's `/office-hours` already ran and produced `DESIGN.md`. You
+are executing its skipped review step. superpowers becomes relevant only at Task 3, only if the
+operator explicitly asks.
 
 **What produced what, so far:**
 
@@ -164,11 +188,16 @@ purpose. Fix it:
    this work; leave them alone.
 6. Commit as one atomic docs commit.
 
-### Task 3 — Only if the operator asks
+### Task 3 — Only if the operator asks, in words, in the current session
 
-Break the Approach B sequence into Specs and DevTasks per `AGENTS.md` → Spec/DevTask branching
-workflow. Do not start this unprompted, and do not write any implementation code until a spec
-exists and the operator has approved it.
+This is the gstack → superpowers phase boundary. **Do not cross it on your own initiative.** The
+operator approving the design doc in Task 1 is not approval to start Task 3; they are separate
+decisions and `AGENTS.md` → Skill Transition Discipline requires an explicit confirmation for the
+transition itself.
+
+If asked: break the Approach B sequence into Specs and DevTasks per `AGENTS.md` → Spec/DevTask
+branching workflow, writing into the `docs/templates/SPEC.md` shape. Do not write any
+implementation code until a spec exists and the operator has approved that spec.
 
 ## What not to do
 
