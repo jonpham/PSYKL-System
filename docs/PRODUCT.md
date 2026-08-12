@@ -56,7 +56,7 @@ The MVP closes the planning loop end-to-end:
 - Each PSYKL terminates by user-completion, user-paused-for-fatigue, or timer expiry, and surfaces a coaching suggestion at the boundary.
 - A simple retrospective view surfaces what got done and when.
 
-> **MVP delivery is sequenced across milestones**, not packed into one. Milestone 1 (M1) ships only Create + Read of a `Task` with a `title` (architecture and workflow proof). M2 completes CRUD plus offline-first behavior. The `psykl-loop` milestone introduces PSYKL execution, boundary coaching, the daily plan, and the first retrospective view — **on the PWA**, which closes the MVP loop without waiting on a native client. See `docs/initiatives/` for per-milestone scope and design.
+> **MVP delivery is sequenced across milestones**, not packed into one. Milestone 1 (M1) ships only Create + Read of a `Task` with a `title` (architecture and workflow proof). M2 completes CRUD plus offline-first behavior. The `todo-experience` milestone turns that rudimentary list into an Apple Reminders-grade task manager before PSYKL sessions attach to tasks. The following `psykl-loop` milestone introduces PSYKL execution, boundary behavior, and the first retrospective views — **on the PWA**, which closes the MVP loop without waiting on a native client. See `docs/initiatives/` for per-milestone scope and design.
 
 ## Future Features
 
@@ -102,13 +102,14 @@ Surface order is intentional: the PWA carries cross-device dogfood, product iter
 
 ## Milestone Roadmap
 
-**Shipped milestones keep their ordinal identifiers** (`M1`, `M2`) — those tokens are baked into Architecture Decision Record IDs, feature-doc filenames, and the changelog, and the ship record does not get renumbered. **Milestones from `psykl-loop` onward are identified by a short purpose tag instead of a number**, because the roadmap past the shipped work is a set of candidates rather than a sequence. A tagged milestone carries no ordering claim and no date; exactly one is active at a time, and the rest are deferred until the operator picks the next one.
+**Shipped milestones keep their ordinal identifiers** (`M1`, `M2`) — those tokens are baked into Architecture Decision Record IDs, feature-doc filenames, and the changelog, and the ship record does not get renumbered. **Milestones from `todo-experience` onward are identified by a short purpose tag instead of a number**, because the roadmap past the shipped work is a set of candidates rather than a sequence. A tagged milestone carries no ordering claim and no date; exactly one is active at a time, and the rest are deferred until the operator picks the next one.
 
 | Milestone           | Theme                                                                                            | Status                 | Initiative dir                        |
 | ------------------- | ------------------------------------------------------------------------------------------------ | ---------------------- | ------------------------------------- |
 | M1                  | Bootstrap — vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | Done                   | `docs/features/`                      |
 | M2                  | Complete Task Create/Read/Update/Delete + offline-first PWA                                      | Done                   | `docs/features/`                      |
-| `psykl-loop`        | PSYKL execution + boundary coaching + daily plan + retrospectives, on the PWA                    | Next up — sketched     | `docs/initiatives/psykl-loop/`        |
+| `todo-experience`   | Apple Reminders-grade task management on the PWA                                                 | Active — approved      | `docs/initiatives/todo-experience/`   |
+| `psykl-loop`        | PSYKL execution + boundary behavior + retrospectives, on the PWA                                 | Next up — sketched     | `docs/initiatives/psykl-loop/`        |
 | `apple-native`      | Apple-native clients (iOS, iPadOS, macOS)                                                        | Deferred — unsequenced | `docs/initiatives/apple-native/`      |
 | `multi-tenant-auth` | Multi-user authentication + multi-tenant data isolation                                          | Deferred — unsequenced | `docs/initiatives/multi-tenant-auth/` |
 

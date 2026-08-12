@@ -6,7 +6,7 @@
 
 > **Deferred 2026-08-12.** Apple-native work is postponed in favour of growing the PWA into a
 > semi-mature product first. The product-discovery scope that used to be bundled into this
-> milestone (PSYKL execution loop, boundary coaching, retrospectives) moved to
+> milestone is now split across [`todo-experience`](../todo-experience/MILESTONE.md) and
 > [`psykl-loop`](../psykl-loop/MILESTONE.md), where it ships on the PWA. Those features never
 > needed a native client, and building them first produces exactly the dogfooding signal this
 > milestone wants before committing to a native client's shape.
@@ -28,7 +28,7 @@ Build SwiftUI native clients for iPhone, iPad, and Mac — the surfaces the oper
 - Authentication against `service-task` using the same `X-User-Id: local` header (the M1/M2 wire format) until [`multi-tenant-auth`](../multi-tenant-auth/MILESTONE.md) lands real auth
 - Sync engine on the Swift side, mirroring the offline-first patterns established on the web in M2 (IndexedDB source-of-truth → sync queue → LWW reconciliation)
 - Native push notifications (iOS only) for PSYKL-boundary prompts when a cycle ends
-- Whatever product surfaces `psykl-loop` has proven out by then, rebuilt natively
+- Whatever product surfaces `todo-experience` and `psykl-loop` have proven out by then, rebuilt natively
 
 ## Cost note
 

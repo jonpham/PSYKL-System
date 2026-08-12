@@ -7,7 +7,8 @@
 > **Deferred 2026-08-12.** This milestone is **not sequenced** — it has no position in a milestone
 > order and no date. Per Premise 6 below, it was always gated on a demand signal rather than on a
 > calendar; the current focus is growing the PWA into a semi-mature product
-> ([`psykl-loop`](../psykl-loop/MILESTONE.md)). It becomes real when somebody actually wants to
+> ([`todo-experience`](../todo-experience/MILESTONE.md), then
+> [`psykl-loop`](../psykl-loop/MILESTONE.md)). It becomes real when somebody actually wants to
 > self-host PSYKL-System.
 
 > **Rescoped 2026-07-23 → auth-only.** The homelab deployment scope originally bundled here has

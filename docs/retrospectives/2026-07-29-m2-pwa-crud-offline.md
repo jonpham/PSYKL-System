@@ -71,7 +71,7 @@ No immediate rule changes. The existing close-out checklist was sufficient after
 
 ## Handoff
 
-> **Superseded 2026-08-12 — steps 3-4 only.** Steps 1-2 completed as written (PR #66 merged as `62e4105`; `v0.3.0` cut at that commit). Steps 3-4 did not happen: the operator deferred Apple-native work in favour of growing the PWA into a semi-mature product first, and the product-discovery scope moved to the new `psykl-loop` milestone. The next design pass is [`docs/initiatives/psykl-loop/MILESTONE.md`](../initiatives/psykl-loop/MILESTONE.md) on a `feat/plan-psykl-loop` branch. Recorded here unedited as the handoff this retrospective actually wrote; see [`docs/PROJECT_STATUS.md`](../PROJECT_STATUS.md) → Roadmap re-cut for the current plan.
+> **Superseded 2026-08-12 — steps 3-4 only.** Steps 1-2 completed as written (PR #66 merged as `62e4105`; `v0.3.0` cut at that commit). Steps 3-4 did not happen: the operator deferred Apple-native work in favour of growing the PWA into a semi-mature product first. Initial discovery opened `psykl-loop`, then the approved `todo-experience` design split task-management quality into the active initiative and parked `psykl-loop` as next. Recorded here unedited as the handoff this retrospective actually wrote; see [`docs/PROJECT_STATUS.md`](../PROJECT_STATUS.md) → Roadmap re-cut for the current plan.
 
 After PR #66 merges:
 
