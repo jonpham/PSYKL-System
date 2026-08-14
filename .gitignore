@@ -46,3 +46,4 @@ test-results/
 # Storybook
 storybook-static/
 **/storybook-static/
+.gstack/
