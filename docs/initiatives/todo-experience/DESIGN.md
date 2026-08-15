@@ -19,6 +19,23 @@ Milestone tag: `todo-experience`
 > - UX = User Experience.
 > - UI = User Interface.
 
+## Re-scope, 2026-08-14
+
+Recorded during `/plan-design-review` after an interactive prototype of the proposed visual system was built and used.
+
+**What changed:** the design _philosophy_. The 2026-08-13 `/design-consultation` produced a bespoke industrial visual identity ("the Ledger") and a governing thesis ("the list is arranged, not scored") that derived the product from first principles. Prototyped against 44 real tasks, it read as rigid and engineering-focused. More expensively, its philosophy was absorbing every planning pass — each review relitigated the identity instead of the product.
+
+The initiative is now **clinical craft parity with Apple Reminders, Things 3, and TickTick**, on a conventional and themable UI. Those three apps are the UI/UX bar, not a feature list.
+
+**What did not change:**
+
+- **The Feature Inventory below is unchanged**, except for the addition of theming. Notifications, repeat rules, priority flags, and shared lists stay out. Subtasks stay deferred.
+- **Premises P1 through P5 all stand**, including P2's refusal of notifications and clock-time scheduling.
+- **Approach B, structure first**, and its sequence.
+- **Every architectural risk and its decision** — the task-shaped sync queue, fractional positions over integer indexes, and the unresolved section representation.
+
+**What was retired:** the bespoke visual identity is demoted to a selectable theme, and the anti-convention stance that came with it (no color on chrome, no overdue styling, no platform font stack, no rounded corners) is reversed. See [`docs/DESIGN.md`](../../DESIGN.md) → Decisions Log.
+
 ## Problem Statement
 
 M2 shipped a technically excellent offline-first todo list — IndexedDB source of truth, sync queue, background sync, multi-device end-to-end coverage — wrapped around a **rudimentary** task experience. The PWA has four UI components (`TaskCreateForm`, `TaskList`, `Toast`, `VersionFooter`) and a flat, single, unordered list of title-only tasks.
@@ -75,6 +92,7 @@ Fine-grained rather than bucketed, at the operator's request — the four coarse
 | Row density + animation              | UI only                    | In scope                            |
 | Native-feeling inline edit           | UI only                    | Partly shipped in M2 Spec 5         |
 | Search                               | query + UI                 | In scope, late                      |
+| Theming (2 themes, device-local)     | token layer + preference   | In scope — added 2026-08-14         |
 | Priority / flag as a visible concept | —                          | **Out** — replace with ordering     |
 | Subtasks (`parent_id`)               | recursion everywhere       | **Deferred** — validate lists first |
 | Notifications / alerts               | —                          | **Out** — P2                        |
@@ -150,10 +168,10 @@ Each user-visible feature is one pull request, deployed and lived with before th
 
 This initiative is the first PSYKL milestone where UX/UI quality is the product, not decoration around the product. The planning workflow therefore adds design gates before engineering lock-in:
 
-1. **`/design-consultation` before `/plan-eng-review`.** Define the user stories, expected task-capture flows, information hierarchy, empty states, dense-list behavior, gesture vocabulary, and Apple Reminders comparison bar. Output belongs in `docs/initiatives/todo-experience/` and should be referenced by specs.
-2. **`/plan-design-review` after the consultation artifact.** Adversarially review whether the proposed UX expectations are specific enough to test and whether the milestone still feels like PSYKL rather than a shallow Reminders clone.
-3. **`/plan-eng-review` after design review.** Lock the data model, sync queue generalization, ordering representation, migration strategy, and test plan against the now-explicit user stories.
-4. **`superpowers:writing-plans` only after the approved design + design review + engineering review are complete.** Each Spec should carry user stories and verification expectations into its DevTasks.
+1. ~~**`/design-consultation` before `/plan-eng-review`.**~~ **Done 2026-08-13.** Produced the UX plan and a visual system. The visual system it proposed was subsequently retired; see Re-scope above.
+2. ~~**`/plan-design-review` after the consultation artifact.**~~ **Done 2026-08-14.** Built an interactive prototype rather than reviewing on paper, which is what surfaced the re-scope. Rewrote [`UX.md`](UX.md) and [`docs/DESIGN.md`](../../DESIGN.md), closed five of seven open UX questions, and added the surfaces the previous plan had left unspecified (list chrome, section creation, loading state, keyboard reorder, reconciled-arrangement state).
+3. **`/plan-eng-review` — next.** Lock the data model, sync queue generalization, ordering representation, section representation, device-local preference storage, migration strategy, and test plan against the now-explicit user stories.
+4. **`superpowers:writing-plans` only after engineering review is complete.** Each Spec should carry user stories and verification expectations into its DevTasks.
 
 Open questions in this design are answered at the first gate that owns the uncertainty. UX questions are answered in `/design-consultation` or `/plan-design-review`; data-model and sync questions are answered in `/plan-eng-review`; implementation chunking questions are answered in `superpowers:writing-plans`.
 
@@ -161,7 +179,7 @@ Open questions in this design are answered at the first gate that owns the uncer
 
 1. **Sections: entity, grouping value, or embedded List descriptor?** Decide during the design/engineering review pass (Risk 3).
 2. **Does the generalized sync queue migrate existing queued entries, or drain first?** A user with pending offline writes at upgrade time must not lose them.
-3. **What is the default list?** Reminders has an inbox concept; a flat list has no home. Existing tasks need somewhere to go at migration.
+3. ~~**What is the default list?**~~ **Answered 2026-08-14** in [`UX.md`](UX.md) § 10: named `Tasks`, renameable, not special beyond the last remaining list being undeletable.
 4. **Does tag design need to anticipate the retrospective?** Tags eventually power "tasks of type X." Whether that constrains tag shape now is unresolved.
 5. **What is the fractional-position representation?** `/plan-eng-review` must choose the persisted type and rebalance rule. The decision is fractional positions over integer indexes; it does not yet choose Postgres `numeric`, fixed-width decimal strings, LexoRank-style lexicographic rank strings, precision limits, or compaction behavior.
 6. **Milestone activation mechanics.** This design supersedes the active-roadmap role of the `psykl-loop` milestone doc committed earlier today in `c0d8759`; that scope becomes the _next_ milestone. Both `docs/initiatives/todo-experience/` and `docs/initiatives/psykl-loop/` already exist. The close-out is not a directory rename: write `todo-experience/MILESTONE.md`, rewrite `psykl-loop/MILESTONE.md` as the next milestone using the appendix below, and refresh roadmap tables.

@@ -1,34 +1,34 @@
-# UX Plan: Todo Experience — screens, stories, and gestures
+# UX Plan: Todo Experience — screens, behaviors, and interactions
 
-Written by `/design-consultation` (gstack) on 2026-08-13.
+Rewritten during `/plan-design-review` (gstack) on 2026-08-14, replacing the version written by `/design-consultation` on 2026-08-13.
 Branch: `feat/plan-psykl-loop`
-Status: **PROPOSED** — input to `/plan-design-review`, then `/plan-eng-review`.
+Status: **PROPOSED** — input to `/plan-eng-review`.
 Initiative: [`DESIGN.md`](DESIGN.md) · [`MILESTONE.md`](MILESTONE.md)
 Visual system: [`docs/DESIGN.md`](../../DESIGN.md) — durable, not deleted at initiative close-out.
-Prototype brief: [`PROTOTYPE-PROMPT.md`](PROTOTYPE-PROMPT.md)
 
-`deleted_at_spec_closeout: false` — this doc is initiative-level. It is deleted at **initiative** close-out along with `DESIGN.md` and `MILESTONE.md`, after its content is folded into the per-Spec feature docs.
+`deleted_at_spec_closeout: false` — initiative-level. Deleted at **initiative** close-out along with `DESIGN.md` and `MILESTONE.md`, after its content is folded into the per-Spec feature docs.
 
 > **Glossary** (each doc carries its own, per [`AGENTS.md`](../../../AGENTS.md) → Design Doc Discipline):
 >
 > - PWA = Progressive Web App.
-> - PSYKL = a self-defined period of focused work, user-tunable, defaulting to 25 minutes. A PSYKL _session_ is one start/stop event against a task.
+> - PSYKL = a self-defined period of focused work. A PSYKL _session_ is one start/stop event against a task. Sessions ship in the `psykl-loop` initiative, not this one.
 > - E2E = End-to-End, the top layer of the five-layer test pyramid.
 > - LWW = Last-Write-Wins.
+> - AT = Assistive Technology (screen readers, switch control, voice control).
 > - UX / UI = User Experience / User Interface.
 
 ---
 
-## 1. The thesis this UX has to deliver
+## 1. What this initiative is
 
-**The list is arranged, not scored.** Position in the list is the priority. Nothing in the interface ranks, flags, sorts, or scores on the user's behalf. Prioritization is an activity the user performs on their own cadence by dragging things upward.
+**A good baseline task manager, built to the craft standard of Apple Reminders, Things 3, and TickTick.**
 
-Two rules everything below answers to:
+The three reference apps set the bar for interaction quality — how a row feels to tick, how a drag settles, how a sheet opens. They are not a feature list. The feature scope of this initiative is unchanged from the approved [`DESIGN.md`](DESIGN.md) Feature Inventory: lists, sections, manual ordering, notes, optional due dates, tags, swipe actions, density and animation polish, and search. Notifications, repeat rules, priority flags, subtasks, and shared lists remain out or deferred exactly as that document has them.
 
-1. **Drag-to-reorder is the hero interaction.** It is not a feature on the list; it is the thing the app is for. Every screen decision is checked against "does this stay legible and calm at forty rows while being rearranged?"
-2. **Effort is retrospective, never declared.** Capture never asks how big a task is. There is no weight, estimate, priority, or urgency input anywhere in this initiative — and no effort _display_ either, because until `psykl-loop` ships sessions there is no honest data to show.
+Two things this initiative does not do:
 
-**Two completion paths, neither second-class.** A sub-5-minute task gets ticked. A long task gets PSYKL loops run against it until it is done. The row must afford both without privileging either. As far as this review found, no app in the category has this problem: Reminders has only the tick, focus timers have only the session.
+1. **It does not invent interaction patterns.** Where the three reference apps agree, PSYKL follows. Innovation budget belongs to the PSYKL session in the next initiative.
+2. **It does not build the PSYKL loop.** Premise P1. Section 9 records what is reserved so sessions attach additively later.
 
 ---
 
@@ -40,13 +40,19 @@ Two rules everything below answers to:
 | **List switcher** (sheet)      | Pick, create, rename, reorder, delete lists.                        | Spec 1       |
 | **Task detail** (sheet)        | Title, notes, due date, tags. Later: Start PSYKL + session history. | Spec 4       |
 | **Search** (overlay)           | Query across all lists.                                             | Spec 6       |
+| **Settings** (sheet)           | Theme selection. Nothing else in this initiative.                   | Spec 5       |
 | **Live session** (full screen) | Reserved. Not built here.                                           | `psykl-loop` |
 
-There is no home screen, no dashboard, no Today view, and no settings screen in this initiative. The app opens directly into the last list the user was in.
+There is no Today view and no dashboard. The app opens directly into the last list the user was in. A Today view is a date-derived surface and premise P2 keeps date-derived attention claims out of this product; if one is ever built it is a later decision, not a gap in this initiative.
 
-### Why there is no Today view
+### List view chrome
 
-Every competitor's centre of gravity is a Today list assembled from due dates. The moment "Today" is computed from dates, the app has made a claim on the user's attention, which Premise P2 refuses. If a Today surface is ever built it is hand-dragged, not derived. This will feel like a missing feature for roughly two weeks and is the sharpest expression of the product's anti-clock stance.
+Previously unspecified, and a real gap. Top to bottom:
+
+- **Header**, 56px, scrolls with the list rather than sticking: the list name in `title`, then a task count in `meta`. Trailing edge carries a single overflow button (`⋯`).
+- **The overflow menu** is where low-frequency list operations live, so no screen chrome is spent on them: `New Section`, `Show/Hide Completed`, `Rename List`, `Delete List`, `Settings`. This resolves the missing section-creation affordance — Spec 2's story `a user adds a section to a list` had no UI behind it in the previous version of this document.
+- **Search** is reachable by pulling down at the top of the list, the convention in all three reference apps.
+- **The capture field** is bottom-anchored, 56px, and never scrolls away.
 
 ---
 
@@ -54,61 +60,64 @@ Every competitor's centre of gravity is a Today list assembled from due dates. T
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ [ ]  Draft the migration plan                    Aug 20  │  44px
-└──────────────────────────────────────────────────────────┘
-  ── hairline rule, full bleed ──
-┌──────────────────────────────────────────────────────────┐
-│ [ ]  Rewrite the sync queue dispatch                     │
-│      ▤  INFRA  DEEP                              Aug 22  │  60px
-└──────────────────────────────────────────────────────────┘
-  ── hairline rule ──
-┌──────────────────────────────────────────────────────────┐
-│ [✓]  ~~Call the dentist~~                                │  40px
+│ ( )  Draft the migration plan                    Aug 20  │  48px
+├─────  inset rule  ───────────────────────────────────────┤
+│ ( )  Rewrite the sync queue dispatch by entity    Aug 22 │
+│      type                                                │  68px
+│      ▤  Infra                                            │
+├──────────────────────────────────────────────────────────┤
+│ (✓)  ~~Call the dentist~~                                │  48px
 └──────────────────────────────────────────────────────────┘
 ```
 
-- **Leading edge: the checkbox.** 24px target inside a 44px touch area. It stays. It is the affordance for the short-task path.
-- **Title:** `row` token, Plex Sans 400, single line, truncated with an ellipsis. Never wraps in the list — the full title lives in the detail sheet. A wrapping title destroys the scan rhythm that makes density calm.
-- **Metadata line** (only when there is metadata): note indicator `▤`, then tags in `meta-xs` mono uppercase, then the due date right-aligned in `meta-sm` mono. The right-aligned mono column aligns vertically down the whole list. That column is doing most of the "instrument" work.
-- **Trailing edge:** nothing. No chevron, no play button, no overflow menu. The row is not a call to action.
-- **Completed:** title strikes through and drops to `--ink-tertiary`, row collapses to 40px, metadata line is dropped.
-
-**No weight rail, no priority dot, no flag, no colour.** The row is monochrome by design; see [`docs/DESIGN.md`](../../DESIGN.md) → Color → The accent is reserved.
+- **Leading edge: a 22px circular checkbox** in a 44px touch target. Unchecked is a `1px` ring in `--text-tertiary`; checked fills with `--accent`.
+- **Title:** `row` token, wraps to a maximum of two lines, then truncates with an ellipsis. Validated against 44 real tasks in the 2026-08-13 prototype — single-line truncation cut more than half of them, and cut them where the meaning was.
+- **Due date:** always right-aligned on the **title's first line**, whether or not a metadata line exists. When a metadata line is present the date does not move down to join it; that alternation destroys the column the date is supposed to form. Past due renders in `--destructive`.
+- **Metadata line** (only when there is a note or tags): note indicator `▤`, then tags. `--text-secondary`.
+- **Trailing edge:** nothing at rest. On hover (pointer) or during a drag, a grip appears.
+- **Completed:** title strikes through and drops to `--text-tertiary`; the metadata line is dropped.
+- **Pending sync:** unchanged from M2 — rows unsynced for >2s dim to 0.6 and carry a pending dot.
 
 ---
 
 ## 4. Gesture vocabulary
 
-Complete and closed. Any interaction not in this table does not exist, and adding one requires re-opening this table rather than quietly appending.
+Complete for the list view. Adding a gesture requires editing this table rather than quietly appending.
 
-| Gesture               | Target                      | Result                                      | Arrives in   |
-| --------------------- | --------------------------- | ------------------------------------------- | ------------ |
-| Tap                   | Checkbox                    | Toggle complete / incomplete                | Shipped (M2) |
-| Tap                   | Row body                    | Open task detail sheet                      | Spec 4       |
-| Swipe right           | Row                         | Complete / uncomplete                       | Spec 5       |
-| Swipe left            | Row                         | Reveal Delete; second swipe or tap confirms | Spec 5       |
-| Long-press, then drag | Row                         | Reorder within and across sections          | Spec 3       |
-| Long-press, then drag | Section header              | Reorder sections within the list            | Spec 3       |
-| Tap                   | Section header              | Collapse / expand section                   | Spec 2       |
-| Tap                   | List name in header         | Open list switcher sheet                    | Spec 1       |
-| Tap                   | Quick-add rail              | Focus the input                             | Shipped (M2) |
-| Enter                 | Quick-add input             | Commit and keep focus for the next capture  | Shipped (M2) |
-| Tap                   | Search icon                 | Open search overlay                         | Spec 6       |
-| **Reserved**          | Detail sheet primary button | **Start PSYKL session**                     | `psykl-loop` |
+| Gesture               | Target                      | Result                                              | Arrives in   |
+| --------------------- | --------------------------- | --------------------------------------------------- | ------------ |
+| Tap                   | Checkbox                    | Toggle complete / incomplete                        | Shipped (M2) |
+| Tap                   | Row title                   | Edit the title inline, in place                     | Shipped (M2) |
+| Tap                   | Row, trailing detail button | Open task detail sheet                              | Spec 4       |
+| Swipe right           | Row                         | Complete / uncomplete                               | Spec 5       |
+| Swipe left            | Row                         | Reveal Delete; tap or continue the swipe to confirm | Spec 5       |
+| Long-press, then drag | Row                         | Reorder within and across sections                  | Spec 3       |
+| Modifier + ↑ / ↓      | Focused row                 | Reorder without a pointer; announced via ARIA       | Spec 3       |
+| Long-press, then drag | Section header              | Reorder sections within the list                    | Spec 3       |
+| Tap                   | Section header              | Collapse / expand section                           | Spec 2       |
+| Tap                   | List name                   | Open list switcher sheet                            | Spec 1       |
+| Tap                   | Overflow `⋯`                | Open the list menu                                  | Spec 1       |
+| Pull down             | Top of list                 | Reveal search                                       | Spec 6       |
+| Tap                   | Capture field               | Focus the input                                     | Shipped (M2) |
+| Enter                 | Capture field               | Commit and keep focus for the next capture          | Shipped (M2) |
+| **Reserved**          | Detail sheet primary button | **Start PSYKL session**                             | `psykl-loop` |
 
-**Pull-to-refresh does not exist.** Sync is automatic and continuous; a manual refresh gesture would imply the user is responsible for it and invite the belief that data can be stale.
+**Pull-to-refresh does not exist.** Sync is automatic and continuous. The pull gesture at the top of the list is spent on search instead, which is what the reference apps do.
 
-### The drag handle problem, deliberately beaten
+### Inline edit and the detail sheet both survive
 
-The [Pratt critique of Reminders](https://ixd.prattsi.org/2024/12/design-critique-reminders-macos-app/) identifies drag-to-reorder as undiscoverable — no handle appears until you already know the gesture exists. Since reordering is PSYKL's hero interaction, this is not acceptable here.
+The previous version of this document moved title editing into the detail sheet and flagged the resulting two-tap regression as "the most likely thing in this document to be wrong." It was. Reminders solves this by giving the row two targets: tapping the title edits in place, and a trailing detail button opens the sheet. PSYKL does the same. M2 Spec 5's inline edit is preserved rather than regressed, and the sheet still owns notes, dates, tags, and the reserved Start button.
 
-**On long-press, a `⠿` grip glyph fades into the row's trailing edge in `--ink-tertiary` and stays for the duration of the drag.** The lifted row takes `--pressed` ground, and an insertion gap opens that other rows animate around. On pointer devices the grip appears on hover. The list's first-run empty state also names the gesture in words.
+The trailing detail button appears on row hover or focus, and is always present for AT. It does not add visual noise at rest.
 
-### Where title editing went, and what it costs
+### Making the drag discoverable
 
-M2 Spec 5 shipped tap-to-edit-inline on the row title. Spec 4 takes that tap for the detail sheet, so title editing moves into the sheet, where the title is rendered as a focused text input at the top.
+The [Pratt critique of Reminders](https://ixd.prattsi.org/2024/12/design-critique-reminders-macos-app/) identifies drag-to-reorder as undiscoverable — no handle appears until you already know the gesture exists. Manual ordering matters here, so:
 
-This is a real regression for the "fix a typo" path — two taps instead of one — and it matches Reminders rather than beating it. It is accepted because the sheet is the only sane home for notes, due date, tags, and the reserved Start button, and because a second row-level tap target would clutter the leading edge that the checkbox owns. **Flagged for `/plan-design-review` as the most likely thing in this document to be wrong.**
+- On long-press, a grip glyph fades in at the row's trailing edge and stays for the duration of the drag. On pointer devices it appears on hover.
+- The lifted row takes `--bg-pressed` and an insertion gap opens that other rows animate around.
+- The empty-list state names the gesture in words.
+- **A keyboard path exists** (modifier + arrows, with an ARIA live-region announcement). Pointer-only reorder is inaccessible, and this is the interaction the product cares most about.
 
 ---
 
@@ -122,24 +131,28 @@ Written as E2E test titles, per `AGENTS.md` → Test Discipline: collapsed to th
 - `a user renames a list and the header updates without losing scroll position`
 - `a user creates a task while a specific list is open and the task lands in that list`
 - `a user switches lists and the previously open list's arrangement is preserved`
+- `a user reorders their lists in the switcher and the order persists`
 - `a user deletes a list and its tasks go with it`
+- `a user deletes their only list and a default list remains`
 - `a user creates a list while offline and it appears on a second device after reconnecting`
 - `a user's existing tasks from before lists existed appear in the default list`
 - `a user with queued offline writes upgrades the app and loses none of them`
 
 ### Spec 2 — Sections
 
-- `a user adds a section to a list and it appears as a header in the flow of the list`
+- `a user adds a section from the list menu and it appears as a header in the flow of the list`
 - `a user moves a task into a section by dragging it under the header`
 - `a user collapses a section and its tasks are hidden but its count remains visible`
 - `a user renames a section and tasks under it stay put`
 - `a user deletes a section and its tasks return to the list's unsectioned area rather than being deleted`
+- `a user collapses a section on one device and it stays expanded on another`
 
 ### Spec 3 — Manual ordering
 
 - `a user drags a task to the top of the list and it stays there after reload`
 - `a user sees a grip appear when long-pressing a task, before the drag starts`
 - `a user drags a task from one section into another and it keeps its new position`
+- `a user reorders a task using only the keyboard and hears the move announced`
 - `a user reorders sections and the tasks travel with their headers`
 - `a user rearranges a list on two offline devices and no hand-made arrangement is lost after both reconnect`
 
@@ -147,20 +160,21 @@ That last one is the initiative's stated success criterion and the hardest test 
 
 ### Spec 4 — Notes and optional due date
 
-- `a user taps a task and sees its full title, notes, due date, and tags`
+- `a user taps a task title and edits it in place without leaving the list`
+- `a user opens a task's detail and sees its full title, notes, due date, and tags`
 - `a user writes a note on a task and a note indicator appears on the row`
-- `a user sets a due date and it appears right-aligned in the row's metadata`
+- `a user sets a due date and it appears right-aligned on the row's title line`
 - `a user sets a due time only when the deadline has a real time, and the time is optional`
-- `a user sees no visual escalation on a task whose due date has passed`
-- `a user edits a task title in the detail sheet and the row updates`
+- `a user sees a past due date rendered as overdue`
 
-### Spec 5 — Interaction polish
+### Spec 5 — Interaction polish and theming
 
 - `a user swipes right on a task to complete it without opening anything`
 - `a user swipes left on a task and must confirm before it is deleted`
-- `a user completes a task and watches the row compact rather than celebrate`
 - `a user with reduced-motion enabled sees state changes without animation`
-- `a user scrolls a list of forty tasks and the metadata column stays aligned`
+- `a user scrolls a list of forty tasks and the date column stays aligned`
+- `a user switches to the Ledger theme and the whole app changes appearance`
+- `a user's chosen theme survives a reload but does not follow them to a second device`
 
 ### Spec 6 — Tags and search
 
@@ -172,82 +186,95 @@ That last one is the initiative's stated success criterion and the hardest test 
 
 ---
 
-## 6. Empty and edge states
+## 6. Empty, loading, and edge states
 
-Each one is a designed screen, not a blank area. All copy is in `--ink-secondary`, `body` token, left-aligned under the header — never centered, never illustrated, never exclamatory.
+Each is a designed screen, not a blank area. Copy is in `--text-secondary`, left-aligned under the header.
 
-| State                             | Content                                                                                                                                                                                                                         |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **First run, no lists**           | The default list already exists and is open, so this state is never reached. Migration puts every pre-existing task there. See Open Question 1.                                                                                 |
-| **List with no tasks**            | `Nothing here yet.` Then, one line smaller: `Add a task below. Long-press any task to drag it into position.` The second line is where the reorder gesture is taught.                                                           |
-| **Section with no tasks**         | The header stays with a `0` count in mono. Empty sections are not auto-removed — a section is a container the user made on purpose, and deleting it behind their back is the kind of thing that erodes trust in an arrangement. |
-| **All tasks in a list completed** | The completed rows remain, compacted. No congratulation, no empty-state swap, no celebration. The work being done is not an event the app has feelings about.                                                                   |
-| **Search, no results**            | `No tasks match "<query>".` Nothing else. No suggestions, no "did you mean."                                                                                                                                                    |
-| **Offline with queued writes**    | Unchanged from M2: rows that have been unsynced for >2s dim to 0.6 and show a pending dot. Offline is a normal operating mode, not an error, and it never gets a banner.                                                        |
-| **Sync failed permanently**       | A single row above the quick-add rail in `--ash`: `<n> changes could not be saved.` Tapping it opens the failed-operations detail. This is the only place `--ash` appears outside of delete.                                    |
+| State                          | Content                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **First paint**                | The app shell renders immediately and the list area holds three placeholder rows at `--bg-surface` until IndexedDB resolves. No spinner: the local read is fast, and a spinner would imply a network wait that is not happening.                                                                                                                          |
+| **First run**                  | The default list exists and is open. Migration puts every pre-existing task there.                                                                                                                                                                                                                                                                        |
+| **List with no tasks**         | `Nothing here yet.` Then, smaller: `Add a task below. Long-press any task to drag it into position.` This is where the reorder gesture is taught.                                                                                                                                                                                                         |
+| **Section with no tasks**      | The header stays with a `0` count. Empty sections are not auto-removed — a section is a container the user made on purpose.                                                                                                                                                                                                                               |
+| **All tasks completed**        | Completed rows are hidden by default, so the list reads as empty and shows the empty-list copy plus a `Show Completed` entry in the list menu. No celebration.                                                                                                                                                                                            |
+| **Search, no results**         | `No tasks match "<query>".` Nothing else.                                                                                                                                                                                                                                                                                                                 |
+| **Offline with queued writes** | Unchanged from M2: unsynced rows dim to 0.6 and show a pending dot. Offline is a normal operating mode, never a banner.                                                                                                                                                                                                                                   |
+| **Sync failed permanently**    | A single row above the capture field in `--destructive`: `<n> changes could not be saved.` Tapping it opens the failed-operations detail.                                                                                                                                                                                                                 |
+| **Arrangement reconciled**     | When a sync resolves a concurrent reorder and the local order changes as a result, the affected rows animate to their new positions rather than snapping, and a dismissible line reads `List order updated from another device.` A hand-made arrangement changing silently is the failure mode the success criterion exists to prevent; the user is told. |
 
 ---
 
 ## 7. Dense-list behavior
 
-The thesis is that density and calm are compatible. These are the rules that have to hold for it to be true.
-
-- **The list is virtualized above ~200 rows**, but scroll position and drag behavior must be identical either side of that threshold. A user must never be able to tell where the boundary is.
-- **Titles truncate, never wrap.** One row, one line. A wrapping title breaks the vertical rhythm that makes a long list scannable, and the full text is one tap away in the sheet.
-- **The metadata column is right-aligned and monospaced**, so dates and counts form a true column down the screen regardless of title length. This is the single strongest density device in the design.
-- **Section headers do not stick.** A sticky header floating over a list you are dragging within is a fight between two motions. The list is one continuous surface; headers scroll with it.
-- **Completed tasks stay in place for the current viewing, then sweep.** A task ticked now stays exactly where it was so the arrangement does not shift underfoot mid-triage. On the next open of that list, completed tasks are collapsed into a single `n COMPLETED` row at the bottom of their section, expandable. See Open Question 4.
-- **No row is ever taller than 60px** and no interaction makes a row grow in place. Everything that needs more room opens the sheet.
+- **The list is virtualized above ~200 rows**, but scroll position and drag behavior must be identical either side of that threshold.
+- **Titles wrap to two lines, then truncate.**
+- **The due date column is right-aligned on the title's first line**, always at the same offset, so it forms a true column down the screen.
+- **Section headers do not stick.** A sticky header floating over a list being dragged within is a fight between two motions.
+- **Completed tasks are hidden by default**, revealed by `Show Completed` in the list menu, where they appear in place, struck through and dimmed. This replaces the previous "sweep on next open" proposal, which was an invention; hide-with-a-toggle is what all three reference apps do and it has no surprising timing.
+- **No interaction makes a row grow in place.** Everything needing more room opens the sheet.
 
 ---
 
-## 8. Apple Reminders comparison bar
+## 8. Reference app parity
 
-The initiative's honest success criterion is that the operator prefers PSYKL for daily capture. This is the specific bar.
+The initiative's honest success criterion is that the operator prefers PSYKL for daily capture. This table is the functional bar; craft parity is judged separately, by use.
 
-| Capability                           | Reminders                | PSYKL                                         | Verdict                |
-| ------------------------------------ | ------------------------ | --------------------------------------------- | ---------------------- |
-| Lists                                | ✅                       | ✅ Spec 1                                     | **Match**              |
-| Sections within a list               | ✅                       | ✅ Spec 2                                     | **Match**              |
-| Manual drag-to-reorder               | ✅                       | ✅ Spec 3                                     | **Match**              |
-| Discoverable drag handle             | ❌ invisible until known | ✅ grip on long-press + taught in empty state | **Beat**               |
-| Notes on a task                      | ✅                       | ✅ Spec 4                                     | **Match**              |
-| Due date                             | ✅                       | ✅ Spec 4, optional time                      | **Match**              |
-| Tags                                 | ✅                       | ✅ Spec 6                                     | **Match**              |
-| Search                               | ✅                       | ✅ Spec 6                                     | **Match**              |
-| Swipe to complete / delete           | ✅                       | ✅ Spec 5                                     | **Match**              |
-| Offline-first with multi-device sync | ⚠️ iCloud, opaque        | ✅ shipped in M2, tested                      | **Beat**               |
-| Subtasks                             | ✅                       | ❌ deferred by P3                             | **Lose, deliberately** |
-| Notifications and alerts             | ✅                       | ❌ never                                      | **Refuse**             |
-| Repeat rules                         | ✅                       | ❌ templates later, not repeats               | **Refuse**             |
-| Priority flags                       | ✅                       | ❌ ordering instead                           | **Refuse**             |
-| Date-derived Today view              | ✅                       | ❌ never derived                              | **Refuse**             |
-| Overdue escalation                   | ✅ red                   | ❌ none                                       | **Refuse**             |
-| Shared lists, assignees              | ✅                       | ❌ single-user by design                      | **Refuse**             |
-| Focused work sessions against a task | ❌                       | ✅ `psykl-loop`                               | **The differentiator** |
+| Capability                           | Reminders                | PSYKL                            | Verdict                |
+| ------------------------------------ | ------------------------ | -------------------------------- | ---------------------- |
+| Lists                                | ✅                       | ✅ Spec 1                        | **Match**              |
+| Sections within a list               | ✅                       | ✅ Spec 2                        | **Match**              |
+| Manual drag-to-reorder               | ✅                       | ✅ Spec 3                        | **Match**              |
+| Discoverable drag handle             | ❌ invisible until known | ✅ grip + keyboard path + taught | **Beat**               |
+| Inline title edit                    | ✅                       | ✅ shipped M2                    | **Match**              |
+| Notes on a task                      | ✅                       | ✅ Spec 4                        | **Match**              |
+| Due date, optional time              | ✅                       | ✅ Spec 4                        | **Match**              |
+| Overdue indication                   | ✅                       | ✅ Spec 4                        | **Match**              |
+| Tags                                 | ✅                       | ✅ Spec 6                        | **Match**              |
+| Search                               | ✅                       | ✅ Spec 6                        | **Match**              |
+| Swipe to complete / delete           | ✅                       | ✅ Spec 5                        | **Match**              |
+| Theming                              | ❌                       | ✅ Spec 5                        | **Beat**               |
+| Offline-first with multi-device sync | ⚠️ iCloud, opaque        | ✅ shipped in M2, tested         | **Beat**               |
+| Subtasks                             | ✅                       | ❌ deferred by P3                | **Lose, deliberately** |
+| Notifications and alerts             | ✅                       | ❌ out, per P2                   | **Out of scope**       |
+| Repeat rules                         | ✅                       | ❌ templates later, not repeats  | **Out of scope**       |
+| Priority flags                       | ✅                       | ❌ ordering instead              | **Out of scope**       |
+| Date-derived Today view              | ✅                       | ❌ out, per P2                   | **Out of scope**       |
+| Shared lists, assignees              | ✅                       | ❌ single-user by design         | **Out of scope**       |
+| Focused work sessions against a task | ❌                       | ✅ `psykl-loop`                  | **The differentiator** |
 
-Nine matches, two beats, seven deliberate refusals. If the operator ends up missing something in the Refuse column during real use, that is the signal Premise P3 exists to catch — and it should change the design rather than be endured.
+Eleven matches, three beats. If the operator misses something in the out-of-scope rows during real use, that is the signal premise P3 exists to catch, and it should change the roadmap rather than be endured.
 
 ---
 
 ## 9. Reserved for `psykl-loop`
 
-Premise P5 says not to make sessions harder to attach later. These are the specific reservations this UX makes now so `psykl-loop` is additive rather than a rewrite.
+Premise P5 says not to make sessions harder to attach later.
 
-1. **The detail sheet's primary button position is left empty.** It is where **Start PSYKL** goes. Nothing else may claim it.
-2. **`--ember` is unspent.** The entire initiative ships without using the accent, so a live session is the first coloured thing the user ever sees.
-3. **The detail sheet has room below notes for session history** — a mono tally of past sessions against the task. It is the natural home for the retrospective data, and it costs nothing to leave the space.
-4. **Tags are a first-class row citizen, not a detail-sheet-only field.** Productivity rate is eventually classified by tag and by parent-list tags, which makes tags the dimension the entire retrospective is computed over. They ship late in the sequence but they ship _visible_.
-5. **No row-level gesture is spent frivolously.** Tap, swipe-left, swipe-right, and long-press are all allocated above; the session entry point deliberately went into the sheet rather than consuming a fifth gesture that does not exist.
+1. **The detail sheet's primary button position is left empty.** It is where **Start PSYKL** goes.
+2. **`--accent-session` is unspent** in every theme, so a live session is the first time the user sees that color.
+3. **The detail sheet has room below notes for session history** — a tally of past sessions against the task.
+4. **Tags are a first-class row citizen**, because productivity is eventually classified by tag and by parent-list tags, which makes tags the dimension the retrospective is computed over.
+5. **The generalized sync queue** built in Spec 1 is what the session entity needs, so the cost is paid once and used twice.
 
 ---
 
-## 10. Open questions for `/plan-design-review`
+## 10. Decisions closed by this review
 
-1. **What is the default list called, and is it special?** Existing tasks need a home at migration. Reminders has an inbox concept. Is the default list deletable? Renameable? Does a task created from search or from a future quick-capture surface land there? (Carried from the initiative design's Open Question 3.)
-2. **Is moving title editing into the detail sheet acceptable?** It is a regression against M2 Spec 5's inline edit and against Reminders. Section 4 argues for it; this is the most likely thing here to be wrong.
-3. **Do sections collapse, and does collapse state sync?** Collapse is listed in the gesture table. If it syncs it is per-device state on a shared entity, which is a sync-model question, not a UX one. If it does not sync, a collapsed section on the phone is expanded on the laptop.
-4. **When exactly do completed tasks sweep?** Section 7 proposes "on next open of the list." Alternatives: immediately, after a timeout, never (manual clear only), or a user setting. Getting this wrong makes the arrangement feel unstable.
-5. **Does a task belong to exactly one list?** Assumed yes throughout. Tags are the cross-cutting dimension. Worth stating explicitly before the schema is locked.
-6. **Is a bottom-anchored quick-add still right once lists and sections exist?** Where does a task typed into the rail land — end of list, end of the current section, or top? "Arranged, not scored" argues for a predictable, boring answer.
-7. **Does the 720px desktop cap hold, or does desktop earn a list sidebar?** This initiative says sheet-only. A sidebar is more useful and less coherent with a mobile-first single-surface design.
+The previous version carried seven open questions. Five are answered here; two are data-model questions that belong to `/plan-eng-review`.
+
+| #   | Question                                | Decision                                                                                                                                                                                             |
+| --- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | What is the default list?               | **Named `Tasks`, renameable, and not special beyond one rule: the last remaining list cannot be deleted.** Migration puts pre-existing tasks there. A task created without list context lands there. |
+| 2   | Where does title editing live?          | **Both.** Tap the title to edit in place (M2 behavior preserved); tap the trailing detail button for the sheet. The previous single-target proposal was the regression it flagged itself as.         |
+| 3   | Do sections collapse, and does it sync? | **Collapse is device-local, not synced.** It describes how one device is being looked at, not the data. Same rule as theme choice. `/plan-eng-review` confirms against the sync model.               |
+| 4   | When do completed tasks sweep?          | **They do not sweep — they are hidden by default**, revealed by `Show Completed`. No timing to get wrong and no arrangement shifting underfoot.                                                      |
+| 5   | Does a task belong to exactly one list? | **Yes.** Tags are the cross-cutting dimension. Stated here; `/plan-eng-review` locks the schema.                                                                                                     |
+| 6   | Where does a captured task land?        | **Appended to the end of the list**, outside any section, always. The predictable answer. If the user wants it elsewhere they drag it, which is the interaction the product is built around.         |
+| 7   | Does the 720px desktop cap hold?        | **Yes for this initiative.** A desktop list sidebar is a real improvement and a real scope increase; it is a candidate for a later initiative, not a gap here.                                       |
+
+### Carried to `/plan-eng-review`
+
+- **Section representation** — real entity, grouping value, or embedded list descriptor (initiative `DESIGN.md` Risk 3).
+- **Fractional position representation** — numeric, fixed-width decimal, or LexoRank-style rank strings (Risk 2).
+- **Sync-queue migration** — migrate queued entries or drain first (initiative Open Question 2).
+- **Where device-local preferences live** — theme choice and section collapse state both need a store that is deliberately outside the sync queue.

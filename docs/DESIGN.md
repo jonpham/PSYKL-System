@@ -1,214 +1,254 @@
 # Design System — PSYKL
 
-Written by `/design-consultation` (gstack) on 2026-08-13, with outside design directions from Codex (`gpt-5.5`) and an independent Claude subagent synthesized into the result.
+Rewritten during `/plan-design-review` (gstack) on 2026-08-14, replacing the bespoke "Ledger" visual identity written by `/design-consultation` on 2026-08-13. The prototype built during that review showed the Ledger direction reading as rigid and engineering-focused; the operator re-scoped the initiative toward conventional task-manager craft with a themable surface. The Ledger survives as one selectable theme.
 
-**Status:** Proposed — not yet reviewed by `/plan-design-review`, not yet implemented.
+**Status:** Proposed — input to `/plan-eng-review`, which locks the theming architecture alongside the data model.
 **Scope:** Durable. This document outlives the `todo-experience` initiative and is refreshed, not deleted, at initiative close-out.
-**Companion:** [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) covers screen behavior, user stories, and gesture vocabulary for the active initiative. This file covers the visual system only.
+**Companion:** [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) covers screens, behavior, and gestures. This file covers the visual system and theming only.
 
 > **Glossary** (each doc carries its own, per [`AGENTS.md`](../AGENTS.md) → Design Doc Discipline):
 >
 > - PWA = Progressive Web App.
-> - PSYKL = a self-defined period of focused work, user-tunable, defaulting to 25 minutes. A PSYKL _session_ is one start/stop event against a task.
+> - PSYKL = a self-defined period of focused work, user-tunable, defaulting to 25 minutes. A PSYKL _session_ is one start/stop event against a task. Sessions ship in the `psykl-loop` initiative, not this one.
 > - OFL = SIL Open Font License.
-> - CDN = Content Delivery Network.
 > - WCAG AA = the Web Content Accessibility Guidelines' AA contrast bar: 4.5:1 for normal text, 3:1 for large text and non-text indicators.
-> - UI = User Interface.
+> - UI / UX = User Interface / User Experience.
+> - Token = a named design value (`--text-primary`) referenced by components instead of a raw literal (`#1a1a1a`).
 
 ---
 
 ## Product Context
 
-- **What this is:** An offline-first task manager whose differentiator is the PSYKL session — a fixed period of focused work started against a task. The task list is the substrate the sessions attach to.
+- **What this is:** An offline-first task manager. Its eventual differentiator is the PSYKL session, which attaches to a task in the next initiative. This initiative builds the task manager the sessions will attach to.
 - **Who it's for:** One person. The operator. Single-user, multi-device, never collaborative ([`docs/PRODUCT.md`](PRODUCT.md) → Sync and Sharing Model).
-- **Space:** Personal task management. Peers: Apple Reminders, Things 3, Todoist, TickTick, Superlist.
+- **Space:** Personal task management. Reference apps: Apple Reminders, Things 3, TickTick.
 - **Project type:** Mobile-first PWA, installed to the home screen, used daily, frequently offline.
 
 ---
 
 ## The Governing Idea
 
-**The list is arranged, not scored.**
+**Be conventional, and be well-made.**
 
-Nothing in the interface ever tells you a task matters. You told it, by putting it where it is. Position in the list _is_ the priority, maintained by hand on whatever cadence you choose. There is no flag, no star, no priority field, no urgency colour, and no algorithmic ranking — this is the design's answer to the "Priority / flag: **Out** — replace with ordering" line in the initiative design.
+The bar for this initiative is craft parity with Apple Reminders, Things 3, and TickTick — not a distinct visual identity. Those three apps have converged on a set of conventions because the conventions work: a circular checkbox on the leading edge, a title that wraps rather than truncates, a subdued metadata line, swipe actions, a bottom-anchored capture field, and a detail sheet. PSYKL adopts them.
 
-Two consequences the whole system follows from:
+This is a deliberate reversal. The previous version of this document argued for a bespoke industrial identity that "refused to soften," and derived a dense ruled-ledger surface from first principles. Building it revealed the cost: the design was distinctive and unpleasant to use, and every planning pass spent its budget relitigating the philosophy instead of the product.
 
-1. **Drag-to-reorder is the hero interaction**, not a feature on a list. Every other decision — row height, type size, contrast, motion — is checked against "does this stay legible and calm when forty rows are stacked and being rearranged?"
-2. **Effort is retrospective, never declared.** The app never asks how big a task is. Energy is inferred later from PSYKL session history: elapsed time, loop count, and post-loop input, aggregated by tag and parent list. Until sessions exist, there is **no effort signal in the interface at all**, because any such signal would be fabricated.
+Three consequences:
 
-### The feeling, in ratio
+1. **Do not innovate on interaction.** Where Reminders, Things, and TickTick agree on a pattern, use that pattern. Innovation budget is reserved for the PSYKL session, which is the only thing this product has that they do not.
+2. **Craft is the differentiator within this initiative.** Being conventional does not mean being sloppy. The three reference apps are pleasant because of pixel-level care: consistent alignment, honest touch targets, motion that explains rather than decorates. That is what to match.
+3. **Personality lives in themes, not in the baseline.** The opinionated aesthetic is not deleted — it is demoted to a theme the operator can select. The default is quiet and expected.
 
-The operator's brief was roughly three parts _effortful, engaging, drives productivity_ to one part _calm, at your own pace_.
-
-The category treats calm and dense as opposites and buys calm by removing information — Things 3's whole thesis is low density and generous whitespace. That equation is inherited from Apple's flat-design era rather than derived from what a task list is for. A well-set page of a book is dense and calm; a slot machine is sparse and frantic. **Calm comes from regularity and restraint of contrast, not from volume of whitespace.**
-
-So: the effortful three lives in density, monospaced precision, small confident type, strict alignment, and a complete absence of encouragement — a tool that assumes you are competent. The calm one lives in the fact that a dense screen contains no competing signals: one hue, one weight, one rule colour, everything on a 4px grid.
-
-**First three seconds:** _This is my arrangement, exactly as I left it._
+**First three seconds:** _I know how to use this._
 
 ---
 
-## Aesthetic Direction
+## Theming Architecture
 
-- **Direction:** Industrial / Utilitarian, with editorial typographic discipline. A ruled ledger, not an app surface.
-- **Decoration level:** Minimal. Type, hairline rules, and one accent do all the work.
-- **Mood:** A tool someone built for themselves and then refused to soften. Flush edges, no cards, no floating panels, no shadows, no depth trickery, no texture, no illustration, no gradient anywhere.
-- **Reference points:** [Things 3](https://culturedcode.com/things/) for what to beat on craft and deliberately lose on density; [Superlist](https://www.superlist.com/) for what to avoid (saturated, playful, gradient-heavy reads as _fun_, not as _work_); the [Pratt critique of Reminders](https://ixd.prattsi.org/2024/12/design-critique-reminders-macos-app/) for the specific defect worth beating — drag handles that are invisible until you already know they exist.
+Themability is a first-class requirement, not a later enhancement. This closes the "Configurable term-map / UI theme architecture" open design surface tracked in [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md), for the visual half. (The term-map half — renaming PSYKL / Earth / Moon / HelioArc / Sun — remains open and is not part of this initiative.)
 
-### Anti-patterns, permanently banned
+### Two token tiers
 
-Purple or violet gradients. Glassmorphism. Card stacks with drop shadows. Uniform bubble border-radius. Gradient buttons. Three-column icon grids. Centered-everything layouts. Confetti, streaks, points, badges, levels, or any completion celebration. `system-ui` as the display or body face. Multi-colour tag pills.
+**Primitive tokens** hold raw values and are defined once per theme per color scheme. Components never reference them.
+
+**Semantic tokens** name a role. Components reference only these. Adding a theme means supplying a new set of primitive values and mapping them to the same semantic names; no component CSS changes.
+
+```css
+/* Semantic contract — every theme MUST define all of these */
+--bg-app; /* the list surface                        */
+--bg-surface; /* sheets, the capture field              */
+--bg-elevated; /* menus, popovers                        */
+--bg-pressed; /* press feedback, drag lift              */
+--bg-selected; /* selected row, active list              */
+
+--text-primary; /* task titles, headings                  */
+--text-secondary; /* metadata, section headers              */
+--text-tertiary; /* placeholders, completed titles         */
+--text-on-accent; /* type sitting on --accent               */
+
+--separator; /* row separators, hairlines              */
+--separator-strong; /* section and structural separators      */
+
+--accent; /* interactive: links, selection, toggles */
+--accent-session; /* RESERVED — a live PSYKL session only   */
+--destructive; /* delete actions and error states        */
+--focus-ring; /* keyboard focus, never --accent alone   */
+
+--font-ui; /* titles, labels, prose                  */
+--font-numeric; /* dates, counts, identifiers             */
+--radius-control; /* inputs, buttons                        */
+--radius-surface; /* sheets, cards if a theme uses them     */
+```
+
+### Rules that survive theming
+
+A theme may change values. A theme may not change these, because they are correctness, not taste:
+
+- **Every theme ships light and dark**, both designed rather than inverted, and both clearing WCAG AA for `--text-primary` and `--text-secondary`.
+- **`--accent-session` is reserved for a live PSYKL session in every theme.** It is never a link, never a button, never a selection state. This is the one rule carried forward wholesale from the Ledger system, and it is the reason the differentiator will read as significant when it lands in `psykl-loop`.
+- **No theme may remove a state signal.** Completion, overdue-ness, pending sync, and focus must each remain distinguishable without relying on hue alone.
+- **Row metrics are not themable** in this initiative. Themes change color and type; layout stays fixed so the density work is not re-litigated per theme.
+
+### Themes shipped
+
+| Theme                 | Character                                                                         | Status                                            |
+| --------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **Plain** _(default)_ | Conventional and quiet. Native-feeling type, blue accent, neutral grays.          | Default on first run.                             |
+| **Ledger**            | The retired bespoke identity: warm paper, hairline rules, IBM Plex, ember accent. | Selectable. Preserves the 2026-08-13 design work. |
+
+Theme selection is a device-local preference, **not synced**. A theme is a property of how you like to look at this device, not of your data. `/plan-eng-review` confirms this against the sync model.
 
 ---
 
-## Typography
+## Plain — the default theme
 
-**IBM Plex Sans** for titles, labels, and prose. **IBM Plex Mono** for every numeral, date, tag, count, and identifier.
+### Typography
 
-Both are OFL, free, and a designed superfamily — the mono column and the prose column belong to each other, and that shared skeleton is what produces the ledger effect. Every number in the app sits in a tabular monospace column and aligns vertically down the list. That single choice does most of the instrument work.
+`--font-ui` is the platform UI stack, so the app reads as native on each device and needs no font download — which also means no font is missing on a cold offline start.
 
-**Loading — self-hosted, not CDN.** This is an offline-first PWA. Fonts are bundled with the client, served same-origin, and precached by the Service Worker alongside the app shell. A Google Fonts `<link>` would render the app in fallback the first time it is opened offline, which is the exact scenario the product is built for. Subset to Latin, `woff2` only, `font-display: swap`.
+```css
+--font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+--font-numeric: ui-monospace, SFMono-Regular, Menlo, monospace;
+```
 
-Prototypes and mockups may load Plex from a CDN for convenience. Shipped code may not.
+This reverses the previous system's ban on platform font stacks. That ban existed to serve a bespoke identity; with the identity retired, the platform stack is the correct conventional choice and it removes ~50KB of precached font from the app shell.
 
-### Scale
+| Token     | Size / line-height | Weight | Use                                                     |
+| --------- | ------------------ | ------ | ------------------------------------------------------- |
+| `title`   | 28 / 34            | 700    | list name                                               |
+| `section` | 15 / 20            | 600    | section header within a list                            |
+| `row`     | 16 / 21            | 400    | task title — the workhorse                              |
+| `body`    | 16 / 24            | 400    | notes, detail sheet prose                               |
+| `label`   | 15 / 20            | 500    | buttons, form labels                                    |
+| `meta`    | 13 / 18            | 400    | due dates, tags, counts (`--font-numeric` for numerals) |
 
-Mobile-first, tuned for a dense list on a 4px baseline.
+16px for the task title, not 15px. The previous 15px was chosen to buy density; the reference apps all sit at 16–17px, and 16px is where a title stops feeling like a table cell.
 
-| Token     | Size / line-height          | Face + weight | Use                          |
-| --------- | --------------------------- | ------------- | ---------------------------- |
-| `meta-xs` | 11 / 16, +0.06em, uppercase | Plex Mono 500 | tags, counts, section labels |
-| `meta-sm` | 12 / 16                     | Plex Mono 500 | due dates, timestamps        |
-| `row`     | 15 / 20                     | Plex Sans 400 | task title — the workhorse   |
-| `body`    | 15 / 24                     | Plex Sans 400 | notes, detail sheet prose    |
-| `section` | 13 / 16, +0.08em, uppercase | Plex Sans 600 | section header within a list |
-| `label`   | 13 / 16                     | Plex Sans 500 | form labels, buttons         |
-| `screen`  | 24 / 28, −0.02em            | Plex Sans 600 | list name                    |
-
-Bold is scarce on purpose. Section headers and the list name are the only places weight 600 appears in the list view, so nothing else can shout in a peripheral scan.
-
----
-
-## Color
-
-**Approach:** Restrained to the point of severity. One accent, and it is spent on one thing.
-
-### The accent is reserved
-
-`--ember` means **a PSYKL session is live**. Nothing else. It is never a link, never a button, never a selection state, never a focus ring, never a tag, never "primary action."
-
-This is the single most load-bearing rule in the system. Because the accent never appears on chrome, the task list is effectively monochrome, which is what lets forty rows read as calm rather than noisy. It also means that starting a session visibly lights the app up — the differentiator gets the only saturated thing in the product. Spending ember on a Save button would devalue the currency and make this look like every other app.
-
-Consequence for the `todo-experience` initiative: **it ships with almost no colour in it.** That is intended, not an oversight.
-
-Buttons are ink on hairline. Selection is a ground shift. Completion is a subtraction.
-
-### Light — canonical
-
-Designed first. Every decision is checked against this theme.
+### Color
 
 ```css
 :root {
-  --ground: #f4f2ed; /* warm paper, never #FFFFFF */
-  --raised: #eae7e0; /* detail sheet, quick-add rail */
-  --pressed: #e4e0d7; /* press + drag-lift ground shift */
-  --rule: #d2cec5; /* row separators */
-  --rule-strong: #b9b4a9; /* section separators */
-  --ink-primary: #191a1a; /* 15.7:1 */
-  --ink-secondary: #63665f; /*  5.2:1 */
-  --ink-tertiary: #6c6f68; /*  4.6:1 — completed rows, placeholders */
-  --ember: #d8410a; /* RESERVED: live PSYKL session only */
-  --ember-dim: #f0c9b2;
-  --ash: #9e3323; /* destructive swipe ground, delete confirm */
-  --focus: #2e3a3f; /* 2px focus ring — deliberately not ember */
+  --bg-app: #ffffff;
+  --bg-surface: #f7f7f8;
+  --bg-elevated: #ffffff;
+  --bg-pressed: #ececee;
+  --bg-selected: #e8f0fe;
+
+  --text-primary: #1c1c1e; /* 16.1:1 */
+  --text-secondary: #6b6b70; /*  5.3:1 */
+  --text-tertiary: #9a9aa0; /*  3.0:1 — non-text and completed only */
+  --text-on-accent: #ffffff;
+
+  --separator: #e5e5e7;
+  --separator-strong: #c9c9cd;
+
+  --accent: #0a68d8; /*  5.1:1 on --bg-app */
+  --accent-session: #d8410a; /* RESERVED: live PSYKL session only */
+  --destructive: #c0392b;
+  --focus-ring: #0a68d8;
+
+  --radius-control: 8px;
+  --radius-surface: 12px;
 }
-```
 
-### Dark — faithful port
-
-```css
 @media (prefers-color-scheme: dark) {
   :root {
-    --ground: #0e0f0f;
-    --raised: #161818;
-    --pressed: #1e2120;
-    --rule: #26292a;
-    --rule-strong: #3a3e3f;
-    --ink-primary: #e8e6e1;
-    --ink-secondary: #8e918f; /* 5.9:1 */
-    --ink-tertiary: #7a7d7b; /* 4.5:1 */
-    --ember: #ff6a1f;
-    --ember-dim: #7a3512;
-    --ash: #b33a2b;
-    --focus: #9fb4bc;
+    --bg-app: #000000;
+    --bg-surface: #1c1c1e;
+    --bg-elevated: #2c2c2e;
+    --bg-pressed: #2c2c2e;
+    --bg-selected: #10305c;
+
+    --text-primary: #f2f2f7; /* 18.4:1 */
+    --text-secondary: #9b9ba1; /*  6.1:1 */
+    --text-tertiary: #6e6e73;
+    --text-on-accent: #ffffff;
+
+    --separator: #2c2c2e;
+    --separator-strong: #48484a;
+
+    --accent: #4a9eff; /*  7.2:1 on --bg-app */
+    --accent-session: #ff6a1f;
+    --destructive: #ff5f52;
+    --focus-ring: #4a9eff;
   }
 }
 ```
 
-### Rules
+`--accent` carries interactive meaning — selected list, links, the completed checkbox fill, toggle states. This is the conventional expectation and reverses the Ledger rule that withheld all color from chrome.
 
-- **No white ground in either theme.** `#F4F2ED` over `#FFFFFF` is most of what separates "considered" from "default."
-- **No semantic colour palette.** There is no success green, no warning amber, no info blue. Success is a state change, not a hue. Errors use `--ash`, which is also the destructive-swipe ground, because they are the same idea: something is being undone.
-- **No overdue styling, ever.** No red rows, no "3 days late," no escalating colour as a date approaches. A date passing is not a moral event; the date sits in the metadata column, in `--ink-secondary`, being true. This is the visual expression of Premise P2 in the initiative design.
-- **Contrast.** `--ink-primary` and `--ink-secondary` clear WCAG AA for normal text in both themes. `--ink-tertiary` sits at ~4.5:1 and is only used where a second, non-colour signal is also present (completed rows also strike through and shrink). `--ember` at ~4:1 on light ground is **never used for small text** — when it carries type, the type is ≥18.66px semibold, or the ink is light-on-ember.
-- **Dark is not an inversion.** Surfaces are re-chosen, not flipped, and accent saturation is reduced relative to naive inversion.
+**Overdue styling is in.** A past due date renders in `--destructive`. The previous system forbade this on the grounds that "a date passing is not a moral event"; the reference apps all do it, users expect it, and premise P2 is about not _scheduling_ the user's attention, not about hiding facts.
 
----
+### Spacing and metrics
 
-## Spacing
+4px base unit. 16px page gutter.
 
-- **Base unit:** 4px. Everything is a multiple. No exceptions, including optical ones.
-- **Density:** Compact.
-- **Scale:** `2xs 2` · `xs 4` · `sm 8` · `md 12` · `lg 16` · `xl 24` · `2xl 32` · `3xl 48`
+| Element                      | Metric                       |
+| ---------------------------- | ---------------------------- |
+| Task row, one-line title     | 48px min                     |
+| Task row, wrapped title      | grows; 2-line title cap      |
+| Task row, with metadata line | + 20px                       |
+| Section header               | 44px, 24px space above       |
+| Capture field                | 56px, bottom-anchored        |
+| Checkbox                     | 22px circle, 44px hit target |
+| Content column               | 720px max on desktop         |
 
-### Row metrics — the load-bearing numbers
+**Four metrics decisions carried over from the 2026-08-13 prototype**, each validated by looking at 44 real tasks on a phone rather than by argument:
 
-| State                                                      | Height   |
-| ---------------------------------------------------------- | -------- |
-| Task, single line                                          | **44px** |
-| Task with a metadata line (due date, tags, note indicator) | **60px** |
-| Task, completed                                            | **40px** |
-| Section header                                             | 32px     |
-| Quick-add rail                                             | 52px     |
+1. **Titles wrap to two lines, then truncate.** Single-line truncation cut more than half of real task titles at phone width, and cut them where the meaning was. This matches all three reference apps.
+2. **The due date always sits on the title line**, right-aligned, regardless of whether tags or a note indicator are present. Letting it drop to the metadata line made the date column alternate between two vertical offsets, which destroyed the column it was supposed to form.
+3. **The checkbox is a light circle**, `1px` in `--text-tertiary` unchecked, filled `--accent` when checked. A heavy 24px square out-shouted every title on screen, worst in dark mode.
+4. **Sections separate with space above, not with heavier type.** At 40 rows the boundary between sections did not register when it was carried by weight and rules alone.
 
-44px is the minimum comfortable touch target and it is also as tight as 15/20 type goes without the list reading as cramped. It is deliberately not 56px (Material) or 72px (Todoist) — those heights are what force competitors to buy calm with whitespace. Completed rows shrink to 40px so a finished section visibly compacts.
+Rows are separated by a `--separator` hairline **inset to the title's left edge**, not full-bleed — full-bleed ruling on every row is what made the previous design read as a spreadsheet.
 
-Horizontal: 16px page gutter. Rows bleed to the full width; the rule between them bleeds too. Nothing is inset in a card.
+### Motion
 
----
-
-## Layout
-
-- **Approach:** Grid-disciplined. One continuous ruled surface.
-- **Grid:** Single column on mobile. Single column on desktop, capped at **720px** so rows never stretch to an unreadable measure. No sidebar in this initiative; list switching is a sheet.
-- **Sections are typographic interruptions, not containers.** A section header is a rule plus a small uppercase label in the flow of the list. It does not box, indent, or tint the tasks under it.
-- **Border radius:** 2px on inputs, sheets, and the quick-add rail. **0 everywhere else.** Nothing is a pill.
-- **The quick-add rail is bottom-anchored and never scrolls away.** Capture is the most frequent action in the product and it gets the most reachable pixel on a phone.
-- **Elevation:** there is none. Sheets slide over the list and are separated by a `--rule-strong` edge, not a shadow.
-
----
-
-## Motion
-
-- **Approach:** Minimal-functional. Motion explains a state change or it does not happen.
+- **Approach:** functional. Motion explains a state change or it does not happen.
 - **Easing:** enter `ease-out` · exit `ease-in` · move `ease-in-out`
-- **Durations:** press feedback 120ms · row lift on drag 180ms · row reorder settle 200ms · completion 140ms · sheet in/out 240ms
-- **Completion is a release of tension, not a reward.** The title fades to `--ink-tertiary`, strikes through, and the row collapses 44px → 40px over 140ms. No bounce, no spring, no checkmark flourish, no haptic celebration, no sound.
-- **Reorder must feel physical.** The lifted row gets a `--pressed` ground and a visible insertion gap that other rows animate around. This is the hero interaction; it is the one place motion budget is spent generously.
-- **Respect `prefers-reduced-motion`:** all of the above collapse to instant state changes, except the drag insertion gap, which stays because it is informational rather than decorative.
+- **Durations:** press 100ms · completion 200ms · row reorder settle 200ms · sheet in/out 300ms · swipe snap 200ms
+- **Reorder is the one place motion is spent generously.** The lifted row takes `--bg-pressed`, and an insertion gap opens that other rows animate around.
+- **Respect `prefers-reduced-motion`:** everything collapses to instant state changes except the drag insertion gap, which is informational.
+
+### Accessibility
+
+- Touch targets ≥44px, including the checkbox's expanded hit area.
+- `--focus-ring` renders as a 2px visible ring on every interactive element. Keyboard focus is never invisible.
+- **Drag-to-reorder has a keyboard equivalent** — a focused row moves with a modifier plus arrow keys, and the move is announced via an ARIA live region. A pointer-only reorder is inaccessible, and reorder is the interaction this product cares most about.
+- Completion, overdue, and pending-sync states each carry a non-color signal in addition to color.
+
+---
+
+## Ledger — the alternate theme
+
+The design system written on 2026-08-13, preserved as a theme rather than deleted. Warm paper (`#F4F2ED`) over white, IBM Plex Sans and Plex Mono self-hosted, hairline rules, ember accent, near-total absence of color.
+
+It supplies its own primitive values against the same semantic contract, including `--font-ui: 'IBM Plex Sans'` and `--font-numeric: 'IBM Plex Mono'`, both self-hosted and precached — a CDN font would render in fallback on a cold offline start, which is the exact scenario this product exists for. Its `--radius-control` and `--radius-surface` are `2px`.
+
+Full primitive values and the rationale behind them live in the 2026-08-13 revision of this file, recoverable at commit `e8c0ef6`. They are restated in the theme's own token file when the theming layer is built.
+
+---
+
+## Anti-patterns, permanently banned
+
+Purple or violet gradients. Glassmorphism. Confetti, streaks, points, badges, levels, or any completion celebration. Motivational copy. Gradient buttons. Three-column icon grids on any screen in this app. Multi-color tag pills. Any use of `--accent-session` outside a live PSYKL session.
+
+Note what left this list in the rewrite: cards, drop shadows, rounded corners, and platform font stacks are all permitted now. They were banned to serve an identity that no longer applies.
 
 ---
 
 ## Decisions Log
 
-| Date       | Decision                                                     | Rationale                                                                                                                                                                                                                                                                                    |
-| ---------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-13 | Design system created                                        | `/design-consultation`, synthesizing Codex and an independent Claude subagent against the approved [`todo-experience` design](initiatives/todo-experience/DESIGN.md).                                                                                                                        |
-| 2026-08-13 | Governing idea: the list is arranged, not scored             | Position _is_ priority. Implements "Priority / flag: Out — replace with ordering" from the initiative design's Feature Inventory.                                                                                                                                                            |
-| 2026-08-13 | Effort is retrospective-only; no weight or estimate input    | Corrected by the operator mid-session. Both outside design voices independently proposed a per-task weight rail set at capture time; that inverts the model. Energy is inferred from session history by tag and parent list, so it cannot be displayed until `psykl-loop` ships sessions.    |
-| 2026-08-13 | The checkbox stays                                           | Two completion paths must sit side by side: tick it for sub-5-minute tasks, run PSYKL loops for long ones. An earlier proposal to delete the checkbox was withdrawn — it assumed every task is session-sized.                                                                                |
-| 2026-08-13 | `--ember` reserved exclusively for a live PSYKL session      | Makes a dense list monochrome and therefore calm, and gives the differentiator the only saturated thing in the product. Costs this initiative nearly all of its colour, deliberately.                                                                                                        |
-| 2026-08-13 | Warm-paper light is canonical; dark ships as a faithful port | With the accent withdrawn from the list, dark loses the "lit gauge" quality that justified it, and paper suits a phone used in daylight. Dark remains available as the live session's own register.                                                                                          |
-| 2026-08-13 | IBM Plex Sans + IBM Plex Mono, self-hosted                   | Free and OFL, unlike Söhne + Berkeley Mono (~$375) proposed by the subagent. Regular width rather than the Condensed proposed by Codex, which trades legibility at 15px for density better bought with row height. Self-hosting is mandatory: a CDN font breaks the offline-first guarantee. |
-| 2026-08-13 | No semantic colour palette, no overdue styling               | Implements Premise P2 — a deadline is a fact about a task, not a claim on your attention.                                                                                                                                                                                                    |
+| Date       | Decision                                                                    | Rationale                                                                                                                                                                                                                             |
+| ---------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-13 | Design system created as the bespoke "Ledger" identity                      | `/design-consultation`, synthesizing Codex and an independent Claude subagent. Superseded 2026-08-14; recoverable at commit `e8c0ef6`.                                                                                                |
+| 2026-08-14 | **Conventional-first baseline replaces the bespoke identity**               | An interactive prototype of the Ledger direction read as rigid and engineering-focused in real use. The operator re-scoped toward craft parity with Apple Reminders, Things 3, and TickTick. Innovation budget moves to `psykl-loop`. |
+| 2026-08-14 | **Two-tier token architecture; themes are first-class**                     | Components reference semantic tokens only. Adding a theme supplies primitives and changes no component CSS. Closes the visual half of the theme-architecture open design surface.                                                     |
+| 2026-08-14 | **Ledger demoted to a selectable theme, not deleted**                       | The token structure, computed contrast ratios, and designed dark theme were correct work regardless of direction. Keeping it proves the theming layer works against a genuinely different aesthetic rather than two shades of gray.   |
+| 2026-08-14 | **Theme choice is device-local, not synced**                                | A theme describes how you want to look at one device, not your data. Confirmed against the sync model at `/plan-eng-review`.                                                                                                          |
+| 2026-08-14 | **`--accent-session` stays reserved across every theme**                    | The only rule carried wholesale from the Ledger system. It is what makes the differentiator read as significant when `psykl-loop` lands.                                                                                              |
+| 2026-08-14 | **Platform font stack in the default theme; the `system-ui` ban is lifted** | The ban existed to protect a bespoke identity. The platform stack is the conventional choice, reads as native, and removes ~50KB of precached font from the app shell. Self-hosted Plex remains mandatory within the Ledger theme.    |
+| 2026-08-14 | **Overdue styling is in; the no-overdue-color rule is reversed**            | Premise P2 refuses _scheduling_ the user's attention, not stating facts. All three reference apps color a past due date and users expect it.                                                                                          |
+| 2026-08-14 | **Titles wrap to two lines; the due date always sits on the title line**    | Both validated against 44 real tasks in the prototype. Single-line truncation cut over half of real titles; a date that moved between lines destroyed the column it was meant to form.                                                |
+| 2026-08-14 | **Row rules are inset, not full-bleed; sections separate with space**       | Full-bleed ruling on every row is what made the previous design read as a spreadsheet. Section boundaries did not register at 40 rows when carried by type weight alone.                                                              |

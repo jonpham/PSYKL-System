@@ -26,7 +26,7 @@ This milestone intentionally comes before `psykl-loop`: PSYKL sessions attach to
 2. **Sections** — add sections within a list after choosing the representation during design/engineering review.
 3. **Manual ordering** — add drag-to-reorder with fractional positions rather than integer indexes; decide the concrete representation during `/plan-eng-review`.
 4. **Task details** — add notes and optional due date, with optional time only when the deadline has a real time.
-5. **Interaction polish** — add swipe to complete/delete, row density work, animation, and native-feeling task interactions.
+5. **Interaction polish and theming** — swipe to complete/delete, row density work, animation, native-feeling task interactions, and the two-theme token layer (see [`docs/DESIGN.md`](../../DESIGN.md) → Theming Architecture).
 6. **Tags and search** — add late because tags feed future retrospective dimensions and search becomes valuable once structure exists.
 
 Visible priority/flag, notifications, alerts, repeat rules, shared lists, assignees, and subtasks are out of scope for this milestone. Subtasks remain deferred until lists and sections have been used in real life.
@@ -35,9 +35,9 @@ Visible priority/flag, notifications, alerts, repeat rules, shared lists, assign
 
 The approved design adds explicit UX-first planning before engineering lock-in:
 
-1. `/design-consultation` — define user stories, UX expectations, screen behavior, dense-list behavior, empty states, and the Apple Reminders comparison bar.
-2. `/plan-design-review` — challenge whether the UX plan is specific enough to test and still feels like PSYKL.
-3. `/plan-eng-review` — lock the data model, sync queue generalization, section representation, ordering scheme, migrations, and test strategy.
+1. ~~`/design-consultation`~~ — **done 2026-08-13.** Produced [`UX.md`](UX.md) and a visual system.
+2. ~~`/plan-design-review`~~ — **done 2026-08-14.** Prototyped the proposed design, which triggered the re-scope recorded in [`DESIGN.md`](DESIGN.md) → Re-scope: conventional craft parity with Apple Reminders, Things 3, and TickTick, on a themable UI. Feature scope unchanged apart from theming.
+3. `/plan-eng-review` — **next.** Lock the data model, sync queue generalization, section representation, ordering scheme, device-local preference storage, migrations, and test strategy.
 4. `superpowers:writing-plans` — write Specs and DevTasks only after the gstack design/review sequence is complete.
 
 ## Architectural Risks to Settle
