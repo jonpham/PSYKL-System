@@ -36,6 +36,33 @@ The initiative is now **clinical craft parity with Apple Reminders, Things 3, an
 
 **What was retired:** the bespoke visual identity is demoted to a selectable theme, and the anti-convention stance that came with it (no color on chrome, no overdue styling, no platform font stack, no rounded corners) is reversed. See [`docs/DESIGN.md`](../../DESIGN.md) → Decisions Log.
 
+## Offline Posture, 2026-08-18
+
+Decided during `/plan-eng-review`. **Offline is a degraded mode, not a first-class one.** This is a deliberate reversal of the M2 positioning; `docs/PRODUCT.md` → Engineering Constraints was updated in the same pass.
+
+| Rule                 | Behavior                                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| Offline reads/writes | Continue to work.                                                                                     |
+| Nag threshold        | At **25** unsynced changes, a persistent banner tells the user to reconnect.                          |
+| Hard ceiling         | At **100** unsynced changes, new writes are refused until the device reconnects and the queue drains. |
+| Deletes              | Never destructive on the client. A delete is a **move to a `Recently Deleted` list**.                 |
+| Purge                | The **server** hard-deletes anything in `Recently Deleted` untouched for **30 days**.                 |
+
+### Why this replaces the cascade-delete design
+
+Deleting a list no longer enqueues one operation per task. It enqueues **one** move. Tasks stay attached to their list; the list itself moves to `Recently Deleted`. This removes the 201-operation burst that the earlier cascade decision created, makes every delete recoverable, and matches Apple Reminders.
+
+### Data-model decisions locked here
+
+| Question                 | Decision                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cross-entity references  | **No foreign keys.** `task.list_id` and `task.section_id` are nullable text. The server accepts a reference it has not seen yet; an orphan sweep heals strays into the default list. The client mints all IDs (`uuidv7`), so a reference is always correct once both rows land.                           |
+| Section representation   | **A real `sections` table** (`id`, `user_id`, `list_id`, `title`, `position`), same no-FK pattern. Resolves Risk 3. Rename and reorder are single-row writes that never collide under Last-Write-Wins.                                                                                                    |
+| Ordering representation  | **`fractional-indexing` npm package** (the Figma/rocicorp algorithm), keys generated client-side, stored as Postgres `text COLLATE "C"` so byte order matches JavaScript string comparison. Resolves Open Question 5.                                                                                     |
+| Sync-queue upgrade path  | **Migrate, never drain.** Draining needs network; a user upgrading while offline would lose queued writes, which Spec 1's own user story forbids. The v1→v2 IndexedDB upgrade rewrites `sync_queue` and `failed_ops` in place, mapping `task_id` → `entity_type` + `entity_id`. Resolves Open Question 2. |
+| Replay ordering          | **Order-independent.** Replay no longer stops at the first transient failure, and an entry moves to `failed_ops` after an attempt ceiling. Supersedes ADR-M2-012.                                                                                                                                         |
+| Device-local preferences | Theme choice and section collapse state live in the existing **`sync_meta` IndexedDB store**, which is never enqueued and therefore never syncs. No new store needed.                                                                                                                                     |
+
 ## Problem Statement
 
 M2 shipped a technically excellent offline-first todo list — IndexedDB source of truth, sync queue, background sync, multi-device end-to-end coverage — wrapped around a **rudimentary** task experience. The PWA has four UI components (`TaskCreateForm`, `TaskList`, `Toast`, `VersionFooter`) and a flat, single, unordered list of title-only tasks.

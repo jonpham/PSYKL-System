@@ -40,6 +40,7 @@ Two things this initiative does not do:
 | **List switcher** (sheet)      | Pick, create, rename, reorder, delete lists.                        | Spec 1       |
 | **Task detail** (sheet)        | Title, notes, due date, tags. Later: Start PSYKL + session history. | Spec 4       |
 | **Search** (overlay)           | Query across all lists.                                             | Spec 6       |
+| **Recently Deleted** (list)    | Deleted lists, sections, and tasks. Restore, or wait 30 days.       | Spec 1       |
 | **Settings** (sheet)           | Theme selection. Nothing else in this initiative.                   | Spec 5       |
 | **Live session** (full screen) | Reserved. Not built here.                                           | `psykl-loop` |
 
@@ -84,23 +85,23 @@ Previously unspecified, and a real gap. Top to bottom:
 
 Complete for the list view. Adding a gesture requires editing this table rather than quietly appending.
 
-| Gesture               | Target                      | Result                                              | Arrives in   |
-| --------------------- | --------------------------- | --------------------------------------------------- | ------------ |
-| Tap                   | Checkbox                    | Toggle complete / incomplete                        | Shipped (M2) |
-| Tap                   | Row title                   | Edit the title inline, in place                     | Shipped (M2) |
-| Tap                   | Row, trailing detail button | Open task detail sheet                              | Spec 4       |
-| Swipe right           | Row                         | Complete / uncomplete                               | Spec 5       |
-| Swipe left            | Row                         | Reveal Delete; tap or continue the swipe to confirm | Spec 5       |
-| Long-press, then drag | Row                         | Reorder within and across sections                  | Spec 3       |
-| Modifier + ↑ / ↓      | Focused row                 | Reorder without a pointer; announced via ARIA       | Spec 3       |
-| Long-press, then drag | Section header              | Reorder sections within the list                    | Spec 3       |
-| Tap                   | Section header              | Collapse / expand section                           | Spec 2       |
-| Tap                   | List name                   | Open list switcher sheet                            | Spec 1       |
-| Tap                   | Overflow `⋯`                | Open the list menu                                  | Spec 1       |
-| Pull down             | Top of list                 | Reveal search                                       | Spec 6       |
-| Tap                   | Capture field               | Focus the input                                     | Shipped (M2) |
-| Enter                 | Capture field               | Commit and keep focus for the next capture          | Shipped (M2) |
-| **Reserved**          | Detail sheet primary button | **Start PSYKL session**                             | `psykl-loop` |
+| Gesture               | Target                      | Result                                            | Arrives in   |
+| --------------------- | --------------------------- | ------------------------------------------------- | ------------ |
+| Tap                   | Checkbox                    | Toggle complete / incomplete                      | Shipped (M2) |
+| Tap                   | Row title                   | Edit the title inline, in place                   | Shipped (M2) |
+| Tap                   | Row, trailing detail button | Open task detail sheet                            | Spec 4       |
+| Swipe right           | Row                         | Complete / uncomplete                             | Spec 5       |
+| Swipe left            | Row                         | Reveal Delete; moves the task to Recently Deleted | Spec 5       |
+| Long-press, then drag | Row                         | Reorder within and across sections                | Spec 3       |
+| Modifier + ↑ / ↓      | Focused row                 | Reorder without a pointer; announced via ARIA     | Spec 3       |
+| Long-press, then drag | Section header              | Reorder sections within the list                  | Spec 3       |
+| Tap                   | Section header              | Collapse / expand section                         | Spec 2       |
+| Tap                   | List name                   | Open list switcher sheet                          | Spec 1       |
+| Tap                   | Overflow `⋯`                | Open the list menu                                | Spec 1       |
+| Pull down             | Top of list                 | Reveal search                                     | Spec 6       |
+| Tap                   | Capture field               | Focus the input                                   | Shipped (M2) |
+| Enter                 | Capture field               | Commit and keep focus for the next capture        | Shipped (M2) |
+| **Reserved**          | Detail sheet primary button | **Start PSYKL session**                           | `psykl-loop` |
 
 **Pull-to-refresh does not exist.** Sync is automatic and continuous. The pull gesture at the top of the list is spent on search instead, which is what the reference apps do.
 
@@ -132,11 +133,15 @@ Written as E2E test titles, per `AGENTS.md` → Test Discipline: collapsed to th
 - `a user creates a task while a specific list is open and the task lands in that list`
 - `a user switches lists and the previously open list's arrangement is preserved`
 - `a user reorders their lists in the switcher and the order persists`
-- `a user deletes a list and its tasks go with it`
+- `a user deletes a list and it moves to Recently Deleted with its tasks intact`
+- `a user restores a deleted list and its tasks come back in their original order`
+- `a user deletes a task while offline and it moves to Recently Deleted without needing the network`
 - `a user deletes their only list and a default list remains`
 - `a user creates a list while offline and it appears on a second device after reconnecting`
 - `a user's existing tasks from before lists existed appear in the default list`
 - `a user with queued offline writes upgrades the app and loses none of them`
+- `a user offline with 25 queued changes sees a banner telling them to reconnect`
+- `a user offline with 100 queued changes cannot add a new task until they reconnect`
 
 ### Spec 2 — Sections
 
@@ -190,17 +195,21 @@ That last one is the initiative's stated success criterion and the hardest test 
 
 Each is a designed screen, not a blank area. Copy is in `--text-secondary`, left-aligned under the header.
 
-| State                          | Content                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **First paint**                | The app shell renders immediately and the list area holds three placeholder rows at `--bg-surface` until IndexedDB resolves. No spinner: the local read is fast, and a spinner would imply a network wait that is not happening.                                                                                                                          |
-| **First run**                  | The default list exists and is open. Migration puts every pre-existing task there.                                                                                                                                                                                                                                                                        |
-| **List with no tasks**         | `Nothing here yet.` Then, smaller: `Add a task below. Long-press any task to drag it into position.` This is where the reorder gesture is taught.                                                                                                                                                                                                         |
-| **Section with no tasks**      | The header stays with a `0` count. Empty sections are not auto-removed — a section is a container the user made on purpose.                                                                                                                                                                                                                               |
-| **All tasks completed**        | Completed rows are hidden by default, so the list reads as empty and shows the empty-list copy plus a `Show Completed` entry in the list menu. No celebration.                                                                                                                                                                                            |
-| **Search, no results**         | `No tasks match "<query>".` Nothing else.                                                                                                                                                                                                                                                                                                                 |
-| **Offline with queued writes** | Unchanged from M2: unsynced rows dim to 0.6 and show a pending dot. Offline is a normal operating mode, never a banner.                                                                                                                                                                                                                                   |
-| **Sync failed permanently**    | A single row above the capture field in `--destructive`: `<n> changes could not be saved.` Tapping it opens the failed-operations detail.                                                                                                                                                                                                                 |
-| **Arrangement reconciled**     | When a sync resolves a concurrent reorder and the local order changes as a result, the affected rows animate to their new positions rather than snapping, and a dismissible line reads `List order updated from another device.` A hand-made arrangement changing silently is the failure mode the success criterion exists to prevent; the user is told. |
+| State                           | Content                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **First paint**                 | The app shell renders immediately and the list area holds three placeholder rows at `--bg-surface` until IndexedDB resolves. No spinner: the local read is fast, and a spinner would imply a network wait that is not happening.                                                                                                                          |
+| **First run**                   | The default list exists and is open. Migration puts every pre-existing task there.                                                                                                                                                                                                                                                                        |
+| **List with no tasks**          | `Nothing here yet.` Then, smaller: `Add a task below. Long-press any task to drag it into position.` This is where the reorder gesture is taught.                                                                                                                                                                                                         |
+| **Section with no tasks**       | The header stays with a `0` count. Empty sections are not auto-removed — a section is a container the user made on purpose.                                                                                                                                                                                                                               |
+| **All tasks completed**         | Completed rows are hidden by default, so the list reads as empty and shows the empty-list copy plus a `Show Completed` entry in the list menu. No celebration.                                                                                                                                                                                            |
+| **Search, no results**          | `No tasks match "<query>".` Nothing else.                                                                                                                                                                                                                                                                                                                 |
+| **Offline, few queued writes**  | Unsynced rows dim to 0.6 and show a pending dot, as in M2. No banner below the nag threshold.                                                                                                                                                                                                                                                             |
+| **Offline, 25+ queued writes**  | A persistent banner above the capture field: `<n> changes waiting to sync. Reconnect to save them.` It blocks nothing.                                                                                                                                                                                                                                    |
+| **Offline, 100+ queued writes** | The capture field is disabled and reads `Reconnect to keep adding.` Writes to existing rows are refused with the same message. Offline is a degraded mode and the app says so plainly.                                                                                                                                                                    |
+| **Recently Deleted, empty**     | `Nothing deleted in the last 30 days.`                                                                                                                                                                                                                                                                                                                    |
+| **Recently Deleted, populated** | Rows show what was deleted with the remaining days right-aligned in the metadata column: `28d`. Restore returns the item to its original list; if that list is itself deleted, it goes to the default list.                                                                                                                                               |
+| **Sync failed permanently**     | A single row above the capture field in `--destructive`: `<n> changes could not be saved.` Tapping it opens the failed-operations detail.                                                                                                                                                                                                                 |
+| **Arrangement reconciled**      | When a sync resolves a concurrent reorder and the local order changes as a result, the affected rows animate to their new positions rather than snapping, and a dismissible line reads `List order updated from another device.` A hand-made arrangement changing silently is the failure mode the success criterion exists to prevent; the user is told. |
 
 ---
 
@@ -272,9 +281,13 @@ The previous version carried seven open questions. Five are answered here; two a
 | 6   | Where does a captured task land?        | **Appended to the end of the list**, outside any section, always. The predictable answer. If the user wants it elsewhere they drag it, which is the interaction the product is built around.         |
 | 7   | Does the 720px desktop cap hold?        | **Yes for this initiative.** A desktop list sidebar is a real improvement and a real scope increase; it is a candidate for a later initiative, not a gap here.                                       |
 
-### Carried to `/plan-eng-review`
+### Answered by `/plan-eng-review`, 2026-08-18
 
-- **Section representation** — real entity, grouping value, or embedded list descriptor (initiative `DESIGN.md` Risk 3).
-- **Fractional position representation** — numeric, fixed-width decimal, or LexoRank-style rank strings (Risk 2).
-- **Sync-queue migration** — migrate queued entries or drain first (initiative Open Question 2).
-- **Where device-local preferences live** — theme choice and section collapse state both need a store that is deliberately outside the sync queue.
+All four carried questions are closed. See [`DESIGN.md`](DESIGN.md) → Offline Posture for the full table.
+
+- **Section representation** — a real `sections` table, no foreign key, same nullable-reference pattern as `list_id`.
+- **Ordering representation** — the `fractional-indexing` package, keys minted client-side, stored as `text COLLATE "C"`.
+- **Sync-queue upgrade** — migrate in place, never drain; draining needs network and Spec 1's own story forbids losing offline writes.
+- **Device-local preferences** — theme choice and section collapse state live in the existing `sync_meta` IndexedDB store, which never enqueues and therefore never syncs.
+
+That review also reversed the offline posture: offline is now a degraded mode with a nag at 25 queued changes and a hard write ceiling at 100, and deletes are non-destructive moves to `Recently Deleted` with a 30-day server-side purge. `docs/PRODUCT.md` and ADR-M2-012 were updated to match.

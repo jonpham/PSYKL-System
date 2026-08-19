@@ -407,6 +407,8 @@ Coordinate replay with an IndexedDB `sync_meta.replay_lock` row instead of `navi
 
 When a due queue row hits a transient failure, update its retry schedule and stop that replay pass. Continuing to later rows would let later operations overtake earlier ones, violating the queue model in Decision #40.
 
+> **Superseded 2026-08-18** by the `todo-experience` initiative. `/plan-eng-review` established that the server tolerates out-of-order arrival for every child entity (no foreign keys, nullable parent references, orphan sweep), so strict replay ordering no longer protects anything. Replay now works the whole due queue each pass, and an entry that exhausts its attempt ceiling moves to `failed_ops` rather than retrying forever. See `docs/initiatives/todo-experience/DESIGN.md` → Offline Posture.
+
 ### ADR-M2-013: Permanent Failure Toast Without Inspector UI
 
 Preserve permanent failures in `failed_ops` and surface a toast through `sync:permanent-fail`. A full failed-operation inspector remains deferred until real dogfood usage proves it is needed.

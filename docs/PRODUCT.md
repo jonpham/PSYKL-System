@@ -76,7 +76,7 @@ The MVP closes the planning loop end-to-end:
 
 PSYKL-System ships as a set of clients sharing a single `service-task` backend:
 
-- **PWA** (Chromium-family browser / desktop / Android via add-to-home-screen) — permanent first-class surface for Android, non-Mac desktops, and other non-Apple users; offline-first from M2 onward
+- **PWA** (Chromium-family browser / desktop / Android via add-to-home-screen) — permanent first-class surface for Android, non-Mac desktops, and other non-Apple users; offline-capable from M2 onward (degraded mode, see Engineering Constraints)
 - **iPhone (iOS)** — intended primary surface long-term; **deferred**, see `apple-native`
 - **iPad (iPadOS)** — arrives alongside the iOS client; **deferred**
 - **macOS** — arrives alongside the iOS client (SwiftUI multiplatform or Mac Catalyst, decided during design); **deferred**
@@ -89,7 +89,7 @@ Surface order is intentional: the PWA carries cross-device dogfood, product iter
 - Components (`components/web_client`, `components/service-task`, `components/ios_client`) are pushed to standalone upstream repositories as **downstream mirrors** via `git subtree split`. Never edit the mirrors directly.
 - The monorepo hosts shared packages (`packages/`), system-level end-to-end tests, infrastructure (Docker Compose, helm charts), and project documentation (`docs/`).
 - **Every component carries a Test-Driven Development (TDD) 5-layer test pyramid from M1**: Static Analysis → Unit → Integration → Component (system-component-isolation) → End-to-End. See [`AGENTS.md` → Test Discipline](../AGENTS.md).
-- The PWA is offline-first from M2 onward (M1 ships an online-required PWA shell).
+- The PWA works offline from M2 onward (M1 ships an online-required PWA shell), but **offline is a degraded mode, not a first-class one**. Reads and writes continue offline; the app tells the user it is offline, warns as the unsynced queue grows, and stops accepting new writes past a hard ceiling until the device reconnects and reconciles. Revised 2026-08-18 by `/plan-eng-review` during the `todo-experience` initiative — see that initiative's `DESIGN.md` → Offline Posture.
 - A self-hosted Docker Compose deployment is supported.
 - Architecture should permit scaling to ~100,000 concurrent users in a future production environment. Initial milestones do not optimize for that scale; they avoid choices that would actively preclude it.
 
