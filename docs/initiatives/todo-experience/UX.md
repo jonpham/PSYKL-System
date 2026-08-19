@@ -38,10 +38,10 @@ Two things this initiative does not do:
 | ------------------------------ | ------------------------------------------------------------------- | ------------ |
 | **List view**                  | The app. One list's tasks, in sections, in the user's order.        | Spec 1       |
 | **List switcher** (sheet)      | Pick, create, rename, reorder, delete lists.                        | Spec 1       |
-| **Task detail** (sheet)        | Title, notes, due date, tags. Later: Start PSYKL + session history. | Spec 4       |
-| **Search** (overlay)           | Query across all lists.                                             | Spec 6       |
-| **Recently Deleted** (list)    | Deleted lists, sections, and tasks. Restore, or wait 30 days.       | Spec 1       |
-| **Settings** (sheet)           | Theme selection. Nothing else in this initiative.                   | Spec 5       |
+| **Task detail** (sheet)        | Title, notes, due date, tags. Later: Start PSYKL + session history. | Spec 5       |
+| **Search** (overlay)           | Query across all lists.                                             | Spec 7       |
+| **Recently Deleted** (list)    | Deleted lists, sections, and tasks. Restore, or wait 30 days.       | Spec 2       |
+| **Settings** (sheet)           | Theme selection. Nothing else in this initiative.                   | Spec 6       |
 | **Live session** (full screen) | Reserved. Not built here.                                           | `psykl-loop` |
 
 There is no Today view and no dashboard. The app opens directly into the last list the user was in. A Today view is a date-derived surface and premise P2 keeps date-derived attention claims out of this product; if one is ever built it is a later decision, not a gap in this initiative.
@@ -51,7 +51,7 @@ There is no Today view and no dashboard. The app opens directly into the last li
 Previously unspecified, and a real gap. Top to bottom:
 
 - **Header**, 56px, scrolls with the list rather than sticking: the list name in `title`, then a task count in `meta`. Trailing edge carries a single overflow button (`⋯`).
-- **The overflow menu** is where low-frequency list operations live, so no screen chrome is spent on them: `New Section`, `Show/Hide Completed`, `Rename List`, `Delete List`, `Settings`. This resolves the missing section-creation affordance — Spec 2's story `a user adds a section to a list` had no UI behind it in the previous version of this document.
+- **The overflow menu** is where low-frequency list operations live, so no screen chrome is spent on them: `New Section`, `Show/Hide Completed`, `Rename List`, `Delete List`, `Settings`. This resolves the missing section-creation affordance — Spec 3's story `a user adds a section to a list` had no UI behind it in the previous version of this document.
 - **Search** is reachable by pulling down at the top of the list, the convention in all three reference apps.
 - **The capture field** is bottom-anchored, 56px, and never scrolls away.
 
@@ -89,16 +89,16 @@ Complete for the list view. Adding a gesture requires editing this table rather 
 | --------------------- | --------------------------- | ------------------------------------------------- | ------------ |
 | Tap                   | Checkbox                    | Toggle complete / incomplete                      | Shipped (M2) |
 | Tap                   | Row title                   | Edit the title inline, in place                   | Shipped (M2) |
-| Tap                   | Row, trailing detail button | Open task detail sheet                            | Spec 4       |
-| Swipe right           | Row                         | Complete / uncomplete                             | Spec 5       |
-| Swipe left            | Row                         | Reveal Delete; moves the task to Recently Deleted | Spec 5       |
-| Long-press, then drag | Row                         | Reorder within and across sections                | Spec 3       |
-| Modifier + ↑ / ↓      | Focused row                 | Reorder without a pointer; announced via ARIA     | Spec 3       |
-| Long-press, then drag | Section header              | Reorder sections within the list                  | Spec 3       |
-| Tap                   | Section header              | Collapse / expand section                         | Spec 2       |
+| Tap                   | Row, trailing detail button | Open task detail sheet                            | Spec 5       |
+| Swipe right           | Row                         | Complete / uncomplete                             | Spec 6       |
+| Swipe left            | Row                         | Reveal Delete; moves the task to Recently Deleted | Spec 6       |
+| Long-press, then drag | Row                         | Reorder within and across sections                | Spec 4       |
+| Modifier + ↑ / ↓      | Focused row                 | Reorder without a pointer; announced via ARIA     | Spec 4       |
+| Long-press, then drag | Section header              | Reorder sections within the list                  | Spec 4       |
+| Tap                   | Section header              | Collapse / expand section                         | Spec 3       |
 | Tap                   | List name                   | Open list switcher sheet                          | Spec 1       |
 | Tap                   | Overflow `⋯`                | Open the list menu                                | Spec 1       |
-| Pull down             | Top of list                 | Reveal search                                     | Spec 6       |
+| Pull down             | Top of list                 | Reveal search                                     | Spec 7       |
 | Tap                   | Capture field               | Focus the input                                   | Shipped (M2) |
 | Enter                 | Capture field               | Commit and keep focus for the next capture        | Shipped (M2) |
 | **Reserved**          | Detail sheet primary button | **Start PSYKL session**                           | `psykl-loop` |
@@ -107,7 +107,7 @@ Complete for the list view. Adding a gesture requires editing this table rather 
 
 ### Inline edit and the detail sheet both survive
 
-The previous version of this document moved title editing into the detail sheet and flagged the resulting two-tap regression as "the most likely thing in this document to be wrong." It was. Reminders solves this by giving the row two targets: tapping the title edits in place, and a trailing detail button opens the sheet. PSYKL does the same. M2 Spec 5's inline edit is preserved rather than regressed, and the sheet still owns notes, dates, tags, and the reserved Start button.
+The previous version of this document moved title editing into the detail sheet and flagged the resulting two-tap regression as "the most likely thing in this document to be wrong." It was. Reminders solves this by giving the row two targets: tapping the title edits in place, and a trailing detail button opens the sheet. PSYKL does the same. M2 Spec 6's inline edit is preserved rather than regressed, and the sheet still owns notes, dates, tags, and the reserved Start button.
 
 The trailing detail button appears on row hover or focus, and is always present for AT. It does not add visual noise at rest.
 
@@ -133,17 +133,22 @@ Written as E2E test titles, per `AGENTS.md` → Test Discipline: collapsed to th
 - `a user creates a task while a specific list is open and the task lands in that list`
 - `a user switches lists and the previously open list's arrangement is preserved`
 - `a user reorders their lists in the switcher and the order persists`
-- `a user deletes a list and it moves to Recently Deleted with its tasks intact`
-- `a user restores a deleted list and its tasks come back in their original order`
-- `a user deletes a task while offline and it moves to Recently Deleted without needing the network`
 - `a user deletes their only list and a default list remains`
 - `a user creates a list while offline and it appears on a second device after reconnecting`
 - `a user's existing tasks from before lists existed appear in the default list`
 - `a user with queued offline writes upgrades the app and loses none of them`
+
+### Spec 2 — Recently Deleted and offline posture
+
+- `a user deletes a list and it moves to Recently Deleted with its tasks intact`
+- `a user restores a deleted list and its tasks come back in their original order`
+- `a user deletes a task while offline and it moves to Recently Deleted without needing the network`
+- `a user sees how many days remain before a deleted item is purged`
+- `a user's task whose list was deleted on another device appears in the default list rather than vanishing`
 - `a user offline with 25 queued changes sees a banner telling them to reconnect`
 - `a user offline with 100 queued changes cannot add a new task until they reconnect`
 
-### Spec 2 — Sections
+### Spec 3 — Sections
 
 - `a user adds a section from the list menu and it appears as a header in the flow of the list`
 - `a user moves a task into a section by dragging it under the header`
@@ -152,7 +157,7 @@ Written as E2E test titles, per `AGENTS.md` → Test Discipline: collapsed to th
 - `a user deletes a section and its tasks return to the list's unsectioned area rather than being deleted`
 - `a user collapses a section on one device and it stays expanded on another`
 
-### Spec 3 — Manual ordering
+### Spec 4 — Manual ordering
 
 - `a user drags a task to the top of the list and it stays there after reload`
 - `a user sees a grip appear when long-pressing a task, before the drag starts`
@@ -163,7 +168,7 @@ Written as E2E test titles, per `AGENTS.md` → Test Discipline: collapsed to th
 
 That last one is the initiative's stated success criterion and the hardest test in the milestone.
 
-### Spec 4 — Notes and optional due date
+### Spec 5 — Notes and optional due date
 
 - `a user taps a task title and edits it in place without leaving the list`
 - `a user opens a task's detail and sees its full title, notes, due date, and tags`
@@ -172,7 +177,7 @@ That last one is the initiative's stated success criterion and the hardest test 
 - `a user sets a due time only when the deadline has a real time, and the time is optional`
 - `a user sees a past due date rendered as overdue`
 
-### Spec 5 — Interaction polish and theming
+### Spec 6 — Interaction polish and theming
 
 - `a user swipes right on a task to complete it without opening anything`
 - `a user swipes left on a task and must confirm before it is deleted`
@@ -181,7 +186,7 @@ That last one is the initiative's stated success criterion and the hardest test 
 - `a user switches to the Ledger theme and the whole app changes appearance`
 - `a user's chosen theme survives a reload but does not follow them to a second device`
 
-### Spec 6 — Tags and search
+### Spec 7 — Tags and search
 
 - `a user applies a tag to a task and it appears in the row's metadata`
 - `a user applies the same tag to tasks in different lists`
@@ -231,17 +236,17 @@ The initiative's honest success criterion is that the operator prefers PSYKL for
 | Capability                           | Reminders                | PSYKL                            | Verdict                |
 | ------------------------------------ | ------------------------ | -------------------------------- | ---------------------- |
 | Lists                                | ✅                       | ✅ Spec 1                        | **Match**              |
-| Sections within a list               | ✅                       | ✅ Spec 2                        | **Match**              |
-| Manual drag-to-reorder               | ✅                       | ✅ Spec 3                        | **Match**              |
+| Sections within a list               | ✅                       | ✅ Spec 3                        | **Match**              |
+| Manual drag-to-reorder               | ✅                       | ✅ Spec 4                        | **Match**              |
 | Discoverable drag handle             | ❌ invisible until known | ✅ grip + keyboard path + taught | **Beat**               |
 | Inline title edit                    | ✅                       | ✅ shipped M2                    | **Match**              |
-| Notes on a task                      | ✅                       | ✅ Spec 4                        | **Match**              |
-| Due date, optional time              | ✅                       | ✅ Spec 4                        | **Match**              |
-| Overdue indication                   | ✅                       | ✅ Spec 4                        | **Match**              |
-| Tags                                 | ✅                       | ✅ Spec 6                        | **Match**              |
-| Search                               | ✅                       | ✅ Spec 6                        | **Match**              |
-| Swipe to complete / delete           | ✅                       | ✅ Spec 5                        | **Match**              |
-| Theming                              | ❌                       | ✅ Spec 5                        | **Beat**               |
+| Notes on a task                      | ✅                       | ✅ Spec 5                        | **Match**              |
+| Due date, optional time              | ✅                       | ✅ Spec 5                        | **Match**              |
+| Overdue indication                   | ✅                       | ✅ Spec 5                        | **Match**              |
+| Tags                                 | ✅                       | ✅ Spec 7                        | **Match**              |
+| Search                               | ✅                       | ✅ Spec 7                        | **Match**              |
+| Swipe to complete / delete           | ✅                       | ✅ Spec 6                        | **Match**              |
+| Theming                              | ❌                       | ✅ Spec 6                        | **Beat**               |
 | Offline-first with multi-device sync | ⚠️ iCloud, opaque        | ✅ shipped in M2, tested         | **Beat**               |
 | Subtasks                             | ✅                       | ❌ deferred by P3                | **Lose, deliberately** |
 | Notifications and alerts             | ✅                       | ❌ out, per P2                   | **Out of scope**       |
