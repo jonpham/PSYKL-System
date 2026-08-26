@@ -19,6 +19,7 @@ export class TaskService {
         userId,
         title: input.title,
         updatedAt: clampFutureTimestamp(new Date(input.updated_at)),
+        listId: input.list_id ?? null,
       })
       .returning();
 
@@ -57,6 +58,7 @@ export class TaskService {
         ...(input.completed_at !== undefined
           ? { completedAt: input.completed_at === null ? null : new Date(input.completed_at) }
           : {}),
+        ...(input.list_id !== undefined ? { listId: input.list_id } : {}),
         deletedAt: null,
         updatedAt,
         serverUpdatedAt: new Date(),
@@ -119,6 +121,7 @@ export class TaskService {
       updated_at: row.updatedAt!.toISOString(),
       server_updated_at: row.serverUpdatedAt.toISOString(),
       deleted_at: row.deletedAt?.toISOString() ?? null,
+      list_id: row.listId ?? null,
     };
   }
 }

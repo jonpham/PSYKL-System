@@ -23,6 +23,7 @@ export const TaskSchema = z
     updated_at: TimestampSchema.describe('Client-supplied intent timestamp for Last-Write-Wins comparison'),
     server_updated_at: TimestampSchema.describe('Server-stamped audit timestamp'),
     deleted_at: TimestampSchema.nullable().describe('Client-supplied tombstone timestamp; null means not deleted'),
+    list_id: UuidV7Schema.nullable().describe('Reference to parent List; no foreign key (offline posture)'),
   })
   .strict();
 
@@ -39,6 +40,7 @@ export const TaskInputSchema = z
     id: UuidV7Schema,
     title: z.string().min(1).max(200),
     updated_at: TimestampSchema,
+    list_id: UuidV7Schema.nullable().optional(),
   })
   .strict();
 
@@ -49,9 +51,10 @@ export const TaskPatchInputSchema = z
     title: z.string().min(1).max(200).optional(),
     completed_at: TimestampSchema.nullable().optional(),
     updated_at: TimestampSchema,
+    list_id: UuidV7Schema.nullable().optional(),
   })
   .strict()
-  .refine((input) => input.title !== undefined || input.completed_at !== undefined, {
+  .refine((input) => input.title !== undefined || input.completed_at !== undefined || input.list_id !== undefined, {
     message: 'At least one patch field is required',
   });
 
