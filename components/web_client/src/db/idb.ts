@@ -10,12 +10,12 @@ export { migrateQueueEntryV1ToV2 };
 
 async function openPsyklDb(): Promise<PsyklDb> {
   return openDB<PsyklDbSchema>(databaseName, CURRENT_SCHEMA_VERSION, {
-    upgrade(db, oldVersion, _newVersion, tx) {
+    async upgrade(db, oldVersion, _newVersion, tx) {
       if (oldVersion < 1) {
         createV1Stores(db);
       }
       if (oldVersion < 2) {
-        void upgradeV1ToV2(db, tx);
+        await upgradeV1ToV2(db, tx);
       }
     },
   });
