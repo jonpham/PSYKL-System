@@ -1,11 +1,12 @@
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task } from '../api/client';
-import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTask, putTaskAndEnqueueSyncOp } from '../db/idb';
+import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTaskAndEnqueueSyncOp } from '../db/idb';
 import type { EntityType, PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { moveToFailedOps } from './replay.failed-ops';
 import { acquireReplayLock, refreshReplayLock, releaseReplayLock } from './replay.lock';
 import { sendEntry } from './replay.transport';
+import { writeBackResponse } from './replay.writeback';
 import { emitStaleWriteIfSuperseded } from './stale-write';
 
 type EnqueueInput = {
@@ -34,6 +35,8 @@ type ReplayTransportResult = {
   status: number;
 };
 type ReplayEntryOutcome = 'failed' | 'replayed' | 'retried';
+
+const MAX_REPLAY_ATTEMPTS = 10;
 
 async function enqueue(input: EnqueueInput, options: ReplayOptions = {}): Promise<SyncQueueEntry> {
   const now = options.now?.() ?? new Date();
@@ -100,7 +103,7 @@ async function replayEntry(
     const response = await (options.transport ?? sendEntry)(entry);
     if (response.status >= 200 && response.status < 300 && response.data) {
       emitStaleWriteIfSuperseded(entry, response.data);
-      await putTask(response.data, options.db);
+      await writeBackResponse(entry, response.data, options.db);
       await deleteSyncOp(entry.id, options.db);
       result.replayed += 1;
       return 'replayed';
@@ -111,19 +114,31 @@ async function replayEntry(
       return 'failed';
     }
   } catch {
-    await scheduleRetry(entry, options);
-    result.retried += 1;
-    return 'retried';
+    const outcome = await scheduleRetry(entry, options);
+    if (outcome === 'failed') {
+      result.failed += 1;
+    } else {
+      result.retried += 1;
+    }
+    return outcome;
   }
 
-  await scheduleRetry(entry, options);
-  result.retried += 1;
-  return 'retried';
+  const outcome = await scheduleRetry(entry, options);
+  if (outcome === 'failed') {
+    result.failed += 1;
+  } else {
+    result.retried += 1;
+  }
+  return outcome;
 }
 
-async function scheduleRetry(entry: SyncQueueEntry, options: ReplayOptions): Promise<void> {
+async function scheduleRetry(entry: SyncQueueEntry, options: ReplayOptions): Promise<ReplayEntryOutcome> {
   const now = options.now?.() ?? new Date();
   const attempts = entry.attempts + 1;
+  if (attempts >= MAX_REPLAY_ATTEMPTS) {
+    await moveToFailedOps(entry, options, 0, `Gave up after ${String(attempts)} attempts`);
+    return 'failed';
+  }
   await enqueueSyncOp(
     {
       ...entry,
@@ -132,7 +147,8 @@ async function scheduleRetry(entry: SyncQueueEntry, options: ReplayOptions): Pro
     },
     options.db,
   );
+  return 'retried';
 }
 
-export { acquireReplayLock, enqueue, refreshReplayLock, releaseReplayLock, replay };
+export { acquireReplayLock, enqueue, MAX_REPLAY_ATTEMPTS, refreshReplayLock, releaseReplayLock, replay };
 export type { EnqueueInput, ReplayOptions, ReplayResult, ReplayTransport, ReplayTransportResult };
