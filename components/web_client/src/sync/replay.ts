@@ -67,10 +67,7 @@ async function replay(options: ReplayOptions = {}): Promise<ReplayResult> {
   const stopHeartbeat = startReplayHeartbeat({ ...options, owner });
   try {
     for (const entry of await dueEntries(options)) {
-      const outcome = await replayEntry(entry, options, result);
-      if (outcome === 'retried') {
-        break;
-      }
+      await replayEntry(entry, options, result);
     }
     return result;
   } finally {
