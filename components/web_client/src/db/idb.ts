@@ -1,16 +1,21 @@
 import { openDB } from 'idb';
 
 import type { Task } from '../api/client';
+import { migrateQueueEntryV1ToV2, upgradeV1ToV2 } from './idb.migration';
 import type { FailedOpEntry, PsyklDb, PsyklDbSchema, SyncMetaEntry, SyncQueueEntry } from './idb.types';
 
 const databaseName = 'psykl';
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
+export { migrateQueueEntryV1ToV2 };
 
 async function openPsyklDb(): Promise<PsyklDb> {
   return openDB<PsyklDbSchema>(databaseName, CURRENT_SCHEMA_VERSION, {
-    upgrade(db, oldVersion) {
+    upgrade(db, oldVersion, _newVersion, tx) {
       if (oldVersion < 1) {
         createV1Stores(db);
+      }
+      if (oldVersion < 2) {
+        void upgradeV1ToV2(db, tx);
       }
     },
   });
@@ -106,11 +111,11 @@ async function getMeta(key: string, db?: PsyklDb): Promise<SyncMetaEntry | undef
 function createV1Stores(db: PsyklDb): void {
   const failedOps = db.createObjectStore('failed_ops', { keyPath: 'id' });
   failedOps.createIndex('created_at', 'created_at');
-  failedOps.createIndex('task_id', 'task_id');
+  (failedOps as unknown as IDBObjectStore).createIndex('task_id', 'task_id');
   db.createObjectStore('sync_meta', { keyPath: 'key' });
   const syncQueue = db.createObjectStore('sync_queue', { keyPath: 'id' });
   syncQueue.createIndex('created_at', 'created_at');
-  syncQueue.createIndex('task_id', 'task_id');
+  (syncQueue as unknown as IDBObjectStore).createIndex('task_id', 'task_id');
   const tasks = db.createObjectStore('tasks', { keyPath: 'id' });
   tasks.createIndex('deleted_at', 'deleted_at');
   tasks.createIndex('updated_at', 'updated_at');
