@@ -47,3 +47,6 @@ test-results/
 storybook-static/
 **/storybook-static/
 .gstack/
+
+# git worktrees (local scratch, never committed)
+.worktrees/
