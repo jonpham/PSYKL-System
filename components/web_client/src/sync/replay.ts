@@ -1,6 +1,7 @@
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task } from '../api/client';
+import type { components } from '../api/types';
 import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTaskAndEnqueueSyncOp } from '../db/idb';
 import type { EntityType, PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { moveToFailedOps } from './replay.failed-ops';
@@ -8,6 +9,8 @@ import { acquireReplayLock, refreshReplayLock, releaseReplayLock } from './repla
 import { sendEntry } from './replay.transport';
 import { writeBackResponse } from './replay.writeback';
 import { emitStaleWriteIfSuperseded } from './stale-write';
+
+type List = components['schemas']['List'];
 
 type EnqueueInput = {
   body: unknown;
@@ -30,7 +33,7 @@ type ReplayResult = { failed: number; replayed: number; retried: number };
 type ReplayTransport = (entry: SyncQueueEntry) => Promise<ReplayTransportResult>;
 
 type ReplayTransportResult = {
-  data?: Task;
+  data?: List | Task;
   error?: unknown;
   status: number;
 };
@@ -102,7 +105,9 @@ async function replayEntry(
   try {
     const response = await (options.transport ?? sendEntry)(entry);
     if (response.status >= 200 && response.status < 300 && response.data) {
-      emitStaleWriteIfSuperseded(entry, response.data);
+      if (entry.entity_type === 'task') {
+        emitStaleWriteIfSuperseded(entry, response.data as Task);
+      }
       await writeBackResponse(entry, response.data, options.db);
       await deleteSyncOp(entry.id, options.db);
       result.replayed += 1;

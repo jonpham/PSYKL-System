@@ -2,7 +2,7 @@ import { openDB } from 'idb';
 
 import type { Task } from '../api/client';
 import { migrateQueueEntryV1ToV2, upgradeV1ToV2 } from './idb.migration';
-import type { FailedOpEntry, PsyklDb, PsyklDbSchema, SyncMetaEntry, SyncQueueEntry } from './idb.types';
+import type { FailedOpEntry, ListRecord, PsyklDb, PsyklDbSchema, SyncMetaEntry, SyncQueueEntry } from './idb.types';
 
 const databaseName = 'psykl';
 export const CURRENT_SCHEMA_VERSION = 2;
@@ -39,6 +39,20 @@ async function deleteTask(id: string, db?: PsyklDb): Promise<void> {
   return withDb(db, async (database) => {
     await database.delete('tasks', id);
   });
+}
+
+async function putList(list: ListRecord, db?: PsyklDb): Promise<void> {
+  return withDb(db, async (database) => {
+    await database.put('lists', list);
+  });
+}
+
+async function listLists(db?: PsyklDb): Promise<ListRecord[]> {
+  return withDb(db, async (database) => database.getAllFromIndex('lists', 'position'));
+}
+
+async function getList(id: string, db?: PsyklDb): Promise<ListRecord | undefined> {
+  return withDb(db, async (database) => database.get('lists', id));
 }
 
 async function enqueueSyncOp(entry: SyncQueueEntry, db?: PsyklDb): Promise<void> {
@@ -141,13 +155,16 @@ export {
   deleteSyncOp,
   deleteTask,
   enqueueSyncOp,
+  getList,
   getMeta,
   getTask,
   listFailedOps,
+  listLists,
   listSyncQueue,
   listTasks,
   openPsyklDb,
   putFailedOp,
+  putList,
   putMeta,
   putTask,
   putTaskAndEnqueueSyncOp,

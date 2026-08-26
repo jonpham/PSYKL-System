@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 
 import { apiClient, type Task } from '../api/client';
 import { listTasks, putTask } from '../db/idb';
+import { getSharedChannel, resetSharedChannelsForTest } from './broadcast-channel';
 
 interface TasksSnapshot {
   error: string | null;
@@ -38,8 +39,8 @@ async function notifyTasksChanged(options: { broadcast?: boolean } = {}): Promis
 }
 
 function resetUseTasksForTest(): void {
-  broadcastChannel?.close();
   broadcastChannel = null;
+  resetSharedChannelsForTest();
   hydrationStarted = false;
   snapshot = {
     error: null,
@@ -118,12 +119,17 @@ function getBroadcastChannel(): BroadcastChannel | null {
     return broadcastChannel;
   }
 
-  broadcastChannel = new BroadcastChannel(channelName);
-  broadcastChannel.addEventListener('message', (event) => {
+  const channel = getSharedChannel(channelName);
+  if (!channel) {
+    return null;
+  }
+
+  channel.addEventListener('message', (event) => {
     if ((event.data as { type?: string }).type === messageType) {
       void notifyTasksChanged({ broadcast: false });
     }
   });
+  broadcastChannel = channel;
 
   return broadcastChannel;
 }
