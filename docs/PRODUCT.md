@@ -33,8 +33,8 @@ PSYKL-System is **single-user, multi-device, siloed**. The model:
 - **"Sync"** means a single user's multiple devices (iPhone, iPad, Mac, PWA) share that user's data.
 - **Each user's data is private and siloed.** No other user has read or write access unless the owning user explicitly shares.
 - **Sharing is one-way, via export-generated artifacts** — markdown files, calendar exports, ZIP archives. The recipient sees a snapshot, NOT a live link into the original data.
-- **No real-time multi-user collaboration.** Ever. Not in M4, not in M10.
-- **Multi-user auth at M4** means many users each have their OWN siloed instance on the same server (e.g., homelab self-hosters running PSYKL for themselves and family members, each with separate isolated data). It does NOT mean shared tasks, shared cycles, or shared retrospectives.
+- **No real-time multi-user collaboration.** Ever. Not in `multi-tenant-auth`, not ever after it.
+- **Multi-user auth in `multi-tenant-auth`** means many users each have their OWN siloed instance on the same server (e.g., homelab self-hosters running PSYKL for themselves and family members, each with separate isolated data). It does NOT mean shared tasks, shared cycles, or shared retrospectives.
 
 This is a deliberate scope constraint. PSYKL exists to support one human's focused work; it is not Notion, Linear, or any collaborative tool.
 
@@ -56,7 +56,7 @@ The MVP closes the planning loop end-to-end:
 - Each PSYKL terminates by user-completion, user-paused-for-fatigue, or timer expiry, and surfaces a coaching suggestion at the boundary.
 - A simple retrospective view surfaces what got done and when.
 
-> **MVP delivery is sequenced across milestones**, not packed into one. Milestone 1 (M1) ships only Create + Read of a `Task` with a `title` (architecture and workflow proof). M2 completes CRUD plus offline-first behavior. M3 introduces PSYKL execution and the first retrospective view on the native Apple clients. See `docs/initiatives/` for per-milestone scope and design.
+> **MVP delivery is sequenced across milestones**, not packed into one. Milestone 1 (M1) ships only Create + Read of a `Task` with a `title` (architecture and workflow proof). M2 completes CRUD plus offline-first behavior. The `todo-experience` milestone turns that rudimentary list into an Apple Reminders-grade task manager before PSYKL sessions attach to tasks. The following `psykl-loop` milestone introduces PSYKL execution, boundary behavior, and the first retrospective views — **on the PWA**, which closes the MVP loop without waiting on a native client. See `docs/initiatives/` for per-milestone scope and design.
 
 ## Future Features
 
@@ -76,12 +76,12 @@ The MVP closes the planning loop end-to-end:
 
 PSYKL-System ships as a set of clients sharing a single `service-task` backend:
 
-- **PWA** (Chromium-family browser / desktop / Android via add-to-home-screen) — permanent first-class surface for Android, non-Mac desktops, and other non-Apple users; offline-first from M2 onward
-- **iPhone (iOS)** — primary surface long-term; arrives in M3
-- **iPad (iPadOS)** — arrives alongside the iOS client in M3
-- **macOS** — arrives alongside the iOS client in M3 (SwiftUI multiplatform or Mac Catalyst, decided during M3 design)
+- **PWA** (Chromium-family browser / desktop / Android via add-to-home-screen) — permanent first-class surface for Android, non-Mac desktops, and other non-Apple users; offline-capable from M2 onward (degraded mode, see Engineering Constraints)
+- **iPhone (iOS)** — intended primary surface long-term; **deferred**, see `apple-native`
+- **iPad (iPadOS)** — arrives alongside the iOS client; **deferred**
+- **macOS** — arrives alongside the iOS client (SwiftUI multiplatform or Mac Catalyst, decided during design); **deferred**
 
-Surface order is intentional: the PWA carries cross-device dogfood, product iteration, and the long-lived non-Apple experience; the Apple-native clients carry the user's Apple daily-driver experience once the product shape is known.
+Surface order is intentional: the PWA carries cross-device dogfood, product iteration, and the long-lived non-Apple experience; the Apple-native clients carry the user's Apple daily-driver experience once the product shape is known. As of 2026-08-12 the Apple clients are deferred without a date — the product shape is still being discovered on the PWA, and building it natively before then would mean building it twice.
 
 ## Engineering Constraints
 
@@ -89,7 +89,7 @@ Surface order is intentional: the PWA carries cross-device dogfood, product iter
 - Components (`components/web_client`, `components/service-task`, `components/ios_client`) are pushed to standalone upstream repositories as **downstream mirrors** via `git subtree split`. Never edit the mirrors directly.
 - The monorepo hosts shared packages (`packages/`), system-level end-to-end tests, infrastructure (Docker Compose, helm charts), and project documentation (`docs/`).
 - **Every component carries a Test-Driven Development (TDD) 5-layer test pyramid from M1**: Static Analysis → Unit → Integration → Component (system-component-isolation) → End-to-End. See [`AGENTS.md` → Test Discipline](../AGENTS.md).
-- The PWA is offline-first from M2 onward (M1 ships an online-required PWA shell).
+- The PWA works offline from M2 onward (M1 ships an online-required PWA shell), but **offline is a degraded mode, not a first-class one**. Reads and writes continue offline; the app tells the user it is offline, warns as the unsynced queue grows, and stops accepting new writes past a hard ceiling until the device reconnects and reconciles. Revised 2026-08-18 by `/plan-eng-review` during the `todo-experience` initiative — see that initiative's `DESIGN.md` → Offline Posture.
 - A self-hosted Docker Compose deployment is supported.
 - Architecture should permit scaling to ~100,000 concurrent users in a future production environment. Initial milestones do not optimize for that scale; they avoid choices that would actively preclude it.
 
@@ -102,11 +102,15 @@ Surface order is intentional: the PWA carries cross-device dogfood, product iter
 
 ## Milestone Roadmap
 
-| Milestone | Theme                                                                                            | Status   | Initiative dir                                        |
-| --------- | ------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------- |
-| M1        | Bootstrap — vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | Designed | `docs/initiatives/m1-bootstrap/`                      |
-| M2        | Complete Task Create/Read/Update/Delete + offline-first PWA                                      | Done     | `docs/features/`                                      |
-| M3        | Apple-native clients (iOS, iPadOS, macOS) + product discovery (PSYKL execution + retrospectives) | Sketched | `docs/initiatives/m3-apple-native-product-discovery/` |
-| M4        | Multi-user authentication + homelab multi-instance support                                       | Sketched | `docs/initiatives/m4-multi-user-auth-homelab/`        |
+**Shipped milestones keep their ordinal identifiers** (`M1`, `M2`) — those tokens are baked into Architecture Decision Record IDs, feature-doc filenames, and the changelog, and the ship record does not get renumbered. **Milestones from `todo-experience` onward are identified by a short purpose tag instead of a number**, because the roadmap past the shipped work is a set of candidates rather than a sequence. A tagged milestone carries no ordering claim and no date; exactly one is active at a time, and the rest are deferred until the operator picks the next one.
+
+| Milestone           | Theme                                                                                            | Status                 | Initiative dir                        |
+| ------------------- | ------------------------------------------------------------------------------------------------ | ---------------------- | ------------------------------------- |
+| M1                  | Bootstrap — vertical slice + test pyramid + Continuous Integration / Continuous Deployment infra | Done                   | `docs/features/`                      |
+| M2                  | Complete Task Create/Read/Update/Delete + offline-first PWA                                      | Done                   | `docs/features/`                      |
+| `todo-experience`   | Apple Reminders-grade task management on the PWA                                                 | Active — approved      | `docs/initiatives/todo-experience/`   |
+| `psykl-loop`        | PSYKL execution + boundary behavior + retrospectives, on the PWA                                 | Next up — sketched     | `docs/initiatives/psykl-loop/`        |
+| `apple-native`      | Apple-native clients (iOS, iPadOS, macOS)                                                        | Deferred — unsequenced | `docs/initiatives/apple-native/`      |
+| `multi-tenant-auth` | Multi-user authentication + multi-tenant data isolation                                          | Deferred — unsequenced | `docs/initiatives/multi-tenant-auth/` |
 
 Each active or future initiative directory carries a `MILESTONE.md` summary suitable for the corresponding GitHub Milestone description, and (once designed) a `DESIGN.md` with full scope, premises, alternatives considered, and success criteria. Completed initiatives are consolidated into durable feature docs, architecture docs, changelog entries, and retrospectives.

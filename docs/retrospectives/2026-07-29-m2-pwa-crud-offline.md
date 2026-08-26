@@ -69,11 +69,13 @@ The feature docs and durable architecture docs cover every M2 design decision:
 
 No immediate rule changes. The existing close-out checklist was sufficient after the user clarified that M2 initiative close-out should be included in PR #66 before merge.
 
-## M3 Handoff
+## Handoff
+
+> **Superseded 2026-08-12 — steps 3-4 only.** Steps 1-2 completed as written (PR #66 merged as `62e4105`; `v0.3.0` cut at that commit). Steps 3-4 did not happen: the operator deferred Apple-native work in favour of growing the PWA into a semi-mature product first. Initial discovery opened `psykl-loop`, then the approved `todo-experience` design split task-management quality into the active initiative and parked `psykl-loop` as next. Recorded here unedited as the handoff this retrospective actually wrote; see [`docs/PROJECT_STATUS.md`](../PROJECT_STATUS.md) → Roadmap re-cut for the current plan.
 
 After PR #66 merges:
 
 1. Fast-forward local `main` to `origin/main`.
 2. Cut the M2 release tag per `README.md` → Release.
-3. Create `feat/plan-m3-apple-native-product-discovery` from updated `main`.
-4. Start the M3 design pass from [`docs/initiatives/m3-apple-native-product-discovery/MILESTONE.md`](../initiatives/m3-apple-native-product-discovery/MILESTONE.md), using the M2 dogfood-ready PWA as the baseline.
+3. ~~Create `feat/plan-m3-apple-native-product-discovery` from updated `main`.~~
+4. ~~Start the M3 design pass from `docs/initiatives/m3-apple-native-product-discovery/MILESTONE.md`, using the M2 dogfood-ready PWA as the baseline.~~

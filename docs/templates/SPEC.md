@@ -1,14 +1,14 @@
 ---
-status: TODO            # TODO | IN-PROGRESS | DONE | BLOCKED
-issue:                  # P{n} for local plan, GH{n} once a GitHub Issue exists
-pr:                     # PR URL — only set for single-DevTask Specs; multi-DevTask Specs leave blank and track per-DevTask `pr:` in the DevTasks section below
-completed_at:           # YYYY-MM-DD when the final DevTask of this Spec merges
+status: TODO # TODO | IN-PROGRESS | DONE | BLOCKED
+issue: # P{n} for local plan, GH{n} once a GitHub Issue exists
+pr: # PR URL — only set for single-DevTask Specs; multi-DevTask Specs leave blank and track per-DevTask `pr:` in the DevTasks section below
+completed_at: # YYYY-MM-DD when the final DevTask of this Spec merges
 created_at: YYYY-MM-DD
-initiative:             # m1-bootstrap, m2-pwa-crud-offline, etc.
-spec_number: N          # matches docs/initiatives/{initiative}/DESIGN.md Spec/DevTask Breakdown
-devtasks_total: N       # number of DevTasks in this Spec (post any trilemma-driven splits)
-devtasks_complete: 0    # update as DevTasks merge
-honors_decisions:       # YAML list of decision IDs from the initiative DESIGN.md that this Spec touches/depends on (e.g. [1, 2, 2b, 6, 18])
+initiative: # m1-bootstrap, m2-pwa-crud-offline, etc.
+spec_number: N # matches docs/initiatives/{initiative}/DESIGN.md Spec/DevTask Breakdown
+devtasks_total: N # number of DevTasks in this Spec (post any trilemma-driven splits)
+devtasks_complete: 0 # update as DevTasks merge
+honors_decisions: # YAML list of decision IDs from the initiative DESIGN.md that this Spec touches/depends on (e.g. [1, 2, 2b, 6, 18])
   - 0
 ---
 
@@ -23,7 +23,7 @@ honors_decisions:       # YAML list of decision IDs from the initiative DESIGN.m
 **Date:** YYYY-MM-DD
 **Initiative:** M{n} {initiative-slug}
 **Spec:** {N}/{M} in initiative (matches the DESIGN.md Spec/DevTask Breakdown table)
-**Spec User Story:** *As a {role}, I {capability} so that {value}.*
+**Spec User Story:** _As a {role}, I {capability} so that {value}._
 **Status:** see frontmatter
 **Time-box:** {N hours / N days estimate}
 **Reads from:** `docs/initiatives/{initiative}/DESIGN.md` Decisions appendix (architectural decisions are LOCKED — do not re-open).
@@ -105,14 +105,14 @@ All 5 pyramid layers per AGENTS.md → Test Discipline. Every DevTask lists test
 
 ### Unit tests
 
-| File | What it asserts |
-|------|-----------------|
+| File                   | What it asserts   |
+| ---------------------- | ----------------- |
 | `path/to/file.test.ts` | concrete behavior |
 
 ### Integration tests
 
-| File | What it asserts |
-|------|-----------------|
+| File                          | What it asserts                                                                                                                                |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `path/to/integration.test.ts` | multi-module interaction inside one component (e.g., API handler + Drizzle + in-process pglite, per AGENTS.md → Test Discipline → Integration) |
 
 ### Component tests
@@ -120,14 +120,14 @@ All 5 pyramid layers per AGENTS.md → Test Discipline. Every DevTask lists test
 For services (e.g., `service-task`): API contract tests driving the real HTTP layer in-process.
 For UI apps (e.g., `web_client`): drive the real UI against stubbed back-end services.
 
-| File | What it asserts |
-|------|-----------------|
+| File                       | What it asserts                                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------- |
 | `path/to/contract.test.ts` | full request/response shape, including default-deny on missing/malformed `user_id` |
 
 ### End-to-End tests
 
-| File | What it asserts |
-|------|-----------------|
+| File                 | What it asserts                                                            |
+| -------------------- | -------------------------------------------------------------------------- |
 | `e2e/{flow}.spec.ts` | one realistic user flow exercised against the running Docker Compose stack |
 
 ### TDD order during implementation
@@ -144,7 +144,7 @@ Number the order in which tests get written:
 
 ## DevTasks
 
-This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 files (lockfile exempt). Each DevTask **branches off `main` and PRs into `main`** (per AGENTS.md → Git Conventions). Each DevTask contains multiple Steps; each Step ends with one commit.
+This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 **production behavior source files** (tests, config, docs, lockfiles, and generated migrations are exempt — see AGENTS.md → Git Conventions). Each DevTask **branches off the Spec integration branch `spec/{tag}-s{N}-{slug}` and PRs into that branch**, not into `main`; the Spec integration branch is the long-lived PR into `main`. Stack a DevTask onto a sibling only when it has a hard dependency on that sibling's unmerged work. Each DevTask contains multiple Steps; each Step ends with one commit.
 
 **Trilemma rule (AGENTS.md → Design Doc Discipline):** if a planned DevTask's implementation files + required test files exceed 10, split the DevTask. Never defer tests to a later PR.
 
@@ -153,7 +153,7 @@ This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 files (
 > DevTasks are numbered **globally** across the initiative (e.g., DevTask 3 always refers to the 3rd DevTask in M1 regardless of which Spec contains it), matching the numbering in the initiative DESIGN.md's Spec/DevTask Breakdown table.
 
 **Files:** ~{count}
-**Branch:** `(feat|bug|infra|chore)/{slug}` (e.g., `infra/workspace-bootstrap` for DevTask 1; `feat/nestjs-task-api-handlers` for DevTask 3a)
+**Branch:** `(feat|bug|infra|chore)/{tag}-s{N}-dt{K}-{short-slug}` (e.g., `feat/todo-experience-s1-dt3-list-endpoints`)
 **PR:** _filled once the PR is opened; format `https://github.com/jonpham/PSYKL-System/pull/N`_
 **Affected:** list of file paths to create or modify
 
