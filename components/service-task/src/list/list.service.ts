@@ -31,7 +31,8 @@ export class ListService {
     const rows = await this.db
       .select()
       .from(schema.lists)
-      .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt)));
+      .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt)))
+      .orderBy(schema.lists.position);
     return rows.map((row) => this.toResponse(row));
   }
 
