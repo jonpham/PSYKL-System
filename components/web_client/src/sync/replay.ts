@@ -2,13 +2,19 @@ import { v7 as uuidv7 } from 'uuid';
 
 import type { Task } from '../api/client';
 import { deleteSyncOp, enqueueSyncOp, listSyncQueue, putTask, putTaskAndEnqueueSyncOp } from '../db/idb';
-import type { PsyklDb, SyncQueueEntry } from '../db/idb.types';
+import type { EntityType, PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { moveToFailedOps } from './replay.failed-ops';
 import { acquireReplayLock, refreshReplayLock, releaseReplayLock } from './replay.lock';
 import { sendEntry } from './replay.transport';
 import { emitStaleWriteIfSuperseded } from './stale-write';
 
-type EnqueueInput = { body: unknown; op: SyncQueueEntry['op']; optimisticTask?: Task; taskId: string };
+type EnqueueInput = {
+  body: unknown;
+  entityId: string;
+  entityType: EntityType;
+  op: SyncQueueEntry['op'];
+  optimisticTask?: Task;
+};
 
 type ReplayOptions = {
   db?: PsyklDb;
@@ -33,7 +39,8 @@ async function enqueue(input: EnqueueInput, options: ReplayOptions = {}): Promis
   const now = options.now?.() ?? new Date();
   const entry: SyncQueueEntry = {
     id: uuidv7(),
-    task_id: input.taskId,
+    entity_type: input.entityType,
+    entity_id: input.entityId,
     op: input.op,
     body: input.body,
     idempotency_key: uuidv7(),

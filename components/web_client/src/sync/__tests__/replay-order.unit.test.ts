@@ -20,7 +20,8 @@ describe('replay FIFO retry ordering', () => {
     // Given
     await enqueueSyncOp({
       id: 'op-1',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'create',
       body: { id: taskId, title: 'first', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000002',
@@ -30,7 +31,8 @@ describe('replay FIFO retry ordering', () => {
     });
     await enqueueSyncOp({
       id: 'op-2',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'patch',
       body: { title: 'second', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000003',

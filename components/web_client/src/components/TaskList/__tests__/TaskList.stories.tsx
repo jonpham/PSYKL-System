@@ -149,7 +149,8 @@ export const PendingQueuedTask: Story = {
       });
       await enqueueSyncOp({
         id: '01940000-0000-7000-8000-000000000011',
-        task_id: '01940000-0000-7000-8000-000000000010',
+        entity_type: 'task',
+        entity_id: '01940000-0000-7000-8000-000000000010',
         op: 'create',
         body: {
           id: '01940000-0000-7000-8000-000000000010',

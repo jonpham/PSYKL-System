@@ -34,7 +34,7 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
 
   async function submit(op: SyncQueueEntry['op'], body: unknown, optimisticTask: Task): Promise<void> {
     await enqueueWithReplay({
-      enqueue: () => enqueue({ body, op, optimisticTask, taskId: task.id }),
+      enqueue: () => enqueue({ body, entityId: task.id, entityType: 'task', op, optimisticTask }),
       replay,
     });
   }

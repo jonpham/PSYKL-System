@@ -40,7 +40,8 @@ export function TaskCreateForm() {
       };
 
       await enqueueWithReplay({
-        enqueue: () => enqueue({ body: taskInput, op: 'create', optimisticTask, taskId: taskInput.id }),
+        enqueue: () =>
+          enqueue({ body: taskInput, entityId: taskInput.id, entityType: 'task', op: 'create', optimisticTask }),
         replay,
       });
       setTitle('');

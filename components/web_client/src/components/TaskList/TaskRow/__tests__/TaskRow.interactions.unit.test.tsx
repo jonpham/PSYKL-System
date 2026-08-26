@@ -81,7 +81,7 @@ describe('TaskRow delete confirmation (Unit)', () => {
     // Then
     const queue = await listSyncQueue();
     expect(queue).toHaveLength(1);
-    expect(queue[0]).toMatchObject({ op: 'delete', task_id: baseTask.id });
+    expect(queue[0]).toMatchObject({ op: 'delete', entity_type: 'task', entity_id: baseTask.id });
     const body = queue[0]?.body as { deleted_at?: string; updated_at?: string };
     expect(body.deleted_at).toEqual(expect.any(String));
     expect(body.updated_at).toEqual(expect.any(String));

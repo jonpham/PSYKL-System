@@ -27,7 +27,7 @@ export function TaskList() {
           if (queue.length === 0 && current.size === 0) {
             return current;
           }
-          return new Set(queue.map((entry) => entry.task_id));
+          return new Set(queue.map((entry) => entry.entity_id));
         });
       }
     });

@@ -7,7 +7,8 @@ import { emitStaleWriteIfSuperseded } from '../stale-write';
 function patchEntry(bodyUpdatedAt: string): SyncQueueEntry {
   return {
     id: 'op-1',
-    task_id: 'task-1',
+    entity_type: 'task',
+    entity_id: 'task-1',
     op: 'patch',
     body: { title: 'mine', updated_at: bodyUpdatedAt },
     idempotency_key: 'key-1',

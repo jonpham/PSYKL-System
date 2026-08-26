@@ -19,14 +19,14 @@ async function sendEntry(entry: SyncQueueEntry): Promise<ReplayTransportResult> 
     return withStatus(
       await apiClient.PATCH('/tasks/{id}', {
         body: entry.body as TaskPatchInput,
-        params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.task_id } },
+        params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.entity_id } },
       }),
     );
   }
   return withStatus(
     await apiClient.DELETE('/tasks/{id}', {
       body: entry.body as TaskDeleteInput,
-      params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.task_id } },
+      params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.entity_id } },
     }),
   );
 }

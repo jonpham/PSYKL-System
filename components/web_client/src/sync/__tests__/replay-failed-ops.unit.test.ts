@@ -126,7 +126,8 @@ async function enqueueFailure(
 ): Promise<void> {
   await enqueueSyncOp({
     id: `op-${index.toString().padStart(3, '0')}`,
-    task_id: taskId,
+    entity_type: 'task',
+    entity_id: taskId,
     op: 'patch',
     body: { title: `failed ${index}`, updated_at: nowIso },
     idempotency_key: `0196f0a4-8b5a-7000-8000-${index.toString().padStart(12, '0')}`,
