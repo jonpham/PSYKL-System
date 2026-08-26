@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { TaskDeleteInput, TaskInput, TaskPatchInput, TaskResponse } from '@psykl/shared-types';
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { clampFutureTimestamp } from '../db/clamp-future-timestamp.js';
 import { type Db, schema } from '../db/index.js';
 
 export const DB_TOKEN = Symbol('DB');
@@ -17,7 +18,7 @@ export class TaskService {
         id: input.id,
         userId,
         title: input.title,
-        updatedAt: this.clampFutureTimestamp(new Date(input.updated_at)),
+        updatedAt: clampFutureTimestamp(new Date(input.updated_at)),
       })
       .returning();
 
@@ -43,7 +44,7 @@ export class TaskService {
 
   async patchTask(userId: string, taskId: string, input: TaskPatchInput): Promise<TaskResponse> {
     const current = await this.findTaskForUser(userId, taskId);
-    const updatedAt = this.clampFutureTimestamp(new Date(input.updated_at));
+    const updatedAt = clampFutureTimestamp(new Date(input.updated_at));
 
     if (updatedAt.getTime() <= current.updatedAt!.getTime()) {
       return this.toResponse(current);
@@ -72,7 +73,7 @@ export class TaskService {
 
   async deleteTask(userId: string, taskId: string, input: TaskDeleteInput): Promise<TaskResponse> {
     const current = await this.findTaskForUser(userId, taskId);
-    const updatedAt = this.clampFutureTimestamp(new Date(input.updated_at));
+    const updatedAt = clampFutureTimestamp(new Date(input.updated_at));
 
     if (updatedAt.getTime() <= current.updatedAt!.getTime()) {
       return this.toResponse(current);
@@ -106,12 +107,6 @@ export class TaskService {
     }
 
     return row;
-  }
-
-  private clampFutureTimestamp(timestamp: Date): Date {
-    const now = new Date();
-    const maxFuture = new Date(now.getTime() + 5 * 60 * 1000);
-    return timestamp.getTime() > maxFuture.getTime() ? now : timestamp;
   }
 
   private toResponse(row: typeof schema.tasks.$inferSelect): TaskResponse {
