@@ -37,6 +37,7 @@ export function TaskCreateForm() {
         updated_at: taskInput.updated_at,
         server_updated_at: now,
         deleted_at: null,
+        list_id: null,
       };
 
       await enqueueWithReplay({

@@ -21,6 +21,7 @@ const serverTask: Task = {
   updated_at: nowIso,
   server_updated_at: laterIso,
   deleted_at: null,
+  list_id: null,
 };
 
 afterEach(async () => {

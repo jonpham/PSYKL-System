@@ -31,6 +31,7 @@ const seedTask: Task = {
   updated_at: new Date('2026-06-01T09:00:00Z').toISOString(),
   server_updated_at: new Date('2026-06-01T09:00:00.500Z').toISOString(),
   deleted_at: null,
+  list_id: null,
 };
 
 const seedListHandler = http.get('*/tasks', () => HttpResponse.json([seedTask]));

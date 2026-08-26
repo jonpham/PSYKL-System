@@ -20,6 +20,7 @@ const sampleTasks: Task[] = [
     updated_at: '2026-05-20T12:00:00.000Z',
     server_updated_at: '2026-05-20T12:00:00.500Z',
     deleted_at: null,
+    list_id: null,
   },
   {
     id: '01940000-0000-7000-8000-000000000002',
@@ -30,6 +31,7 @@ const sampleTasks: Task[] = [
     updated_at: '2026-05-20T12:01:00.000Z',
     server_updated_at: '2026-05-20T12:01:00.500Z',
     deleted_at: null,
+    list_id: null,
   },
 ];
 

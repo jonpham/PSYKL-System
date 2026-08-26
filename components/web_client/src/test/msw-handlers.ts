@@ -42,6 +42,7 @@ export const handlers = [
       updated_at: body.updated_at,
       server_updated_at: now,
       deleted_at: null,
+      list_id: null,
     };
     store = [task, ...store];
 

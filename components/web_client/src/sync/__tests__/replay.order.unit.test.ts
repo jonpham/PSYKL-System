@@ -32,6 +32,7 @@ describe('replay ordering', () => {
               updated_at: nowIso,
               server_updated_at: nowIso,
               deleted_at: null,
+              list_id: null,
             },
             status: 200,
           },

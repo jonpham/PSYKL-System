@@ -28,6 +28,7 @@ function serverTask(updatedAt: string): Task {
     updated_at: updatedAt,
     server_updated_at: '2026-06-01T12:00:00.500Z',
     deleted_at: null,
+    list_id: null,
   };
 }
 

@@ -29,6 +29,7 @@ const task: Task = {
   updated_at: '2026-06-12T16:00:00.000Z',
   server_updated_at: '2026-06-12T16:00:01.000Z',
   deleted_at: null,
+  list_id: null,
 };
 
 afterEach(async () => {
