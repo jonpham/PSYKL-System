@@ -44,8 +44,9 @@ describe('sync replay integration', () => {
     await enqueue(
       {
         body: { id: taskId, title: 'queued create', updated_at: nowIso },
+        entityId: taskId,
+        entityType: 'task',
         op: 'create',
-        taskId,
       },
       {
         now: () => new Date(nowIso),
