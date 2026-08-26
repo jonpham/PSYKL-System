@@ -1,27 +1,25 @@
 import { http, HttpResponse } from 'msw';
 
-import type { Task } from '../api/client';
-import { listHandlers, resetListStore } from './msw-handlers.lists';
+import type { components } from '../api/types';
 
-let store: Task[] = [];
+type List = components['schemas']['List'];
 
-export function resetStore() {
-  store = [];
-  resetListStore();
+let listStore: List[] = [];
+
+export function resetListStore() {
+  listStore = [];
 }
 
-export const handlers = [
-  http.get('*/version', () => HttpResponse.json({ component: 'service-task', commit: 'dev' })),
-
-  http.get('*/tasks', ({ request }) => {
+export const listHandlers = [
+  http.get('*/lists', ({ request }) => {
     if (request.headers.get('x-user-id') !== 'local') {
       return new HttpResponse(null, { status: 401 });
     }
 
-    return HttpResponse.json(store);
+    return HttpResponse.json(listStore);
   }),
 
-  http.post('*/tasks', async ({ request }) => {
+  http.post('*/lists', async ({ request }) => {
     if (request.headers.get('x-user-id') !== 'local') {
       return new HttpResponse(null, { status: 401 });
     }
@@ -29,29 +27,28 @@ export const handlers = [
       return new HttpResponse(null, { status: 400 });
     }
 
-    const body = (await request.json()) as { id?: string; title?: string; updated_at?: string };
-    if (!body.id || !body.title || !body.updated_at || body.title.length > 200) {
+    const body = (await request.json()) as { id?: string; title?: string; position?: string; updated_at?: string };
+    if (!body.id || !body.title || !body.position || !body.updated_at) {
       return new HttpResponse(null, { status: 400 });
     }
 
     const now = new Date().toISOString();
-    const task: Task = {
+    const list: List = {
       id: body.id,
       user_id: 'local',
       title: body.title,
+      position: body.position,
       created_at: now,
-      completed_at: null,
       updated_at: body.updated_at,
       server_updated_at: now,
       deleted_at: null,
-      list_id: null,
     };
-    store = [task, ...store];
+    listStore = [...listStore, list];
 
-    return HttpResponse.json(task, { status: 201 });
+    return HttpResponse.json(list, { status: 201 });
   }),
 
-  http.patch('*/tasks/:id', async ({ params, request }) => {
+  http.patch('*/lists/:id', async ({ params, request }) => {
     if (request.headers.get('x-user-id') !== 'local') {
       return new HttpResponse(null, { status: 401 });
     }
@@ -60,29 +57,29 @@ export const handlers = [
     }
 
     const id = String(params['id']);
-    const existing = store.find((task) => task.id === id);
+    const existing = listStore.find((list) => list.id === id);
     if (!existing) {
       return new HttpResponse(null, { status: 404 });
     }
 
-    const body = (await request.json()) as { completed_at?: string | null; title?: string; updated_at?: string };
+    const body = (await request.json()) as { title?: string; position?: string; updated_at?: string };
     if (!body.updated_at) {
       return new HttpResponse(null, { status: 400 });
     }
 
-    const nextTask: Task = {
+    const nextList: List = {
       ...existing,
-      completed_at: body.completed_at ?? existing.completed_at,
+      position: body.position ?? existing.position,
       title: body.title ?? existing.title,
       updated_at: body.updated_at,
       server_updated_at: new Date().toISOString(),
     };
-    store = store.map((task) => (task.id === id ? nextTask : task));
+    listStore = listStore.map((list) => (list.id === id ? nextList : list));
 
-    return HttpResponse.json(nextTask);
+    return HttpResponse.json(nextList);
   }),
 
-  http.delete('*/tasks/:id', async ({ params, request }) => {
+  http.delete('*/lists/:id', async ({ params, request }) => {
     if (request.headers.get('x-user-id') !== 'local') {
       return new HttpResponse(null, { status: 401 });
     }
@@ -91,7 +88,7 @@ export const handlers = [
     }
 
     const id = String(params['id']);
-    const existing = store.find((task) => task.id === id);
+    const existing = listStore.find((list) => list.id === id);
     if (!existing) {
       return new HttpResponse(null, { status: 404 });
     }
@@ -101,16 +98,14 @@ export const handlers = [
       return new HttpResponse(null, { status: 400 });
     }
 
-    const nextTask: Task = {
+    const nextList: List = {
       ...existing,
       deleted_at: body.deleted_at,
       updated_at: body.updated_at,
       server_updated_at: new Date().toISOString(),
     };
-    store = store.map((task) => (task.id === id ? nextTask : task));
+    listStore = listStore.map((list) => (list.id === id ? nextList : list));
 
-    return HttpResponse.json(nextTask);
+    return HttpResponse.json(nextList);
   }),
-
-  ...listHandlers,
 ];

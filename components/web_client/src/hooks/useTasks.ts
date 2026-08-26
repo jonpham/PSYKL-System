@@ -2,7 +2,10 @@ import { useEffect, useSyncExternalStore } from 'react';
 
 import { apiClient, type Task } from '../api/client';
 import { listTasks, putTask } from '../db/idb';
-import { getSharedChannel, resetSharedChannelsForTest } from './broadcast-channel';
+import { resetSharedChannelsForTest } from './broadcast-channel';
+import { createChannelNotifier } from './broadcast-notify';
+import { getActiveListId, registerActiveListChangeListener, resetActiveListForTest } from './useActiveList';
+import { getDefaultListId } from './useLists.default-list';
 
 interface TasksSnapshot {
   error: string | null;
@@ -10,17 +13,21 @@ interface TasksSnapshot {
   tasks: Task[];
 }
 
-const channelName = 'psykl-idb';
-const messageType = 'tasks-changed';
 const subscribers = new Set<() => void>();
+const channel = createChannelNotifier('psykl-idb', 'tasks-changed', () => {
+  void notifyTasksChanged({ broadcast: false });
+});
 
-let broadcastChannel: BroadcastChannel | null = null;
 let hydrationStarted = false;
 let snapshot: TasksSnapshot = {
   error: null,
   loading: true,
   tasks: [],
 };
+
+// Re-filters tasks by the (possibly just-changed) active list without
+// `useActiveList` importing this module back.
+registerActiveListChangeListener(() => notifyTasksChanged({ broadcast: false }));
 
 function useTasks(): TasksSnapshot {
   useEffect(() => {
@@ -34,12 +41,13 @@ async function notifyTasksChanged(options: { broadcast?: boolean } = {}): Promis
   await reloadSnapshot({ error: null, loading: false });
 
   if (options.broadcast ?? true) {
-    getBroadcastChannel()?.postMessage({ type: messageType });
+    channel.post();
   }
 }
 
 function resetUseTasksForTest(): void {
-  broadcastChannel = null;
+  channel.reset();
+  resetActiveListForTest();
   resetSharedChannelsForTest();
   hydrationStarted = false;
   snapshot = {
@@ -52,7 +60,7 @@ function resetUseTasksForTest(): void {
 
 function subscribe(callback: () => void): () => void {
   subscribers.add(callback);
-  getBroadcastChannel();
+  channel.ensureChannel();
   void reloadSnapshot({ loading: false });
 
   return () => {
@@ -106,7 +114,7 @@ async function reloadSnapshot(
     error: overrides.error ?? snapshot.error,
     loading: overrides.loading ?? snapshot.loading,
     tasks: tasks
-      .filter((task) => task.deleted_at === null)
+      .filter((task) => task.deleted_at === null && isInActiveList(task))
       .sort((left, right) => right.created_at.localeCompare(left.created_at)),
   };
   setSnapshot(nextSnapshot);
@@ -114,24 +122,18 @@ async function reloadSnapshot(
   return nextSnapshot;
 }
 
-function getBroadcastChannel(): BroadcastChannel | null {
-  if (broadcastChannel || typeof BroadcastChannel === 'undefined') {
-    return broadcastChannel;
+/**
+ * A task belongs to the active list either by an exact `list_id` match, or
+ * (for tasks predating lists, `list_id: null`) by the active list being the
+ * default "Tasks" list — per UX.md § 10 decision 1, "Migration puts every
+ * pre-existing task there."
+ */
+function isInActiveList(task: Task): boolean {
+  const activeListId = getActiveListId();
+  if (activeListId === null || task.list_id === activeListId) {
+    return true;
   }
-
-  const channel = getSharedChannel(channelName);
-  if (!channel) {
-    return null;
-  }
-
-  channel.addEventListener('message', (event) => {
-    if ((event.data as { type?: string }).type === messageType) {
-      void notifyTasksChanged({ broadcast: false });
-    }
-  });
-  broadcastChannel = channel;
-
-  return broadcastChannel;
+  return task.list_id === null && activeListId === getDefaultListId();
 }
 
 function setSnapshot(nextSnapshot: TasksSnapshot): void {

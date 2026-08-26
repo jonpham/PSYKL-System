@@ -16,8 +16,11 @@ afterEach(async () => {
 
 describe('useLists', () => {
   it('creates a list optimistically and queues it for sync', async () => {
-    // Arrange
+    // Arrange — wait for the default list so createList sees a stable snapshot
     const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
 
     // Act
     await act(async () => {
@@ -26,16 +29,20 @@ describe('useLists', () => {
 
     // Assert — the list is readable locally before any network call
     await waitFor(() => {
-      expect(result.current.lists.map((list) => list.title)).toEqual(['Groceries']);
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks', 'Groceries']);
     });
     const queue = await listSyncQueue();
-    expect(queue).toHaveLength(1);
-    expect(queue[0]).toMatchObject({ entity_type: 'list', op: 'create' });
+    const createEntries = queue.filter((entry) => entry.entity_type === 'list' && entry.op === 'create');
+    expect(createEntries).toHaveLength(2);
+    expect(createEntries.some((entry) => (entry.body as { title?: string }).title === 'Groceries')).toBe(true);
   });
 
   it('gives each new list a position that sorts after the previous one', async () => {
     // Arrange
     const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
 
     // Act
     await act(async () => {
@@ -47,22 +54,25 @@ describe('useLists', () => {
     await waitFor(() => {
       const positions = result.current.lists.map((list) => list.position);
       expect(positions).toEqual([...positions].sort());
-      expect(new Set(positions).size).toBe(2);
+      expect(new Set(positions).size).toBe(3);
     });
   });
 
   it('renames a list and queues the patch for sync', async () => {
     // Arrange
     const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
     await act(async () => {
       await result.current.createList('Groceries');
     });
     await waitFor(() => {
-      expect(result.current.lists.map((list) => list.title)).toEqual(['Groceries']);
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks', 'Groceries']);
     });
-    const listId = result.current.lists[0]?.id;
+    const listId = result.current.lists.find((list) => list.title === 'Groceries')?.id;
     if (!listId) {
-      throw new Error('expected a list to exist after createList');
+      throw new Error('expected a Groceries list to exist after createList');
     }
 
     // Act
@@ -72,7 +82,7 @@ describe('useLists', () => {
 
     // Assert
     await waitFor(() => {
-      expect(result.current.lists.map((list) => list.title)).toEqual(['Weekly Groceries']);
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks', 'Weekly Groceries']);
     });
     const queue = await listSyncQueue();
     const patchEntry = queue.find((entry) => entry.op === 'patch');
@@ -83,15 +93,18 @@ describe('useLists', () => {
   it('moves a list between two others and queues the patch for sync', async () => {
     // Arrange
     const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
     await act(async () => {
       await result.current.createList('First');
       await result.current.createList('Second');
       await result.current.createList('Third');
     });
     await waitFor(() => {
-      expect(result.current.lists.map((list) => list.title)).toEqual(['First', 'Second', 'Third']);
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks', 'First', 'Second', 'Third']);
     });
-    const [first, second, third] = result.current.lists;
+    const [, first, second, third] = result.current.lists;
     if (!first || !second || !third) {
       throw new Error('expected three lists to exist after createList');
     }
@@ -103,11 +116,11 @@ describe('useLists', () => {
 
     // Assert
     await waitFor(() => {
-      expect(result.current.lists.map((list) => list.title)).toEqual(['First', 'Third', 'Second']);
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks', 'First', 'Third', 'Second']);
     });
     const positions = result.current.lists.map((list) => list.position);
     expect(positions).toEqual([...positions].sort());
-    expect(new Set(positions).size).toBe(3);
+    expect(new Set(positions).size).toBe(4);
 
     const queue = await listSyncQueue();
     const patchEntry = queue.find((entry) => entry.entity_id === third.id && entry.op === 'patch');

@@ -6,12 +6,14 @@ import { deleteDB } from 'idb';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import App from '../App';
+import { resetUseListsForTest } from '../hooks/useLists';
 import { resetUseTasksForTest } from '../hooks/useTasks';
 
 const databaseName = 'psykl';
 
 afterEach(async () => {
   resetUseTasksForTest();
+  resetUseListsForTest();
   await deleteDB(databaseName);
 });
 
