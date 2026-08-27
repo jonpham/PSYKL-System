@@ -14,7 +14,7 @@ test.describe('lists', () => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Open list switcher' }).click();
     await page.getByRole('listitem', { name: 'Groceries' }).click();
-    await page.getByPlaceholder('Add a task').fill('Milk');
+    await page.getByPlaceholder('What needs doing?').fill('Milk');
     await page.keyboard.press('Enter');
     await expect(page.getByText('Milk')).toBeVisible();
 
