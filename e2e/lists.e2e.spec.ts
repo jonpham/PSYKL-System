@@ -13,6 +13,9 @@ test.describe('lists', () => {
   test('a user creates a task while a specific list is open and the task lands in that list', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Open list switcher' }).click();
+    await page.getByRole('button', { name: 'New List' }).click();
+    await page.getByLabel('List name').fill('Groceries');
+    await page.keyboard.press('Enter');
     await page.getByRole('listitem', { name: 'Groceries' }).click();
     await page.getByPlaceholder('What needs doing?').fill('Milk');
     await page.keyboard.press('Enter');
