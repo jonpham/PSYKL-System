@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { listSyncQueue } from '../../db/idb';
 import { resetUseListsForTest, useLists } from '../useLists';
+import { DEFAULT_LIST_ID } from '../useLists.default-list';
 
 const databaseName = 'psykl';
 
@@ -26,6 +27,21 @@ describe('useLists default list and deletion guard', () => {
     const queue = await listSyncQueue();
     expect(queue).toHaveLength(1);
     expect(queue[0]).toMatchObject({ entity_type: 'list', op: 'create' });
+  });
+
+  it('creates the default list with a well-known id, not a random one, so two devices agree without syncing first', async () => {
+    // Arrange / Act
+    const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
+
+    // Assert — a fixed id (not uuidv7()) means every device that bootstraps
+    // before its first sync computes the same list id, so a task created on
+    // one device still resolves to the same list on another (see the
+    // multi-device race documented in useLists.default-list.ts).
+    expect(DEFAULT_LIST_ID).toBeTruthy();
+    expect(result.current.lists[0]?.id).toBe(DEFAULT_LIST_ID);
   });
 
   it('does not offer to delete the only remaining (default) list', async () => {

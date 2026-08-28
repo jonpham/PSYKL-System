@@ -11,6 +11,16 @@ import type { ListRecord, SyncQueueEntry } from '../db/idb.types';
 const defaultListFlagKey = 'default_list_created';
 const defaultListTitle = 'Tasks';
 
+// A fixed, well-known id rather than uuidv7(): PSYKL is single-user,
+// multi-device (docs/PRODUCT.md → Sync and Sharing Model), so there is only
+// ever one default list per account. A random per-device id lets two
+// devices that both bootstrap before either has synced create two distinct
+// "Tasks" lists, silently splitting a task's list_id from the active
+// device's local list id. A shared constant makes every device agree
+// without a network round trip. list.service.ts's createList treats a
+// duplicate-id create as an idempotent success for the same reason.
+const DEFAULT_LIST_ID = '00000000-0000-7000-8000-000000000001';
+
 // The earliest-position active list is the default list — either the one
 // just created below, or (on later runs / other devices) the "Tasks" list
 // created the first time. `useTasks` reads this to decide which list a
@@ -78,7 +88,7 @@ async function createDefaultListRecord(
 ): Promise<ListRecord> {
   const now = new Date().toISOString();
   const list: ListRecord = {
-    id: uuidv7(),
+    id: DEFAULT_LIST_ID,
     user_id: 'local',
     title: defaultListTitle,
     position: generateKeyBetween(null, null),
@@ -103,4 +113,4 @@ async function createDefaultListRecord(
   return list;
 }
 
-export { ensureDefaultList, getDefaultListId, resetDefaultListForTest };
+export { DEFAULT_LIST_ID, ensureDefaultList, getDefaultListId, resetDefaultListForTest };
