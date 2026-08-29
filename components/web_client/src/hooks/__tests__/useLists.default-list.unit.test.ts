@@ -2,15 +2,29 @@ import 'fake-indexeddb/auto';
 
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { deleteDB } from 'idb';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { listSyncQueue } from '../../db/idb';
 import { resetUseListsForTest, useLists } from '../useLists';
 import { DEFAULT_LIST_ID } from '../useLists.default-list';
 
+// See useLists.unit.test.ts — deleteList now calls enqueueWithReplay, which
+// fires a detached background replay() that must not race real network/IDB
+// work across tests.
+const mockReplay = vi.hoisted(() => vi.fn<() => Promise<unknown>>());
+
+vi.mock('../../sync/replay', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../sync/replay')>();
+  return {
+    ...actual,
+    replay: mockReplay,
+  };
+});
+
 const databaseName = 'psykl';
 
 afterEach(async () => {
+  mockReplay.mockReset();
   resetUseListsForTest();
   await deleteDB(databaseName);
 });
