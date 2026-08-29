@@ -11,13 +11,8 @@ export class ListService {
   constructor(@Inject(DB_TOKEN) private readonly db: Db) {}
 
   async createList(userId: string, input: ListInput): Promise<ListResponse> {
-    // onConflictDoNothing, not a plain insert: two devices can independently
-    // bootstrap the same well-known default-list id before either has synced
-    // (see web_client's useLists.default-list.ts), each under its own
-    // Idempotency-Key — the idempotency cache dedupes retries of the SAME
-    // key, not two different devices' creates of the same id. Treat the
-    // loser as an idempotent success and return the row that won, matching
-    // patchList's "not-newer is a silent no-op" LWW posture below.
+    // onConflictDoNothing: two devices can race to create the same default-list
+    // id (see list-persistence.integration.test.ts for why).
     const [inserted] = await this.db
       .insert(schema.lists)
       .values({
