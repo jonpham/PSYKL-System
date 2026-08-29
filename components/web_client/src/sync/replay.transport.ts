@@ -1,14 +1,18 @@
-import { apiClient, type Task, type TaskInput, taskMutationRequestParams } from '../api/client';
-import type { components } from '../api/types';
+import type {
+  List,
+  ListDeleteInput,
+  ListInput,
+  ListPatchInput,
+  Task,
+  TaskDeleteInput,
+  TaskInput,
+  TaskPatchInput,
+} from '../api/client';
+import { createListRemote, deleteListRemote, patchListRemote } from '../api/lists.api-client';
+import type { EntityApiResult } from '../api/tasks.api-client';
+import { createTaskRemote, deleteTaskRemote, patchTaskRemote } from '../api/tasks.api-client';
 import type { SyncQueueEntry } from '../db/idb.types';
 import type { ReplayTransportResult } from './replay';
-
-type List = components['schemas']['List'];
-type ListDeleteInput = components['schemas']['ListDeleteInput'];
-type ListInput = components['schemas']['ListInput'];
-type ListPatchInput = components['schemas']['ListPatchInput'];
-type TaskDeleteInput = components['schemas']['TaskDeleteInput'];
-type TaskPatchInput = components['schemas']['TaskPatchInput'];
 
 async function sendEntry(entry: SyncQueueEntry): Promise<ReplayTransportResult> {
   return entry.entity_type === 'list' ? sendListEntry(entry) : sendTaskEntry(entry);
@@ -16,59 +20,29 @@ async function sendEntry(entry: SyncQueueEntry): Promise<ReplayTransportResult> 
 
 async function sendTaskEntry(entry: SyncQueueEntry): Promise<ReplayTransportResult> {
   if (entry.op === 'create') {
-    return withStatus(
-      await apiClient.POST('/tasks', {
-        body: entry.body as TaskInput,
-        ...taskMutationRequestParams(entry.idempotency_key),
-      }),
-    );
+    return withStatus(await createTaskRemote(entry.body as TaskInput, entry.idempotency_key));
   }
   if (entry.op === 'patch') {
-    return withStatus(
-      await apiClient.PATCH('/tasks/{id}', {
-        body: entry.body as TaskPatchInput,
-        params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.entity_id } },
-      }),
-    );
+    return withStatus(await patchTaskRemote(entry.entity_id, entry.body as TaskPatchInput, entry.idempotency_key));
   }
-  return withStatus(
-    await apiClient.DELETE('/tasks/{id}', {
-      body: entry.body as TaskDeleteInput,
-      params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.entity_id } },
-    }),
-  );
+  return withStatus(await deleteTaskRemote(entry.entity_id, entry.body as TaskDeleteInput, entry.idempotency_key));
 }
 
 async function sendListEntry(entry: SyncQueueEntry): Promise<ReplayTransportResult> {
   if (entry.op === 'create') {
-    return withStatus(
-      await apiClient.POST('/lists', {
-        body: entry.body as ListInput,
-        ...taskMutationRequestParams(entry.idempotency_key),
-      }),
-    );
+    return withStatus(await createListRemote(entry.body as ListInput, entry.idempotency_key));
   }
   if (entry.op === 'patch') {
-    return withStatus(
-      await apiClient.PATCH('/lists/{id}', {
-        body: entry.body as ListPatchInput,
-        params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.entity_id } },
-      }),
-    );
+    return withStatus(await patchListRemote(entry.entity_id, entry.body as ListPatchInput, entry.idempotency_key));
   }
-  return withStatus(
-    await apiClient.DELETE('/lists/{id}', {
-      body: entry.body as ListDeleteInput,
-      params: { ...taskMutationRequestParams(entry.idempotency_key).params, path: { id: entry.entity_id } },
-    }),
-  );
+  return withStatus(await deleteListRemote(entry.entity_id, entry.body as ListDeleteInput, entry.idempotency_key));
 }
 
-function withStatus(result: { data?: List | Task; error?: unknown; response: Response }): ReplayTransportResult {
+function withStatus(result: EntityApiResult<List | Task>): ReplayTransportResult {
   return {
     data: result.data,
     error: result.error,
-    status: result.response.status,
+    status: result.status,
   };
 }
 
