@@ -76,6 +76,20 @@ describe('createSyncClient — task entity (atomic optimistic write)', () => {
     // Then
     await expect(getTask(taskId)).resolves.toEqual(optimisticTask);
   });
+
+  it('hydrate() throws on a non-2xx/error response instead of silently no-oping', async () => {
+    // Given — mirrors what useTasks.ts's hydrateTasks required before this
+    // refactor: a server error must surface to the caller's offline-fallback
+    // catch, not be treated as a calm, empty success.
+    const client = createSyncClient({
+      entityType: 'task',
+      listRemote: () => Promise.resolve({ error: 'server exploded', status: 500 }),
+      put: putTask,
+    });
+
+    // When / Then
+    await expect(client.hydrate()).rejects.toThrow();
+  });
 });
 
 describe('createSyncClient — list entity (two-step, no atomic primitive exists)', () => {

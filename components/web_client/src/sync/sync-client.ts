@@ -33,8 +33,8 @@ function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
     },
     async hydrate() {
       const result = await config.listRemote();
-      if (!result.data) {
-        return;
+      if (result.error || !result.data) {
+        throw new Error(`hydrate failed: ${JSON.stringify(result.error)}`);
       }
       await Promise.all(result.data.map((record) => config.put(record)));
     },
