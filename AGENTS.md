@@ -49,6 +49,12 @@ Output the following before stopping:
 
 ### Response Style
 
+Optimized for a small terminal window, fast operator scanning, and low review dread. Precedent: PR #70 (83 files, one dump) and the wall-of-text turns leading up to it prompted this section — see `docs/retrospectives/2026-08-28-todo-experience-spec1-pr-size.md`.
+
+- **Hard cap: ≤ 20 lines of prose per response**, excluding required blocks (code, diffs, commit messages, file/command listings, the Step-complete block, tables). If it doesn't fit, cut detail, don't ask permission to run long.
+- **Bullets and tables by default, not paragraphs.** A paragraph is a rewrite request unless the content genuinely can't be listed (e.g. a single causal explanation sentence).
+- **State the conclusion first, in one line, before the supporting detail.** Root cause, verdict, or recommendation up top — not built up to.
+- **Don't re-paraphrase what's already on disk.** Cite `path:line`; don't restate spec/design content the operator can already read.
 - Terse — skip preambles and post-step recaps. The `✅ Step N complete` block is the required exception.
 - Never add a trailing "here's what I did" summary after completing tool calls.
 - Never use an Acronym that you have not defined in the current session, unless the user used it first.
@@ -112,6 +118,7 @@ When invoking `superpowers:subagent-driven-development` or dispatching long-live
 - **Pre-tune `.claude/settings.json` before the first subagent dispatch.** Run `/fewer-permission-prompts` to add common read-only patterns to the project-shared allowlist; subagents inherit the parent's permission mode and uninstrumented commands flood the user with prompts. Project-shared `.claude/settings.json` (NOT `settings.local.json`) so the allowlist applies to every contributor's subagent runs.
 - **Watch token budgets.** Each implementer + 2-stage reviewer cycle can run 50k–100k tokens per task. If the user issues a token-conservation warning, pause and create a handoff doc (see Per-Spec retrospective format) before dispatching more subagents.
 - **Order: sequential by default; parallel only when truly independent.** The skill's two-stage review (spec compliance → code quality) is forbidden to run before the implementer finishes; if multiple DevTasks are truly independent (no shared base mutations, no shared files), they can run in parallel via multiple `Agent` calls in one message.
+- **HARD RULE: each DevTask opens and merges its own PR against the Spec branch before the next DevTask starts, even during continuous same-session execution.** "Commit directly onto the Spec branch, single PR at close-out" is no longer an offerable option — it produces one unreviewable Spec PR (precedent: PR #70, 83 files). The task-review step already required by this skill _is_ the DevTask PR's review; open it, get it merged (self-approved or operator-approved per the file-limit and merge-approval rules below), then branch the next DevTask off the updated Spec branch. The Spec PR at close-out is then a fast-forward aggregate of already-reviewed commits, not a fresh read.
 
 ### Test Discipline (TDD + Full Test Pyramid)
 
