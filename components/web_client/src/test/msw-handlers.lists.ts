@@ -93,15 +93,16 @@ export const listHandlers = [
       return new HttpResponse(null, { status: 404 });
     }
 
-    const body = (await request.json()) as { deleted_at?: string; updated_at?: string };
-    if (!body.deleted_at || !body.updated_at) {
+    // ListDeleteInputSchema is { deleted_at } only — list.service.ts's
+    // deleteList() never touches updated_at, unlike Task's delete.
+    const body = (await request.json()) as { deleted_at?: string };
+    if (!body.deleted_at) {
       return new HttpResponse(null, { status: 400 });
     }
 
     const nextList: List = {
       ...existing,
       deleted_at: body.deleted_at,
-      updated_at: body.updated_at,
       server_updated_at: new Date().toISOString(),
     };
     listStore = listStore.map((list) => (list.id === id ? nextList : list));
