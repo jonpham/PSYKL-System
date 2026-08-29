@@ -1,7 +1,11 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { v7 as uuidv7 } from 'uuid';
 
-import { apiClient, type Task } from '../api/client';
-import { listTasks, putTask } from '../db/idb';
+import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
+import { listTasks } from '../db/idb';
+import { taskServiceClient } from '../services/task-service-client';
+import { enqueueWithReplay } from '../sync/page-triggers';
+import { replay } from '../sync/replay';
 import { resetSharedChannelsForTest } from './broadcast-channel';
 import { createChannelNotifier } from './broadcast-notify';
 import { getActiveListId, registerActiveListChangeListener, resetActiveListForTest } from './useActiveList';
@@ -11,6 +15,12 @@ interface TasksSnapshot {
   error: string | null;
   loading: boolean;
   tasks: Task[];
+}
+
+interface UseTasksResult extends TasksSnapshot {
+  createTask(title: string): Promise<Task>;
+  deleteTask(id: string, body: TaskDeleteInput, optimistic: Task): Promise<void>;
+  patchTask(id: string, body: TaskPatchInput, optimistic: Task): Promise<Task>;
 }
 
 const subscribers = new Set<() => void>();
@@ -29,12 +39,50 @@ let snapshot: TasksSnapshot = {
 // `useActiveList` importing this module back.
 registerActiveListChangeListener(() => notifyTasksChanged({ broadcast: false }));
 
-function useTasks(): TasksSnapshot {
+function useTasks(): UseTasksResult {
   useEffect(() => {
     void hydrateTasks();
   }, []);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const createTask = useCallback(async (title: string): Promise<Task> => {
+    const now = new Date().toISOString();
+    const listId = getActiveListId();
+    const task: Task = {
+      id: uuidv7(),
+      user_id: 'local',
+      title,
+      created_at: now,
+      completed_at: null,
+      updated_at: now,
+      server_updated_at: now,
+      deleted_at: null,
+      list_id: listId,
+    };
+    return mutateTask(() =>
+      taskServiceClient.create(task.id, { id: task.id, list_id: listId, title, updated_at: now }, task),
+    );
+  }, []);
+
+  const patchTask = useCallback(
+    (id: string, body: TaskPatchInput, optimistic: Task) =>
+      mutateTask(() => taskServiceClient.patch(id, body, optimistic)),
+    [],
+  );
+
+  const deleteTask = useCallback(
+    (id: string, body: TaskDeleteInput, optimistic: Task) =>
+      mutateTask(() => taskServiceClient.delete(id, body, optimistic)),
+    [],
+  );
+
+  return { ...snapshot, createTask, deleteTask, patchTask };
+}
+
+function mutateTask<T>(enqueue: () => Promise<T>): Promise<T> {
+  // notify defaults to notifyTasksChanged inside enqueueWithReplay — no
+  // override needed, unlike useLists.ts's mutateList.
+  return enqueueWithReplay({ enqueue, replay });
 }
 
 async function notifyTasksChanged(options: { broadcast?: boolean } = {}): Promise<void> {
@@ -81,22 +129,7 @@ async function hydrateTasks(): Promise<void> {
   setSnapshot({ ...snapshot, loading: true });
 
   try {
-    const { data, error, response } = await apiClient.GET('/tasks', {
-      params: {
-        header: {
-          'X-User-Id': 'local',
-        },
-        query: {
-          include_deleted: '1',
-        },
-      },
-    });
-
-    if (!response.ok || error) {
-      throw new Error('Failed to hydrate tasks');
-    }
-
-    await Promise.all((data ?? []).map((task) => putTask(task)));
+    await taskServiceClient.hydrate();
     await reloadSnapshot({ error: null, loading: false });
   } catch {
     const localSnapshot = await reloadSnapshot({ error: null, loading: false });
