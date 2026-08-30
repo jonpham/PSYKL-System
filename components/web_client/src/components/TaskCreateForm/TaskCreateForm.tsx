@@ -1,13 +1,10 @@
 import type { SubmitEvent } from 'react';
 import { useState } from 'react';
-import { v7 as uuidv7 } from 'uuid';
 
-import type { Task, TaskInput } from '../../api/client';
-import { getActiveListId } from '../../hooks/useActiveList';
-import { enqueueWithReplay } from '../../sync/page-triggers';
-import { enqueue, replay } from '../../sync/replay';
+import { useTasks } from '../../hooks/useTasks';
 
 export function TaskCreateForm() {
+  const { createTask } = useTasks();
   const [title, setTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -23,31 +20,7 @@ export function TaskCreateForm() {
     setSubmitting(true);
     setErrorMessage(null);
     try {
-      const now = new Date().toISOString();
-      const listId = getActiveListId();
-      const taskInput: TaskInput = {
-        id: uuidv7(),
-        title: trimmedTitle,
-        updated_at: now,
-        list_id: listId,
-      };
-      const optimisticTask: Task = {
-        id: taskInput.id,
-        user_id: 'local',
-        title: taskInput.title,
-        created_at: now,
-        completed_at: null,
-        updated_at: taskInput.updated_at,
-        server_updated_at: now,
-        deleted_at: null,
-        list_id: listId,
-      };
-
-      await enqueueWithReplay({
-        enqueue: () =>
-          enqueue({ body: taskInput, entityId: taskInput.id, entityType: 'task', op: 'create', optimisticTask }),
-        replay,
-      });
+      await createTask(trimmedTitle);
       setTitle('');
     } catch {
       setErrorMessage('Failed to create task');
