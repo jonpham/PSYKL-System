@@ -2,45 +2,26 @@
 
 > Updated by the active session at the start of each work block. Reflects the live state of the project — see [`AGENTS.md`](../AGENTS.md) for terminology (Initiative / Spec / Task / Step / Feature).
 
-**Active initiative:** `todo-experience` — Apple Reminders-grade task management on the PWA. Approved design at [`docs/initiatives/todo-experience/DESIGN.md`](initiatives/todo-experience/DESIGN.md); milestone summary at [`docs/initiatives/todo-experience/MILESTONE.md`](initiatives/todo-experience/MILESTONE.md).
-**Initiative status:** 🟡 `todo-experience` is active, designed, and design-reviewed. `/design-consultation` ran on 2026-08-13; `/plan-design-review` ran on 2026-08-14 and **re-scoped the initiative** — see [`DESIGN.md`](initiatives/todo-experience/DESIGN.md) → Re-scope. The bespoke "Ledger" visual identity was prototyped, found to read as rigid, and demoted to a selectable theme; the initiative is now clinical craft parity with Apple Reminders, Things 3, and TickTick on a conventional, themable UI. **Feature scope is unchanged** — the three reference apps are the UI/UX bar, not a feature list — except that theming was added. The current docs are the visual system at [`docs/DESIGN.md`](DESIGN.md) and the UX plan at [`UX.md`](initiatives/todo-experience/UX.md). The next action is `/plan-eng-review`. The following initiative is `psykl-loop`, now parked as next at [`docs/initiatives/psykl-loop/MILESTONE.md`](initiatives/psykl-loop/MILESTONE.md). The preceding initiative, M2 — PWA CRUD + offline-first, is 🟢 complete and merged to `main` (PR [#66](https://github.com/jonpham/PSYKL-System/pull/66), commit `62e4105`). Durable records live in [`docs/features/`](features/), [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), [`docs/STACK.md`](STACK.md), [`CHANGELOG.md`](../CHANGELOG.md), and [`docs/retrospectives/2026-07-29-m2-pwa-crud-offline.md`](retrospectives/2026-07-29-m2-pwa-crud-offline.md).
-**Last completed initiative:** M2 — PWA CRUD + offline-first.
-**Last completed spec:** M2 Spec 6 — Multi-device E2E + offline harness ([`[20260728]P6_m2-multi-device-e2e-harness.md`](features/%5B20260728%5DP6_m2-multi-device-e2e-harness.md)).
+**Active initiative:** `todo-experience` — Apple Reminders-grade task management on the PWA. Approved design at [`docs/initiatives/todo-experience/DESIGN.md`](initiatives/todo-experience/DESIGN.md); UX plan at [`UX.md`](initiatives/todo-experience/UX.md).
+**Initiative status:** 🟡 Active. Spec 1 shipped (below). Specs 2-7 are outlined at DevTask fidelity in `docs/specs/todo-experience/` and get expanded when each starts.
+**Last completed initiative:** M2 — PWA CRUD + offline-first (merged PR [#66](https://github.com/jonpham/PSYKL-System/pull/66)). All M2 records live in [`docs/features/`](features/); no longer summarized here.
+**Last completed spec:** `todo-experience` Spec 1 — Generalized Sync Queue + Lists ([feature doc](features/%5B20260818%5DP1_todo-experience-sync-queue-and-lists.md)). Merged PRs [#70](https://github.com/jonpham/PSYKL-System/pull/70), [#71](https://github.com/jonpham/PSYKL-System/pull/71), [#72](https://github.com/jonpham/PSYKL-System/pull/72) — DevTasks 7-8 were discovered via #70's code review (layered Service/Sync/API Client architecture), not in the original 6-DevTask breakdown.
 **Active spec for execution:** N/A.
-**Next executable spec:** Spec 1 — [`20260818-Spec1-sync-queue-generalization-and-lists.md`](specs/todo-experience/20260818-Spec1-sync-queue-generalization-and-lists.md). Six DevTasks, fully stepped. Specs 2-7 are outlined at DevTask fidelity and expanded when each starts.
-**Active skill:** `superpowers:writing-plans` — complete. Execution starts with Spec 1.
-**Branch:** `feat/plan-psykl-loop`.
-**Known blockers:** None. The initiative is **7 Specs**, not 6 — `superpowers:writing-plans` split Recently Deleted and the offline posture out of Spec 1 per the AGENTS.md trilemma rule. Next action: create the Spec 1 integration branch and start DevTask 1.
+**Next executable spec:** Spec 2 — Recently Deleted + offline posture ([`20260818-Spec2-recently-deleted-and-offline-posture.md`](specs/todo-experience/20260818-Spec2-recently-deleted-and-offline-posture.md)).
+**Branch:** `main`.
+**Known blockers:** None. Next action: create the Spec 2 integration branch and start DevTask 1, per-DevTask PRs from the start (see AGENTS.md → Subagent-Driven Development Discipline).
 
-**Homelab deploy track (2026-07-23, out-of-Spec, concurrent with M2):** PSYKL is deployed to a k3s cluster (Proxmox VM **robin**, `10.0.1.206`, LAN-only at `psykl.lan.witty-m.com`) via ArgoCD from a separate GitOps repo (`PSYKL-GitOps`). The two 2026-06-29 helm-hardening commits on `main` (`feat(helm): support image pull secrets`, `fix(helm): support robin ingress api path`) were the undocumented start of this. This session validated the live deploy (all ArgoCD apps Synced/Healthy), documented the flow in [`README.md` → Deploy to k3s](../README.md#deploy-to-k3s-homelab--robin) + [ADR-M2-010](ARCHITECTURE.md), and adopted **semver** as the go-forward image-pin scheme (manual bump). **Completed 2026-07-24:** released `v0.2.0` and repinned `PSYKL-GitOps/apps/psykl/values-robin.yaml` to `0.2.0` (note: the image tag is the `v`-stripped semver — `cd-release.yml` strips the leading `v`); ArgoCD rolled robin to the `:0.2.0` images (`/version` → commit `854f6d8`, all 21 todos preserved on the pglite PVC, app `Synced`/`Healthy`). The in-app version footer ([#64](https://github.com/jonpham/PSYKL-System/pull/64)) now shows both components' build commits. Milestone **M4 was rescoped to auth + multi-tenant isolation only** — homelab deployment is now handled. Image-tag write-back automation is deferred ([`BACKLOG_IDEAS.md`](BACKLOG_IDEAS.md)).
+**Homelab deploy** (k3s cluster **robin**, LAN-only at `psykl.lan.witty-m.com`, GitOps via `PSYKL-GitOps`): live, deployed via ArgoCD, semver-pinned image tags. Full runbook at [`README.md` → Deploy to k3s](../README.md#deploy-to-k3s-homelab--robin); architecture at [ADR-M2-010](ARCHITECTURE.md). Not tied to any active Spec — update `PSYKL-GitOps/apps/psykl/values-robin.yaml` and merge to redeploy.
 
-**Roadmap re-cut (2026-08-12).** Apple-native client work is **deferred** in favour of growing the PWA into a semi-mature product first. Initial discovery opened `psykl-loop`, then the approved `/office-hours` design split out `todo-experience` as the active initiative because the task experience needs to be good before PSYKL sessions attach to tasks. `psykl-loop` remains next and is seeded from the approved design's Appendix. At the same time, **milestones past the shipped work are now identified by a short purpose tag rather than an ordinal number**, because the remaining roadmap is a set of candidates, not a sequence. Shipped milestones keep `M1` / `M2` (those tokens are baked into ADR IDs, feature-doc filenames, and `CHANGELOG.md`). See [`docs/PRODUCT.md`](PRODUCT.md) → Milestone Roadmap.
+**Roadmap:** Apple-native client work is deferred in favor of maturing the PWA first. `psykl-loop` is next after `todo-experience`, seeded at [`docs/initiatives/psykl-loop/MILESTONE.md`](initiatives/psykl-loop/MILESTONE.md). Milestones from `psykl-loop` onward are tagged (not ordinal-numbered) since the remaining roadmap is a set of candidates, not a sequence — see [`docs/PRODUCT.md`](PRODUCT.md) → Milestone Roadmap.
 
-## How to Pick Up This Project (for any AI agent, mid-2026 or later)
+## How to Pick Up This Project (for any AI agent)
 
-1. **Read in this order:**
-   - [`README.md`](../README.md) — developer quickstart (install, scripts, verification, deploy)
-   - [`CLAUDE.md`](../CLAUDE.md) → sources [`AGENTS.md`](../AGENTS.md)
-   - [`AGENTS.md`](../AGENTS.md) — working agreement, vocabulary (Project / Initiative / Spec / DevTask / Step / Feature), Test Discipline (5-layer pyramid, TDD mandatory), Git Conventions (sibling-default DevTask branches; stacking only on real dependency; rebase-before-PR), naming conventions, skill routing
-   - [`docs/PRODUCT.md`](PRODUCT.md) — product brief; the Sync and Sharing Model (single-user multi-device, no collaboration ever)
-   - [`docs/STACK.md`](STACK.md) — what's shipped (tech stack table per milestone)
-   - [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — durable architectural decisions (ADRs) and component descriptions for everything that's shipped
-   - [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md) — this file
-   - [`docs/features/`](features/) — completed-feature records (one per shipped Spec)
-   - [`docs/features/[20260610]GH38_m2-service-task-patch-delete-lww-idempotency.md`](features/%5B20260610%5DGH38_m2-service-task-patch-delete-lww-idempotency.md) — completed M2 Spec 1 record
-   - [`docs/features/[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md) — completed M2 Spec 2 record
-   - [`docs/features/[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md) — completed M2 Spec 3 record
-   - [`docs/features/[20260618]GH41_m2-service-worker-background-sync.md`](features/%5B20260618%5DGH41_m2-service-worker-background-sync.md) — completed M2 Spec 4 record
-   - [`docs/features/[20260724]P5_m2-pwa-crud-ui-polish.md`](features/%5B20260724%5DP5_m2-pwa-crud-ui-polish.md) — completed M2 Spec 5 record
-   - [`docs/features/[20260728]P6_m2-multi-device-e2e-harness.md`](features/%5B20260728%5DP6_m2-multi-device-e2e-harness.md) — completed M2 Spec 6 record
-   - [`docs/initiatives/todo-experience/DESIGN.md`](initiatives/todo-experience/DESIGN.md) — the active initiative design; read its **Re-scope** section first
-   - [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) — screens, gestures, user stories, and the decisions the design review closed
-   - [`docs/initiatives/todo-experience/MILESTONE.md`](initiatives/todo-experience/MILESTONE.md) — the active initiative summary
-   - [`docs/initiatives/psykl-loop/MILESTONE.md`](initiatives/psykl-loop/MILESTONE.md) — the next initiative seed
-2. **Vocabulary to memorize:** `DevTask` = workflow concept (PR-sized unit). `Task` = PSYKL data-model entity (the `id, user_id, title, created_at` record). They are unrelated.
-3. **The Decisions appendix is normative.** If a decision looks wrong, surface it for user discussion — do not silently rework.
+1. **Read in this order:** [`README.md`](../README.md) (quickstart) → [`CLAUDE.md`](../CLAUDE.md)/[`AGENTS.md`](../AGENTS.md) (working agreement, vocabulary, Test Discipline, Git Conventions) → [`docs/PRODUCT.md`](PRODUCT.md) (product brief, Sync and Sharing Model) → [`docs/STACK.md`](STACK.md) (shipped stack) → [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) (ADRs) → this file → [`docs/features/`](features/) (completed-feature records) → the active initiative's `DESIGN.md`/`UX.md`/`MILESTONE.md` under `docs/initiatives/todo-experience/`.
+2. **Vocabulary:** `DevTask` = workflow concept (PR-sized unit). `Task` = PSYKL data-model entity. Unrelated.
+3. **The Decisions appendix in any `APPROVED` design doc is normative.** Surface for discussion, don't silently rework.
 4. **TDD ordering is mandatory:** failing test → implementation → green → refactor → commit. Tests live in the same PR as the implementation.
-5. **DevTask branching:** siblings off the Spec integration branch unless K+1 depends on K's unmerged work; rebase onto `origin/<target>` before opening any PR.
+5. **DevTask branching:** each DevTask gets its own PR, merged before the next starts (AGENTS.md → Subagent-Driven Development Discipline); stack only on a real dependency; rebase onto `origin/<target>` before opening any PR.
 
 ## Current Stack
 
@@ -51,51 +32,26 @@ See [`docs/STACK.md`](STACK.md) for the canonical shipped stack table. Architect
 | Initiative                    | Theme                                                        | Status                      | Initiative Doc                                         |
 | ----------------------------- | ------------------------------------------------------------ | --------------------------- | ------------------------------------------------------ |
 | M2 — PWA CRUD + offline-first | Complete Task Create/Read/Update/Delete + offline-first sync | 🟢 Done — merged via PR #66 | [`docs/features/`](features/)                          |
-| `todo-experience`             | Apple Reminders-grade task management on the PWA             | 🟡 Active — approved        | [`todo-experience/`](initiatives/todo-experience/)     |
+| `todo-experience`             | Apple Reminders-grade task management on the PWA             | 🟡 Active — Spec 1 shipped  | [`todo-experience/`](initiatives/todo-experience/)     |
 | `psykl-loop`                  | PSYKL execution, boundary behavior, retrospectives           | ⚪ Next — sketched          | [`psykl-loop/`](initiatives/psykl-loop/)               |
 | `apple-native`                | iOS, iPadOS, macOS SwiftUI clients                           | 🔵 Deferred — unsequenced   | [`apple-native/`](initiatives/apple-native/)           |
 | `multi-tenant-auth`           | Real authentication, multi-tenant data isolation             | 🔵 Deferred — unsequenced   | [`multi-tenant-auth/`](initiatives/multi-tenant-auth/) |
 
 Legend: 🟢 Done · 🟡 In progress · ⚪ Sketched / Not started · 🔵 Deferred (no date, no ordering claim)
 
-## M2 Specs
-
-Generated by `superpowers:writing-plans` on 2026-06-10 from the M2 design, milestone doc, and issue briefs.
-
-| Spec | Title                                         | Execution spec                                                                                                                                  | DevTasks                 |
-| ---- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| M2-1 | service-task PATCH/DELETE + LWW + Idempotency | [`[20260610]GH38_m2-service-task-patch-delete-lww-idempotency.md`](features/%5B20260610%5DGH38_m2-service-task-patch-delete-lww-idempotency.md) | Complete                 |
-| M2-2 | PWA IndexedDB store + useSyncExternalStore    | [`[20260612]GH39_m2-pwa-indexeddb-store.md`](features/%5B20260612%5DGH39_m2-pwa-indexeddb-store.md)                                             | Complete                 |
-| M2-3 | Sync engine                                   | [`[20260613]GH40_m2-sync-engine.md`](features/%5B20260613%5DGH40_m2-sync-engine.md)                                                             | Complete — shipped       |
-| M2-4 | Service Worker + Background Sync              | [`[20260618]GH41_m2-service-worker-background-sync.md`](features/%5B20260618%5DGH41_m2-service-worker-background-sync.md)                       | Complete — shipped       |
-| M2-5 | PWA CRUD UI polish                            | [`[20260724]P5_m2-pwa-crud-ui-polish.md`](features/%5B20260724%5DP5_m2-pwa-crud-ui-polish.md)                                                   | Complete — `spec/m2-pwa` |
-| M2-6 | Multi-device E2E + offline harness            | [`[20260728]P6_m2-multi-device-e2e-harness.md`](features/%5B20260728%5DP6_m2-multi-device-e2e-harness.md)                                       | Complete — `spec/m2-pwa` |
-
-## Remaining Planning Gates
-
-| Gate                         | Status                      | Required action                                                                                                                 |
-| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| M2 design user review        | Satisfied for spec planning | User requested `superpowers:writing-plans` on 2026-06-10, promoting the design into spec generation.                            |
-| Durable product-doc refresh  | Done                        | `docs/PRODUCT.md` Surface Areas records the PWA as the permanent non-Apple client surface.                                      |
-| Code style + linting routing | Done                        | Spec M2-1 explicitly defers broad linting/TypeScript/formatting/commit-style tightening until after M2 or a hygiene initiative. |
-| M2 execution spec generation | Done                        | Completed Spec records live under [`docs/features/`](features/); obsolete per-Spec planning docs are deleted at Spec close-out. |
-
 ## Open Design Surfaces
 
 Not blocking anything today; documented so they don't get lost.
 
-| Surface                                                                                                                                                                                                                                                                                                                                      | Parked at                                            | Owning milestone                                  |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
-| ~~Offline-first sync engine architecture~~ — **SHIPPED in M2.** IndexedDB source-of-truth, sync queue, Service Worker scope, Background Sync, Last-Write-Wins, and multi-device E2E are now durable architecture in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).                                                                               | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md)            | M2 (resolved)                                     |
-| ~~Conflict resolution via CRDT~~ — **CLOSED, out of scope.** Per the single-user multi-device sync model (`docs/PRODUCT.md` → Sync and Sharing Model), Last-Write-Wins is sufficient for the lifetime of the project; Conflict-free Replicated Data Types solve a multi-actor problem PSYKL does not have.                                   | Permanently closed 2026-05-20                        | —                                                 |
-| Server-side vs client-side retrospective aggregation                                                                                                                                                                                                                                                                                         | `/office-hours` parked                               | `psykl-loop`+                                     |
-| ~~Todo UX user stories, dense-list interaction design, and Apple Reminders comparison bar~~ — **ANSWERED.** `/design-consultation` (2026-08-13) wrote them; `/plan-design-review` (2026-08-14) prototyped, re-scoped, and closed five of the seven open questions. Two data-model questions were deliberately carried to `/plan-eng-review`. | [`UX.md`](initiatives/todo-experience/UX.md) § 10    | `todo-experience`                                 |
-| ~~Configurable UI theme architecture~~ — **VISUAL HALF ANSWERED 2026-08-14** by `/plan-design-review`. Two-tier semantic token system, two themes (Plain default, Ledger alternate), device-local preference. The **term-map half** (renaming PSYKL / Earth / Moon / HelioArc / Sun) remains open and unassigned.                            | [`docs/DESIGN.md`](DESIGN.md) → Theming Architecture | `todo-experience` (visual); unassigned (term-map) |
-| Multi-user auth scheme (OAuth provider vs magic-link vs password+session)                                                                                                                                                                                                                                                                    | `/office-hours`                                      | `multi-tenant-auth`                               |
-| Homelab multi-instance deployment guide                                                                                                                                                                                                                                                                                                      | `/office-hours`                                      | `multi-tenant-auth`                               |
-| Apple Watch integration (movement detection for fatigue / distraction signals)                                                                                                                                                                                                                                                               | `docs/PRODUCT.md` future features                    | Unassigned                                        |
-| iCloud / Google Calendar sync                                                                                                                                                                                                                                                                                                                | `docs/PRODUCT.md` future features                    | Unassigned                                        |
-| Apple Reminders import / two-way sync                                                                                                                                                                                                                                                                                                        | `docs/PRODUCT.md` future features                    | Unassigned                                        |
+| Surface                                                                        | Parked at                                            | Owning milestone    |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------- | ------------------- |
+| Server-side vs client-side retrospective aggregation                           | `/office-hours` parked                               | `psykl-loop`+       |
+| Configurable UI theme — term-map half (renaming PSYKL/Earth/Moon/HelioArc/Sun) | [`docs/DESIGN.md`](DESIGN.md) → Theming Architecture | unassigned          |
+| Multi-user auth scheme (OAuth provider vs magic-link vs password+session)      | `/office-hours`                                      | `multi-tenant-auth` |
+| Homelab multi-instance deployment guide                                        | `/office-hours`                                      | `multi-tenant-auth` |
+| Apple Watch integration (movement detection for fatigue / distraction signals) | `docs/PRODUCT.md` future features                    | Unassigned          |
+| iCloud / Google Calendar sync                                                  | `docs/PRODUCT.md` future features                    | Unassigned          |
+| Apple Reminders import / two-way sync                                          | `docs/PRODUCT.md` future features                    | Unassigned          |
 
 ## Backlog ideas (not on the milestone roadmap)
 
