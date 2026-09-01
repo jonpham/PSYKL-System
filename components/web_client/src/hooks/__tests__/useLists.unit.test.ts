@@ -2,19 +2,64 @@ import 'fake-indexeddb/auto';
 
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { deleteDB } from 'idb';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createListRemote } from '../../api/lists.api-client';
 import { listSyncQueue } from '../../db/idb';
 import { resetUseListsForTest, useLists } from '../useLists';
+import { DEFAULT_LIST_ID } from '../useLists.default-list';
+
+// Same isolation strategy as TaskCreateForm.unit.test.tsx: createList/etc.
+// now call enqueueWithReplay (fixing the asymmetry with Task mutations),
+// which fires a detached background replay(). Left real, that replay would
+// race real network + IDB work across tests via the shared fake-indexeddb.
+const mockReplay = vi.hoisted(() => vi.fn<() => Promise<unknown>>());
+
+vi.mock('../../sync/replay', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../sync/replay')>();
+  return {
+    ...actual,
+    replay: mockReplay,
+  };
+});
 
 const databaseName = 'psykl';
 
 afterEach(async () => {
+  mockReplay.mockReset();
   resetUseListsForTest();
   await deleteDB(databaseName);
 });
 
 describe('useLists', () => {
+  it('hydrates a list that already exists server-side — never happened before this fix', async () => {
+    // Arrange — simulates device A's already-established state: the
+    // well-known default list plus a second list this device (B) never
+    // itself touched. Before this fix, useLists had no server hydration at
+    // all, so "Groceries" would never have appeared here.
+    await createListRemote(
+      { id: DEFAULT_LIST_ID, title: 'Tasks', position: 'a0', updated_at: '2026-06-12T16:00:00.000Z' },
+      '0196f0a4-8b5a-7000-8000-0000000000a1',
+    );
+    await createListRemote(
+      {
+        id: '0196f0a4-8b5a-7000-8000-000000000099',
+        title: 'Groceries',
+        position: 'a1',
+        updated_at: '2026-06-12T16:00:00.000Z',
+      },
+      '0196f0a4-8b5a-7000-8000-0000000000a2',
+    );
+
+    // Act
+    const { result } = renderHook(() => useLists());
+
+    // Assert
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks', 'Groceries']);
+    });
+  });
+
   it('creates a list optimistically and queues it for sync', async () => {
     // Arrange — wait for the default list so createList sees a stable snapshot
     const { result } = renderHook(() => useLists());

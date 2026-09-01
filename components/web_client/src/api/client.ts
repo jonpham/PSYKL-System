@@ -1,6 +1,6 @@
 import createClient from 'openapi-fetch';
 
-import type { paths } from './types';
+import type { components, paths } from './types';
 
 const baseUrl = (import.meta.env['VITE_API_URL'] as string | undefined) ?? 'http://localhost:3000';
 
@@ -36,3 +36,9 @@ export function taskMutationRequestParams(idempotencyKey: string) {
 
 export type Task = paths['/tasks']['get']['responses']['200']['content']['application/json'][number];
 export type TaskInput = NonNullable<paths['/tasks']['post']['requestBody']>['content']['application/json'];
+export type TaskPatchInput = components['schemas']['TaskPatchInput'];
+export type TaskDeleteInput = components['schemas']['TaskDeleteInput'];
+export type List = components['schemas']['List'];
+export type ListInput = components['schemas']['ListInput'];
+export type ListPatchInput = components['schemas']['ListPatchInput'];
+export type ListDeleteInput = components['schemas']['ListDeleteInput'];

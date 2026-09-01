@@ -2,9 +2,11 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { useCallback, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
-import { listLists, putList } from '../db/idb';
+import { listLists } from '../db/idb';
 import type { ListRecord } from '../db/idb.types';
-import { enqueue } from '../sync/replay';
+import { listServiceClient } from '../services/list-service-client';
+import { enqueueWithReplay } from '../sync/page-triggers';
+import { replay } from '../sync/replay';
 import { resetSharedChannelsForTest } from './broadcast-channel';
 import { createChannelNotifier } from './broadcast-notify';
 import { ensureDefaultList, resetDefaultListForTest } from './useLists.default-list';
@@ -26,6 +28,10 @@ const channel = createChannelNotifier('psykl-idb', 'lists-changed', () => {
 let hydrated = false;
 let snapshot: ListRecord[] = [];
 
+function mutateList<T>(enqueue: () => Promise<T>): Promise<T> {
+  return enqueueWithReplay({ enqueue, notify: notifyListSubscribers, replay });
+}
+
 function useLists(): UseListsResult {
   const lists = useSyncExternalStore(subscribeToLists, getListsSnapshot);
 
@@ -43,15 +49,13 @@ function useLists(): UseListsResult {
         server_updated_at: now,
         deleted_at: null,
       };
-      await putList(list);
-      await enqueue({
-        body: { id: list.id, title: list.title, position: list.position, updated_at: list.updated_at },
-        entityId: list.id,
-        entityType: 'list',
-        op: 'create',
-      });
-      await notifyListSubscribers();
-      return list;
+      return mutateList(() =>
+        listServiceClient.create(
+          list.id,
+          { id: list.id, title: list.title, position: list.position, updated_at: list.updated_at },
+          list,
+        ),
+      );
     },
     [lists],
   );
@@ -67,9 +71,8 @@ function useLists(): UseListsResult {
         return;
       }
       const deleted_at = new Date().toISOString();
-      await putList({ ...existing, deleted_at, updated_at: deleted_at });
-      await enqueue({ body: { deleted_at, updated_at: deleted_at }, entityId: id, entityType: 'list', op: 'delete' });
-      await notifyListSubscribers();
+      const optimistic: ListRecord = { ...existing, deleted_at, updated_at: deleted_at };
+      await mutateList(() => listServiceClient.delete(id, { deleted_at }, optimistic));
     },
     [lists],
   );
@@ -82,9 +85,8 @@ function useLists(): UseListsResult {
       if (!existing) {
         return;
       }
-      await putList({ ...existing, position, updated_at });
-      await enqueue({ body: { position, updated_at }, entityId: id, entityType: 'list', op: 'patch' });
-      await notifyListSubscribers();
+      const optimistic: ListRecord = { ...existing, position, updated_at };
+      await mutateList(() => listServiceClient.patch(id, { position, updated_at }, optimistic));
     },
     [lists],
   );
@@ -96,9 +98,8 @@ function useLists(): UseListsResult {
       if (!existing) {
         return;
       }
-      await putList({ ...existing, title, updated_at });
-      await enqueue({ body: { title, updated_at }, entityId: id, entityType: 'list', op: 'patch' });
-      await notifyListSubscribers();
+      const optimistic: ListRecord = { ...existing, title, updated_at };
+      await mutateList(() => listServiceClient.patch(id, { title, updated_at }, optimistic));
     },
     [lists],
   );
@@ -127,7 +128,7 @@ function subscribeToLists(callback: () => void): () => void {
   subscribers.add(callback);
   channel.ensureChannel();
   if (!hydrated) {
-    void ensureDefaultListThenReload();
+    void hydrateThenEnsureDefaultList();
   }
 
   return () => {
@@ -135,7 +136,17 @@ function subscribeToLists(callback: () => void): () => void {
   };
 }
 
-async function ensureDefaultListThenReload(): Promise<void> {
+async function hydrateThenEnsureDefaultList(): Promise<void> {
+  // Pull server-known lists down first (best-effort — offline is expected
+  // and not an error here, matching useTasks.ts's hydrateTasks). Only after
+  // that does ensureDefaultList() decide, from local IDB state, whether this
+  // device still needs to bootstrap the default list itself.
+  try {
+    await listServiceClient.hydrate();
+  } catch {
+    // Offline on first load — ensureDefaultList() below still makes the app
+    // usable; the next successful hydrate() (or replay) catches this device up.
+  }
   await ensureDefaultList();
   await reloadListsSnapshot();
 }
