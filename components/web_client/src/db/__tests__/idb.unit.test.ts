@@ -29,6 +29,7 @@ const task: Task = {
   updated_at: '2026-06-12T16:00:00.000Z',
   server_updated_at: '2026-06-12T16:00:01.000Z',
   deleted_at: null,
+  list_id: null,
 };
 
 afterEach(async () => {
@@ -36,17 +37,17 @@ afterEach(async () => {
 });
 
 describe('openPsyklDb', () => {
-  it('opens database version 1 with all local-first stores and indexes', async () => {
+  it('opens database version 2 with all local-first stores and indexes', async () => {
     // When
     const db = await openPsyklDb();
 
     // Then
-    expect(CURRENT_SCHEMA_VERSION).toBe(1);
+    expect(CURRENT_SCHEMA_VERSION).toBe(2);
     expect(db.version).toBe(CURRENT_SCHEMA_VERSION);
-    expect([...db.objectStoreNames]).toEqual(['failed_ops', 'sync_meta', 'sync_queue', 'tasks']);
-    expect([...db.transaction('tasks').store.indexNames]).toEqual(['deleted_at', 'updated_at', 'user_id']);
-    expect([...db.transaction('sync_queue').store.indexNames]).toEqual(['created_at', 'task_id']);
-    expect([...db.transaction('failed_ops').store.indexNames]).toEqual(['created_at', 'task_id']);
+    expect([...db.objectStoreNames]).toEqual(['failed_ops', 'lists', 'sync_meta', 'sync_queue', 'tasks']);
+    expect([...db.transaction('tasks').store.indexNames]).toEqual(['deleted_at', 'list_id', 'updated_at', 'user_id']);
+    expect([...db.transaction('sync_queue').store.indexNames]).toEqual(['created_at', 'entity_id']);
+    expect([...db.transaction('failed_ops').store.indexNames]).toEqual(['created_at', 'entity_id']);
     db.close();
   });
 });
@@ -73,7 +74,8 @@ describe('sync helpers', () => {
     // Given
     await enqueueSyncOp({
       id: 'op-2',
-      task_id: task.id,
+      entity_type: 'task',
+      entity_id: task.id,
       op: 'patch',
       body: { title: 'second' },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000002',
@@ -83,7 +85,8 @@ describe('sync helpers', () => {
     });
     await enqueueSyncOp({
       id: 'op-1',
-      task_id: task.id,
+      entity_type: 'task',
+      entity_id: task.id,
       op: 'create',
       body: task,
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000003',
@@ -113,7 +116,8 @@ describe('sync helpers', () => {
     await expect(
       putTaskAndEnqueueSyncOp(task, {
         id: 'op-invalid-body',
-        task_id: task.id,
+        entity_type: 'task',
+        entity_id: task.id,
         op: 'create',
         body: invalidQueueBody,
         idempotency_key: '0196f0a4-8b5a-7000-8000-000000000004',

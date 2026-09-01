@@ -31,6 +31,7 @@ const seedTask: Task = {
   updated_at: new Date('2026-06-01T09:00:00Z').toISOString(),
   server_updated_at: new Date('2026-06-01T09:00:00.500Z').toISOString(),
   deleted_at: null,
+  list_id: null,
 };
 
 const seedListHandler = http.get('*/tasks', () => HttpResponse.json([seedTask]));
@@ -61,11 +62,12 @@ export const EditTitleEnqueuesPatch: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'seed task edited{Enter}');
 
-    // Assert
+    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // list's own create op on first run, so filter to this task's entry.
     await waitFor(async () => {
-      const queue = await listSyncQueue();
+      const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
       expect(queue).toHaveLength(1);
-      expect(queue[0]).toMatchObject({ op: 'patch', task_id: seedTask.id });
+      expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'patch' });
       expect((queue[0]?.body as { title?: string }).title).toBe('seed task edited');
     });
     expect(await canvas.findByRole('button', { name: /edit seed task edited/i })).toBeInTheDocument();
@@ -89,11 +91,12 @@ export const CompleteEnqueuesPatch: Story = {
     // Act
     await userEvent.click(canvas.getByRole('checkbox', { name: /mark seed task complete/i }));
 
-    // Assert
+    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // list's own create op on first run, so filter to this task's entry.
     await waitFor(async () => {
-      const queue = await listSyncQueue();
+      const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
       expect(queue).toHaveLength(1);
-      expect(queue[0]).toMatchObject({ op: 'patch', task_id: seedTask.id });
+      expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'patch' });
       expect((queue[0]?.body as { completed_at?: string | null }).completed_at).toEqual(expect.any(String));
     });
     expect(await canvas.findByRole('checkbox', { name: /mark seed task incomplete/i })).toBeChecked();
@@ -121,11 +124,12 @@ export const DeleteEnqueuesDelete: Story = {
     // for the re-rendered "Confirm delete" label rather than racing the render.
     await userEvent.click(await canvas.findByRole('button', { name: /confirm delete seed task/i }));
 
-    // Assert
+    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // list's own create op on first run, so filter to this task's entry.
     await waitFor(async () => {
-      const queue = await listSyncQueue();
+      const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
       expect(queue).toHaveLength(1);
-      expect(queue[0]).toMatchObject({ op: 'delete', task_id: seedTask.id });
+      expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'delete' });
       expect((queue[0]?.body as { deleted_at?: string }).deleted_at).toEqual(expect.any(String));
     });
     await waitFor(() => expect(canvas.queryByText('seed task')).not.toBeInTheDocument());

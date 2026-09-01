@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskInput } from '../../api/client';
+import { getActiveListId } from '../../hooks/useActiveList';
 import { enqueueWithReplay } from '../../sync/page-triggers';
 import { enqueue, replay } from '../../sync/replay';
 
@@ -23,10 +24,12 @@ export function TaskCreateForm() {
     setErrorMessage(null);
     try {
       const now = new Date().toISOString();
+      const listId = getActiveListId();
       const taskInput: TaskInput = {
         id: uuidv7(),
         title: trimmedTitle,
         updated_at: now,
+        list_id: listId,
       };
       const optimisticTask: Task = {
         id: taskInput.id,
@@ -37,10 +40,12 @@ export function TaskCreateForm() {
         updated_at: taskInput.updated_at,
         server_updated_at: now,
         deleted_at: null,
+        list_id: listId,
       };
 
       await enqueueWithReplay({
-        enqueue: () => enqueue({ body: taskInput, op: 'create', optimisticTask, taskId: taskInput.id }),
+        enqueue: () =>
+          enqueue({ body: taskInput, entityId: taskInput.id, entityType: 'task', op: 'create', optimisticTask }),
         replay,
       });
       setTitle('');

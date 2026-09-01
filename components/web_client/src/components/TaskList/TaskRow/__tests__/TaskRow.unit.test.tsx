@@ -33,6 +33,7 @@ const baseTask: Task = {
   updated_at: '2026-06-01T09:00:00.000Z',
   server_updated_at: '2026-06-01T09:00:00.500Z',
   deleted_at: null,
+  list_id: null,
 };
 
 function renderRow(task: Task = baseTask, isPending = false) {
@@ -86,7 +87,7 @@ describe('TaskRow (Unit)', () => {
       });
       const queue = await listSyncQueue();
       expect(queue).toHaveLength(1);
-      expect(queue[0]).toMatchObject({ op: 'patch', task_id: baseTask.id });
+      expect(queue[0]).toMatchObject({ op: 'patch', entity_type: 'task', entity_id: baseTask.id });
       const body = queue[0]?.body as { title?: string; updated_at?: string };
       expect(body.title).toBe('walk the cat');
       expect(body.updated_at).toEqual(expect.any(String));
@@ -154,7 +155,7 @@ describe('TaskRow (Unit)', () => {
       // Then
       const queue = await listSyncQueue();
       expect(queue).toHaveLength(1);
-      expect(queue[0]).toMatchObject({ op: 'patch', task_id: baseTask.id });
+      expect(queue[0]).toMatchObject({ op: 'patch', entity_type: 'task', entity_id: baseTask.id });
       const body = queue[0]?.body as { completed_at?: string | null; updated_at?: string };
       expect(body.completed_at).toEqual(expect.any(String));
       expect(body.updated_at).toEqual(expect.any(String));

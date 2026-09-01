@@ -7,7 +7,7 @@ async function seedSyncQueue(page: Page, input: { id: string; taskTitle: string 
     async ({ id, taskIdValue, taskTitle }) => {
       const openDb = async () =>
         await new Promise<IDBDatabase>((resolve, reject) => {
-          const request = indexedDB.open('psykl', 1);
+          const request = indexedDB.open('psykl', 2);
           request.onerror = () => reject(request.error);
           request.onsuccess = () => resolve(request.result);
         });
@@ -21,7 +21,8 @@ async function seedSyncQueue(page: Page, input: { id: string; taskTitle: string 
       const now = new Date().toISOString();
       await put(db, 'sync_queue', {
         id,
-        task_id: taskIdValue,
+        entity_type: 'task',
+        entity_id: taskIdValue,
         op: 'create',
         body: { id: taskIdValue, title: taskTitle, updated_at: now },
         idempotency_key: '0198f5c9-52f2-7000-8000-000000000011',
@@ -39,7 +40,7 @@ async function seedReplayLock(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const openDb = async () =>
       await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('psykl', 1);
+        const request = indexedDB.open('psykl', 2);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
       });
@@ -62,7 +63,7 @@ async function readSyncQueueLength(page: Page): Promise<number> {
   return await page.evaluate(async () => {
     const openDb = async () =>
       await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('psykl', 1);
+        const request = indexedDB.open('psykl', 2);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
       });
@@ -83,7 +84,7 @@ async function readTaskTitles(page: Page): Promise<string[]> {
   return await page.evaluate(async () => {
     const openDb = async () =>
       await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('psykl', 1);
+        const request = indexedDB.open('psykl', 2);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
       });

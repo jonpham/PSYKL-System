@@ -18,6 +18,7 @@ export const tasks = pgTable('tasks', {
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   serverUpdatedAt: timestamp('server_updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  listId: text('list_id'), // nullable, NO foreign key — see DESIGN.md -> Offline Posture
 });
 
 export type TaskRow = typeof tasks.$inferSelect;

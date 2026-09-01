@@ -22,7 +22,8 @@ describe('replay heartbeat', () => {
     let resolveTransport: (value: { error: string; status: number }) => void = () => undefined;
     await enqueueSyncOp({
       id: 'op-1',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'patch',
       body: { title: 'long replay', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000002',

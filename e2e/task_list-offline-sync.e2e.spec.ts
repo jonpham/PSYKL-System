@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-import { listLocalSyncQueue, listLocalTasks } from './helpers/idb-storage';
+import { listLocalSyncQueue, listLocalTasks, type SyncQueueEntry } from './helpers/idb-storage';
 import {
   createTask,
   deleteTask,
+  type Device,
   editTask,
   expectServerTaskHidden,
   expectServerTaskVisible,
@@ -16,6 +17,11 @@ import {
   type TaskRow,
   triggerQueuedReplay,
 } from './helpers/multi-device';
+
+async function taskQueueEntries(device: Device): Promise<SyncQueueEntry[]> {
+  const queue = await listLocalSyncQueue(device);
+  return queue.filter((entry) => entry.entity_type === 'task');
+}
 
 test.describe('Task list offline sync', () => {
   test('two devices share one backend account but keep isolated browser storage', async ({ browser }) => {
@@ -38,14 +44,17 @@ test.describe('Task list offline sync', () => {
     await setOffline(device, true);
     await createTask(device, title);
     await expectTaskVisible(device, title);
-    await expect(listLocalSyncQueue(device)).resolves.toHaveLength(1);
+    // Filtered to 'task' entries: the device's own default-list bootstrap
+    // (see useLists.default-list.ts) also enqueues a 'list' create entry on
+    // first load, independent of this test's task creation.
+    await expect(taskQueueEntries(device)).resolves.toHaveLength(1);
 
     await setOffline(device, false);
     await triggerQueuedReplay(device);
 
     await expectServerTaskVisible(device.userId, title);
     await reloadAndExpectTaskVisible(device, title);
-    await expect(listLocalSyncQueue(device)).resolves.toHaveLength(0);
+    await expect(taskQueueEntries(device)).resolves.toHaveLength(0);
   });
 
   test('newer client edit wins when two devices edit the same Task', async ({ browser }) => {

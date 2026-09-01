@@ -1,16 +1,21 @@
 import { openDB } from 'idb';
 
 import type { Task } from '../api/client';
-import type { FailedOpEntry, PsyklDb, PsyklDbSchema, SyncMetaEntry, SyncQueueEntry } from './idb.types';
+import { migrateQueueEntryV1ToV2, upgradeV1ToV2 } from './idb.migration';
+import type { FailedOpEntry, ListRecord, PsyklDb, PsyklDbSchema, SyncMetaEntry, SyncQueueEntry } from './idb.types';
 
 const databaseName = 'psykl';
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
+export { migrateQueueEntryV1ToV2 };
 
 async function openPsyklDb(): Promise<PsyklDb> {
   return openDB<PsyklDbSchema>(databaseName, CURRENT_SCHEMA_VERSION, {
-    upgrade(db, oldVersion) {
+    async upgrade(db, oldVersion, _newVersion, tx) {
       if (oldVersion < 1) {
         createV1Stores(db);
+      }
+      if (oldVersion < 2) {
+        await upgradeV1ToV2(db, tx);
       }
     },
   });
@@ -34,6 +39,20 @@ async function deleteTask(id: string, db?: PsyklDb): Promise<void> {
   return withDb(db, async (database) => {
     await database.delete('tasks', id);
   });
+}
+
+async function putList(list: ListRecord, db?: PsyklDb): Promise<void> {
+  return withDb(db, async (database) => {
+    await database.put('lists', list);
+  });
+}
+
+async function listLists(db?: PsyklDb): Promise<ListRecord[]> {
+  return withDb(db, async (database) => database.getAllFromIndex('lists', 'position'));
+}
+
+async function getList(id: string, db?: PsyklDb): Promise<ListRecord | undefined> {
+  return withDb(db, async (database) => database.get('lists', id));
 }
 
 async function enqueueSyncOp(entry: SyncQueueEntry, db?: PsyklDb): Promise<void> {
@@ -106,11 +125,11 @@ async function getMeta(key: string, db?: PsyklDb): Promise<SyncMetaEntry | undef
 function createV1Stores(db: PsyklDb): void {
   const failedOps = db.createObjectStore('failed_ops', { keyPath: 'id' });
   failedOps.createIndex('created_at', 'created_at');
-  failedOps.createIndex('task_id', 'task_id');
+  (failedOps as unknown as IDBObjectStore).createIndex('task_id', 'task_id');
   db.createObjectStore('sync_meta', { keyPath: 'key' });
   const syncQueue = db.createObjectStore('sync_queue', { keyPath: 'id' });
   syncQueue.createIndex('created_at', 'created_at');
-  syncQueue.createIndex('task_id', 'task_id');
+  (syncQueue as unknown as IDBObjectStore).createIndex('task_id', 'task_id');
   const tasks = db.createObjectStore('tasks', { keyPath: 'id' });
   tasks.createIndex('deleted_at', 'deleted_at');
   tasks.createIndex('updated_at', 'updated_at');
@@ -136,13 +155,16 @@ export {
   deleteSyncOp,
   deleteTask,
   enqueueSyncOp,
+  getList,
   getMeta,
   getTask,
   listFailedOps,
+  listLists,
   listSyncQueue,
   listTasks,
   openPsyklDb,
   putFailedOp,
+  putList,
   putMeta,
   putTask,
   putTaskAndEnqueueSyncOp,

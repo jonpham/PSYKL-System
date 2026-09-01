@@ -21,6 +21,7 @@ const serverTask: Task = {
   updated_at: nowIso,
   server_updated_at: laterIso,
   deleted_at: null,
+  list_id: null,
 };
 
 afterEach(async () => {
@@ -34,8 +35,9 @@ describe('enqueue', () => {
     const entry = await enqueue(
       {
         body: { title: 'queued', updated_at: nowIso },
+        entityId: taskId,
+        entityType: 'task',
         op: 'patch',
-        taskId,
       },
       {
         now: () => new Date(nowIso),
@@ -51,9 +53,10 @@ describe('enqueue', () => {
         attempts: 0,
         body: { title: 'queued', updated_at: nowIso },
         created_at: nowIso,
+        entity_id: taskId,
+        entity_type: 'task',
         next_attempt_at: nowIso,
         op: 'patch',
-        task_id: taskId,
       }),
     ]);
   });
@@ -64,7 +67,8 @@ describe('replay', () => {
     // Given
     await enqueueSyncOp({
       id: 'op-2',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'patch',
       body: { title: 'second', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000002',
@@ -74,7 +78,8 @@ describe('replay', () => {
     });
     await enqueueSyncOp({
       id: 'op-1',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'create',
       body: { id: taskId, title: 'first', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000003',
@@ -101,7 +106,8 @@ describe('replay', () => {
     // Given
     await enqueueSyncOp({
       id: 'op-1',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'patch',
       body: { title: 'retry later', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000002',
@@ -132,7 +138,8 @@ describe('replay', () => {
     // Given
     await enqueueSyncOp({
       id: 'op-1',
-      task_id: taskId,
+      entity_type: 'task',
+      entity_id: taskId,
       op: 'patch',
       body: { title: 'retry after network', updated_at: nowIso },
       idempotency_key: '0196f0a4-8b5a-7000-8000-000000000002',

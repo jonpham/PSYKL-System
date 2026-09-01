@@ -3,7 +3,13 @@ import type { Page } from '@playwright/test';
 import type { TaskRow } from './multi-device';
 
 type BrowserStorageTarget = { page: Page };
-type SyncQueueEntry = { id: string; idempotency_key: string; op: string; task_id: string };
+type SyncQueueEntry = {
+  entity_id: string;
+  entity_type: 'list' | 'task';
+  id: string;
+  idempotency_key: string;
+  op: string;
+};
 
 async function listLocalTasks(target: BrowserStorageTarget): Promise<TaskRow[]> {
   return readObjectStore<TaskRow>(target.page, 'tasks');
@@ -37,7 +43,7 @@ async function readObjectStore<T>(page: Page, storeName: string): Promise<T[]> {
         indexedDB: { open: (databaseName: string, version: number) => BrowserRequest };
       }
     ).indexedDB;
-    const request = browserIndexedDb.open('psykl', 1);
+    const request = browserIndexedDb.open('psykl', 2);
     const db = await new Promise<BrowserDatabase>((resolve, reject) => {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result as BrowserDatabase);

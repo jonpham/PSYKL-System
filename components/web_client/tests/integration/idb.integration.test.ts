@@ -24,12 +24,12 @@ afterEach(async () => {
 });
 
 describe('IndexedDB upgrade and persistence', () => {
-  it('creates version 1 stores from an empty database and preserves tasks across reopen', async () => {
+  it('creates version 2 stores from an empty database and preserves tasks across reopen', async () => {
     // Given
     const firstOpen = await openPsyklDb();
-    expect(firstOpen.version).toBe(1);
+    expect(firstOpen.version).toBe(2);
+    await putTask(task, firstOpen);
     firstOpen.close();
-    await putTask(task);
 
     // When
     const secondOpen = await openPsyklDb();

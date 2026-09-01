@@ -1,11 +1,13 @@
 import { http, HttpResponse } from 'msw';
 
 import type { Task } from '../api/client';
+import { listHandlers, resetListStore } from './msw-handlers.lists';
 
 let store: Task[] = [];
 
 export function resetStore() {
   store = [];
+  resetListStore();
 }
 
 export const handlers = [
@@ -42,6 +44,7 @@ export const handlers = [
       updated_at: body.updated_at,
       server_updated_at: now,
       deleted_at: null,
+      list_id: null,
     };
     store = [task, ...store];
 
@@ -108,4 +111,6 @@ export const handlers = [
 
     return HttpResponse.json(nextTask);
   }),
+
+  ...listHandlers,
 ];

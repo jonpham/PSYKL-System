@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@psykl/shared-types": "workspace:*",
+    "fractional-indexing": "^4.0.0",
     "idb": "^8.0.3",
     "openapi-fetch": "^0.13.0",
     "react": "^19.0.0",

@@ -29,6 +29,7 @@ const sampleTasks: Task[] = [
     updated_at: new Date('2026-05-27T10:00:00Z').toISOString(),
     server_updated_at: new Date('2026-05-27T10:00:00.500Z').toISOString(),
     deleted_at: null,
+    list_id: null,
   },
   {
     id: '01940000-0000-7000-8000-000000000002',
@@ -39,6 +40,7 @@ const sampleTasks: Task[] = [
     updated_at: new Date('2026-05-27T11:00:00Z').toISOString(),
     server_updated_at: new Date('2026-05-27T11:00:00.500Z').toISOString(),
     deleted_at: null,
+    list_id: null,
   },
 ];
 
@@ -146,10 +148,12 @@ export const PendingQueuedTask: Story = {
         updated_at: new Date('2026-05-27T12:00:00Z').toISOString(),
         server_updated_at: new Date('2026-05-27T12:00:00.500Z').toISOString(),
         deleted_at: null,
+        list_id: null,
       });
       await enqueueSyncOp({
         id: '01940000-0000-7000-8000-000000000011',
-        task_id: '01940000-0000-7000-8000-000000000010',
+        entity_type: 'task',
+        entity_id: '01940000-0000-7000-8000-000000000010',
         op: 'create',
         body: {
           id: '01940000-0000-7000-8000-000000000010',
