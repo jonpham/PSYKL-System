@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { Task } from '../../../api/client';
-import type { SyncQueueEntry } from '../../../db/idb.types';
-import { enqueueWithReplay } from '../../../sync/page-triggers';
-import { enqueue, replay } from '../../../sync/replay';
+import { useTasks } from '../../../hooks/useTasks';
 import { useDelayedFlag } from './useDelayedFlag';
 
 const CONFIRM_DELETE_WINDOW_MS = 3000;
@@ -17,6 +15,7 @@ interface TaskRowProps {
 }
 
 export function TaskRow({ isPending = false, task }: TaskRowProps) {
+  const { deleteTask, patchTask } = useTasks();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(task.title);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -32,20 +31,13 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
     };
   }, []);
 
-  async function submit(op: SyncQueueEntry['op'], body: unknown, optimisticTask: Task): Promise<void> {
-    await enqueueWithReplay({
-      enqueue: () => enqueue({ body, entityId: task.id, entityType: 'task', op, optimisticTask }),
-      replay,
-    });
-  }
-
   function commitTitle(value: string): void {
     const nextTitle = value.trim();
     if (!nextTitle || nextTitle === task.title) {
       return;
     }
     const now = new Date().toISOString();
-    void submit('patch', { title: nextTitle, updated_at: now }, { ...task, title: nextTitle, updated_at: now });
+    void patchTask(task.id, { title: nextTitle, updated_at: now }, { ...task, title: nextTitle, updated_at: now });
   }
 
   // Enter/Escape blur the input so `onBlur` is the single commit point; Escape
@@ -61,8 +53,8 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
   function toggleComplete(): void {
     const now = new Date().toISOString();
     const completedAt = task.completed_at ? null : now;
-    void submit(
-      'patch',
+    void patchTask(
+      task.id,
       { completed_at: completedAt, updated_at: now },
       { ...task, completed_at: completedAt, updated_at: now },
     );
@@ -79,7 +71,7 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
     }
     setConfirmingDelete(false);
     const now = new Date().toISOString();
-    void submit('delete', { deleted_at: now, updated_at: now }, { ...task, deleted_at: now, updated_at: now });
+    void deleteTask(task.id, { deleted_at: now, updated_at: now }, { ...task, deleted_at: now, updated_at: now });
   }
 
   const completed = task.completed_at !== null;
