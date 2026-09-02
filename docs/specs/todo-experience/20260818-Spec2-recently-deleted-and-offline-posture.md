@@ -729,7 +729,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 **Steps:**
 
-- [ ] **Step 1: Write failing integration test for the purge boundary**
+- [x] **Step 1: Write failing integration test for the purge boundary**
 
   Create `components/service-task/tests/integration/recently-deleted-purge.integration.test.ts`:
 
@@ -811,18 +811,18 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 2: Run and verify it fails**
+- [x] **Step 2: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/service-task test:integration`
   Expected: FAIL — `../../src/purge/purge.service.js` does not exist.
 
-- [ ] **Step 3: Add the `@nestjs/schedule` dependency**
+- [x] **Step 3: Add the `@nestjs/schedule` dependency**
 
   ```bash
   pnpm --filter @psykl/service-task add @nestjs/schedule
   ```
 
-- [ ] **Step 4: Implement `PurgeService`**
+- [x] **Step 4: Implement `PurgeService`**
 
   Create `components/service-task/src/purge/purge.service.ts`:
 
@@ -879,7 +879,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   }
   ```
 
-- [ ] **Step 5: Wire `ScheduleModule`, `PurgeService`, and `CLOCK_TOKEN` into `AppModule`**
+- [x] **Step 5: Wire `ScheduleModule`, `PurgeService`, and `CLOCK_TOKEN` into `AppModule`**
 
   In `components/service-task/src/app.module.ts`:
 
@@ -902,7 +902,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   export class AppModule {}
   ```
 
-- [ ] **Step 6: Run and verify green, then commit**
+- [x] **Step 6: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/service-task test:integration`
   Expected: PASS
@@ -914,7 +914,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(service-task): add PurgeService with daily 30-day tombstone purge"
   ```
 
-- [ ] **Step 7: Full verification pass**
+- [x] **Step 7: Full verification pass**
 
   ```bash
   pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
@@ -925,7 +925,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Expected: all green.
 
-- [ ] **Step 8: Update this spec doc's checkbox state**
+- [x] **Step 8: Update this spec doc's checkbox state**
 
   Mark DevTask 8's Steps 1-7 complete above.
 
