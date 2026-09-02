@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { TimestampSchema, UuidV7Schema } from './task.js';
+import { TaskSchema, TimestampSchema, UuidV7Schema } from './task.js';
 
 /**
  * PSYKL List data-model entity.
@@ -54,3 +54,19 @@ export type ListPatchInput = z.infer<typeof ListPatchInputSchema>;
 export const ListDeleteInputSchema = z.object({ deleted_at: TimestampSchema }).strict();
 
 export type ListDeleteInput = z.infer<typeof ListDeleteInputSchema>;
+
+/**
+ * Request body shape for POST /lists/{id}/restore.
+ * Clears deleted_at server-side; reconciles under Last-Write-Wins like a patch.
+ */
+export const ListRestoreInputSchema = z.object({ updated_at: TimestampSchema }).strict();
+
+export type ListRestoreInput = z.infer<typeof ListRestoreInputSchema>;
+
+/**
+ * Response shape for GET /deleted — every List and Task tombstone within the
+ * 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+ */
+export const DeletedResponseSchema = z.object({ lists: z.array(ListSchema), tasks: z.array(TaskSchema) }).strict();
+
+export type DeletedResponse = z.infer<typeof DeletedResponseSchema>;
