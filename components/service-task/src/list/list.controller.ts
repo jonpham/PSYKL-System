@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post, Req } from '@nestjs/common';
 import {
   type List as ListResponse,
   type ListDeleteInput,
@@ -7,6 +7,8 @@ import {
   ListInputSchema,
   type ListPatchInput,
   ListPatchInputSchema,
+  type ListRestoreInput,
+  ListRestoreInputSchema,
 } from '@psykl/shared-types';
 import { ZodValidationPipe } from 'nestjs-zod';
 
@@ -49,5 +51,15 @@ export class ListController {
     @Body(new ZodValidationPipe(ListDeleteInputSchema)) body: ListDeleteInput,
   ): Promise<ListResponse> {
     return this.lists.deleteList(req.userId!, id, body);
+  }
+
+  @Post(':id/restore')
+  @HttpCode(200)
+  async restore(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(ListRestoreInputSchema)) body: ListRestoreInput,
+  ): Promise<ListResponse> {
+    return this.lists.restoreList(req.userId!, id, body);
   }
 }

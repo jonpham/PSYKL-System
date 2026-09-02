@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Inject,
   Param,
   Patch,
@@ -19,6 +20,8 @@ import {
   type TaskPatchInput,
   TaskPatchInputSchema,
   type TaskResponse,
+  type TaskRestoreInput,
+  TaskRestoreInputSchema,
 } from '@psykl/shared-types';
 import { ZodValidationPipe } from 'nestjs-zod';
 
@@ -64,6 +67,16 @@ export class TaskController {
     @Body(new ZodValidationPipe(TaskDeleteInputSchema)) body: TaskDeleteInput,
   ): Promise<TaskResponse> {
     return this.tasks.deleteTask(req.userId!, id, body);
+  }
+
+  @Post(':id/restore')
+  @HttpCode(200)
+  async restore(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(TaskRestoreInputSchema)) body: TaskRestoreInput,
+  ): Promise<TaskResponse> {
+    return this.tasks.restoreTask(req.userId!, id, body);
   }
 
   private parseIncludeDeleted(value: string | undefined): boolean {
