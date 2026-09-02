@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Completed `todo-experience` Spec 1 Generalized Sync Queue + Lists ([feature doc](docs/features/%5B20260818%5DP1_todo-experience-sync-queue-and-lists.md)): the sync queue and `failed_ops` are now entity-agnostic (`entity_type`/`entity_id`, not Task-only), replay is order-independent with a retry-attempt ceiling, and Lists exist end to end — server `lists` table, client IndexedDB store, full create/rename/reorder/delete, and a `ListSwitcher` UI. Tasks carry a nullable `list_id`. Fixed two real multi-device bugs found via the offline E2E harness: the default "Tasks" list now uses a deterministic well-known id instead of a random one (two devices could otherwise each bootstrap a different default list), and Lists now hydrate from the server on mount (previously a device that never itself mutated a list would never see it). Introduced a layered `Service Client` / `Sync Client` / `API Client` architecture so no UI Component or Hook calls the sync layer directly anymore. Constituent PRs: [#70](https://github.com/jonpham/PSYKL-System/pull/70), [#71](https://github.com/jonpham/PSYKL-System/pull/71), [#72](https://github.com/jonpham/PSYKL-System/pull/72).
+
 ## [0.3.0] - 2026-07-29
 
 - Milestone M2 PWA CRUD + Offline-First is complete. The PWA now supports full local-first Task CRUD, offline queueing and replay, an owned Service Worker with Background Sync, Last-Write-Wins multi-device convergence, tombstone delete propagation, and real-stack E2E coverage. Release tag to be cut after PR [#66](https://github.com/jonpham/PSYKL-System/pull/66) merges to `main`.

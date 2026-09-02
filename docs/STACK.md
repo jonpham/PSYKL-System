@@ -82,6 +82,22 @@
 | Multi-device E2E harness      | Playwright opens two isolated browser contexts against one Compose stack and one `user_id`; helper assertions inspect each context's IDB   |
 | Offline sync E2E coverage     | Active E2E covers offline create replay, Last-Write-Wins convergence, tombstone propagation, idempotent retry, and pending-sync affordance |
 
+## todo-experience Spec 1 (shipped)
+
+| Layer                   | Choice                                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sync queue entity model | `sync_queue` and `failed_ops` carry `entity_type` (`'task' \| 'list'`) + `entity_id`; IndexedDB schema bumped to version 2, upgrade migrates `task_id` rows in place                                    |
+| Replay ordering         | Order-independent — a due row's transient failure no longer stops that replay pass; an entry exhausting `MAX_REPLAY_ATTEMPTS` (10) moves to `failed_ops`. Fully realizes ADR-M2-012's supersession.     |
+| List entity (server)    | `lists` table in `service-task`: `id` (client UUID v7, no FK), `user_id`, `title`, `position` (`text COLLATE "C"`), `created_at`/`updated_at`/`server_updated_at`/`deleted_at`                          |
+| List entity (client)    | `lists` IndexedDB object store; `ListRecord` mirrors the service wire shape                                                                                                                             |
+| List ordering           | `fractional-indexing` package generates `position` keys client-side; Postgres `COLLATE "C"` matches JavaScript string sort                                                                              |
+| List create idempotency | `service-task`'s `createList` uses `onConflictDoNothing` + return-existing-row instead of a plain insert — tolerates two devices racing to create the same id                                           |
+| Default list bootstrap  | Deterministic well-known id (`00000000-0000-7000-8000-000000000001`) instead of a random UUID — every device agrees on the same default "Tasks" list without a network round trip                       |
+| List hydration          | `GET /lists` on hook mount, mirroring Task hydration — closes a gap where a device that never mutated a list would never see it                                                                         |
+| Data-access layering    | `UI Component → Hook → Service Client (offlineCapable: boolean) → { Sync Client → IndexedDB \| API Client → API }`; `service-client.ts`, `sync-client.ts`, `tasks.api-client.ts`, `lists.api-client.ts` |
+| List switcher UI        | `ListSwitcher` + `ListRow` under `components/ListSwitcher/`; create, rename, delete (guarded — last list undeletable), and switch active list                                                           |
+| Active list persistence | Device-local `sync_meta` key (`useActiveList.ts`) — not synced, matches theme-preference precedent                                                                                                      |
+
 ## Pending (planned, not shipped)
 
 | Layer                | Choice                                                       | Lands in |
