@@ -1,11 +1,14 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { TaskDeleteInput, TaskInput, TaskPatchInput, TaskResponse } from '@psykl/shared-types';
-import { and, eq, isNull } from 'drizzle-orm';
+import type { TaskDeleteInput, TaskInput, TaskPatchInput, TaskResponse, TaskRestoreInput } from '@psykl/shared-types';
+import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';
 
 import { clampFutureTimestamp } from '../db/clamp-future-timestamp.js';
 import { type Db, schema } from '../db/index.js';
 
 export const DB_TOKEN = Symbol('DB');
+
+// 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class TaskService {
@@ -96,6 +99,43 @@ export class TaskService {
     }
 
     return this.toResponse(row);
+  }
+
+  async restoreTask(userId: string, taskId: string, input: TaskRestoreInput): Promise<TaskResponse> {
+    const current = await this.findTaskForUser(userId, taskId);
+    const updatedAt = clampFutureTimestamp(new Date(input.updated_at));
+
+    if (updatedAt.getTime() <= current.updatedAt!.getTime()) {
+      return this.toResponse(current);
+    }
+
+    const [row] = await this.db
+      .update(schema.tasks)
+      .set({
+        deletedAt: null,
+        updatedAt,
+        serverUpdatedAt: new Date(),
+      })
+      .where(and(eq(schema.tasks.id, taskId), eq(schema.tasks.userId, userId)))
+      .returning();
+
+    if (!row) {
+      throw new NotFoundException('Task not found');
+    }
+
+    return this.toResponse(row);
+  }
+
+  async listDeletedTasks(userId: string): Promise<TaskResponse[]> {
+    const cutoff = new Date(Date.now() - RECENTLY_DELETED_WINDOW_MS);
+    const rows = await this.db
+      .select()
+      .from(schema.tasks)
+      .where(
+        and(eq(schema.tasks.userId, userId), isNotNull(schema.tasks.deletedAt), gte(schema.tasks.deletedAt, cutoff)),
+      );
+
+    return rows.map((row) => this.toResponse(row));
   }
 
   private async findTaskForUser(userId: string, taskId: string) {

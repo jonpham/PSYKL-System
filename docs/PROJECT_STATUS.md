@@ -6,10 +6,10 @@
 **Initiative status:** 🟡 Active. Spec 1 shipped (below). Specs 2-7 are outlined at DevTask fidelity in `docs/specs/todo-experience/` and get expanded when each starts.
 **Last completed initiative:** M2 — PWA CRUD + offline-first (merged PR [#66](https://github.com/jonpham/PSYKL-System/pull/66)). All M2 records live in [`docs/features/`](features/); no longer summarized here.
 **Last completed spec:** `todo-experience` Spec 1 — Generalized Sync Queue + Lists ([feature doc](features/%5B20260818%5DP1_todo-experience-sync-queue-and-lists.md)). Merged PRs [#70](https://github.com/jonpham/PSYKL-System/pull/70), [#71](https://github.com/jonpham/PSYKL-System/pull/71), [#72](https://github.com/jonpham/PSYKL-System/pull/72) — DevTasks 7-8 were discovered via #70's code review (layered Service/Sync/API Client architecture), not in the original 6-DevTask breakdown.
-**Active spec for execution:** N/A.
-**Next executable spec:** Spec 2 — Recently Deleted + offline posture ([`20260818-Spec2-recently-deleted-and-offline-posture.md`](specs/todo-experience/20260818-Spec2-recently-deleted-and-offline-posture.md)).
-**Branch:** `main`.
-**Known blockers:** None. Next action: create the Spec 2 integration branch and start DevTask 1, per-DevTask PRs from the start (see AGENTS.md → Subagent-Driven Development Discipline).
+**Active spec for execution:** `todo-experience` Spec 2 — Recently Deleted + offline posture ([`20260818-Spec2-recently-deleted-and-offline-posture.md`](specs/todo-experience/20260818-Spec2-recently-deleted-and-offline-posture.md)). DevTask 7/11 (Restore endpoints + `GET /deleted`) implemented, PR [#76](https://github.com/jonpham/PSYKL-System/pull/76) open against the Spec branch, awaiting review/merge. DevTask 7 was split from DESIGN.md's combined "restore + purge" DevTask per the AGENTS.md trilemma rule (11 files > ≤10 ceiling) — DevTasks renumbered 7-11, see spec doc's "Decisions made during spec drafting".
+**Next executable spec:** N/A — mid-Spec 2. After DevTask 7 merges, DevTask 8 (30-day purge job) starts next.
+**Branch:** `spec/todo-experience-s2-recently-deleted-and-offline-posture` (Spec integration, draft PR [#75](https://github.com/jonpham/PSYKL-System/pull/75)); active DevTask branch `feat/todo-experience-s2-dt7-restore-and-deleted`.
+**Known blockers:** None. Next action: review + merge PR #76 into the Spec branch, then branch DevTask 8 off the updated Spec branch.
 
 **Homelab deploy** (k3s cluster **robin**, LAN-only at `psykl.lan.witty-m.com`, GitOps via `PSYKL-GitOps`): live, deployed via ArgoCD, semver-pinned image tags. Full runbook at [`README.md` → Deploy to k3s](../README.md#deploy-to-k3s-homelab--robin); architecture at [ADR-M2-010](ARCHITECTURE.md). Not tied to any active Spec — update `PSYKL-GitOps/apps/psykl/values-robin.yaml` and merge to redeploy.
 

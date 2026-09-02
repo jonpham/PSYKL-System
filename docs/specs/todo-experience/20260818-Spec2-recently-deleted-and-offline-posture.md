@@ -110,7 +110,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 **Steps:**
 
-- [ ] **Step 1: Shared-types — write failing unit tests for the three new schemas**
+- [x] **Step 1: Shared-types — write failing unit tests for the three new schemas**
 
   Create `packages/shared-types/src/schemas/task-restore-input.unit.test.ts`:
 
@@ -160,12 +160,12 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 2: Run and verify all three fail**
+- [x] **Step 2: Run and verify all three fail**
 
   Run: `pnpm --filter @psykl/shared-types test:unit`
   Expected: FAIL — `TaskRestoreInputSchema`, `ListRestoreInputSchema`, `DeletedResponseSchema` are not exported.
 
-- [ ] **Step 3: Implement the three schemas**
+- [x] **Step 3: Implement the three schemas**
 
   In `packages/shared-types/src/schemas/task.ts`, after `TaskDeleteInputSchema`:
 
@@ -191,7 +191,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   export type DeletedResponse = z.infer<typeof DeletedResponseSchema>;
   ```
 
-- [ ] **Step 4: Run and verify green, then commit**
+- [x] **Step 4: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/shared-types test:unit`
   Expected: PASS
@@ -204,7 +204,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(shared-types): add restore input and deleted response schemas"
   ```
 
-- [ ] **Step 5: Write failing OpenAPI doc assertions**
+- [x] **Step 5: Write failing OpenAPI doc assertions**
 
   In `packages/shared-types/src/openapi.unit.test.ts`, add inside the `describe('buildOpenApiDocument', ...)` block:
 
@@ -229,12 +229,12 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 6: Run and verify it fails**
+- [x] **Step 6: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/shared-types test:unit`
   Expected: FAIL — paths undefined.
 
-- [ ] **Step 7: Register the paths**
+- [x] **Step 7: Register the paths**
 
   In `packages/shared-types/src/openapi/task-paths.ts`, add to the top-level `const` block: `const taskRestoreInput = registry.register('TaskRestoreInput', TaskRestoreInputSchema);` (add `TaskRestoreInputSchema` to the existing import from `../schemas/task.js`). After the `delete` path registration, add:
 
@@ -300,7 +300,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 8: Run and verify green, then commit**
+- [x] **Step 8: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/shared-types test:unit`
   Expected: PASS
@@ -311,7 +311,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(shared-types): register restore and deleted OpenAPI paths"
   ```
 
-- [ ] **Step 9: `TaskService.restoreTask` — write failing unit test**
+- [x] **Step 9: `TaskService.restoreTask` — write failing unit test**
 
   Create `components/service-task/src/task/__tests__/task.service.restore.unit.test.ts`, following the `mockDeleteDb` pattern in `task.service.delete.unit.test.ts`:
 
@@ -373,12 +373,12 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 10: Run and verify it fails**
+- [x] **Step 10: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/service-task test:unit`
   Expected: FAIL — `restoreTask` is not a function.
 
-- [ ] **Step 11: Implement `TaskService.restoreTask` and `listDeletedTasks`**
+- [x] **Step 11: Implement `TaskService.restoreTask` and `listDeletedTasks`**
 
   In `components/service-task/src/task/task.service.ts`, change the `drizzle-orm` import to `import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';`, add near the top of the file (after imports):
 
@@ -428,7 +428,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Add `TaskRestoreInput` to the existing `@psykl/shared-types` type import.
 
-- [ ] **Step 12: Run and verify green, then commit**
+- [x] **Step 12: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/service-task test:unit`
   Expected: PASS
@@ -439,7 +439,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(service-task): add TaskService.restoreTask and listDeletedTasks"
   ```
 
-- [ ] **Step 13: `ListService.restoreList` — write failing unit test, implement, verify, commit**
+- [x] **Step 13: `ListService.restoreList` — write failing unit test, implement, verify, commit**
 
   Create `components/service-task/src/list/__tests__/list.service.restore.unit.test.ts` mirroring Step 9's two cases (`restoreList` clears `deletedAt` when newer; no-op when not newer), using a local `mockRestoreDb` helper built the same way (list rows have `position`, not `completedAt`).
 
@@ -496,7 +496,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(service-task): add ListService.restoreList and listDeletedLists"
   ```
 
-- [ ] **Step 14: Controller contract tests — write failing tests for both restore routes**
+- [x] **Step 14: Controller contract tests — write failing tests for both restore routes**
 
   Create `components/service-task/src/task/__tests__/task.controller.restore.contract.test.ts`, reusing `taskControllerHarness`/`taskCreateBody`/`validTaskId`/`validIdempotencyKey` from `task.controller.contract-support.js`. Add a `restoreTask` method to that harness file:
 
@@ -522,12 +522,12 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Create `components/service-task/src/list/__tests__/list.controller.restore.contract.test.ts` with the same four cases as tasks, minus the `Idempotency-Key` case (list mutations never require it — add a case instead asserting restore succeeds with **no** `Idempotency-Key` header set, documenting the asymmetry inline per the ownership-comment convention, referencing `idempotency.interceptor.ts`).
 
-- [ ] **Step 15: Run and verify both fail**
+- [x] **Step 15: Run and verify both fail**
 
   Run: `pnpm --filter @psykl/service-task test:component`
   Expected: FAIL — no `/restore` route registered (404 instead of the expected status on every case).
 
-- [ ] **Step 16: Implement both controller routes**
+- [x] **Step 16: Implement both controller routes**
 
   In `components/service-task/src/task/task.controller.ts`, add `TaskRestoreInputSchema`/`TaskRestoreInput` to the `@psykl/shared-types` import, then after the `delete` method:
 
@@ -555,7 +555,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   }
   ```
 
-- [ ] **Step 17: Run and verify green, then commit**
+- [x] **Step 17: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/service-task test:component`
   Expected: PASS
@@ -569,7 +569,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(service-task): wire POST /tasks/:id/restore and POST /lists/:id/restore"
   ```
 
-- [ ] **Step 18: `GET /deleted` — write failing contract test**
+- [x] **Step 18: `GET /deleted` — write failing contract test**
 
   Create `components/service-task/src/deleted/__tests__/deleted.controller.contract.test.ts`:
 
@@ -616,12 +616,12 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Add `get app() { return app; }` to the returned object of both `taskControllerHarness()` (`task.controller.contract-support.ts`) and the new `listControllerHarness()` (`list.controller.contract-support.ts`, created in Step 14) so this test can reach the raw Nest HTTP server for the one route (`/deleted`) that belongs to neither controller.
 
-- [ ] **Step 19: Run and verify it fails**
+- [x] **Step 19: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/service-task test:component`
   Expected: FAIL — 404, no `/deleted` route.
 
-- [ ] **Step 20: Implement `DeletedController` and wire it into `AppModule`**
+- [x] **Step 20: Implement `DeletedController` and wire it into `AppModule`**
 
   Create `components/service-task/src/deleted/deleted.controller.ts`:
 
@@ -666,7 +666,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   export class AppModule {}
   ```
 
-- [ ] **Step 21: Run and verify green, then commit**
+- [x] **Step 21: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/service-task test:component`
   Expected: PASS
@@ -678,7 +678,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(service-task): add GET /deleted"
   ```
 
-- [ ] **Step 22: Extend user-id default-deny coverage**
+- [x] **Step 22: Extend user-id default-deny coverage**
 
   Add rows to the `it.each` table in `components/service-task/src/auth/__tests__/user-id.guard.contract.test.ts` for `POST /tasks/:id/restore` and `GET /deleted`; add a row to `components/service-task/src/list/__tests__/list.user-id.contract.test.ts` for `POST /lists/:id/restore`.
 
@@ -690,7 +690,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "test(service-task): cover restore and deleted routes in user-id default-deny suite"
   ```
 
-- [ ] **Step 23: Integration test — restore + `GET /deleted` window filtering against real pglite**
+- [x] **Step 23: Integration test — restore + `GET /deleted` window filtering against real pglite**
 
   Create `components/service-task/tests/integration/recently-deleted-restore.integration.test.ts` using the `createIntegrationDb`/`insertTask`/`taskService` pattern from `task.integration-support.ts` (add an `insertList`/`listService` pair to a new `list.integration-support.ts`, modeled on the task one). Cases:
   - a task inserted with `deletedAt` 5 days ago is returned by `listDeletedTasks`; restoring it via `TaskService.restoreTask` clears `deletedAt` and it no longer appears.
@@ -705,7 +705,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "test(service-task): integration coverage for restore and 30-day deleted window"
   ```
 
-- [ ] **Step 24: Update this spec doc's checkbox state**
+- [x] **Step 24: Update this spec doc's checkbox state**
 
   Mark DevTask 7's Steps 1-23 complete above; do not touch `docs/features/` (feature doc is written once, at Spec 2's final DevTask). Commit as part of the DevTask 7 PR body, not a separate commit (per AGENTS.md → File & Status Discipline).
 

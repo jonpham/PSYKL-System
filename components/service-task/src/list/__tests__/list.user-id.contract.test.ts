@@ -34,6 +34,7 @@ describe('list routes reject requests without a user id', () => {
     ['get', '/lists'],
     ['patch', '/lists/018f0000-0000-7000-8000-000000000001'],
     ['delete', '/lists/018f0000-0000-7000-8000-000000000001'],
+    ['post', '/lists/018f0000-0000-7000-8000-000000000001/restore'],
   ] as const)('%s %s returns 401 with no X-User-Id header', async (method, path) => {
     // When / Then
     await requestWithoutUserId(method, path).expect(401);
