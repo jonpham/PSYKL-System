@@ -709,6 +709,226 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Mark DevTask 7's Steps 1-23 complete above; do not touch `docs/features/` (feature doc is written once, at Spec 2's final DevTask). Commit as part of the DevTask 7 PR body, not a separate commit (per AGENTS.md → File & Status Discipline).
 
+### DevTask 8: 30-day purge job
+
+**Files:** 2
+**Branch:** `feat/todo-experience-s2-dt8-purge-job` (stacked on DevTask 7's branch — hard dependency on `DB_TOKEN`/`schema` wiring already in `main` is not the blocker; the dependency is sequencing behind the DevTask 7 PR per the DESIGN.md breakdown's `Depends on` column, and this DevTask lands while DevTask 7 is still in review)
+**PR:** _filled once the PR is opened; targets `feat/todo-experience-s2-dt7-restore-and-deleted`_
+**Affected:**
+
+- `components/service-task/src/purge/purge.service.ts` (create)
+- `components/service-task/src/app.module.ts` (modify)
+- `components/service-task/package.json` (modify — new `@nestjs/schedule` dependency; exempt from the file-count limit per AGENTS.md → Git Conventions)
+
+**Design notes carried into implementation:**
+
+- **Clock control via DI, not `vi.useFakeTimers`.** `PurgeService` takes a `CLOCK_TOKEN` provider (`type Clock = () => Date`), mirroring the `DB_TOKEN` pattern already in `task.service.ts`. Production wiring provides `() => new Date()`; the integration test constructs `PurgeService` directly with a fixed clock, so the purge boundary test runs instantly instead of waiting real days.
+- **One log line per purged row**, per the Open Questions/Risks entry — `Logger.log` on each deleted task/list id before the query returns.
+- **No separate `PurgeModule`.** `PurgeService` and `CLOCK_TOKEN`'s provider are registered directly on `AppModule`, same rationale as `DeletedController` in DevTask 7 — keeps this DevTask at 2 files instead of 3.
+- **`@nestjs/schedule`'s `ScheduleModule.forRoot()`** is added to `AppModule`'s imports once; `@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)` drives the daily run in production. The Cron decorator does not fire during the integration test — the test calls `purgeExpiredTombstones()` directly.
+
+**Steps:**
+
+- [ ] **Step 1: Write failing integration test for the purge boundary**
+
+  Create `components/service-task/tests/integration/recently-deleted-purge.integration.test.ts`:
+
+  ```ts
+  import { v7 as uuidv7 } from 'uuid';
+  import { beforeAll, describe, expect, it } from 'vitest';
+
+  import type { Db } from '../../src/db/index.js';
+  import { insertList, listService } from './list.integration-support.js';
+  import { createIntegrationDb, insertTask, taskService } from './task.integration-support.js';
+  import { PurgeService } from '../../src/purge/purge.service.js';
+
+  describe('PurgeService.purgeExpiredTombstones', () => {
+    let db: Db;
+
+    beforeAll(async () => {
+      db = await createIntegrationDb();
+    });
+
+    // Fixed "now" so the 30-day boundary is deterministic instead of drifting
+    // with the real wall clock (see recently-deleted-restore.integration.test.ts
+    // for why real-Date.now()-relative fixtures are needed elsewhere).
+    const now = new Date('2026-06-20T00:00:00.000Z');
+    const daysBefore = (days: number) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+    it('purges a Task tombstoned 31 days ago, keeps one tombstoned 29 days ago', async () => {
+      const purgedId = uuidv7();
+      const keptId = uuidv7();
+      await insertTask(db, { id: purgedId, title: 'purge me', updatedAt: daysBefore(31), deletedAt: daysBefore(31) });
+      await insertTask(db, { id: keptId, title: 'keep me', updatedAt: daysBefore(29), deletedAt: daysBefore(29) });
+
+      // Given
+      const purge = new PurgeService(db, () => now);
+
+      // When
+      const result = await purge.purgeExpiredTombstones();
+
+      // Then
+      expect(result.tasksPurged).toBeGreaterThanOrEqual(1);
+      const remaining = await taskService(db).listTasks('local', { includeDeleted: true });
+      expect(remaining.map((task) => task.id)).not.toContain(purgedId);
+      expect(remaining.map((task) => task.id)).toContain(keptId);
+    });
+
+    it('purges a List tombstoned 31 days ago, keeps one tombstoned 29 days ago', async () => {
+      const purgedId = uuidv7();
+      const keptId = uuidv7();
+      await insertList(db, { id: purgedId, title: 'purge me', updatedAt: daysBefore(31), deletedAt: daysBefore(31) });
+      await insertList(db, { id: keptId, title: 'keep me', updatedAt: daysBefore(29), deletedAt: daysBefore(29) });
+
+      // Given
+      const purge = new PurgeService(db, () => now);
+
+      // When
+      const result = await purge.purgeExpiredTombstones();
+
+      // Then
+      expect(result.listsPurged).toBeGreaterThanOrEqual(1);
+      const remainingKept = await listService(db).listDeletedLists('local');
+      expect(remainingKept.map((list) => list.id)).toContain(keptId);
+      expect(remainingKept.map((list) => list.id)).not.toContain(purgedId);
+    });
+
+    it('never purges a row restored before the 30-day boundary', async () => {
+      const id = uuidv7();
+      await insertTask(db, { id, title: 'restored in time', updatedAt: daysBefore(31), deletedAt: daysBefore(31) });
+      await taskService(db).restoreTask('local', id, { updated_at: daysBefore(1).toISOString() });
+
+      // Given
+      const purge = new PurgeService(db, () => now);
+
+      // When
+      await purge.purgeExpiredTombstones();
+
+      // Then
+      const rows = await taskService(db).listTasks('local', { includeDeleted: true });
+      expect(rows.map((task) => task.id)).toContain(id);
+    });
+  });
+  ```
+
+- [ ] **Step 2: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: FAIL — `../../src/purge/purge.service.js` does not exist.
+
+- [ ] **Step 3: Add the `@nestjs/schedule` dependency**
+
+  ```bash
+  pnpm --filter @psykl/service-task add @nestjs/schedule
+  ```
+
+- [ ] **Step 4: Implement `PurgeService`**
+
+  Create `components/service-task/src/purge/purge.service.ts`:
+
+  ```ts
+  import { Inject, Injectable, Logger } from '@nestjs/common';
+  import { Cron, CronExpression } from '@nestjs/schedule';
+  import { and, isNotNull, lt } from 'drizzle-orm';
+
+  import { type Db, schema } from '../db/index.js';
+  import { DB_TOKEN } from '../task/task.service.js';
+
+  export const CLOCK_TOKEN = Symbol('CLOCK');
+  export type Clock = () => Date;
+
+  // 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+  const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+  export interface PurgeResult {
+    tasksPurged: number;
+    listsPurged: number;
+  }
+
+  @Injectable()
+  export class PurgeService {
+    private readonly logger = new Logger(PurgeService.name);
+
+    constructor(
+      @Inject(DB_TOKEN) private readonly db: Db,
+      @Inject(CLOCK_TOKEN) private readonly clock: Clock,
+    ) {}
+
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    async purgeExpiredTombstones(): Promise<PurgeResult> {
+      const cutoff = new Date(this.clock().getTime() - RECENTLY_DELETED_WINDOW_MS);
+
+      const purgedTasks = await this.db
+        .delete(schema.tasks)
+        .where(and(isNotNull(schema.tasks.deletedAt), lt(schema.tasks.deletedAt, cutoff)))
+        .returning({ id: schema.tasks.id });
+      for (const row of purgedTasks) {
+        this.logger.log(`purged task ${row.id}`);
+      }
+
+      const purgedLists = await this.db
+        .delete(schema.lists)
+        .where(and(isNotNull(schema.lists.deletedAt), lt(schema.lists.deletedAt, cutoff)))
+        .returning({ id: schema.lists.id });
+      for (const row of purgedLists) {
+        this.logger.log(`purged list ${row.id}`);
+      }
+
+      return { tasksPurged: purgedTasks.length, listsPurged: purgedLists.length };
+    }
+  }
+  ```
+
+- [ ] **Step 5: Wire `ScheduleModule`, `PurgeService`, and `CLOCK_TOKEN` into `AppModule`**
+
+  In `components/service-task/src/app.module.ts`:
+
+  ```ts
+  import { Module } from '@nestjs/common';
+  import { ScheduleModule } from '@nestjs/schedule';
+
+  import { DeletedController } from './deleted/deleted.controller.js';
+  import { IdempotencyModule } from './idempotency/idempotency.module.js';
+  import { ListModule } from './list/list.module.js';
+  import { CLOCK_TOKEN, PurgeService } from './purge/purge.service.js';
+  import { TaskModule } from './task/task.module.js';
+  import { VersionModule } from './version/version.module.js';
+
+  @Module({
+    imports: [TaskModule, ListModule, IdempotencyModule, VersionModule, ScheduleModule.forRoot()],
+    controllers: [DeletedController],
+    providers: [PurgeService, { provide: CLOCK_TOKEN, useValue: () => new Date() }],
+  })
+  export class AppModule {}
+  ```
+
+- [ ] **Step 6: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/purge/purge.service.ts components/service-task/src/app.module.ts \
+    components/service-task/tests/integration/recently-deleted-purge.integration.test.ts \
+    components/service-task/package.json
+  git commit -m "feat(service-task): add PurgeService with daily 30-day tombstone purge"
+  ```
+
+- [ ] **Step 7: Full verification pass**
+
+  ```bash
+  pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
+  pnpm --filter @psykl/service-task test:unit
+  pnpm --filter @psykl/service-task test:integration
+  pnpm --filter @psykl/service-task test:component
+  ```
+
+  Expected: all green.
+
+- [ ] **Step 8: Update this spec doc's checkbox state**
+
+  Mark DevTask 8's Steps 1-7 complete above.
+
 ---
 
 ## Test Plan
