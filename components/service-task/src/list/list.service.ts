@@ -1,10 +1,19 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { List as ListResponse, ListDeleteInput, ListInput, ListPatchInput } from '@psykl/shared-types';
-import { and, eq, isNull } from 'drizzle-orm';
+import type {
+  List as ListResponse,
+  ListDeleteInput,
+  ListInput,
+  ListPatchInput,
+  ListRestoreInput,
+} from '@psykl/shared-types';
+import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';
 
 import { clampFutureTimestamp } from '../db/clamp-future-timestamp.js';
 import { type Db, schema } from '../db/index.js';
 import { DB_TOKEN } from '../task/task.service.js';
+
+// 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class ListService {
@@ -71,6 +80,38 @@ export class ListService {
       .where(and(eq(schema.lists.id, id), eq(schema.lists.userId, userId)))
       .returning();
     return this.toResponse(row!);
+  }
+
+  async restoreList(userId: string, id: string, input: ListRestoreInput): Promise<ListResponse> {
+    const existing = await this.requireList(userId, id);
+    const incoming = clampFutureTimestamp(new Date(input.updated_at));
+
+    if (incoming.getTime() <= existing.updatedAt.getTime()) {
+      return this.toResponse(existing);
+    }
+
+    const [row] = await this.db
+      .update(schema.lists)
+      .set({
+        deletedAt: null,
+        updatedAt: incoming,
+        serverUpdatedAt: new Date(),
+      })
+      .where(and(eq(schema.lists.id, id), eq(schema.lists.userId, userId)))
+      .returning();
+    return this.toResponse(row!);
+  }
+
+  async listDeletedLists(userId: string): Promise<ListResponse[]> {
+    const cutoff = new Date(Date.now() - RECENTLY_DELETED_WINDOW_MS);
+    const rows = await this.db
+      .select()
+      .from(schema.lists)
+      .where(
+        and(eq(schema.lists.userId, userId), isNotNull(schema.lists.deletedAt), gte(schema.lists.deletedAt, cutoff)),
+      )
+      .orderBy(schema.lists.position);
+    return rows.map((row) => this.toResponse(row));
   }
 
   private async requireList(userId: string, id: string) {
