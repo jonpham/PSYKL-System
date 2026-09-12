@@ -929,7 +929,212 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Mark DevTask 8's Steps 1-7 complete above.
 
----
+### DevTask 9: Orphan sweep heals dangling `list_id`
+
+**Files:** 1
+**Branch:** `feat/todo-experience-s2-dt9-orphan-sweep` (stacked on DevTask 7's branch — hard dependency on DevTask 7 per the DESIGN.md breakdown's `Depends on` column; DevTask 7 is still unmerged, so this DevTask branches off it directly rather than off the Spec branch)
+**PR:** _filled once the PR is opened; targets `feat/todo-experience-s2-dt7-restore-and-deleted`_
+**Affected:**
+
+- `components/service-task/src/task/task.service.ts` (modify)
+
+**Design notes carried into implementation:**
+
+- **"Default list" = the earliest-position live list for the user**, matching the client's own definition in `components/web_client/src/hooks/useLists.default-list.ts:24-28` ("The earliest-position active list is the default list"). The server does NOT hardcode the client's well-known `DEFAULT_LIST_ID` constant — that ID is itself just the first list a device creates, and UX.md § 10 says a task whose original list is deleted "goes to the default list," which must still resolve correctly if the well-known list itself is ever deleted and a different list becomes earliest-position.
+- **Heals by write, not by response-shaping.** An orphaned Task's `list_id` is persisted back to the default list's id on the next `listTasks` read — "heals without a background job" per the DESIGN.md decision — not just masked in the response while the stored row stays broken.
+- **No live lists at all → no-op.** If a user has zero live lists (edge case; the client always bootstraps one), orphaned references are left as-is rather than crashing — there is nothing to heal into yet.
+- **Scoped to `listTasks`'s default (non-deleted) rows.** Tombstoned Tasks (`includeDeleted: true`) are not healed — a deleted Task's `list_id` is inert; healing it would just be write amplification with no observable effect since deleted rows are excluded from the client's list views.
+
+**Steps:**
+
+- [ ] **Step 1: Write failing integration test for the orphan sweep**
+
+  Create `components/service-task/tests/integration/task-orphan-sweep.integration.test.ts`:
+
+  ```ts
+  import { v7 as uuidv7 } from 'uuid';
+  import { beforeAll, describe, expect, it } from 'vitest';
+
+  import type { Db } from '../../src/db/index.js';
+  import { insertList } from './list.integration-support.js';
+  import { createIntegrationDb, insertTask, taskService } from './task.integration-support.js';
+
+  describe('TaskService orphan sweep', () => {
+    let db: Db;
+
+    beforeAll(async () => {
+      db = await createIntegrationDb();
+    });
+
+    it('reassigns a Task pointing at a deleted list to the earliest-position live list, persisting the fix', async () => {
+      const defaultListId = await insertList(db, {
+        title: 'Tasks',
+        position: 'a0',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      const deletedListId = await insertList(db, {
+        title: 'Gone',
+        position: 'a1',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+        deletedAt: new Date('2026-05-20T11:00:00.000Z'),
+      });
+      const taskId = await insertTask(db, {
+        title: 'orphaned',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      await db.update((await import('../../src/db/index.js')).schema.tasks).set({ listId: deletedListId });
+
+      // Given
+      const service = taskService(db);
+
+      // When
+      const [firstRead] = await service.listTasks('local');
+
+      // Then
+      expect(firstRead).toMatchObject({ id: taskId, list_id: defaultListId });
+
+      // And — the fix is persisted, not just shaped in the response
+      const [secondRead] = await service.listTasks('local');
+      expect(secondRead).toMatchObject({ id: taskId, list_id: defaultListId });
+    });
+
+    it('reassigns a Task pointing at a list id the server has never seen', async () => {
+      const defaultListId = await insertList(db, {
+        title: 'Tasks',
+        position: 'a0',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      const unseenListId = uuidv7();
+      const taskId = await insertTask(db, {
+        id: uuidv7(),
+        title: 'never-seen list',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      await db.update((await import('../../src/db/index.js')).schema.tasks).set({ listId: unseenListId });
+
+      // Given
+      const service = taskService(db);
+
+      // When
+      const rows = await service.listTasks('local');
+
+      // Then
+      expect(rows.find((task) => task.id === taskId)).toMatchObject({ list_id: defaultListId });
+    });
+
+    it('leaves a Task referencing a live list untouched', async () => {
+      const liveListId = await insertList(db, {
+        title: 'Live',
+        position: 'a2',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      const taskId = await insertTask(db, { title: 'fine', updatedAt: new Date('2026-05-20T10:00:00.000Z') });
+      await db.update((await import('../../src/db/index.js')).schema.tasks).set({ listId: liveListId });
+
+      // Given
+      const service = taskService(db);
+
+      // When
+      const rows = await service.listTasks('local');
+
+      // Then
+      expect(rows.find((task) => task.id === taskId)).toMatchObject({ list_id: liveListId });
+    });
+  });
+  ```
+
+  (Note: the awkward `db.update(...)` calls set `list_id` after insert because `insertTask` in `task.integration-support.ts` does not currently accept a `listId` field — Step 4 below extends that helper cleanly instead of leaving the inline `db.update` workaround in the final test; see Step 4.)
+
+- [ ] **Step 2: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: FAIL — assertions on `list_id` don't match (no healing logic yet).
+
+- [ ] **Step 3: Extend `insertTask` to accept `listId`, and rewrite the test using it**
+
+  In `components/service-task/tests/integration/task.integration-support.ts`, add `listId?: string` to `insertTask`'s input type and pass it through to `.values({ ..., listId: input.listId })`. Rewrite the three test bodies above to pass `listId` directly to `insertTask` instead of the inline `db.update(...)` workaround.
+
+- [ ] **Step 4: Implement the orphan sweep in `TaskService.listTasks`**
+
+  In `components/service-task/src/task/task.service.ts`, add `import { schema } from '../db/index.js'` already exists; extend the `drizzle-orm` import with `inArray`. Replace `listTasks` with:
+
+  ```ts
+  async listTasks(userId: string, options: { includeDeleted?: boolean } = {}): Promise<TaskResponse[]> {
+    const rows = await this.db
+      .select()
+      .from(schema.tasks)
+      .where(
+        options.includeDeleted
+          ? eq(schema.tasks.userId, userId)
+          : and(eq(schema.tasks.userId, userId), isNull(schema.tasks.deletedAt)),
+      );
+
+    const healedRows = options.includeDeleted ? rows : await this.healOrphanedListReferences(userId, rows);
+    return healedRows.map((row) => this.toResponse(row));
+  }
+
+  private async healOrphanedListReferences(
+    userId: string,
+    rows: (typeof schema.tasks.$inferSelect)[],
+  ): Promise<(typeof schema.tasks.$inferSelect)[]> {
+    const referencedListIds = [...new Set(rows.map((row) => row.listId).filter((id): id is string => id !== null))];
+    if (referencedListIds.length === 0) {
+      return rows;
+    }
+
+    const liveLists = await this.db
+      .select({ id: schema.lists.id })
+      .from(schema.lists)
+      .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt), inArray(schema.lists.id, referencedListIds)));
+    const liveListIds = new Set(liveLists.map((list) => list.id));
+    const orphans = rows.filter((row) => row.listId !== null && !liveListIds.has(row.listId));
+    if (orphans.length === 0) {
+      return rows;
+    }
+
+    const [defaultList] = await this.db
+      .select({ id: schema.lists.id })
+      .from(schema.lists)
+      .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt)))
+      .orderBy(schema.lists.position)
+      .limit(1);
+    if (!defaultList) {
+      return rows;
+    }
+
+    const orphanIds = orphans.map((row) => row.id);
+    await this.db.update(schema.tasks).set({ listId: defaultList.id }).where(inArray(schema.tasks.id, orphanIds));
+
+    return rows.map((row) => (orphanIds.includes(row.id) ? { ...row, listId: defaultList.id } : row));
+  }
+  ```
+
+- [ ] **Step 5: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/task/task.service.ts \
+    components/service-task/tests/integration/task-orphan-sweep.integration.test.ts \
+    components/service-task/tests/integration/task.integration-support.ts
+  git commit -m "feat(service-task): heal orphaned Task list_id references on read"
+  ```
+
+- [ ] **Step 6: Full verification pass**
+
+  ```bash
+  pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
+  pnpm --filter @psykl/service-task test:unit
+  pnpm --filter @psykl/service-task test:integration
+  pnpm --filter @psykl/service-task test:component
+  ```
+
+  Expected: all green.
+
+- [ ] **Step 7: Update this spec doc's checkbox state**
+
+  Mark DevTask 9's Steps 1-6 complete above.
 
 ## Test Plan
 
