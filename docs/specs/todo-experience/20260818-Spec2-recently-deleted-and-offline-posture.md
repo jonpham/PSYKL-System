@@ -931,12 +931,13 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 ### DevTask 9: Orphan sweep heals dangling `list_id`
 
-**Files:** 1
+**Files:** 2 (revised from the planned 1 — see design notes)
 **Branch:** `feat/todo-experience-s2-dt9-orphan-sweep` (stacked on DevTask 7's branch — hard dependency on DevTask 7 per the DESIGN.md breakdown's `Depends on` column; DevTask 7 is still unmerged, so this DevTask branches off it directly rather than off the Spec branch)
 **PR:** _filled once the PR is opened; targets `feat/todo-experience-s2-dt7-restore-and-deleted`_
 **Affected:**
 
 - `components/service-task/src/task/task.service.ts` (modify)
+- `components/service-task/src/task/task-orphan-sweep.ts` (create)
 
 **Design notes carried into implementation:**
 
@@ -944,10 +945,11 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 - **Heals by write, not by response-shaping.** An orphaned Task's `list_id` is persisted back to the default list's id on the next `listTasks` read — "heals without a background job" per the DESIGN.md decision — not just masked in the response while the stored row stays broken.
 - **No live lists at all → no-op.** If a user has zero live lists (edge case; the client always bootstraps one), orphaned references are left as-is rather than crashing — there is nothing to heal into yet.
 - **Scoped to `listTasks`'s default (non-deleted) rows.** Tombstoned Tasks (`includeDeleted: true`) are not healed — a deleted Task's `list_id` is inert; healing it would just be write amplification with no observable effect since deleted rows are excluded from the client's list views.
+- **Healing logic lives in its own file, `task-orphan-sweep.ts`.** Inlining it in `task.service.ts` pushed that file over the project's `max-lines: 150` ESLint rule (caught by the pre-commit hook during execution) — split by responsibility, matching the existing `openapi/task-paths.ts` / `openapi/list-paths.ts` precedent in `packages/shared-types`. Revises the planned file count from 1 to 2; still well under the ≤10 DevTask ceiling.
 
 **Steps:**
 
-- [ ] **Step 1: Write failing integration test for the orphan sweep**
+- [x] **Step 1: Write failing integration test for the orphan sweep**
 
   Create `components/service-task/tests/integration/task-orphan-sweep.integration.test.ts`:
 
@@ -1045,16 +1047,16 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   (Note: the awkward `db.update(...)` calls set `list_id` after insert because `insertTask` in `task.integration-support.ts` does not currently accept a `listId` field — Step 4 below extends that helper cleanly instead of leaving the inline `db.update` workaround in the final test; see Step 4.)
 
-- [ ] **Step 2: Run and verify it fails**
+- [x] **Step 2: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/service-task test:integration`
   Expected: FAIL — assertions on `list_id` don't match (no healing logic yet).
 
-- [ ] **Step 3: Extend `insertTask` to accept `listId`, and rewrite the test using it**
+- [x] **Step 3: Extend `insertTask` to accept `listId`, and rewrite the test using it**
 
   In `components/service-task/tests/integration/task.integration-support.ts`, add `listId?: string` to `insertTask`'s input type and pass it through to `.values({ ..., listId: input.listId })`. Rewrite the three test bodies above to pass `listId` directly to `insertTask` instead of the inline `db.update(...)` workaround.
 
-- [ ] **Step 4: Implement the orphan sweep in `TaskService.listTasks`**
+- [x] **Step 4: Implement the orphan sweep in `TaskService.listTasks`**
 
   In `components/service-task/src/task/task.service.ts`, add `import { schema } from '../db/index.js'` already exists; extend the `drizzle-orm` import with `inArray`. Replace `listTasks` with:
 
@@ -1109,7 +1111,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   }
   ```
 
-- [ ] **Step 5: Run and verify green, then commit**
+- [x] **Step 5: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/service-task test:integration`
   Expected: PASS
@@ -1121,7 +1123,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(service-task): heal orphaned Task list_id references on read"
   ```
 
-- [ ] **Step 6: Full verification pass**
+- [x] **Step 6: Full verification pass**
 
   ```bash
   pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
@@ -1132,7 +1134,7 @@ This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Expected: all green.
 
-- [ ] **Step 7: Update this spec doc's checkbox state**
+- [x] **Step 7: Update this spec doc's checkbox state**
 
   Mark DevTask 9's Steps 1-6 complete above.
 
