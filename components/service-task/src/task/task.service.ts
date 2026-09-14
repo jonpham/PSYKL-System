@@ -7,7 +7,8 @@ import { type Db, schema } from '../db/index.js';
 
 export const DB_TOKEN = Symbol('DB');
 
-// 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+// 30-day Recently Deleted retention window: a Task tombstoned longer than
+// this is still readable via listDeletedTasks but no longer counts as "recent".
 const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()

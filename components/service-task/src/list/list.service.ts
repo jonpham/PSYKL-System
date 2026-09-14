@@ -12,7 +12,8 @@ import { clampFutureTimestamp } from '../db/clamp-future-timestamp.js';
 import { type Db, schema } from '../db/index.js';
 import { DB_TOKEN } from '../task/task.service.js';
 
-// 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+// 30-day Recently Deleted retention window: a List tombstoned longer than
+// this is still readable via listDeletedLists but no longer counts as "recent".
 const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()

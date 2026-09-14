@@ -65,7 +65,7 @@ export type ListRestoreInput = z.infer<typeof ListRestoreInputSchema>;
 
 /**
  * Response shape for GET /deleted — every List and Task tombstone within the
- * 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+ * 30-day Recently Deleted retention window (older tombstones are purged server-side).
  */
 export const DeletedResponseSchema = z.object({ lists: z.array(ListSchema), tasks: z.array(TaskSchema) }).strict();
 

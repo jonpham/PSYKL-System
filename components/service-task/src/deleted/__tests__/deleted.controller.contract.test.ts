@@ -21,10 +21,6 @@ describe('GET /deleted', () => {
   const tasks = taskControllerHarness();
 
   it('returns deleted Tasks and Lists for the current user, excluding live rows', async () => {
-    // listDeletedTasks/listDeletedLists filter against a real Date.now() cutoff, so
-    // fixture timestamps must be near "now" rather than the fixed 2026-05-20 dates
-    // used elsewhere in this suite — a hardcoded past date would age out of the
-    // 30-day window as real time passes.
     const now = new Date();
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString();
     const createdAt = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString();

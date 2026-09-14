@@ -16,7 +16,7 @@ describe('ListRestoreInputSchema', () => {
     expect(() =>
       ListRestoreInputSchema.parse({
         updated_at: '2026-05-20T12:00:00.000Z',
-        deleted_at: '2026-05-20T12:00:00.000Z',
+        unknown_field: 'x',
       }),
     ).toThrow();
   });
