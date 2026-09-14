@@ -41,7 +41,7 @@ describe('ListController contract: restore', () => {
         .expect(201);
       await api.deleteList({ id, body: listDeleteBody({ deleted_at: '2026-05-20T12:10:00.000Z' }) }).expect(200);
 
-      // Given
+      // Given — older than the row's updated_at clock (12:00), not the deleted_at value.
       const staleRestoreBody = listRestoreBody({ updated_at: '2026-05-20T11:00:00.000Z' });
 
       // When

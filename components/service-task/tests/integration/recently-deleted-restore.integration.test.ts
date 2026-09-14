@@ -5,6 +5,13 @@ import type { Db } from '../../src/db/index.js';
 import { insertList, listService } from './list.integration-support.js';
 import { createIntegrationDb, insertTask, taskService } from './task.integration-support.js';
 
+/**
+ * Restore + GET /deleted window filtering, against a real pglite DB.
+ * Uses timestamps relative to the current wall clock — listDeletedTasks/
+ * listDeletedLists filter against a real 30-day cutoff (see task.service.ts,
+ * list.service.ts), so fixed 2026-05-20-style fixture dates elsewhere in this
+ * suite would age out of the window as real time passes.
+ */
 describe('Recently Deleted restore + 30-day window', () => {
   let db: Db;
 
