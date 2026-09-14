@@ -8,7 +8,7 @@ import { DB_TOKEN } from '../task/task.service.js';
 export const CLOCK_TOKEN = Symbol('CLOCK');
 export type Clock = () => Date;
 
-// 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+// 30-day Recently Deleted retention window: a tombstone older than this is purged below.
 const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface PurgeResult {
