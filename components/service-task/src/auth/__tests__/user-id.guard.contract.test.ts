@@ -52,6 +52,24 @@ describe('UserIdGuard (Component-layer contract)', () => {
       await requestWithoutUserId.expect(401);
     });
 
+    it('rejects POST /tasks/:id/restore when the header is missing', async () => {
+      // Given
+      const requestWithoutUserId = request(app.getHttpServer())
+        .post('/tasks/0193e1c0-1234-7000-8000-000000000000/restore')
+        .send({ updated_at: '2026-05-20T12:00:00.000Z' });
+
+      // When / Then
+      await requestWithoutUserId.expect(401);
+    });
+
+    it('rejects GET /deleted when the header is missing', async () => {
+      // Given
+      const requestWithoutUserId = request(app.getHttpServer()).get('/deleted');
+
+      // When / Then
+      await requestWithoutUserId.expect(401);
+    });
+
     it('rejects POST /tasks when the header is empty', async () => {
       // Given
       const emptyUserId = '';

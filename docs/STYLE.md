@@ -15,3 +15,10 @@ This document records project style preferences and static-tool ownership for ru
 - Move shared type-only contracts into an adjacent `*.types.ts` file when they distract from the behavior module or are consumed by multiple files.
 - Prefer non-exported declarations in the behavior module and a single named export block at the bottom when it improves scanability.
 - Keep imports and named exports alphabetized. ESLint enforces this through `simple-import-sort/imports` and `simple-import-sort/exports`.
+
+## Code Comments
+
+- **Production code comments** exist only for what naming and structure can't convey — a non-obvious constraint, a cross-file behavior the reader can't see locally, a deliberate deviation from the obvious approach. If a comment just restates what the code already says (variable names, control flow), delete it.
+- **Test code comments are held to a looser bar.** A test's job includes documenting behavior for a future reader (see AGENTS.md → Test Structure Convention), so context, rationale, and cross-file explanations belong there even when the assertion below is self-evident on its own.
+- **Code must never reference markdown documents** (`.md` files) in a comment. Docs may reference code; code may reference other code (a file path, a class name, an inline `path:line`); code referencing a doc rots the moment the doc moves or the decision it recorded changes. State the rule directly instead.
+- Avoid duplicating the same rationale in two places in one file (e.g., a docblock and an inline comment two lines later making the same point) — say it once, in the more useful location.
