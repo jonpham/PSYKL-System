@@ -3,12 +3,12 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { type Db, schema } from '../db/index.js';
 
 /**
- * A Task whose list_id matches no live List (deleted or never synced — see
- * DESIGN.md -> Offline Posture "No foreign keys") is reassigned to the
- * earliest-position live List for this user, and the fix is persisted so it
- * heals without a background job. "Default list" here matches the client's
- * own definition in web_client/src/hooks/useLists.default-list.ts: the
- * earliest-position active list, not a hardcoded well-known id.
+ * A Task whose list_id matches no live List (deleted, or never synced because
+ * task.list_id carries no foreign key) is reassigned to the earliest-position
+ * live List for this user, and the fix is persisted so it heals without a
+ * background job. "Default list" here matches the client's own definition in
+ * web_client/src/hooks/useLists.default-list.ts: the earliest-position active
+ * list, not a hardcoded well-known id.
  *
  * Used by TaskService.listTasks — split into its own file to keep
  * task.service.ts under the project's max-lines lint rule.
