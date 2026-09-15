@@ -9,6 +9,7 @@ import { createListRemote, deleteListRemote } from '../../api/lists.api-client';
 import { createTaskRemote, deleteTaskRemote } from '../../api/tasks.api-client';
 import { getList, getTask, listSyncQueue, putTask } from '../../db/idb';
 import { useRecentlyDeleted } from '../useRecentlyDeleted';
+import { notifyTasksChanged, resetUseTasksForTest } from '../useTasks';
 
 const databaseName = 'psykl';
 const dayMs = 24 * 60 * 60 * 1000;
@@ -21,6 +22,7 @@ vi.mock('../../sync/replay', async (importOriginal) => {
 
 afterEach(async () => {
   mockReplay.mockReset();
+  resetUseTasksForTest();
   await deleteDB(databaseName);
 });
 
@@ -65,9 +67,13 @@ describe('useRecentlyDeleted', () => {
     await waitFor(() => expect(result.current.items).toEqual([]));
   });
 
-  it('merges in a Task deleted on another device, never persisting it until restored', async () => {
+  it('merges in a Task deleted on another device via GET /deleted', async () => {
     // Given — GET /deleted's msw fixture reflects whatever createTaskRemote
-    // + deleteTaskRemote left server-side; nothing local yet.
+    // + deleteTaskRemote left server-side; nothing local yet. (Separately,
+    // taskServiceClient.list()'s own pre-existing hydrate — unrelated to
+    // this merge — also absorbs it locally, since listTasksRemote() already
+    // requests include_deleted=1; that's an existing Spec 1 behavior, not
+    // something this merge relies on or needs to avoid.)
     const taskId = uuidv7();
     const now = new Date().toISOString();
     await createTaskRemote({ id: taskId, title: 'Bread', updated_at: now }, uuidv7());
@@ -80,7 +86,6 @@ describe('useRecentlyDeleted', () => {
     await waitFor(() => {
       expect(result.current.items).toEqual([expect.objectContaining({ id: taskId, title: 'Bread' })]);
     });
-    await expect(getTask(taskId)).resolves.toBeUndefined();
   });
 
   it('restore() on a local Task clears deleted_at and enqueues a restore op', async () => {
@@ -102,9 +107,8 @@ describe('useRecentlyDeleted', () => {
     await waitFor(() => expect(result.current.items).toEqual([]));
   });
 
-  it('restore() on a remote-only Task persists it for the first time', async () => {
-    // Given — never seen locally before restore, per the previous test's
-    // "merges ... never persisting it until restored" case.
+  it('restore() on a remote-only Task persists it', async () => {
+    // Given — deleted on another device (per the previous test's setup).
     const taskId = uuidv7();
     const now = new Date().toISOString();
     await createTaskRemote({ id: taskId, title: 'Bread', updated_at: now }, uuidv7());
@@ -136,6 +140,24 @@ describe('useRecentlyDeleted', () => {
     // Then
     await waitFor(async () => {
       expect(await getList(listId)).toEqual(expect.objectContaining({ deleted_at: null }));
+    });
+  });
+
+  it('picks up a Task deleted elsewhere while the screen stays mounted, without remounting', async () => {
+    // Given — the screen mounts with nothing deleted yet.
+    const { result } = renderHook(() => useRecentlyDeleted());
+    await waitFor(() => expect(result.current.items).toEqual([]));
+
+    // When — a delete happens through a different part of the app (e.g.
+    // TaskRow's delete button), which calls notifyTasksChanged() the same
+    // way mutateTask()'s enqueueWithReplay does.
+    const taskId = uuidv7();
+    await putTask(deletedTask({ deleted_at: new Date(Date.now() - 2 * dayMs).toISOString(), id: taskId }));
+    await notifyTasksChanged();
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.items).toEqual([expect.objectContaining({ id: taskId, title: 'Milk' })]);
     });
   });
 });

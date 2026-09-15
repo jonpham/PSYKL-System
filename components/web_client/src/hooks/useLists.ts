@@ -7,7 +7,13 @@ import { listServiceClient } from '../services/list-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
 import { resetDefaultListForTest } from './useLists.default-list';
-import { getListsSnapshot, notifyListSubscribers, resetListsSyncForTest, subscribeToLists } from './useLists.sync';
+import {
+  getListsSnapshot,
+  notifyListSubscribers,
+  resetListsSyncForTest,
+  subscribeToListChanges,
+  subscribeToLists,
+} from './useLists.sync';
 
 interface UseListsResult {
   canDelete: boolean;
@@ -102,4 +108,4 @@ function resetUseListsForTest(): void {
   resetListsSyncForTest();
 }
 
-export { notifyListSubscribers, resetUseListsForTest, useLists };
+export { notifyListSubscribers, resetUseListsForTest, subscribeToListChanges, useLists };

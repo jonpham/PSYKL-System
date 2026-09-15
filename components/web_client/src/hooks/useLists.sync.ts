@@ -89,4 +89,15 @@ function setSnapshot(nextSnapshot: ListRecord[]): void {
   subscribers.forEach((callback) => callback());
 }
 
-export { getListsSnapshot, notifyListSubscribers, resetListsSyncForTest, subscribeToLists };
+/**
+ * Lets a module outside this hook (currently `useRecentlyDeleted.ts`) react
+ * to same-tab List changes — mirrors `useTasks.ts`'s `subscribeToTaskChanges`.
+ */
+function subscribeToListChanges(callback: () => void): () => void {
+  subscribers.add(callback);
+  return () => {
+    subscribers.delete(callback);
+  };
+}
+
+export { getListsSnapshot, notifyListSubscribers, resetListsSyncForTest, subscribeToListChanges, subscribeToLists };

@@ -5,7 +5,10 @@ import { listDeletedRemote } from '../api/deleted.api-client';
 import type { ListRecord } from '../db/idb.types';
 import { listServiceClient } from '../services/list-service-client';
 import { taskServiceClient } from '../services/task-service-client';
-import { notifyListSubscribers } from './useLists';
+import { enqueueWithReplay } from '../sync/page-triggers';
+import { replay } from '../sync/replay';
+import { notifyListSubscribers, subscribeToListChanges } from './useLists';
+import { subscribeToTaskChanges } from './useTasks';
 
 // 30-day Recently Deleted retention window — mirrors service-task's
 // RECENTLY_DELETED_WINDOW_MS (duplicated per-file there too, across
@@ -51,6 +54,15 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
 
   useEffect(() => {
     void reload();
+    // Live-updates while the screen stays open: a delete/restore happening
+    // anywhere else in the app (e.g. TaskList) while Recently Deleted is
+    // mounted must show up without the user closing and reopening it.
+    const unsubscribeTasks = subscribeToTaskChanges(() => void reload());
+    const unsubscribeLists = subscribeToListChanges(() => void reload());
+    return () => {
+      unsubscribeTasks();
+      unsubscribeLists();
+    };
   }, [reload]);
 
   const restore = useCallback(
@@ -61,22 +73,26 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
         if (!existing) {
           return;
         }
-        await taskServiceClient.restore(
-          item.id,
-          { updated_at: now },
-          { ...existing, deleted_at: null, updated_at: now },
-        );
+        const optimistic = { ...existing, deleted_at: null, updated_at: now };
+        // enqueueWithReplay (not a bare service-client call): matches
+        // useTasks.ts's mutateTask — without it, the restore op never
+        // triggers replay(), and useTasks()'s own subscribers (TaskList)
+        // never learn the row came back.
+        await enqueueWithReplay({
+          enqueue: () => taskServiceClient.restore(item.id, { updated_at: now }, optimistic),
+          replay,
+        });
       } else {
         const existing = lists.find((list) => list.id === item.id);
         if (!existing) {
           return;
         }
-        await listServiceClient.restore(
-          item.id,
-          { updated_at: now },
-          { ...existing, deleted_at: null, updated_at: now },
-        );
-        await notifyListSubscribers();
+        const optimistic = { ...existing, deleted_at: null, updated_at: now };
+        await enqueueWithReplay({
+          enqueue: () => listServiceClient.restore(item.id, { updated_at: now }, optimistic),
+          notify: notifyListSubscribers,
+          replay,
+        });
       }
       await reload();
     },
