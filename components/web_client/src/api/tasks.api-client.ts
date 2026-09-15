@@ -6,6 +6,7 @@ import {
   taskMutationRequestParams,
   type TaskPatchInput,
   taskRequestParams,
+  type TaskRestoreInput,
 } from './client';
 
 interface EntityApiResult<T> {
@@ -53,5 +54,13 @@ async function deleteTaskRemote(
   return { data, error, status: response.status };
 }
 
-export { createTaskRemote, deleteTaskRemote, listTasksRemote, patchTaskRemote };
+async function restoreTaskRemote(id: string, idempotencyKey: string): Promise<EntityApiResult<Task>> {
+  const { data, error, response } = await apiClient.POST('/tasks/{id}/restore', {
+    body: { updated_at: new Date().toISOString() } satisfies TaskRestoreInput,
+    params: { ...taskMutationRequestParams(idempotencyKey).params, path: { id } },
+  });
+  return { data, error, status: response.status };
+}
+
+export { createTaskRemote, deleteTaskRemote, listTasksRemote, patchTaskRemote, restoreTaskRemote };
 export type { EntityApiResult };

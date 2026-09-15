@@ -4,6 +4,7 @@ import {
   type ListDeleteInput,
   type ListInput,
   type ListPatchInput,
+  type ListRestoreInput,
   taskMutationRequestParams,
   taskRequestParams,
 } from './client';
@@ -48,4 +49,12 @@ async function deleteListRemote(
   return { data, error, status: response.status };
 }
 
-export { createListRemote, deleteListRemote, listListsRemote, patchListRemote };
+async function restoreListRemote(id: string, idempotencyKey: string): Promise<EntityApiResult<List>> {
+  const { data, error, response } = await apiClient.POST('/lists/{id}/restore', {
+    body: { updated_at: new Date().toISOString() } satisfies ListRestoreInput,
+    params: { ...taskMutationRequestParams(idempotencyKey).params, path: { id } },
+  });
+  return { data, error, status: response.status };
+}
+
+export { createListRemote, deleteListRemote, listListsRemote, patchListRemote, restoreListRemote };
