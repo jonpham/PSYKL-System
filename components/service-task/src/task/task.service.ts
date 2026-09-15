@@ -4,6 +4,7 @@ import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';
 
 import { clampFutureTimestamp } from '../db/clamp-future-timestamp.js';
 import { type Db, schema } from '../db/index.js';
+import { healOrphanedListReferences } from './task-orphan-sweep.js';
 
 export const DB_TOKEN = Symbol('DB');
 
@@ -44,7 +45,8 @@ export class TaskService {
           : and(eq(schema.tasks.userId, userId), isNull(schema.tasks.deletedAt)),
       );
 
-    return rows.map((row) => this.toResponse(row));
+    const healedRows = options.includeDeleted ? rows : await healOrphanedListReferences(this.db, userId, rows);
+    return healedRows.map((row) => this.toResponse(row));
   }
 
   async patchTask(userId: string, taskId: string, input: TaskPatchInput): Promise<TaskResponse> {
