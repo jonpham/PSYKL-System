@@ -1647,7 +1647,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 **Files:** 12 (bent past the ≤10 ceiling per explicit operator override during plan review — this DevTask absorbed a narrow-scope re-open of [ADR-TE-003](../../ARCHITECTURE.md) discovered while planning; see "Decisions made during spec drafting" below and new [ADR-TE-004](../../ARCHITECTURE.md))
 **Branch:** `feat/todo-experience-s2-dt11-recently-deleted-ui` (depends on DevTask 10's `taskServiceClient.restore()`/`listServiceClient.restore()`; branches off DevTask 10's branch — DevTask 10 is unmerged when this starts)
-**PR:** _filled once the PR is opened_
+**PR:** [#80](https://github.com/jonpham/PSYKL-System/pull/80) (targets DevTask 10's branch, per the stacking rule — retargets to the Spec branch once #79 merges)
 **Affected:**
 
 - `components/web_client/src/sync/sync-client.ts` (modify — `list()`, `listPending()`, `HydrationExhaustedError`; `hydrate()`/`absorb()` become private closure details, dropped from the exported interface)
