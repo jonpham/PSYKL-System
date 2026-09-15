@@ -37,25 +37,31 @@ const hydrationResets = new WeakMap<object, () => void>();
 function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
   config: SyncClientConfig<TEntity>,
 ): SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> {
-  let hydrated = false;
+  // The in-flight/settled promise itself, not a boolean — two `list()` calls
+  // racing before the first fetch resolves (e.g. useSyncExternalStore's
+  // subscribe() firing before the mount effect that used to be the only
+  // hydrate trigger) must await the SAME attempt and observe the SAME
+  // outcome, not have the second one short-circuit past a still-pending
+  // first attempt with a premature "local is empty" read.
+  let hydratePromise: Promise<void> | null = null;
 
   async function absorb(records: TEntity[]): Promise<void> {
     await Promise.all(records.map((record) => config.put(record)));
   }
 
   // Attempts a remote refresh at most once per page load — later calls
-  // no-op here regardless of whether the first attempt succeeded, matching
-  // this app's existing "never auto-retry hydrate mid-session" behavior.
-  async function hydrateOnce(): Promise<void> {
-    if (hydrated) {
-      return;
-    }
-    hydrated = true;
-    const result = await config.listRemote();
-    if (result.error || !result.data) {
-      throw new Error(`hydrate failed: ${JSON.stringify(result.error)}`);
-    }
-    await absorb(result.data);
+  // return the already-settled promise regardless of whether the first
+  // attempt succeeded, matching this app's existing "never auto-retry
+  // hydrate mid-session" behavior.
+  function hydrateOnce(): Promise<void> {
+    hydratePromise ??= (async () => {
+      const result = await config.listRemote();
+      if (result.error || !result.data) {
+        throw new Error(`hydrate failed: ${JSON.stringify(result.error)}`);
+      }
+      await absorb(result.data);
+    })();
+    return hydratePromise;
   }
 
   const client: SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> = {
@@ -93,7 +99,7 @@ function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
   };
 
   hydrationResets.set(client, () => {
-    hydrated = false;
+    hydratePromise = null;
   });
   return client;
 }

@@ -2,20 +2,19 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
-import { resetTaskServiceClientForTest, taskServiceClient } from '../services/task-service-client';
+import { taskServiceClient } from '../services/task-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
-import { HydrationExhaustedError } from '../sync/sync-client';
-import { resetSharedChannelsForTest } from './broadcast-channel';
-import { createChannelNotifier } from './broadcast-notify';
-import { getActiveListId, registerActiveListChangeListener, resetActiveListForTest } from './useActiveList';
-import { getDefaultListId } from './useLists.default-list';
-
-interface TasksSnapshot {
-  error: string | null;
-  loading: boolean;
-  tasks: Task[];
-}
+import { getActiveListId } from './useActiveList';
+import {
+  getSnapshot,
+  hydrateTasks,
+  notifyTasksChanged,
+  resetTasksSyncForTest,
+  subscribeToTaskChanges,
+  subscribeToTasks,
+  type TasksSnapshot,
+} from './useTasks.sync';
 
 interface UseTasksResult extends TasksSnapshot {
   createTask(title: string): Promise<Task>;
@@ -23,27 +22,11 @@ interface UseTasksResult extends TasksSnapshot {
   patchTask(id: string, body: TaskPatchInput, optimistic: Task): Promise<Task>;
 }
 
-const subscribers = new Set<() => void>();
-const channel = createChannelNotifier('psykl-idb', 'tasks-changed', () => {
-  void notifyTasksChanged({ broadcast: false });
-});
-
-let hydrationStarted = false;
-let snapshot: TasksSnapshot = {
-  error: null,
-  loading: true,
-  tasks: [],
-};
-
-// Re-filters tasks by the (possibly just-changed) active list without
-// `useActiveList` importing this module back.
-registerActiveListChangeListener(() => notifyTasksChanged({ broadcast: false }));
-
 function useTasks(): UseTasksResult {
   useEffect(() => {
     void hydrateTasks();
   }, []);
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const snapshot = useSyncExternalStore(subscribeToTasks, getSnapshot, getSnapshot);
 
   const createTask = useCallback(async (title: string): Promise<Task> => {
     const now = new Date().toISOString();
@@ -85,97 +68,8 @@ function mutateTask<T>(enqueue: () => Promise<T>): Promise<T> {
   return enqueueWithReplay({ enqueue, replay });
 }
 
-async function notifyTasksChanged(options: { broadcast?: boolean } = {}): Promise<void> {
-  await reloadSnapshot({ error: null, loading: false });
-
-  if (options.broadcast ?? true) {
-    channel.post();
-  }
-}
-
 function resetUseTasksForTest(): void {
-  channel.reset();
-  resetActiveListForTest();
-  resetSharedChannelsForTest();
-  resetTaskServiceClientForTest();
-  hydrationStarted = false;
-  snapshot = {
-    error: null,
-    loading: true,
-    tasks: [],
-  };
-  subscribers.clear();
+  resetTasksSyncForTest();
 }
 
-function subscribe(callback: () => void): () => void {
-  subscribers.add(callback);
-  channel.ensureChannel();
-  void reloadSnapshot({ loading: false });
-
-  return () => {
-    subscribers.delete(callback);
-  };
-}
-
-function getSnapshot(): TasksSnapshot {
-  return snapshot;
-}
-
-async function hydrateTasks(): Promise<void> {
-  if (hydrationStarted) {
-    return;
-  }
-
-  hydrationStarted = true;
-  setSnapshot({ ...snapshot, loading: true });
-  await reloadSnapshot({ error: null, loading: false });
-}
-
-async function reloadSnapshot(
-  overrides: Partial<Pick<TasksSnapshot, 'error' | 'loading'>> = {},
-): Promise<TasksSnapshot> {
-  try {
-    const tasks = await taskServiceClient.list();
-    const nextSnapshot: TasksSnapshot = {
-      error: overrides.error ?? snapshot.error,
-      loading: overrides.loading ?? snapshot.loading,
-      tasks: tasks
-        .filter((task) => task.deleted_at === null && isInActiveList(task))
-        .sort((left, right) => right.created_at.localeCompare(left.created_at)),
-    };
-    setSnapshot(nextSnapshot);
-    return nextSnapshot;
-  } catch (error) {
-    if (!(error instanceof HydrationExhaustedError)) {
-      throw error;
-    }
-    const nextSnapshot: TasksSnapshot = {
-      error: 'Failed to load tasks',
-      loading: overrides.loading ?? snapshot.loading,
-      tasks: [],
-    };
-    setSnapshot(nextSnapshot);
-    return nextSnapshot;
-  }
-}
-
-/**
- * A task belongs to the active list either by an exact `list_id` match, or
- * (for tasks predating lists, `list_id: null`) by the active list being the
- * default "Tasks" list — per UX.md § 10 decision 1, "Migration puts every
- * pre-existing task there."
- */
-function isInActiveList(task: Task): boolean {
-  const activeListId = getActiveListId();
-  if (activeListId === null || task.list_id === activeListId) {
-    return true;
-  }
-  return task.list_id === null && activeListId === getDefaultListId();
-}
-
-function setSnapshot(nextSnapshot: TasksSnapshot): void {
-  snapshot = nextSnapshot;
-  subscribers.forEach((callback) => callback());
-}
-
-export { notifyTasksChanged, resetUseTasksForTest, useTasks };
+export { notifyTasksChanged, resetUseTasksForTest, subscribeToTaskChanges, useTasks };
