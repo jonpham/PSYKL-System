@@ -6,8 +6,8 @@ import {
   patchListRemote,
   restoreListRemote,
 } from '../api/lists.api-client';
-import { putList } from '../db/idb';
-import { createSyncClient } from '../sync/sync-client';
+import { listLists, putList } from '../db/idb';
+import { createSyncClient, resetSyncClientHydrationForTest } from '../sync/sync-client';
 import { createServiceClient, type EntityApiClient } from './service-client';
 
 const listApiClient: EntityApiClient<List, ListInput, ListPatchInput, ListDeleteInput> = {
@@ -20,6 +20,7 @@ const listApiClient: EntityApiClient<List, ListInput, ListPatchInput, ListDelete
 
 const listSyncClient = createSyncClient<List, ListInput, ListPatchInput, ListDeleteInput>({
   entityType: 'list',
+  listLocal: listLists,
   listRemote: listListsRemote,
   put: putList,
 });
@@ -30,4 +31,8 @@ const listServiceClient = createServiceClient<List, ListInput, ListPatchInput, L
   syncClient: listSyncClient,
 });
 
-export { listServiceClient };
+function resetListServiceClientForTest(): void {
+  resetSyncClientHydrationForTest(listSyncClient);
+}
+
+export { listServiceClient, resetListServiceClientForTest };
