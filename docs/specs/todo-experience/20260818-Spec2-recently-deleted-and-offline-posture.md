@@ -3328,7 +3328,7 @@ interface UseSyncPressureResult {
 function useSyncPressure(): UseSyncPressureResult;
 ```
 
-- [ ] **Step 1: Write the failing unit test for `syncPressureLevel`**
+- [x] **Step 1: Write the failing unit test for `syncPressureLevel`**
 
   ```ts
   // components/web_client/src/sync/__tests__/sync-pressure.unit.test.ts
@@ -3359,7 +3359,7 @@ function useSyncPressure(): UseSyncPressureResult;
   Run: `pnpm --filter @psykl/web-client test:unit sync-pressure`
   Expected: FAIL — `../sync-pressure` has no exported member `syncPressureLevel`/`NAG_THRESHOLD`/`WRITE_CEILING`.
 
-- [ ] **Step 2: Implement `sync-pressure.ts`**
+- [x] **Step 2: Implement `sync-pressure.ts`**
 
   ```ts
   // components/web_client/src/sync/sync-pressure.ts
@@ -3402,7 +3402,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "feat(web-client): add sync pressure thresholds and ceiling error"
   ```
 
-- [ ] **Step 3: Write the failing unit test enforcing the ceiling in `enqueueOptimistic`**
+- [x] **Step 3: Write the failing unit test enforcing the ceiling in `enqueueOptimistic`**
 
   Read `components/web_client/src/sync/__tests__/sync-client.unit.test.ts` first for the existing mock-`config`/fake-IDB setup this test must match.
 
@@ -3459,7 +3459,7 @@ function useSyncPressure(): UseSyncPressureResult;
   Run: `pnpm --filter @psykl/web-client test:unit sync-client.write-ceiling`
   Expected: FAIL — the write is not currently refused; queue grows to `WRITE_CEILING + 1`.
 
-- [ ] **Step 4: Enforce the ceiling in `enqueueOptimistic`**
+- [x] **Step 4: Enforce the ceiling in `enqueueOptimistic`**
 
   In `components/web_client/src/sync/sync-client.ts`, add the import and the check at the top of `enqueueOptimistic`:
 
@@ -3499,7 +3499,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "feat(web-client): refuse new writes at the sync queue's write ceiling"
   ```
 
-- [ ] **Step 5: Write the failing unit test for `useSyncPressure`**
+- [x] **Step 5: Write the failing unit test for `useSyncPressure`**
 
   ```ts
   // components/web_client/src/hooks/__tests__/useSyncPressure.unit.test.ts
@@ -3554,7 +3554,7 @@ function useSyncPressure(): UseSyncPressureResult;
   Run: `pnpm --filter @psykl/web-client test:unit useSyncPressure`
   Expected: FAIL — `../useSyncPressure` module does not exist.
 
-- [ ] **Step 6: Implement `useSyncPressure`**
+- [x] **Step 6: Implement `useSyncPressure`**
 
   ```ts
   // components/web_client/src/hooks/useSyncPressure.ts
@@ -3607,7 +3607,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "feat(web-client): add useSyncPressure hook"
   ```
 
-- [ ] **Step 7: Write the failing Storybook play-function test for `SyncPressureBanner`**
+- [x] **Step 7: Write the failing Storybook play-function test for `SyncPressureBanner`**
 
   ```tsx
   // components/web_client/src/components/SyncPressureBanner/__tests__/SyncPressureBanner.stories.tsx
@@ -3637,7 +3637,7 @@ function useSyncPressure(): UseSyncPressureResult;
   Run: `pnpm --filter @psykl/web-client test:component SyncPressureBanner`
   Expected: FAIL — `../SyncPressureBanner` module does not exist.
 
-- [ ] **Step 8: Implement `SyncPressureBanner`**
+- [x] **Step 8: Implement `SyncPressureBanner`**
 
   ```tsx
   // components/web_client/src/components/SyncPressureBanner/SyncPressureBanner.tsx
@@ -3680,7 +3680,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "feat(web-client): add SyncPressureBanner component"
   ```
 
-- [ ] **Step 9: Write the failing unit test for TaskCreateForm's ceiling behavior**
+- [x] **Step 9: Write the failing unit test for TaskCreateForm's ceiling behavior**
 
   Read `components/web_client/src/components/TaskCreateForm/__tests__/TaskCreateForm.unit.test.tsx` first — this test mocks `useSyncPressure` alongside the existing `useTasks` mock.
 
@@ -3705,7 +3705,7 @@ function useSyncPressure(): UseSyncPressureResult;
   Run: `pnpm --filter @psykl/web-client test:unit TaskCreateForm`
   Expected: FAIL — `useSyncPressure` is not imported/used by `TaskCreateForm.tsx` yet, so the mock has no effect and the field is not disabled.
 
-- [ ] **Step 10: Wire the ceiling into `TaskCreateForm`**
+- [x] **Step 10: Wire the ceiling into `TaskCreateForm`**
 
   In `components/web_client/src/components/TaskCreateForm/TaskCreateForm.tsx`:
 
@@ -3751,7 +3751,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "feat(web-client): disable task capture at the write ceiling"
   ```
 
-- [ ] **Step 11: Mount the banner in `App.tsx`**
+- [x] **Step 11: Mount the banner in `App.tsx`**
 
   In `components/web_client/src/App.tsx`, add the import and mount above `TaskCreateForm`:
 
@@ -3773,7 +3773,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "feat(web-client): mount SyncPressureBanner above the capture field"
   ```
 
-- [ ] **Step 12: Add the `seedSyncQueue` E2E helper**
+- [x] **Step 12: Add the `seedSyncQueue` E2E helper**
 
   In `e2e/helpers/idb-storage.ts`, add alongside the existing `readObjectStore`:
 
@@ -3826,7 +3826,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "test(e2e): add seedSyncQueue helper for offline-pressure fixtures"
   ```
 
-- [ ] **Step 13: Write `offline_pressure.e2e.spec.ts` (inactive first, per TDD/E2E discipline)**
+- [x] **Step 13: Write `offline_pressure.e2e.spec.ts` (inactive first, per TDD/E2E discipline)**
 
   ```ts
   // e2e/offline_pressure.e2e.spec.ts
@@ -3873,7 +3873,7 @@ function useSyncPressure(): UseSyncPressureResult;
 
   Do NOT run yet — commit skipped/inactive if the app doesn't yet reflect seeded state pre-Step-11; in this DevTask the UI pieces land first (Steps 1-11), so this spec is written active. Proceed directly to Step 14.
 
-- [ ] **Step 14: Run the E2E spec against the real stack**
+- [x] **Step 14: Run the E2E spec against the real stack**
 
   Prerequisite: `docker compose up -d` (or the project's standard local stack) is running per `README.md` → Verify locally (UI/UX).
 
@@ -3885,7 +3885,7 @@ function useSyncPressure(): UseSyncPressureResult;
   git commit -m "test(e2e): cover offline sync pressure banner and write ceiling"
   ```
 
-- [ ] **Step 15: Full verification pass**
+- [x] **Step 15: Full verification pass**
 
   ```bash
   pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
@@ -3896,7 +3896,7 @@ function useSyncPressure(): UseSyncPressureResult;
 
   Expected: all green — full E2E suite (18 specs now, up from 16), no regressions in Recently Deleted or restore-plumbing scenarios from DevTasks 10-11.
 
-- [ ] **Step 16: Update this spec doc's checkbox state**
+- [x] **Step 16: Update this spec doc's checkbox state**
 
   Mark DevTask 12's Steps 1-15 complete above. Update frontmatter: `devtasks_complete: 6`.
 
