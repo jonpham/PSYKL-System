@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import type { List, Task } from '../../api/client';
 import type { EntityApiResult } from '../../api/tasks.api-client';
-import { getList, getTask, listSyncQueue, putList, putTask } from '../../db/idb';
-import { createSyncClient } from '../sync-client';
+import { getList, getTask, listLists, listSyncQueue, listTasks, putList, putTask } from '../../db/idb';
+import { createSyncClient, HydrationExhaustedError } from '../sync-client';
 
 const databaseName = 'psykl';
 const taskId = '0196f0a4-8b5a-7000-8000-000000000001';
@@ -43,6 +43,7 @@ afterEach(async () => {
 describe('createSyncClient — task entity (atomic optimistic write)', () => {
   const taskClient = createSyncClient({
     entityType: 'task',
+    listLocal: listTasks,
     listRemote: () => Promise.resolve({ data: [], status: 200 }) as Promise<EntityApiResult<Task[]>>,
     put: putTask,
   });
@@ -62,33 +63,72 @@ describe('createSyncClient — task entity (atomic optimistic write)', () => {
     expect(queue).toMatchObject([{ entity_id: taskId, entity_type: 'task', op: 'create' }]);
   });
 
-  it('hydrate() writes each remote Task into IDB', async () => {
+  it('list() absorbs each remote Task into IDB, then returns local rows', async () => {
     // Given
     const client = createSyncClient({
       entityType: 'task',
+      listLocal: listTasks,
       listRemote: () => Promise.resolve({ data: [optimisticTask], status: 200 }),
       put: putTask,
     });
 
     // When
-    await client.hydrate();
+    const result = await client.list();
 
     // Then
+    expect(result).toEqual([optimisticTask]);
     await expect(getTask(taskId)).resolves.toEqual(optimisticTask);
   });
 
-  it('hydrate() throws on a non-2xx/error response instead of silently no-oping', async () => {
-    // Given — mirrors what useTasks.ts's hydrateTasks required before this
-    // refactor: a server error must surface to the caller's offline-fallback
-    // catch, not be treated as a calm, empty success.
+  it('list() falls back to local rows when the remote refresh fails but local has data', async () => {
+    // Given
+    await putTask(optimisticTask);
     const client = createSyncClient({
       entityType: 'task',
+      listLocal: listTasks,
       listRemote: () => Promise.resolve({ error: 'server exploded', status: 500 }),
       put: putTask,
     });
 
     // When / Then
-    await expect(client.hydrate()).rejects.toThrow();
+    await expect(client.list()).resolves.toEqual([optimisticTask]);
+  });
+
+  it('list() throws HydrationExhaustedError when the remote refresh fails AND local is empty', async () => {
+    // Given — mirrors what useTasks.ts's hydrateTasks required before this
+    // refactor: a server error with no local fallback must surface to the
+    // caller's error UI, not be treated as a calm, empty success.
+    const client = createSyncClient({
+      entityType: 'task',
+      listLocal: listTasks,
+      listRemote: () => Promise.resolve({ error: 'server exploded', status: 500 }),
+      put: putTask,
+    });
+
+    // When / Then
+    await expect(client.list()).rejects.toThrow(HydrationExhaustedError);
+  });
+
+  it("listPending() returns only this entityType's queued entity ids", async () => {
+    // Given
+    await taskClient.create(taskId, { id: taskId, title: 'wash the car', updated_at: nowIso }, optimisticTask);
+    const listSyncClientForFilterCheck = createSyncClient({
+      entityType: 'list',
+      listLocal: listLists,
+      listRemote: () => Promise.resolve({ data: [], status: 200 }) as Promise<EntityApiResult<List[]>>,
+      put: putList,
+    });
+    await listSyncClientForFilterCheck.create(
+      listId,
+      { id: listId, title: 'Groceries', position: 'a0', updated_at: nowIso },
+      optimisticList,
+    );
+
+    // When
+    const pending = await taskClient.listPending();
+
+    // Then — the List's queue entry must not leak into the Task client's view.
+    expect(pending).toEqual([taskId]);
   });
 
   it('restore() writes the optimistic (un-deleted) Task then enqueues a restore op', async () => {
@@ -110,6 +150,7 @@ describe('createSyncClient — task entity (atomic optimistic write)', () => {
 describe('createSyncClient — list entity (two-step, no atomic primitive exists)', () => {
   const listClient = createSyncClient({
     entityType: 'list',
+    listLocal: listLists,
     listRemote: () => Promise.resolve({ data: [], status: 200 }) as Promise<EntityApiResult<List[]>>,
     put: putList,
   });
@@ -157,18 +198,20 @@ describe('createSyncClient — list entity (two-step, no atomic primitive exists
     expect(queue).toMatchObject([{ entity_id: listId, entity_type: 'list', op: 'delete' }]);
   });
 
-  it('hydrate() writes each remote List into IDB — the hydration path that never existed before', async () => {
+  it('list() absorbs each remote List into IDB — the hydration path that never existed before', async () => {
     // Given
     const client = createSyncClient({
       entityType: 'list',
+      listLocal: listLists,
       listRemote: () => Promise.resolve({ data: [optimisticList], status: 200 }),
       put: putList,
     });
 
     // When
-    await client.hydrate();
+    const result = await client.list();
 
     // Then
+    expect(result).toEqual([optimisticList]);
     await expect(getList(listId)).resolves.toEqual(optimisticList);
   });
 
