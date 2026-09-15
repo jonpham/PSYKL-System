@@ -1711,7 +1711,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
 
 **Steps:**
 
-- [ ] **Step 1: `sync-client.ts` — rewrite the failing unit tests for `list()`/`listPending()`/`HydrationExhaustedError`**
+- [x] **Step 1: `sync-client.ts` — rewrite the failing unit tests for `list()`/`listPending()`/`HydrationExhaustedError`**
 
   Replace `components/web_client/src/sync/__tests__/sync-client.unit.test.ts`'s two `hydrate()` tests (in both the task and list `describe` blocks) and add `listLocal` to every existing `createSyncClient(...)` call in the file. Full replacement content:
 
@@ -1950,12 +1950,12 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 2: Run and verify it fails**
+- [x] **Step 2: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `createSyncClient` config requires `listLocal` (type error), `list`/`listPending`/`HydrationExhaustedError` don't exist yet.
 
-- [ ] **Step 3: Implement `sync-client.ts`**
+- [x] **Step 3: Implement `sync-client.ts`**
 
   Replace `components/web_client/src/sync/sync-client.ts` in full:
 
@@ -2073,7 +2073,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   export type { SyncClient, SyncClientConfig };
   ```
 
-- [ ] **Step 4: Run and verify green, then commit**
+- [x] **Step 4: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -2083,7 +2083,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "refactor(web-client): SyncClient exposes list()/listPending(), hydrate() goes private"
   ```
 
-- [ ] **Step 5: `service-client.ts` — rewrite the failing unit tests**
+- [x] **Step 5: `service-client.ts` — rewrite the failing unit tests**
 
   Replace `components/web_client/src/services/__tests__/service-client.unit.test.ts` in full:
 
@@ -2201,12 +2201,12 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 6: Run and verify it fails**
+- [x] **Step 6: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `ServiceClient` has no `list`/`listPending`; fake objects missing `hydrate` no longer matter since it's gone from the type, but `list`/`listPending` aren't implemented yet.
 
-- [ ] **Step 7: Implement `service-client.ts`**
+- [x] **Step 7: Implement `service-client.ts`**
 
   Replace `components/web_client/src/services/service-client.ts` in full:
 
@@ -2300,7 +2300,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   export type { EntityApiClient, ServiceClient, ServiceClientConfig };
   ```
 
-- [ ] **Step 8: Run and verify green, then commit**
+- [x] **Step 8: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -2310,7 +2310,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "refactor(web-client): ServiceClient mirrors SyncClient's list()/listPending()"
   ```
 
-- [ ] **Step 9: `task-service-client.ts`/`list-service-client.ts` — update tests and wiring**
+- [x] **Step 9: `task-service-client.ts`/`list-service-client.ts` — update tests and wiring**
 
   In `components/web_client/src/services/__tests__/task-service-client.unit.test.ts`, replace the `hydrate()` test:
 
@@ -2372,7 +2372,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 10: Run and verify it fails, then implement, then verify green and commit**
+- [x] **Step 10: Run and verify it fails, then implement, then verify green and commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL first (type error — `listLocal` missing from the config passed to `createSyncClient`), then PASS once the two `listLocal` wirings above land.
@@ -2384,7 +2384,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "feat(web-client): wire listLocal into task/list SyncClient configs"
   ```
 
-- [ ] **Step 11: `useTasks.ts` — drop `db/idb`, read via `taskServiceClient.list()`**
+- [x] **Step 11: `useTasks.ts` — drop `db/idb`, read via `taskServiceClient.list()`**
 
   Existing tests (`components/web_client/src/hooks/__tests__/useTasks.unit.test.tsx`) already characterize the exact behavior this step must preserve (loading/error semantics on hydrate success, offline-with-local-data, and offline-with-no-local-data) — this is a refactor, not new behavior, so no test changes are needed; Step 12 runs them unchanged to confirm nothing regressed.
 
@@ -2435,7 +2435,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
 
   Everything else in the file (`useTasks()`, `createTask`/`patchTask`/`deleteTask`, `notifyTasksChanged`, `resetUseTasksForTest`, `subscribe`, `getSnapshot`, `isInActiveList`, `setSnapshot`, exports) is unchanged.
 
-- [ ] **Step 12: Run and verify still green, then commit**
+- [x] **Step 12: Run and verify still green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS — all five existing `useTasks` tests still pass unmodified.
@@ -2445,7 +2445,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "refactor(web-client): useTasks reads via taskServiceClient.list(), drops db/idb import"
   ```
 
-- [ ] **Step 13: `useLists.ts` — drop `db/idb`, read via `listServiceClient.list()`, export `notifyListSubscribers`**
+- [x] **Step 13: `useLists.ts` — drop `db/idb`, read via `listServiceClient.list()`, export `notifyListSubscribers`**
 
   Existing tests (`components/web_client/src/hooks/__tests__/useLists.unit.test.ts`) already characterize the hydrate-then-ensure-default-list behavior this must preserve — refactor only, no test changes needed here (Step 15's `useRecentlyDeleted` tests are the first real exercise of the new `notifyListSubscribers` export).
 
@@ -2494,7 +2494,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
 
   Everything else in the file is unchanged.
 
-- [ ] **Step 14: Run and verify still green, then commit**
+- [x] **Step 14: Run and verify still green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS — all existing `useLists` tests still pass unmodified.
@@ -2504,7 +2504,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "refactor(web-client): useLists reads via listServiceClient.list(), exports notifyListSubscribers"
   ```
 
-- [ ] **Step 15: `TaskList.tsx` — read pending-sync state via `taskServiceClient.listPending()`**
+- [x] **Step 15: `TaskList.tsx` — read pending-sync state via `taskServiceClient.listPending()`**
 
   Step 1's `listPending()` test already covers the entity_type-filter fix at the `sync-client.ts` layer; `TaskList.tsx`'s existing Storybook play function (`TaskList.stories.tsx`, asserting `getByLabelText(/pending sync/i)`) already covers this component's UI outcome and needs no changes — Step 20 re-runs it to confirm.
 
@@ -2528,7 +2528,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
 
   Everything else in the file is unchanged.
 
-- [ ] **Step 16: Run and verify still green, then commit**
+- [x] **Step 16: Run and verify still green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS (no unit test exercises this path directly; type-checking + the existing `TaskList.unit.test.tsx` suite must still pass).
@@ -2538,7 +2538,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "refactor(web-client): TaskList reads pending-sync state via taskServiceClient.listPending()"
   ```
 
-- [ ] **Step 17: `GET /deleted` msw fixture + `deleted.api-client.ts`**
+- [x] **Step 17: `GET /deleted` msw fixture + `deleted.api-client.ts`**
 
   In `components/web_client/src/test/msw-handlers.lists.ts`, export the list store's deleted rows:
 
@@ -2624,7 +2624,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "feat(web-client): add listDeletedRemote GET /deleted client"
   ```
 
-- [ ] **Step 18: `useRecentlyDeleted.ts` — write failing unit tests**
+- [x] **Step 18: `useRecentlyDeleted.ts` — write failing unit tests**
 
   Create `components/web_client/src/hooks/__tests__/useRecentlyDeleted.unit.test.ts`:
 
@@ -2772,7 +2772,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 19: Run and verify it fails, then implement**
+- [x] **Step 19: Run and verify it fails, then implement**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `../useRecentlyDeleted` does not exist.
@@ -2903,7 +2903,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   export type { DeletedItem };
   ```
 
-- [ ] **Step 20: Run and verify green, then commit**
+- [x] **Step 20: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -2914,7 +2914,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "feat(web-client): add useRecentlyDeleted hook"
   ```
 
-- [ ] **Step 21: `RecentlyDeleted.tsx` — write failing unit tests**
+- [x] **Step 21: `RecentlyDeleted.tsx` — write failing unit tests**
 
   Create `components/web_client/src/components/RecentlyDeleted/__tests__/RecentlyDeleted.unit.test.tsx`:
 
@@ -2987,7 +2987,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 22: Run and verify it fails, then implement**
+- [x] **Step 22: Run and verify it fails, then implement**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `../RecentlyDeleted` does not exist.
@@ -3056,7 +3056,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   export { RecentlyDeleted } from './RecentlyDeleted';
   ```
 
-- [ ] **Step 23: Run and verify green, then commit**
+- [x] **Step 23: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -3068,7 +3068,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "feat(web-client): add RecentlyDeleted screen"
   ```
 
-- [ ] **Step 24: `App.tsx` — write failing test for the entry-point button**
+- [x] **Step 24: `App.tsx` — write failing test for the entry-point button**
 
   In `components/web_client/src/__tests__/App.unit.test.tsx`, add the import `import userEvent from '@testing-library/user-event';` and this test:
 
@@ -3083,7 +3083,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 25: Run and verify it fails, then wire the button and dialog into `App.tsx`**
+- [x] **Step 25: Run and verify it fails, then wire the button and dialog into `App.tsx`**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — no button named "Recently Deleted".
@@ -3116,7 +3116,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
 
   Per the Entry-point scope decision above, this button is temporary — it moves into the `⋯` overflow menu once that ships in a later Spec.
 
-- [ ] **Step 26: Run and verify green, then commit**
+- [x] **Step 26: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -3126,7 +3126,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "feat(web-client): add temporary Recently Deleted entry point"
   ```
 
-- [ ] **Step 27: Write the Storybook Component-layer play function**
+- [x] **Step 27: Write the Storybook Component-layer play function**
 
   Create `components/web_client/src/components/RecentlyDeleted/__tests__/RecentlyDeleted.stories.tsx`:
 
@@ -3200,7 +3200,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   };
   ```
 
-- [ ] **Step 28: Verify the story, then commit**
+- [x] **Step 28: Verify the story, then commit**
 
   Run: `pnpm --filter @psykl/web-client storybook` and open `PSYKL/RecentlyDeleted` to confirm the play function completes without a red interactions panel (CI runs the equivalent headlessly via `pnpm --filter @psykl/web-client test:component:stories`).
 
@@ -3209,7 +3209,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "test(web-client): add RecentlyDeleted Storybook play function"
   ```
 
-- [ ] **Step 29: Write `e2e/recently_deleted.e2e.spec.ts`**
+- [x] **Step 29: Write `e2e/recently_deleted.e2e.spec.ts`**
 
   Create `e2e/recently_deleted.e2e.spec.ts`:
 
@@ -3265,7 +3265,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   });
   ```
 
-- [ ] **Step 30: Run and verify, then commit**
+- [x] **Step 30: Run and verify, then commit**
 
   Run: `pnpm --filter e2e test recently_deleted`
   Expected: PASS (both scenarios)
@@ -3275,7 +3275,7 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
   git commit -m "test(e2e): cover Recently Deleted restore for tasks and lists"
   ```
 
-- [ ] **Step 31: Update spec doc bookkeeping**
+- [x] **Step 31: Update spec doc bookkeeping**
 
   Mark DevTask 11's Steps 1-30 complete above.
 
