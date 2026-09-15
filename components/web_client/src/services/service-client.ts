@@ -8,6 +8,7 @@ interface EntityApiClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   delete(id: string, input: TDeleteInput, idempotencyKey: string): Promise<EntityApiResult<TEntity>>;
   list(): Promise<EntityApiResult<TEntity[]>>;
   patch(id: string, input: TPatchInput, idempotencyKey: string): Promise<EntityApiResult<TEntity>>;
+  restore(id: string, idempotencyKey: string): Promise<EntityApiResult<TEntity>>;
 }
 
 type ServiceClientConfig<TEntity, TInput, TPatchInput, TDeleteInput> =
@@ -26,6 +27,7 @@ interface ServiceClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   delete(entityId: string, body: TDeleteInput, optimistic: TEntity): Promise<void>;
   hydrate(): Promise<void>;
   patch(entityId: string, body: TPatchInput, optimistic: TEntity): Promise<TEntity>;
+  restore(entityId: string, body: unknown, optimistic: TEntity): Promise<TEntity>;
 }
 
 function createServiceClient<TEntity, TInput, TPatchInput, TDeleteInput>(
@@ -50,6 +52,12 @@ function createServiceClient<TEntity, TInput, TPatchInput, TDeleteInput>(
         return;
       }
       unwrap(await config.apiClient.delete(entityId, body, uuidv7()), 'delete');
+    },
+    async restore(entityId, body, optimistic) {
+      if (config.offlineCapable) {
+        return config.syncClient.restore(entityId, body, optimistic);
+      }
+      return unwrap(await config.apiClient.restore(entityId, uuidv7()), 'restore');
     },
     async hydrate() {
       // Direct (offlineCapable: false) mode has no local cache to fill.
