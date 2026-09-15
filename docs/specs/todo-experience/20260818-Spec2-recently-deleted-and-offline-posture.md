@@ -17,7 +17,7 @@ honors_decisions:
 
 # Recently Deleted + Offline Posture — Implementation Spec
 
-> **DevTask 7 expanded to per-Step TDD detail** (via `superpowers:writing-plans`, this pass) against the interfaces Spec 1 actually shipped. DevTasks 8-11 remain outline-only and get expanded when each starts.
+> **DevTasks 7-12 are all expanded to per-Step TDD detail** (via `superpowers:writing-plans`, across several passes) against the interfaces Spec 1 actually shipped.
 
 **Date:** 2026-08-18
 **Initiative:** `todo-experience`
@@ -78,14 +78,14 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 **Entry-point scope decision:** UX.md's eventual `⋯` list overflow menu (hosting `New Section`, `Rename List`, `Delete List`, `Settings`, and presumably `Recently Deleted`) does not exist yet in the codebase — `App.tsx` is still the minimal bootstrap shell, and the overflow menu is unscoped, later Spec 3+ work. DevTask 11 adds a plain temporary "Recently Deleted" button next to the list-switcher button rather than building that menu now. Move it into the real overflow menu when that ships.
 
-| #   | Title                                                   | Branch                                             | Files | Depends on       |
-| --- | ------------------------------------------------------- | -------------------------------------------------- | ----- | ---------------- |
-| 7   | Restore endpoints + `GET /deleted`                      | `feat/todo-experience-s2-dt7-restore-and-deleted`  | 10    | Spec 1 DevTask 3 |
-| 8   | 30-day purge job                                        | `feat/todo-experience-s2-dt8-purge-job`            | 2     | DevTask 7        |
-| 9   | Orphan sweep heals dangling `list_id`                   | `feat/todo-experience-s2-dt9-orphan-sweep`         | 2     | DevTask 7        |
-| 10  | Restore sync-queue plumbing                             | `feat/todo-experience-s2-dt10-restore-plumbing`    | 9     | DevTask 7        |
-| 11  | Recently Deleted screen + read/write abstraction parity | `feat/todo-experience-s2-dt11-recently-deleted-ui` | 12    | DevTask 10       |
-| 12  | Offline pressure banner + write ceiling                 | `feat/todo-experience-s2-dt12-offline-pressure`    | ~4    | Spec 1 DevTask 1 |
+| #   | Title                                                   | Branch                                             | Files | Depends on                                                                                                |
+| --- | ------------------------------------------------------- | -------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------- |
+| 7   | Restore endpoints + `GET /deleted`                      | `feat/todo-experience-s2-dt7-restore-and-deleted`  | 10    | Spec 1 DevTask 3                                                                                          |
+| 8   | 30-day purge job                                        | `feat/todo-experience-s2-dt8-purge-job`            | 2     | DevTask 7                                                                                                 |
+| 9   | Orphan sweep heals dangling `list_id`                   | `feat/todo-experience-s2-dt9-orphan-sweep`         | 2     | DevTask 7                                                                                                 |
+| 10  | Restore sync-queue plumbing                             | `feat/todo-experience-s2-dt10-restore-plumbing`    | 9     | DevTask 7                                                                                                 |
+| 11  | Recently Deleted screen + read/write abstraction parity | `feat/todo-experience-s2-dt11-recently-deleted-ui` | 12    | DevTask 10                                                                                                |
+| 12  | Offline pressure banner + write ceiling                 | `feat/todo-experience-s2-dt12-offline-pressure`    | 9     | Spec 1 DevTask 1 (documented); branches off DevTask 11 for sequencing (operator override — see Decisions) |
 
 ### DevTask 7: Restore endpoints + `GET /deleted`
 
@@ -3281,6 +3281,627 @@ function listDeletedRemote(): Promise<EntityApiResult<DeletedResponse>>;
 
 ---
 
+### DevTask 12: Offline pressure banner + write ceiling
+
+**Files:** 9 (`sync/sync-pressure.ts`, `sync/sync-client.ts`, `hooks/useSyncPressure.ts`, `components/SyncPressureBanner/SyncPressureBanner.tsx`, `components/SyncPressureBanner/index.ts`, `App.tsx`, `components/TaskCreateForm/TaskCreateForm.tsx`, `e2e/offline_pressure.e2e.spec.ts`, `e2e/helpers/idb-storage.ts`)
+**Branch:** `feat/todo-experience-s2-dt12-offline-pressure` — branches off DevTask 11's branch (`feat/todo-experience-s2-dt11-recently-deleted-ui`, PR [#80](https://github.com/jonpham/PSYKL-System/pull/80)), **not** off the Spec branch, and **not** off DevTask 11's actual diff. **Operator-directed sequencing exception, not a code dependency** — see "Decisions made during spec drafting" below. Retargets to the Spec integration branch once DevTasks 10 and 11 merge.
+**PR:** not yet opened
+**Reads from:** [`DESIGN.md`](../../initiatives/todo-experience/DESIGN.md) → Offline Posture (LOCKED) thresholds table (nag at 25, hard ceiling at 100); `UX.md` § "Offline, few queued writes" / "Offline, 25+ queued writes" / "Offline, 100+ queued writes" rows.
+**Affected:**
+
+- `components/web_client/src/sync/sync-pressure.ts` (create — pure thresholds + `SyncWriteCeilingError`)
+- `components/web_client/src/sync/sync-client.ts` (modify — `enqueueOptimistic` throws `SyncWriteCeilingError` at the ceiling)
+- `components/web_client/src/hooks/useSyncPressure.ts` (create — live queue-depth hook)
+- `components/web_client/src/components/SyncPressureBanner/SyncPressureBanner.tsx` (create)
+- `components/web_client/src/components/SyncPressureBanner/index.ts` (create)
+- `components/web_client/src/App.tsx` (modify — mount the banner above the capture field)
+- `components/web_client/src/components/TaskCreateForm/TaskCreateForm.tsx` (modify — disable the capture field at the ceiling)
+- `e2e/offline_pressure.e2e.spec.ts` (create)
+- `e2e/helpers/idb-storage.ts` (modify — add a direct-IDB `seedSyncQueue` helper; seeding 100 real tasks through the UI per test run is too slow for CI)
+
+**Design notes carried into implementation:**
+
+- **Single choke point.** `service-client.ts` always routes every mutation (create/patch/delete/restore, for both Task and List) through `SyncClient`, which always calls `enqueueOptimistic` (`sync-client.ts:enqueueOptimistic`) — confirmed by reading `service-client.ts`'s `offlineCapable: true` branch, which never calls the wire `apiClient` directly. This one function is therefore the only place that needs the ceiling check; no per-entity or per-hook duplication.
+- **Queue depth = `(await listSyncQueue()).length`.** No new counter/store — `listSyncQueue()` already exists (`db/idb.ts`) and is already used by `SyncClient.listPending()`.
+- **Live updates reuse existing change notifications**, not a new subscription primitive. `enqueueWithReplay` (`sync/page-triggers.ts`) already calls `notify()` right after enqueue and again after every `replay()` drain. `useSyncPressure` subscribes to the same `subscribeToTaskChanges`/`subscribeToListChanges` exports `useRecentlyDeleted.ts` already uses (DevTask 11) — no IDB change-event API needed.
+- **`SyncWriteCeilingError` is a distinct type/name from `MAX_REPLAY_ATTEMPTS`'s "replay ceiling"** (`sync/replay.ts`, unrelated: exhausted retry count, not queue depth) — chosen specifically to avoid the naming collision.
+- **Banner (nag, ≥25) vs. capture-field disable (ceiling, ≥100) are two different UI treatments**, matching UX.md's two distinct table rows verbatim: banner text `"<n> changes waiting to sync. Reconnect to save them."` stays constant across nag and ceiling (it's still true at 100+, and UX.md doesn't specify separate banner copy for the ceiling); the capture field additionally goes `disabled` with placeholder `"Reconnect to keep adding."` only at the ceiling. The field is disabled **proactively** (checked before submit, via `useSyncPressure`'s `level`), not reactively via catching `SyncWriteCeilingError` after a failed submit — matches UX.md's "capture field is disabled and reads..." (present tense, not an error state).
+- **Patch/delete/restore ceiling enforcement has no dedicated per-row UI in this DevTask.** `SyncWriteCeilingError` thrown from `enqueueOptimistic` still propagates to every caller (`TaskList`'s complete-toggle, `RecentlyDeleted`'s restore, etc.) and surfaces as a generic thrown error — functionally "refused," per UX.md's "writes to existing rows are refused with the same message," but without bespoke messaging on every row type. Covered by a unit test on `enqueueOptimistic`, not a dedicated E2E scenario per row type. Out of scope: wiring a shared error-toast for all patch/delete/restore call sites (no such shared surface exists yet; would be a larger refactor, not this DevTask's "~4 files" scope).
+- **Banner is not gated on `navigator.onLine`.** Queue depth can back up from a stalled server too, not only real offline — DESIGN.md's threshold table keys off unsynced-change count, not connectivity state.
+- E2E scenarios seed the queue directly via IndexedDB (`seedSyncQueue`) then `page.reload()` so `useSyncPressure`'s mount-time `reload()` picks up the seeded count — mirrors `reloadAndExpectTaskVisible` (`e2e/helpers/multi-device.ts`) already used by `task_list-offline-sync.e2e.spec.ts`.
+
+**Interfaces produced:**
+
+```ts
+// sync/sync-pressure.ts
+type SyncPressureLevel = 'ok' | 'nag' | 'ceiling';
+const NAG_THRESHOLD = 25;
+const WRITE_CEILING = 100;
+function syncPressureLevel(queueLength: number): SyncPressureLevel;
+class SyncWriteCeilingError extends Error {}
+
+// hooks/useSyncPressure.ts
+interface UseSyncPressureResult {
+  count: number;
+  level: SyncPressureLevel;
+}
+function useSyncPressure(): UseSyncPressureResult;
+```
+
+- [x] **Step 1: Write the failing unit test for `syncPressureLevel`**
+
+  ```ts
+  // components/web_client/src/sync/__tests__/sync-pressure.unit.test.ts
+  import { describe, expect, it } from 'vitest';
+
+  import { NAG_THRESHOLD, syncPressureLevel, WRITE_CEILING } from '../sync-pressure';
+
+  describe('syncPressureLevel', () => {
+    it('is ok below the nag threshold', () => {
+      // Given/When/Then: 24 queued changes, one below the nag threshold
+      expect(syncPressureLevel(NAG_THRESHOLD - 1)).toBe('ok');
+    });
+
+    it('is nag at the nag threshold', () => {
+      expect(syncPressureLevel(NAG_THRESHOLD)).toBe('nag');
+    });
+
+    it('is nag just below the ceiling', () => {
+      expect(syncPressureLevel(WRITE_CEILING - 1)).toBe('nag');
+    });
+
+    it('is ceiling at the write ceiling', () => {
+      expect(syncPressureLevel(WRITE_CEILING)).toBe('ceiling');
+    });
+  });
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit sync-pressure`
+  Expected: FAIL — `../sync-pressure` has no exported member `syncPressureLevel`/`NAG_THRESHOLD`/`WRITE_CEILING`.
+
+- [x] **Step 2: Implement `sync-pressure.ts`**
+
+  ```ts
+  // components/web_client/src/sync/sync-pressure.ts
+  const NAG_THRESHOLD = 25;
+  const WRITE_CEILING = 100;
+
+  type SyncPressureLevel = 'ok' | 'nag' | 'ceiling';
+
+  function syncPressureLevel(queueLength: number): SyncPressureLevel {
+    if (queueLength >= WRITE_CEILING) {
+      return 'ceiling';
+    }
+    if (queueLength >= NAG_THRESHOLD) {
+      return 'nag';
+    }
+    return 'ok';
+  }
+
+  /**
+   * Thrown by `sync-client.ts`'s `enqueueOptimistic` when the local queue is
+   * already at `WRITE_CEILING` — offline is a degraded mode and new writes
+   * are refused until the queue drains, per DESIGN.md's Offline Posture.
+   */
+  class SyncWriteCeilingError extends Error {
+    constructor() {
+      super('Reconnect to keep adding.');
+      this.name = 'SyncWriteCeilingError';
+    }
+  }
+
+  export { NAG_THRESHOLD, syncPressureLevel, SyncWriteCeilingError, WRITE_CEILING };
+  export type { SyncPressureLevel };
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit sync-pressure`
+  Expected: PASS
+
+  ```bash
+  git add components/web_client/src/sync/sync-pressure.ts components/web_client/src/sync/__tests__/sync-pressure.unit.test.ts
+  git commit -m "feat(web-client): add sync pressure thresholds and ceiling error"
+  ```
+
+- [x] **Step 3: Write the failing unit test enforcing the ceiling in `enqueueOptimistic`**
+
+  Read `components/web_client/src/sync/__tests__/sync-client.unit.test.ts` first for the existing mock-`config`/fake-IDB setup this test must match.
+
+  ```ts
+  // components/web_client/src/sync/__tests__/sync-client.write-ceiling.unit.test.ts
+  import 'fake-indexeddb/auto';
+
+  import { deleteDB } from 'idb';
+  import { afterEach, describe, expect, it } from 'vitest';
+
+  import { enqueueSyncOp, listSyncQueue } from '../../db/idb';
+  import { WRITE_CEILING } from '../sync-pressure';
+  import { createSyncClient } from '../sync-client';
+
+  const databaseName = 'psykl';
+
+  afterEach(async () => {
+    await deleteDB(databaseName);
+  });
+
+  describe('SyncClient write ceiling', () => {
+    it('refuses a new write once the queue is at the ceiling', async () => {
+      // Given a queue already at WRITE_CEILING entries
+      for (let index = 0; index < WRITE_CEILING; index += 1) {
+        await enqueueSyncOp({
+          id: `seed-${index}`,
+          entity_type: 'list',
+          entity_id: `list-${index}`,
+          op: 'create',
+          body: {},
+          idempotency_key: `idem-${index}`,
+          attempts: 0,
+          next_attempt_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        });
+      }
+      const client = createSyncClient({
+        entityType: 'list',
+        listLocal: async () => [],
+        listRemote: async () => ({ data: [] }),
+        put: async () => undefined,
+      });
+
+      // When creating one more
+      const attempt = client.create('list-new', {}, { id: 'list-new' });
+
+      // Then it's refused and the queue does not grow
+      await expect(attempt).rejects.toThrow('Reconnect to keep adding.');
+      await expect(listSyncQueue()).resolves.toHaveLength(WRITE_CEILING);
+    });
+  });
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit sync-client.write-ceiling`
+  Expected: FAIL — the write is not currently refused; queue grows to `WRITE_CEILING + 1`.
+
+- [x] **Step 4: Enforce the ceiling in `enqueueOptimistic`**
+
+  In `components/web_client/src/sync/sync-client.ts`, add the import and the check at the top of `enqueueOptimistic`:
+
+  ```ts
+  import { syncPressureLevel, SyncWriteCeilingError } from './sync-pressure';
+  ```
+
+  ```ts
+  async function enqueueOptimistic<TEntity>(
+    config: Pick<SyncClientConfig<TEntity>, 'entityType' | 'put'>,
+    entityId: string,
+    body: unknown,
+    op: SyncQueueEntry['op'],
+    optimistic: TEntity,
+  ): Promise<void> {
+    const queue = await listSyncQueue();
+    if (syncPressureLevel(queue.length) === 'ceiling') {
+      throw new SyncWriteCeilingError();
+    }
+    if (config.entityType === 'task') {
+      await enqueue({ body, entityId, entityType: 'task', op, optimisticTask: optimistic as unknown as Task });
+      return;
+    }
+    await config.put(optimistic);
+    await enqueue({ body, entityId, entityType: config.entityType, op });
+  }
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit sync-client.write-ceiling`
+  Expected: PASS
+
+  Run: `pnpm --filter @psykl/web-client test:unit`
+  Expected: PASS — no regressions in the existing `sync-client.unit.test.ts`/`sync-client.list.unit.test.ts`.
+
+  ```bash
+  git add components/web_client/src/sync/sync-client.ts
+  git commit -m "feat(web-client): refuse new writes at the sync queue's write ceiling"
+  ```
+
+- [x] **Step 5: Write the failing unit test for `useSyncPressure`**
+
+  ```ts
+  // components/web_client/src/hooks/__tests__/useSyncPressure.unit.test.ts
+  import 'fake-indexeddb/auto';
+
+  import { deleteDB } from 'idb';
+  import { act, renderHook, waitFor } from '@testing-library/react';
+  import { afterEach, describe, expect, it } from 'vitest';
+
+  import { enqueueSyncOp } from '../../db/idb';
+  import { notifyTasksChanged } from '../useTasks';
+  import { useSyncPressure } from '../useSyncPressure';
+
+  const databaseName = 'psykl';
+
+  afterEach(async () => {
+    await deleteDB(databaseName);
+  });
+
+  describe('useSyncPressure', () => {
+    it('reports the current queue depth and level, and updates on change notifications', async () => {
+      // Given an empty queue
+      const { result } = renderHook(() => useSyncPressure());
+      await waitFor(() => expect(result.current.count).toBe(0));
+      expect(result.current.level).toBe('ok');
+
+      // When 25 entries are queued and a change notification fires
+      for (let index = 0; index < 25; index += 1) {
+        await enqueueSyncOp({
+          id: `seed-${index}`,
+          entity_type: 'task',
+          entity_id: `task-${index}`,
+          op: 'create',
+          body: {},
+          idempotency_key: `idem-${index}`,
+          attempts: 0,
+          next_attempt_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        });
+      }
+      await act(async () => {
+        await notifyTasksChanged();
+      });
+
+      // Then the hook reflects the new depth and level
+      await waitFor(() => expect(result.current.count).toBe(25));
+      expect(result.current.level).toBe('nag');
+    });
+  });
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit useSyncPressure`
+  Expected: FAIL — `../useSyncPressure` module does not exist.
+
+- [x] **Step 6: Implement `useSyncPressure`**
+
+  ```ts
+  // components/web_client/src/hooks/useSyncPressure.ts
+  import { useCallback, useEffect, useState } from 'react';
+
+  import { listSyncQueue } from '../db/idb';
+  import { syncPressureLevel, type SyncPressureLevel } from '../sync/sync-pressure';
+  import { subscribeToListChanges } from './useLists';
+  import { subscribeToTaskChanges } from './useTasks';
+
+  interface UseSyncPressureResult {
+    count: number;
+    level: SyncPressureLevel;
+  }
+
+  function useSyncPressure(): UseSyncPressureResult {
+    const [count, setCount] = useState(0);
+
+    const reload = useCallback(async () => {
+      const queue = await listSyncQueue();
+      setCount(queue.length);
+    }, []);
+
+    useEffect(() => {
+      void reload();
+      // Same live-update pattern as useRecentlyDeleted.ts (DevTask 11):
+      // enqueueWithReplay's notify() fires right after every enqueue and
+      // again after every replay() drain, so subscribing here catches both
+      // queue growth and queue drain without a new IDB change-event API.
+      const unsubscribeTasks = subscribeToTaskChanges(() => void reload());
+      const unsubscribeLists = subscribeToListChanges(() => void reload());
+      return () => {
+        unsubscribeTasks();
+        unsubscribeLists();
+      };
+    }, [reload]);
+
+    return { count, level: syncPressureLevel(count) };
+  }
+
+  export { useSyncPressure };
+  export type { UseSyncPressureResult };
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit useSyncPressure`
+  Expected: PASS
+
+  ```bash
+  git add components/web_client/src/hooks/useSyncPressure.ts components/web_client/src/hooks/__tests__/useSyncPressure.unit.test.ts
+  git commit -m "feat(web-client): add useSyncPressure hook"
+  ```
+
+- [x] **Step 7: Write the failing Storybook play-function test for `SyncPressureBanner`**
+
+  ```tsx
+  // components/web_client/src/components/SyncPressureBanner/__tests__/SyncPressureBanner.stories.tsx
+  import type { Meta, StoryObj } from '@storybook/react';
+  import { expect, within } from '@storybook/test';
+
+  import { SyncPressureBanner } from '../SyncPressureBanner';
+
+  const meta: Meta<typeof SyncPressureBanner> = {
+    component: SyncPressureBanner,
+    title: 'SyncPressureBanner',
+  };
+  export default meta;
+
+  type Story = StoryObj<typeof SyncPressureBanner>;
+
+  export const BelowThreshold: Story = {
+    play: async ({ canvasElement }) => {
+      // Arrange/Act: default fixture — empty queue
+      const canvas = within(canvasElement);
+      // Assert: no banner text below the nag threshold
+      await expect(canvas.queryByRole('status')).toBeNull();
+    },
+  };
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:component SyncPressureBanner`
+  Expected: FAIL — `../SyncPressureBanner` module does not exist.
+
+- [x] **Step 8: Implement `SyncPressureBanner`**
+
+  ```tsx
+  // components/web_client/src/components/SyncPressureBanner/SyncPressureBanner.tsx
+  import { useSyncPressure } from '../../hooks/useSyncPressure';
+
+  export function SyncPressureBanner() {
+    const { count, level } = useSyncPressure();
+
+    if (level === 'ok') {
+      return null;
+    }
+
+    return (
+      <p
+        role="status"
+        style={{
+          background: '#fff3cd',
+          border: '1px solid #ffe08a',
+          borderRadius: 4,
+          margin: '1rem 0 0',
+          padding: '0.5rem 0.75rem',
+        }}
+      >
+        {count} changes waiting to sync. Reconnect to save them.
+      </p>
+    );
+  }
+  ```
+
+  ```ts
+  // components/web_client/src/components/SyncPressureBanner/index.ts
+  export { SyncPressureBanner } from './SyncPressureBanner';
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:component SyncPressureBanner`
+  Expected: PASS
+
+  ```bash
+  git add components/web_client/src/components/SyncPressureBanner
+  git commit -m "feat(web-client): add SyncPressureBanner component"
+  ```
+
+- [x] **Step 9: Write the failing unit test for TaskCreateForm's ceiling behavior**
+
+  Read `components/web_client/src/components/TaskCreateForm/__tests__/TaskCreateForm.unit.test.tsx` first — this test mocks `useSyncPressure` alongside the existing `useTasks` mock.
+
+  ```tsx
+  // Add to components/web_client/src/components/TaskCreateForm/__tests__/TaskCreateForm.unit.test.tsx
+  import { useSyncPressure } from '../../../hooks/useSyncPressure';
+
+  vi.mock('../../../hooks/useSyncPressure');
+
+  it('disables the capture field at the write ceiling', () => {
+    // Arrange
+    vi.mocked(useSyncPressure).mockReturnValue({ count: 100, level: 'ceiling' });
+    render(<TaskCreateForm />);
+
+    // Assert
+    expect(screen.getByLabelText('title')).toBeDisabled();
+    expect(screen.getByLabelText('title')).toHaveAttribute('placeholder', 'Reconnect to keep adding.');
+    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled();
+  });
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit TaskCreateForm`
+  Expected: FAIL — `useSyncPressure` is not imported/used by `TaskCreateForm.tsx` yet, so the mock has no effect and the field is not disabled.
+
+- [x] **Step 10: Wire the ceiling into `TaskCreateForm`**
+
+  In `components/web_client/src/components/TaskCreateForm/TaskCreateForm.tsx`:
+
+  ```tsx
+  import { useSyncPressure } from '../../hooks/useSyncPressure';
+  ```
+
+  ```tsx
+  export function TaskCreateForm() {
+    const { createTask } = useTasks();
+    const { level } = useSyncPressure();
+    const atCeiling = level === 'ceiling';
+    const [title, setTitle] = useState('');
+    // ...unchanged state...
+  ```
+
+  ```tsx
+        <input
+          id="task-title"
+          aria-label="title"
+          disabled={atCeiling}
+          maxLength={200}
+          name="title"
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder={atCeiling ? 'Reconnect to keep adding.' : 'What needs doing?'}
+          style={{ flex: 1, padding: '0.5rem' }}
+          type="text"
+          value={title}
+        />
+        <button type="submit" disabled={!title.trim() || submitting || atCeiling}>
+          Create
+        </button>
+  ```
+
+  Run: `pnpm --filter @psykl/web-client test:unit TaskCreateForm`
+  Expected: PASS
+
+  Run: `pnpm --filter @psykl/web-client test:unit`
+  Expected: PASS — full unit suite green, no regressions.
+
+  ```bash
+  git add components/web_client/src/components/TaskCreateForm/TaskCreateForm.tsx components/web_client/src/components/TaskCreateForm/__tests__/TaskCreateForm.unit.test.tsx
+  git commit -m "feat(web-client): disable task capture at the write ceiling"
+  ```
+
+- [x] **Step 11: Mount the banner in `App.tsx`**
+
+  In `components/web_client/src/App.tsx`, add the import and mount above `TaskCreateForm`:
+
+  ```tsx
+  import { SyncPressureBanner } from './components/SyncPressureBanner';
+  ```
+
+  ```tsx
+      <RecentlyDeleted onClose={() => setRecentlyDeletedOpen(false)} open={recentlyDeletedOpen} />
+      <SyncPressureBanner />
+      <section data-testid="task-ui-slot">
+  ```
+
+  Run: `pnpm --filter @psykl/web-client typecheck && pnpm --filter @psykl/web-client lint`
+  Expected: PASS
+
+  ```bash
+  git add components/web_client/src/App.tsx
+  git commit -m "feat(web-client): mount SyncPressureBanner above the capture field"
+  ```
+
+- [x] **Step 12: Add the `seedSyncQueue` E2E helper**
+
+  In `e2e/helpers/idb-storage.ts`, add alongside the existing `readObjectStore`:
+
+  ```ts
+  async function seedSyncQueue(target: BrowserStorageTarget, count: number): Promise<void> {
+    await target.page.evaluate(async (n) => {
+      const browserIndexedDb = (
+        globalThis as typeof globalThis & {
+          indexedDB: { open: (databaseName: string, version: number) => any };
+        }
+      ).indexedDB;
+      const request = browserIndexedDb.open('psykl', 2);
+      const db: any = await new Promise((resolve, reject) => {
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+      });
+      try {
+        const tx = db.transaction('sync_queue', 'readwrite');
+        const store = tx.objectStore('sync_queue');
+        for (let index = 0; index < n; index += 1) {
+          store.put({
+            id: `e2e-seed-${index}-${Date.now()}`,
+            entity_type: 'list',
+            entity_id: `e2e-seed-list-${index}`,
+            op: 'create',
+            body: {},
+            idempotency_key: `e2e-seed-idem-${index}`,
+            attempts: 0,
+            next_attempt_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          });
+        }
+        await new Promise((resolve, reject) => {
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+      } finally {
+        db.close();
+      }
+    }, count);
+  }
+  ```
+
+  Update the module's export line: `export { listLocalSyncQueue, listLocalTasks, seedSyncQueue };`
+
+  No test run yet — exercised by Step 13's spec.
+
+  ```bash
+  git add e2e/helpers/idb-storage.ts
+  git commit -m "test(e2e): add seedSyncQueue helper for offline-pressure fixtures"
+  ```
+
+- [x] **Step 13: Write `offline_pressure.e2e.spec.ts` (inactive first, per TDD/E2E discipline)**
+
+  ```ts
+  // e2e/offline_pressure.e2e.spec.ts
+  import { expect, test } from '@playwright/test';
+
+  import { seedSyncQueue } from './helpers/idb-storage';
+  import { openDevice, setOffline, triggerQueuedReplay } from './helpers/multi-device';
+
+  test.describe('Offline sync pressure', () => {
+    test('a user offline with 25 queued changes sees a banner telling them to reconnect', async ({ browser }) => {
+      const device = await openDevice(browser);
+      await setOffline(device, true);
+
+      // Seeding writes straight to IndexedDB (100 real creates through the UI
+      // is too slow for CI) — the app only re-reads the queue on its existing
+      // change notifications, so trigger the same 'online' listener the real
+      // reconnect path uses. Still offline: each fetch fails fast and the
+      // entry is rescheduled, not dropped, so the seeded count survives.
+      // `page.reload()` while genuinely offline was tried first and hit
+      // `net::ERR_INTERNET_DISCONNECTED` — no Service Worker is active yet
+      // to serve the navigation from cache on a brand-new browser context.
+      await seedSyncQueue(device, 25);
+      await triggerQueuedReplay(device);
+
+      // Exact count isn't asserted: the device's own default-list bootstrap
+      // (useLists.default-list.ts) also enqueues one 'list' create entry on
+      // first load, independent of this test's seeded 25 (same caveat as
+      // task_list-offline-sync.e2e.spec.ts's taskQueueEntries filter).
+      await expect(device.page.getByText(/\d+ changes waiting to sync\. Reconnect to save them\./)).toBeVisible();
+    });
+
+    test('a user offline with 100 queued changes cannot add a new task until they reconnect', async ({ browser }) => {
+      const device = await openDevice(browser);
+      await setOffline(device, true);
+
+      await seedSyncQueue(device, 100);
+      await triggerQueuedReplay(device);
+
+      await expect(device.page.getByLabel('title')).toBeDisabled();
+      await expect(device.page.getByLabel('title')).toHaveAttribute('placeholder', 'Reconnect to keep adding.');
+    });
+  });
+  ```
+
+  Do NOT run yet — commit skipped/inactive if the app doesn't yet reflect seeded state pre-Step-11; in this DevTask the UI pieces land first (Steps 1-11), so this spec is written active. Proceed directly to Step 14.
+
+- [x] **Step 14: Run the E2E spec against the real stack**
+
+  Prerequisite: `docker compose up -d` (or the project's standard local stack) is running per `README.md` → Verify locally (UI/UX).
+
+  Run: `pnpm --filter e2e test offline_pressure`
+  Expected: PASS (both scenarios)
+
+  ```bash
+  git add e2e/offline_pressure.e2e.spec.ts
+  git commit -m "test(e2e): cover offline sync pressure banner and write ceiling"
+  ```
+
+- [x] **Step 15: Full verification pass**
+
+  ```bash
+  pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
+  pnpm --filter @psykl/web-client test:unit
+  pnpm --filter @psykl/web-client test:component
+  pnpm --filter e2e test
+  ```
+
+  Expected: all green — full E2E suite (18 specs now, up from 16), no regressions in Recently Deleted or restore-plumbing scenarios from DevTasks 10-11.
+
+- [x] **Step 16: Update this spec doc's checkbox state**
+
+  Mark DevTask 12's Steps 1-15 complete above. Update frontmatter: `devtasks_complete: 6`.
+
+---
+
 ## Test Plan
 
 - **Unit:** schema validation for `TaskRestoreInput`/`ListRestoreInput`/`DeletedResponse` (DevTask 7); `TaskService.restoreTask`/`ListService.restoreList` LWW arithmetic (DevTask 7); purge boundary arithmetic (DevTask 8); orphan sweep healing (DevTask 9); `SyncClient`/`ServiceClient`/`replay.transport` restore-op plumbing (DevTask 10); `useSyncPressure` threshold transitions at 24/25/99/100 (DevTask 12).
@@ -3305,6 +3926,7 @@ New user stories to add to `UX.md` § 5 are already written there under Spec 1 a
   - **`EntityApiClient`, `SyncClient`, and `ServiceClient` are NOT unified via `extends`/`implements`**, despite now sharing method names. Considered and rejected: each method's arity and return type differ meaningfully per layer (`EntityApiClient` needs `idempotencyKey` and returns the wire envelope `EntityApiResult<T>`; `SyncClient`/`ServiceClient` need `optimistic` instead and return/throw directly) — forcing a shared supertype would require widening to `unknown`, discarding the type safety this decision exists to add. The naming parallelism is intentional but stays a convention, not a type-level relationship.
   - **No `absorb()` (or any hook-facing "push these rows into the cache" primitive) was added**, despite being the initial approach considered for `useRecentlyDeleted.ts`'s cross-device tombstone case (`GET /deleted` doesn't map onto any single entity's `listRemote` config). Rejected once it became clear `restore()`'s existing optimistic-write path already persists a remote-only row the moment the user acts on it — the hook only ever needs to _render_ remote-only rows, which it does by merging `GET /deleted`'s response into in-memory state, never IDB, until restored.
   - **`AGENTS.md`'s ≤10 production-behavior-source-file ceiling is explicitly bent for this DevTask (12 files)**, by explicit operator instruction during plan review rather than the trilemma rule's default (split DevTasks). The refactor (`sync-client.ts`, `service-client.ts`, `task-service-client.ts`, `list-service-client.ts`, `useTasks.ts`, `useLists.ts`, `TaskList.tsx` — 7 files) and the Recently Deleted screen (`deleted.api-client.ts`, `useRecentlyDeleted.ts`, `RecentlyDeleted.tsx`, `RecentlyDeleted/index.ts`, `App.tsx` — 5 files) were judged not worth splitting into two DevTasks: the screen depends on the refactor's `list()` existing before it can avoid touching `db/idb` itself, and splitting would have produced an intermediate DevTask (the refactor alone) with no user-visible behavior change to review against.
+- **DevTask 12 branches off DevTask 11's branch (`feat/todo-experience-s2-dt11-recently-deleted-ui`, PR #80) for sequencing convenience, not a code dependency — an explicit, documented exception to AGENTS.md → Git Conventions' "stacking is permitted only when a DevTask depends on another DevTask's unmerged changes."** Confirmed directly with the operator during plan review: DevTask 12's scope (`useSyncPressure`, `SyncPressureBanner`, the write-ceiling check, `TaskCreateForm`'s disabled state) has no code dependency on DevTask 11's diff — the dependency table's `Spec 1 DevTask 1` entry is the real technical dependency (Spec 1's sync queue foundation, already merged to `main`). This DevTask could equally be branched off the Spec integration branch. It is stacked on PR #80 purely so the operator can keep working at the current branch tip without rebasing onto the Spec branch mid-stream while DevTasks 10-11 are still under review. **Retarget to the Spec branch once DevTasks 10 and 11 merge** — do not carry the stacked base into the eventual DevTask 12 PR description without noting this is not a real dependency, so a reviewer doesn't go looking for one.
 
 ---
 

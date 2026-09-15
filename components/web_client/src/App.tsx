@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ListSwitcher } from './components/ListSwitcher';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
+import { SyncPressureBanner } from './components/SyncPressureBanner';
 import { TaskCreateForm } from './components/TaskCreateForm';
 import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
@@ -83,6 +84,7 @@ export default function App() {
         open={switcherOpen}
       />
       <RecentlyDeleted onClose={() => setRecentlyDeletedOpen(false)} open={recentlyDeletedOpen} />
+      <SyncPressureBanner />
       <section data-testid="task-ui-slot">
         <TaskCreateForm />
         <TaskList />
