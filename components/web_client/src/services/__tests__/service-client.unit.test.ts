@@ -26,7 +26,8 @@ function fakeSyncClient(overrides: Partial<SyncClient<Widget, unknown, unknown, 
   return {
     create: vi.fn(() => Promise.resolve(widget)),
     delete: vi.fn(() => Promise.resolve()),
-    hydrate: vi.fn(() => Promise.resolve()),
+    list: vi.fn(() => Promise.resolve([widget])),
+    listPending: vi.fn(() => Promise.resolve(['w1'])),
     patch: vi.fn(() => Promise.resolve(widget)),
     restore: vi.fn(() => Promise.resolve(widget)),
     ...overrides,
@@ -34,7 +35,7 @@ function fakeSyncClient(overrides: Partial<SyncClient<Widget, unknown, unknown, 
 }
 
 describe('createServiceClient — offlineCapable: true', () => {
-  it('routes create/patch/delete/hydrate to the sync client, never the api client', async () => {
+  it('routes create/patch/delete/restore/list/listPending to the sync client, never the api client', async () => {
     // Given
     const apiClient = fakeApiClient();
     const syncClient = fakeSyncClient();
@@ -45,23 +46,26 @@ describe('createServiceClient — offlineCapable: true', () => {
     await client.patch('w1', {}, widget);
     await client.delete('w1', {}, widget);
     await client.restore('w1', {}, widget);
-    await client.hydrate();
+    await client.list();
+    await client.listPending();
 
     // Then
     expect(syncClient.create).toHaveBeenCalledWith('w1', {}, widget);
     expect(syncClient.patch).toHaveBeenCalledWith('w1', {}, widget);
     expect(syncClient.delete).toHaveBeenCalledWith('w1', {}, widget);
     expect(syncClient.restore).toHaveBeenCalledWith('w1', {}, widget);
-    expect(syncClient.hydrate).toHaveBeenCalled();
+    expect(syncClient.list).toHaveBeenCalled();
+    expect(syncClient.listPending).toHaveBeenCalled();
     expect(apiClient.create).not.toHaveBeenCalled();
     expect(apiClient.patch).not.toHaveBeenCalled();
     expect(apiClient.delete).not.toHaveBeenCalled();
     expect(apiClient.restore).not.toHaveBeenCalled();
+    expect(apiClient.list).not.toHaveBeenCalled();
   });
 });
 
 describe('createServiceClient — offlineCapable: false', () => {
-  it('routes create/patch/delete directly to the api client and unwraps {data}', async () => {
+  it('routes create/patch/delete/list directly to the api client and unwraps {data}', async () => {
     // Given
     const apiClient = fakeApiClient();
     const client = createServiceClient({ apiClient, offlineCapable: false });
@@ -71,25 +75,27 @@ describe('createServiceClient — offlineCapable: false', () => {
     const patched = await client.patch('w1', {}, widget);
     await client.delete('w1', {}, widget);
     const restored = await client.restore('w1', {}, widget);
+    const listed = await client.list();
 
     // Then
     expect(created).toEqual(widget);
     expect(patched).toEqual(widget);
     expect(restored).toEqual(widget);
+    expect(listed).toEqual([widget]);
     expect(apiClient.create).toHaveBeenCalledWith({}, expect.any(String));
     expect(apiClient.patch).toHaveBeenCalledWith('w1', {}, expect.any(String));
     expect(apiClient.delete).toHaveBeenCalledWith('w1', {}, expect.any(String));
     expect(apiClient.restore).toHaveBeenCalledWith('w1', expect.any(String));
+    expect(apiClient.list).toHaveBeenCalled();
   });
 
-  it('hydrate() is a no-op — direct mode has no local cache to fill', async () => {
+  it('listPending() is empty — direct-mode entities are never locally queued', async () => {
     // Given
     const apiClient = fakeApiClient();
     const client = createServiceClient({ apiClient, offlineCapable: false });
 
     // When / Then
-    await expect(client.hydrate()).resolves.toBeUndefined();
-    expect(apiClient.list).not.toHaveBeenCalled();
+    await expect(client.listPending()).resolves.toEqual([]);
   });
 
   it('throws when the api client returns an error instead of data', async () => {

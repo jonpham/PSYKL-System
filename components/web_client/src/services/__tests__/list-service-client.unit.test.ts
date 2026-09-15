@@ -41,16 +41,17 @@ describe('listServiceClient — production wiring', () => {
     expect(queue).toMatchObject([{ entity_id: listId, entity_type: 'list', op: 'create' }]);
   });
 
-  it('hydrate() pulls lists that already exist server-side into IDB — this is the fix for the gap', async () => {
+  it('list() pulls lists that already exist server-side into IDB — this is the fix for the gap', async () => {
     // Given — a list created directly on the server (e.g. by another device),
     // never mutated by this device, so nothing would previously have pulled
     // it down.
     await createListRemote({ id: listId, title: 'Groceries', position: 'a0', updated_at: nowIso }, idempotencyKey);
 
     // When
-    await listServiceClient.hydrate();
+    const result = await listServiceClient.list();
 
     // Then
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ id: listId, title: 'Groceries' })]));
     await expect(getList(listId)).resolves.toMatchObject({ id: listId, title: 'Groceries' });
   });
 });

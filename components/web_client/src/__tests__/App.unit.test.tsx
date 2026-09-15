@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import 'fake-indexeddb/auto';
 
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { deleteDB } from 'idb';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -28,5 +29,14 @@ describe('App shell', () => {
     render(<App />);
     expect(screen.getByTestId('task-ui-slot')).toBeInTheDocument();
     expect(await screen.findByText(/no tasks yet/i)).toBeInTheDocument();
+  });
+
+  it('opens and closes the Recently Deleted screen from a temporary button', async () => {
+    render(<App />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Recently Deleted' }));
+    expect(await screen.findByRole('dialog', { name: 'Recently Deleted' })).toBeVisible();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Recently Deleted' })).toBeNull();
   });
 });

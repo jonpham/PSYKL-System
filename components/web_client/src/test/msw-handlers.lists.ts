@@ -10,6 +10,12 @@ export function resetListStore() {
   listStore = [];
 }
 
+export function getDeletedLists(): List[] {
+  return listStore.filter((list) => list.deleted_at !== null);
+}
+
+export type { List };
+
 export const listHandlers = [
   http.get('*/lists', ({ request }) => {
     if (request.headers.get('x-user-id') !== 'local') {
