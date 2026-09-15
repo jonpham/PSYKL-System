@@ -6,7 +6,7 @@ completed_at:
 created_at: 2026-08-18
 initiative: todo-experience
 spec_number: 2
-devtasks_total: 4
+devtasks_total: 5
 devtasks_complete: 0
 honors_decisions:
   - offline-posture-deletes-are-moves
@@ -16,7 +16,7 @@ honors_decisions:
 
 # Recently Deleted + Offline Posture — Implementation Spec
 
-> **Outline.** DevTask boundaries, files, and tests are settled; per-Step TDD detail is written when this Spec starts, against the interfaces Spec 1 actually shipped.
+> **DevTask 7 expanded to per-Step TDD detail** (via `superpowers:writing-plans`, this pass) against the interfaces Spec 1 actually shipped. DevTasks 8-11 remain outline-only and get expanded when each starts.
 
 **Date:** 2026-08-18
 **Initiative:** `todo-experience`
@@ -69,55 +69,1100 @@ The purge runs as a NestJS scheduled job, not an endpoint.
 
 ## DevTasks
 
-| #   | Title                                   | Branch                                            | Files | Depends on       |
-| --- | --------------------------------------- | ------------------------------------------------- | ----- | ---------------- |
-| 7   | Restore endpoints + 30-day purge job    | `feat/todo-experience-s2-dt7-restore-and-purge`   | ~5    | Spec 1 DevTask 3 |
-| 8   | Orphan sweep heals dangling `list_id`   | `feat/todo-experience-s2-dt8-orphan-sweep`        | ~3    | DevTask 7        |
-| 9   | Recently Deleted screen + restore UI    | `feat/todo-experience-s2-dt9-recently-deleted-ui` | ~5    | DevTask 7        |
-| 10  | Offline pressure banner + write ceiling | `feat/todo-experience-s2-dt10-offline-pressure`   | ~4    | Spec 1 DevTask 1 |
+This Spec contains 5 DevTasks. Each DevTask is one Pull Request, ≤10 **production behavior source files** (tests, config, docs, lockfiles, and generated migrations are exempt — see AGENTS.md → Git Conventions). Each DevTask branches off the Spec integration branch `spec/todo-experience-s2-recently-deleted-and-offline-posture` and PRs into that branch, not into `main`.
 
-### DevTask 7 — Restore endpoints + purge
+**Trilemma split (AGENTS.md → Design Doc Discipline):** the DESIGN.md breakdown's original DevTask 7 ("Restore endpoints + 30-day purge job") touches 11 production behavior source files once counted precisely — one over the ≤10 ceiling. Per the trilemma rule (prefer splitting DevTasks over bending the file-count rule or deferring tests), it is split here into **DevTask 7 (Restore endpoints + `GET /deleted`)** and a new **DevTask 8 (30-day purge job)**. The former DevTask 8 (Orphan sweep) and DevTask 9 (UI) and DevTask 10 (Offline pressure) shift to DevTask 9, 10, 11 respectively. This is a narrow-scope DevTask-count adjustment, not a decision re-open — DESIGN.md's Offline Posture decisions are unchanged.
 
-Adds `restore` to `ListService` and `TaskService`, two controller routes, and a `PurgeService` on a daily schedule. The purge test controls the clock rather than waiting.
+| #   | Title                                   | Branch                                             | Files | Depends on       |
+| --- | --------------------------------------- | -------------------------------------------------- | ----- | ---------------- |
+| 7   | Restore endpoints + `GET /deleted`      | `feat/todo-experience-s2-dt7-restore-and-deleted`  | 10    | Spec 1 DevTask 3 |
+| 8   | 30-day purge job                        | `feat/todo-experience-s2-dt8-purge-job`            | 2     | DevTask 7        |
+| 9   | Orphan sweep heals dangling `list_id`   | `feat/todo-experience-s2-dt9-orphan-sweep`         | ~3    | DevTask 7        |
+| 10  | Recently Deleted screen + restore UI    | `feat/todo-experience-s2-dt10-recently-deleted-ui` | ~5    | DevTask 7        |
+| 11  | Offline pressure banner + write ceiling | `feat/todo-experience-s2-dt11-offline-pressure`    | ~4    | Spec 1 DevTask 1 |
 
-**Key test:** `components/service-task/tests/integration/recently-deleted-purge.integration.test.ts` — a row deleted 31 days ago is purged; one deleted 29 days ago is not; a row _restored_ on day 29 is never purged.
+### DevTask 7: Restore endpoints + `GET /deleted`
 
-### DevTask 8 — Orphan sweep
+> DevTask numbers are global across the initiative, matching (post-split) DESIGN.md's Spec/DevTask Breakdown.
 
-A task whose `list_id` matches no live list is reassigned to the default list on read. Runs server-side in `listTasks`, so it heals without a background job.
+**Files:** 10
+**Branch:** `feat/todo-experience-s2-dt7-restore-and-deleted`
+**PR:** _filled once the PR is opened_
+**Affected:**
 
-**Key test:** `task-orphan-sweep.integration.test.ts` — a task pointing at a deleted list surfaces in the default list rather than vanishing.
+- `packages/shared-types/src/schemas/task.ts` (modify)
+- `packages/shared-types/src/schemas/list.ts` (modify)
+- `packages/shared-types/src/openapi/task-paths.ts` (modify)
+- `packages/shared-types/src/openapi/list-paths.ts` (modify)
+- `components/service-task/src/task/task.service.ts` (modify)
+- `components/service-task/src/task/task.controller.ts` (modify)
+- `components/service-task/src/list/list.service.ts` (modify)
+- `components/service-task/src/list/list.controller.ts` (modify)
+- `components/service-task/src/deleted/deleted.controller.ts` (create)
+- `components/service-task/src/app.module.ts` (modify)
 
-### DevTask 9 — Recently Deleted UI
+**Design notes carried into implementation:**
 
-New `RecentlyDeleted/` component tree, reachable from the list overflow menu. Rows show remaining days in the metadata column (`28d`). Restore returns an item to its original list, or to the default list if that list is itself deleted.
+- **Existing idempotency asymmetry preserved, not fixed.** `IdempotencyInterceptor.requiresIdempotency` (`components/service-task/src/idempotency/idempotency.interceptor.ts:85-89`) only requires `Idempotency-Key` on routes whose path starts with `/tasks`. List mutations (`POST/PATCH/DELETE /lists*`) are not currently idempotency-protected. `POST /tasks/{id}/restore` therefore requires `Idempotency-Key`; `POST /lists/{id}/restore` does not — matching every existing List route. This is a pre-existing gap, out of scope for this DevTask.
+- **Restore reconciles under Last-Write-Wins**, identical pattern to `patchTask`/`patchList`: an `updated_at` at or before the stored row's `updated_at` is a silent no-op returning the stored row, not an error.
+- **`GET /deleted` filters to a 30-day window** (`deleted_at IS NOT NULL AND deleted_at >= now() - 30d`) even though nothing purges yet in this DevTask — DevTask 8 makes the purge and this filter agree by construction.
+- **`DeletedController` is declared directly on `AppModule`**, not its own module — it only needs `TaskService`/`ListService`, both already exported by `TaskModule`/`ListModule`, which `AppModule` already imports. Avoids an 11th file.
 
-**Key tests:** Storybook play function for restore; `e2e/recently_deleted.e2e.spec.ts`.
+**Steps:**
 
-### DevTask 10 — Offline pressure
+- [x] **Step 1: Shared-types — write failing unit tests for the three new schemas**
 
-New `useSyncPressure()` hook counting `sync_queue` depth. Banner above the capture field at 25. At 100 the capture field disables and mutations are refused with `Reconnect to keep adding.`
+  Create `packages/shared-types/src/schemas/task-restore-input.unit.test.ts`:
 
-**Key test:** `e2e/offline_pressure.e2e.spec.ts` — this behavior only exists at the E2E layer, since it depends on real queue depth and real offline state.
+  ```ts
+  import { describe, expect, it } from 'vitest';
 
----
+  import { TaskRestoreInputSchema } from './task';
+
+  describe('TaskRestoreInputSchema', () => {
+    it('accepts updated_at', () => {
+      const valid = { updated_at: '2026-05-20T12:00:00.000Z' };
+      expect(TaskRestoreInputSchema.parse(valid)).toEqual(valid);
+    });
+
+    it('rejects missing updated_at', () => {
+      expect(() => TaskRestoreInputSchema.parse({})).toThrow();
+    });
+
+    it('rejects unknown fields', () => {
+      expect(() =>
+        TaskRestoreInputSchema.parse({
+          updated_at: '2026-05-20T12:00:00.000Z',
+          deleted_at: '2026-05-20T12:00:00.000Z',
+        }),
+      ).toThrow();
+    });
+  });
+  ```
+
+  Create `packages/shared-types/src/schemas/list-restore-input.unit.test.ts` (same three cases, importing `ListRestoreInputSchema` from `./list`).
+
+  Create `packages/shared-types/src/schemas/deleted-response.unit.test.ts`:
+
+  ```ts
+  import { describe, expect, it } from 'vitest';
+
+  import { DeletedResponseSchema } from './list';
+
+  describe('DeletedResponseSchema', () => {
+    it('accepts empty lists and tasks arrays', () => {
+      expect(DeletedResponseSchema.parse({ lists: [], tasks: [] })).toEqual({ lists: [], tasks: [] });
+    });
+
+    it('rejects a missing tasks field', () => {
+      expect(() => DeletedResponseSchema.parse({ lists: [] })).toThrow();
+    });
+  });
+  ```
+
+- [x] **Step 2: Run and verify all three fail**
+
+  Run: `pnpm --filter @psykl/shared-types test:unit`
+  Expected: FAIL — `TaskRestoreInputSchema`, `ListRestoreInputSchema`, `DeletedResponseSchema` are not exported.
+
+- [x] **Step 3: Implement the three schemas**
+
+  In `packages/shared-types/src/schemas/task.ts`, after `TaskDeleteInputSchema`:
+
+  ```ts
+  export const TaskRestoreInputSchema = z.object({ updated_at: TimestampSchema }).strict();
+
+  export type TaskRestoreInput = z.infer<typeof TaskRestoreInputSchema>;
+  ```
+
+  In `packages/shared-types/src/schemas/list.ts`: add `import { TaskSchema } from './task.js';` to the existing `import` from `./task.js`, then after `ListDeleteInputSchema`:
+
+  ```ts
+  export const ListRestoreInputSchema = z.object({ updated_at: TimestampSchema }).strict();
+
+  export type ListRestoreInput = z.infer<typeof ListRestoreInputSchema>;
+
+  /**
+   * Response shape for GET /deleted — every List and Task tombstone within the
+   * 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+   */
+  export const DeletedResponseSchema = z.object({ lists: z.array(ListSchema), tasks: z.array(TaskSchema) }).strict();
+
+  export type DeletedResponse = z.infer<typeof DeletedResponseSchema>;
+  ```
+
+- [x] **Step 4: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/shared-types test:unit`
+  Expected: PASS
+
+  ```bash
+  git add packages/shared-types/src/schemas/task.ts packages/shared-types/src/schemas/list.ts \
+    packages/shared-types/src/schemas/task-restore-input.unit.test.ts \
+    packages/shared-types/src/schemas/list-restore-input.unit.test.ts \
+    packages/shared-types/src/schemas/deleted-response.unit.test.ts
+  git commit -m "feat(shared-types): add restore input and deleted response schemas"
+  ```
+
+- [x] **Step 5: Write failing OpenAPI doc assertions**
+
+  In `packages/shared-types/src/openapi.unit.test.ts`, add inside the `describe('buildOpenApiDocument', ...)` block:
+
+  ```ts
+  it('produces /tasks/{id}/restore, /lists/{id}/restore, and /deleted paths', () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.paths?.['/tasks/{id}/restore']?.post).toBeDefined();
+    expect(doc.paths?.['/lists/{id}/restore']?.post).toBeDefined();
+    expect(doc.paths?.['/deleted']?.get).toBeDefined();
+    expect(doc.components?.schemas?.TaskRestoreInput).toBeDefined();
+    expect(doc.components?.schemas?.ListRestoreInput).toBeDefined();
+    expect(doc.components?.schemas?.DeletedResponse).toBeDefined();
+  });
+
+  it('requires Idempotency-Key on /tasks/{id}/restore but not on /lists/{id}/restore', () => {
+    const doc = buildOpenApiDocument();
+    const taskRestoreParams = doc.paths?.['/tasks/{id}/restore']?.post?.parameters ?? [];
+    const listRestoreParams = doc.paths?.['/lists/{id}/restore']?.post?.parameters ?? [];
+    const findKey = (params: typeof taskRestoreParams) => params.find((p) => p.name === 'Idempotency-Key');
+    expect(findKey(taskRestoreParams)).toMatchObject({ required: true });
+    expect(findKey(listRestoreParams)).toBeUndefined();
+  });
+  ```
+
+- [x] **Step 6: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/shared-types test:unit`
+  Expected: FAIL — paths undefined.
+
+- [x] **Step 7: Register the paths**
+
+  In `packages/shared-types/src/openapi/task-paths.ts`, add to the top-level `const` block: `const taskRestoreInput = registry.register('TaskRestoreInput', TaskRestoreInputSchema);` (add `TaskRestoreInputSchema` to the existing import from `../schemas/task.js`). After the `delete` path registration, add:
+
+  ```ts
+  registry.registerPath({
+    method: 'post',
+    path: '/tasks/{id}/restore',
+    summary: 'Restore a soft-deleted Task with Last-Write-Wins reconciliation',
+    request: {
+      params: taskIdParam,
+      headers: mutatingHeaders,
+      body: { content: { 'application/json': { schema: taskRestoreInput } } },
+    },
+    responses: {
+      200: { description: 'OK', content: { 'application/json': { schema: taskResponse } } },
+      400: { description: 'Bad request - body fails TaskRestoreInput validation' },
+      401: { description: 'Missing X-User-Id header' },
+      403: { description: 'Malformed X-User-Id header' },
+      404: { description: 'Task not found for current user' },
+      409: { description: 'Same Idempotency-Key was used with a different request body' },
+    },
+  });
+  ```
+
+  In `packages/shared-types/src/openapi/list-paths.ts`, add `ListRestoreInputSchema` and `DeletedResponseSchema` to the existing import from `../schemas/list.js`, then after the top-level `const` block add:
+
+  ```ts
+  const listRestoreInput = registry.register('ListRestoreInput', ListRestoreInputSchema);
+  const deletedResponse = registry.register('DeletedResponse', DeletedResponseSchema);
+  ```
+
+  After the `delete` path registration, add:
+
+  ```ts
+  registry.registerPath({
+    method: 'post',
+    path: '/lists/{id}/restore',
+    summary: 'Restore a soft-deleted List with Last-Write-Wins reconciliation',
+    request: {
+      params: listIdParam,
+      headers: userIdHeader,
+      body: { content: { 'application/json': { schema: listRestoreInput } } },
+    },
+    responses: {
+      200: { description: 'OK', content: { 'application/json': { schema: listResponse } } },
+      400: { description: 'Bad request - body fails ListRestoreInput validation' },
+      401: { description: 'Missing X-User-Id header' },
+      403: { description: 'Malformed X-User-Id header' },
+      404: { description: 'List not found for current user' },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/deleted',
+    summary: 'List every List and Task tombstone within the 30-day Recently Deleted window',
+    request: { headers: userIdHeader },
+    responses: {
+      200: { description: 'OK', content: { 'application/json': { schema: deletedResponse } } },
+      401: { description: 'Missing X-User-Id header' },
+      403: { description: 'Malformed X-User-Id header' },
+    },
+  });
+  ```
+
+- [x] **Step 8: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/shared-types test:unit`
+  Expected: PASS
+
+  ```bash
+  git add packages/shared-types/src/openapi.unit.test.ts packages/shared-types/src/openapi/task-paths.ts \
+    packages/shared-types/src/openapi/list-paths.ts
+  git commit -m "feat(shared-types): register restore and deleted OpenAPI paths"
+  ```
+
+- [x] **Step 9: `TaskService.restoreTask` — write failing unit test**
+
+  Create `components/service-task/src/task/__tests__/task.service.restore.unit.test.ts`, following the `mockDeleteDb` pattern in `task.service.delete.unit.test.ts`:
+
+  ```ts
+  import { describe, expect, it, vi } from 'vitest';
+
+  import type { Db } from '../../db/index.js';
+  import { TaskService } from '../task.service.js';
+  import { taskRow } from './task.service.unit-support.js';
+
+  function mockRestoreDb(selectRows: unknown[], updateSet: ReturnType<typeof vi.fn>): Db {
+    const where = vi.fn(async () => selectRows);
+    const from = vi.fn(() => ({ where }));
+    return {
+      select: vi.fn(() => ({ from })),
+      update: vi.fn(() => ({ set: updateSet })),
+    } as unknown as Db;
+  }
+
+  describe('TaskService.restoreTask', () => {
+    it('clears deleted_at and bumps updated_at when the restore is newer', async () => {
+      const currentRow = taskRow({
+        updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+        deletedAt: new Date('2026-05-20T12:00:00.000Z'),
+      });
+      const restoredRow = taskRow({ updatedAt: new Date('2026-05-20T12:05:00.000Z'), deletedAt: null });
+      const updateSet = vi.fn(() => ({ where: vi.fn(() => ({ returning: vi.fn(async () => [restoredRow]) })) }));
+      const service = new TaskService(mockRestoreDb([currentRow], updateSet));
+
+      // Given
+      const restoreInput = { updated_at: '2026-05-20T12:05:00.000Z' };
+
+      // When
+      const restored = await service.restoreTask('local', currentRow.id, restoreInput);
+
+      // Then
+      expect(restored.deleted_at).toBeNull();
+      expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ deletedAt: null }));
+    });
+
+    it('is a no-op returning the stored row when restore updated_at is not newer', async () => {
+      const currentRow = taskRow({
+        updatedAt: new Date('2026-05-20T12:05:00.000Z'),
+        deletedAt: new Date('2026-05-20T12:05:00.000Z'),
+      });
+      const updateSet = vi.fn();
+      const service = new TaskService(mockRestoreDb([currentRow], updateSet));
+
+      // Given
+      const staleRestoreInput = { updated_at: '2026-05-20T12:00:00.000Z' };
+
+      // When
+      const result = await service.restoreTask('local', currentRow.id, staleRestoreInput);
+
+      // Then
+      expect(result.deleted_at).toBe('2026-05-20T12:05:00.000Z');
+      expect(updateSet).not.toHaveBeenCalled();
+    });
+  });
+  ```
+
+- [x] **Step 10: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/service-task test:unit`
+  Expected: FAIL — `restoreTask` is not a function.
+
+- [x] **Step 11: Implement `TaskService.restoreTask` and `listDeletedTasks`**
+
+  In `components/service-task/src/task/task.service.ts`, change the `drizzle-orm` import to `import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';`, add near the top of the file (after imports):
+
+  ```ts
+  // 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+  const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+  ```
+
+  Add to the `TaskService` class, after `deleteTask`:
+
+  ```ts
+  async restoreTask(userId: string, taskId: string, input: TaskRestoreInput): Promise<TaskResponse> {
+    const current = await this.findTaskForUser(userId, taskId);
+    const updatedAt = clampFutureTimestamp(new Date(input.updated_at));
+
+    if (updatedAt.getTime() <= current.updatedAt!.getTime()) {
+      return this.toResponse(current);
+    }
+
+    const [row] = await this.db
+      .update(schema.tasks)
+      .set({
+        deletedAt: null,
+        updatedAt,
+        serverUpdatedAt: new Date(),
+      })
+      .where(and(eq(schema.tasks.id, taskId), eq(schema.tasks.userId, userId)))
+      .returning();
+
+    if (!row) {
+      throw new NotFoundException('Task not found');
+    }
+
+    return this.toResponse(row);
+  }
+
+  async listDeletedTasks(userId: string): Promise<TaskResponse[]> {
+    const cutoff = new Date(Date.now() - RECENTLY_DELETED_WINDOW_MS);
+    const rows = await this.db
+      .select()
+      .from(schema.tasks)
+      .where(and(eq(schema.tasks.userId, userId), isNotNull(schema.tasks.deletedAt), gte(schema.tasks.deletedAt, cutoff)));
+
+    return rows.map((row) => this.toResponse(row));
+  }
+  ```
+
+  Add `TaskRestoreInput` to the existing `@psykl/shared-types` type import.
+
+- [x] **Step 12: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:unit`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/task/task.service.ts \
+    components/service-task/src/task/__tests__/task.service.restore.unit.test.ts
+  git commit -m "feat(service-task): add TaskService.restoreTask and listDeletedTasks"
+  ```
+
+- [x] **Step 13: `ListService.restoreList` — write failing unit test, implement, verify, commit**
+
+  Create `components/service-task/src/list/__tests__/list.service.restore.unit.test.ts` mirroring Step 9's two cases (`restoreList` clears `deletedAt` when newer; no-op when not newer), using a local `mockRestoreDb` helper built the same way (list rows have `position`, not `completedAt`).
+
+  Run: `pnpm --filter @psykl/service-task test:unit` — verify FAIL (`restoreList` undefined).
+
+  In `components/service-task/src/list/list.service.ts`, change the import to `import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';`, add near the top:
+
+  ```ts
+  // 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+  const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+  ```
+
+  Add to the `ListService` class, after `deleteList`:
+
+  ```ts
+  async restoreList(userId: string, id: string, input: ListRestoreInput): Promise<ListResponse> {
+    const existing = await this.requireList(userId, id);
+    const incoming = clampFutureTimestamp(new Date(input.updated_at));
+
+    if (incoming.getTime() <= existing.updatedAt.getTime()) {
+      return this.toResponse(existing);
+    }
+
+    const [row] = await this.db
+      .update(schema.lists)
+      .set({
+        deletedAt: null,
+        updatedAt: incoming,
+        serverUpdatedAt: new Date(),
+      })
+      .where(and(eq(schema.lists.id, id), eq(schema.lists.userId, userId)))
+      .returning();
+    return this.toResponse(row!);
+  }
+
+  async listDeletedLists(userId: string): Promise<ListResponse[]> {
+    const cutoff = new Date(Date.now() - RECENTLY_DELETED_WINDOW_MS);
+    const rows = await this.db
+      .select()
+      .from(schema.lists)
+      .where(and(eq(schema.lists.userId, userId), isNotNull(schema.lists.deletedAt), gte(schema.lists.deletedAt, cutoff)))
+      .orderBy(schema.lists.position);
+    return rows.map((row) => this.toResponse(row));
+  }
+  ```
+
+  Add `ListRestoreInput` to the existing `@psykl/shared-types` type import.
+
+  Run: `pnpm --filter @psykl/service-task test:unit` — verify PASS.
+
+  ```bash
+  git add components/service-task/src/list/list.service.ts \
+    components/service-task/src/list/__tests__/list.service.restore.unit.test.ts
+  git commit -m "feat(service-task): add ListService.restoreList and listDeletedLists"
+  ```
+
+- [x] **Step 14: Controller contract tests — write failing tests for both restore routes**
+
+  Create `components/service-task/src/task/__tests__/task.controller.restore.contract.test.ts`, reusing `taskControllerHarness`/`taskCreateBody`/`validTaskId`/`validIdempotencyKey` from `task.controller.contract-support.js`. Add a `restoreTask` method to that harness file:
+
+  ```ts
+  restoreTask(input: { id: string; userId?: string; idempotencyKey?: string; body: RequestBody }) {
+    const req = request(app.getHttpServer())
+      .post(`/tasks/${input.id}/restore`)
+      .set('X-User-Id', input.userId ?? 'local');
+    if (input.idempotencyKey) {
+      req.set('Idempotency-Key', input.idempotencyKey);
+    }
+    return req.send(input.body);
+  },
+  ```
+
+  Test cases (`describe('POST /tasks/:id/restore')`):
+  - creates a deleted task (via `postTask` + `deleteTask`), restores it, expects 200 with `deleted_at: null` and the new `updated_at`; a subsequent `getTasks()` (default, excludes deleted) includes it again.
+  - restore with an older `updated_at` than the stored row returns 200 with the row unchanged (`deleted_at` still set).
+  - restore without `Idempotency-Key` returns 400.
+  - restore of a nonexistent id returns 404.
+
+  Create `components/service-task/src/list/__tests__/list.controller.contract-support.ts` (this file doesn't exist yet — model it on `task.controller.contract-support.ts`, scoped to `ListController`'s four existing routes plus `restoreList`, with `deleteList`/`createList`/`restoreList` helpers hitting `/lists`, `/lists/:id`, `/lists/:id/restore`, no `Idempotency-Key` handling since List routes don't require it).
+
+  Create `components/service-task/src/list/__tests__/list.controller.restore.contract.test.ts` with the same four cases as tasks, minus the `Idempotency-Key` case (list mutations never require it — add a case instead asserting restore succeeds with **no** `Idempotency-Key` header set, documenting the asymmetry inline per the ownership-comment convention, referencing `idempotency.interceptor.ts`).
+
+- [x] **Step 15: Run and verify both fail**
+
+  Run: `pnpm --filter @psykl/service-task test:component`
+  Expected: FAIL — no `/restore` route registered (404 instead of the expected status on every case).
+
+- [x] **Step 16: Implement both controller routes**
+
+  In `components/service-task/src/task/task.controller.ts`, add `TaskRestoreInputSchema`/`TaskRestoreInput` to the `@psykl/shared-types` import, then after the `delete` method:
+
+  ```ts
+  @Post(':id/restore')
+  async restore(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(TaskRestoreInputSchema)) body: TaskRestoreInput,
+  ): Promise<TaskResponse> {
+    return this.tasks.restoreTask(req.userId!, id, body);
+  }
+  ```
+
+  In `components/service-task/src/list/list.controller.ts`, add `ListRestoreInputSchema`/`ListRestoreInput` to the `@psykl/shared-types` import, then after the `delete` method:
+
+  ```ts
+  @Post(':id/restore')
+  async restore(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(ListRestoreInputSchema)) body: ListRestoreInput,
+  ): Promise<ListResponse> {
+    return this.lists.restoreList(req.userId!, id, body);
+  }
+  ```
+
+- [x] **Step 17: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:component`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/task/task.controller.ts components/service-task/src/list/list.controller.ts \
+    components/service-task/src/task/__tests__/task.controller.contract-support.ts \
+    components/service-task/src/task/__tests__/task.controller.restore.contract.test.ts \
+    components/service-task/src/list/__tests__/list.controller.contract-support.ts \
+    components/service-task/src/list/__tests__/list.controller.restore.contract.test.ts
+  git commit -m "feat(service-task): wire POST /tasks/:id/restore and POST /lists/:id/restore"
+  ```
+
+- [x] **Step 18: `GET /deleted` — write failing contract test**
+
+  Create `components/service-task/src/deleted/__tests__/deleted.controller.contract.test.ts`:
+
+  ```ts
+  import request from 'supertest';
+  import { describe, expect, it } from 'vitest';
+
+  import { listControllerHarness } from '../../list/__tests__/list.controller.contract-support.js';
+  import { taskControllerHarness } from '../../task/__tests__/task.controller.contract-support.js';
+
+  describe('GET /deleted', () => {
+    const tasks = taskControllerHarness();
+    const lists = listControllerHarness();
+
+    it('returns deleted Lists and Tasks for the current user, excluding live rows', async () => {
+      const taskId = '0193e1c0-1234-7000-8000-000000000200';
+      await tasks
+        .postTask({
+          idempotencyKey: '0193e1c0-5678-7000-8000-000000000200',
+          body: { id: taskId, title: 'gone', updated_at: '2026-05-20T12:00:00.000Z' },
+        })
+        .expect(201);
+      await tasks
+        .deleteTask({
+          id: taskId,
+          idempotencyKey: '0193e1c0-5678-7000-8000-000000000201',
+          body: { deleted_at: '2026-05-20T12:05:00.000Z', updated_at: '2026-05-20T12:05:00.000Z' },
+        })
+        .expect(200);
+
+      // Given / When
+      const res = await request(tasks.app.getHttpServer()).get('/deleted').set('X-User-Id', 'local').expect(200);
+
+      // Then
+      expect((res.body.tasks as Array<{ id: string }>).map((t) => t.id)).toContain(taskId);
+      expect(res.body.lists).toEqual(expect.any(Array));
+    });
+
+    it('returns 401 with no X-User-Id header', async () => {
+      await request(tasks.app.getHttpServer()).get('/deleted').expect(401);
+    });
+  });
+  ```
+
+  Add `get app() { return app; }` to the returned object of both `taskControllerHarness()` (`task.controller.contract-support.ts`) and the new `listControllerHarness()` (`list.controller.contract-support.ts`, created in Step 14) so this test can reach the raw Nest HTTP server for the one route (`/deleted`) that belongs to neither controller.
+
+- [x] **Step 19: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/service-task test:component`
+  Expected: FAIL — 404, no `/deleted` route.
+
+- [x] **Step 20: Implement `DeletedController` and wire it into `AppModule`**
+
+  Create `components/service-task/src/deleted/deleted.controller.ts`:
+
+  ```ts
+  import { Controller, Get, Inject, Req } from '@nestjs/common';
+  import type { DeletedResponse } from '@psykl/shared-types';
+
+  import { ListService } from '../list/list.service.js';
+  import { TaskService } from '../task/task.service.js';
+
+  interface RequestWithUser {
+    userId?: string;
+  }
+
+  @Controller()
+  export class DeletedController {
+    constructor(
+      @Inject(TaskService) private readonly tasks: TaskService,
+      @Inject(ListService) private readonly lists: ListService,
+    ) {}
+
+    @Get('deleted')
+    async listDeleted(@Req() req: RequestWithUser): Promise<DeletedResponse> {
+      const [lists, tasks] = await Promise.all([
+        this.lists.listDeletedLists(req.userId!),
+        this.tasks.listDeletedTasks(req.userId!),
+      ]);
+      return { lists, tasks };
+    }
+  }
+  ```
+
+  In `components/service-task/src/app.module.ts`, add the import and register the controller:
+
+  ```ts
+  import { DeletedController } from './deleted/deleted.controller.js';
+  // ...
+  @Module({
+    imports: [TaskModule, ListModule, IdempotencyModule, VersionModule],
+    controllers: [DeletedController],
+  })
+  export class AppModule {}
+  ```
+
+- [x] **Step 21: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:component`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/deleted/deleted.controller.ts \
+    components/service-task/src/deleted/__tests__/deleted.controller.contract.test.ts \
+    components/service-task/src/app.module.ts
+  git commit -m "feat(service-task): add GET /deleted"
+  ```
+
+- [x] **Step 22: Extend user-id default-deny coverage**
+
+  Add rows to the `it.each` table in `components/service-task/src/auth/__tests__/user-id.guard.contract.test.ts` for `POST /tasks/:id/restore` and `GET /deleted`; add a row to `components/service-task/src/list/__tests__/list.user-id.contract.test.ts` for `POST /lists/:id/restore`.
+
+  Run: `pnpm --filter @psykl/service-task test:component` — verify PASS (the guard already applies globally; this step only adds coverage).
+
+  ```bash
+  git add components/service-task/src/auth/__tests__/user-id.guard.contract.test.ts \
+    components/service-task/src/list/__tests__/list.user-id.contract.test.ts
+  git commit -m "test(service-task): cover restore and deleted routes in user-id default-deny suite"
+  ```
+
+- [x] **Step 23: Integration test — restore + `GET /deleted` window filtering against real pglite**
+
+  Create `components/service-task/tests/integration/recently-deleted-restore.integration.test.ts` using the `createIntegrationDb`/`insertTask`/`taskService` pattern from `task.integration-support.ts` (add an `insertList`/`listService` pair to a new `list.integration-support.ts`, modeled on the task one). Cases:
+  - a task inserted with `deletedAt` 5 days ago is returned by `listDeletedTasks`; restoring it via `TaskService.restoreTask` clears `deletedAt` and it no longer appears.
+  - a task inserted with `deletedAt` 31 days ago is **excluded** from `listDeletedTasks` (window filter working ahead of DevTask 8's purge job).
+  - same two cases for `ListService.restoreList`/`listDeletedLists`.
+
+  Run: `pnpm --filter @psykl/service-task test:integration` — verify PASS (implementation from Steps 11/13 already covers this; this step is characterization coverage, not new production code).
+
+  ```bash
+  git add components/service-task/tests/integration/recently-deleted-restore.integration.test.ts \
+    components/service-task/tests/integration/list.integration-support.ts
+  git commit -m "test(service-task): integration coverage for restore and 30-day deleted window"
+  ```
+
+- [x] **Step 24: Update this spec doc's checkbox state**
+
+  Mark DevTask 7's Steps 1-23 complete above; do not touch `docs/features/` (feature doc is written once, at Spec 2's final DevTask). Commit as part of the DevTask 7 PR body, not a separate commit (per AGENTS.md → File & Status Discipline).
+
+### DevTask 8: 30-day purge job
+
+**Files:** 2
+**Branch:** `feat/todo-experience-s2-dt8-purge-job` (stacked on DevTask 7's branch — hard dependency on `DB_TOKEN`/`schema` wiring already in `main` is not the blocker; the dependency is sequencing behind the DevTask 7 PR per the DESIGN.md breakdown's `Depends on` column, and this DevTask lands while DevTask 7 is still in review)
+**PR:** _filled once the PR is opened; targets `feat/todo-experience-s2-dt7-restore-and-deleted`_
+**Affected:**
+
+- `components/service-task/src/purge/purge.service.ts` (create)
+- `components/service-task/src/app.module.ts` (modify)
+- `components/service-task/package.json` (modify — new `@nestjs/schedule` dependency; exempt from the file-count limit per AGENTS.md → Git Conventions)
+
+**Design notes carried into implementation:**
+
+- **Clock control via DI, not `vi.useFakeTimers`.** `PurgeService` takes a `CLOCK_TOKEN` provider (`type Clock = () => Date`), mirroring the `DB_TOKEN` pattern already in `task.service.ts`. Production wiring provides `() => new Date()`; the integration test constructs `PurgeService` directly with a fixed clock, so the purge boundary test runs instantly instead of waiting real days.
+- **One log line per purged row**, per the Open Questions/Risks entry — `Logger.log` on each deleted task/list id before the query returns.
+- **No separate `PurgeModule`.** `PurgeService` and `CLOCK_TOKEN`'s provider are registered directly on `AppModule`, same rationale as `DeletedController` in DevTask 7 — keeps this DevTask at 2 files instead of 3.
+- **`@nestjs/schedule`'s `ScheduleModule.forRoot()`** is added to `AppModule`'s imports once; `@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)` drives the daily run in production. The Cron decorator does not fire during the integration test — the test calls `purgeExpiredTombstones()` directly.
+
+**Steps:**
+
+- [x] **Step 1: Write failing integration test for the purge boundary**
+
+  Create `components/service-task/tests/integration/recently-deleted-purge.integration.test.ts`:
+
+  ```ts
+  import { v7 as uuidv7 } from 'uuid';
+  import { beforeAll, describe, expect, it } from 'vitest';
+
+  import type { Db } from '../../src/db/index.js';
+  import { insertList, listService } from './list.integration-support.js';
+  import { createIntegrationDb, insertTask, taskService } from './task.integration-support.js';
+  import { PurgeService } from '../../src/purge/purge.service.js';
+
+  describe('PurgeService.purgeExpiredTombstones', () => {
+    let db: Db;
+
+    beforeAll(async () => {
+      db = await createIntegrationDb();
+    });
+
+    // Fixed "now" so the 30-day boundary is deterministic instead of drifting
+    // with the real wall clock (see recently-deleted-restore.integration.test.ts
+    // for why real-Date.now()-relative fixtures are needed elsewhere).
+    const now = new Date('2026-06-20T00:00:00.000Z');
+    const daysBefore = (days: number) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+    it('purges a Task tombstoned 31 days ago, keeps one tombstoned 29 days ago', async () => {
+      const purgedId = uuidv7();
+      const keptId = uuidv7();
+      await insertTask(db, { id: purgedId, title: 'purge me', updatedAt: daysBefore(31), deletedAt: daysBefore(31) });
+      await insertTask(db, { id: keptId, title: 'keep me', updatedAt: daysBefore(29), deletedAt: daysBefore(29) });
+
+      // Given
+      const purge = new PurgeService(db, () => now);
+
+      // When
+      const result = await purge.purgeExpiredTombstones();
+
+      // Then
+      expect(result.tasksPurged).toBeGreaterThanOrEqual(1);
+      const remaining = await taskService(db).listTasks('local', { includeDeleted: true });
+      expect(remaining.map((task) => task.id)).not.toContain(purgedId);
+      expect(remaining.map((task) => task.id)).toContain(keptId);
+    });
+
+    it('purges a List tombstoned 31 days ago, keeps one tombstoned 29 days ago', async () => {
+      const purgedId = uuidv7();
+      const keptId = uuidv7();
+      await insertList(db, { id: purgedId, title: 'purge me', updatedAt: daysBefore(31), deletedAt: daysBefore(31) });
+      await insertList(db, { id: keptId, title: 'keep me', updatedAt: daysBefore(29), deletedAt: daysBefore(29) });
+
+      // Given
+      const purge = new PurgeService(db, () => now);
+
+      // When
+      const result = await purge.purgeExpiredTombstones();
+
+      // Then
+      expect(result.listsPurged).toBeGreaterThanOrEqual(1);
+      const remainingKept = await listService(db).listDeletedLists('local');
+      expect(remainingKept.map((list) => list.id)).toContain(keptId);
+      expect(remainingKept.map((list) => list.id)).not.toContain(purgedId);
+    });
+
+    it('never purges a row restored before the 30-day boundary', async () => {
+      const id = uuidv7();
+      await insertTask(db, { id, title: 'restored in time', updatedAt: daysBefore(31), deletedAt: daysBefore(31) });
+      await taskService(db).restoreTask('local', id, { updated_at: daysBefore(1).toISOString() });
+
+      // Given
+      const purge = new PurgeService(db, () => now);
+
+      // When
+      await purge.purgeExpiredTombstones();
+
+      // Then
+      const rows = await taskService(db).listTasks('local', { includeDeleted: true });
+      expect(rows.map((task) => task.id)).toContain(id);
+    });
+  });
+  ```
+
+- [x] **Step 2: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: FAIL — `../../src/purge/purge.service.js` does not exist.
+
+- [x] **Step 3: Add the `@nestjs/schedule` dependency**
+
+  ```bash
+  pnpm --filter @psykl/service-task add @nestjs/schedule
+  ```
+
+- [x] **Step 4: Implement `PurgeService`**
+
+  Create `components/service-task/src/purge/purge.service.ts`:
+
+  ```ts
+  import { Inject, Injectable, Logger } from '@nestjs/common';
+  import { Cron, CronExpression } from '@nestjs/schedule';
+  import { and, isNotNull, lt } from 'drizzle-orm';
+
+  import { type Db, schema } from '../db/index.js';
+  import { DB_TOKEN } from '../task/task.service.js';
+
+  export const CLOCK_TOKEN = Symbol('CLOCK');
+  export type Clock = () => Date;
+
+  // 30-day Recently Deleted retention window. See DESIGN.md -> Offline Posture.
+  const RECENTLY_DELETED_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+  export interface PurgeResult {
+    tasksPurged: number;
+    listsPurged: number;
+  }
+
+  @Injectable()
+  export class PurgeService {
+    private readonly logger = new Logger(PurgeService.name);
+
+    constructor(
+      @Inject(DB_TOKEN) private readonly db: Db,
+      @Inject(CLOCK_TOKEN) private readonly clock: Clock,
+    ) {}
+
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    async purgeExpiredTombstones(): Promise<PurgeResult> {
+      const cutoff = new Date(this.clock().getTime() - RECENTLY_DELETED_WINDOW_MS);
+
+      const purgedTasks = await this.db
+        .delete(schema.tasks)
+        .where(and(isNotNull(schema.tasks.deletedAt), lt(schema.tasks.deletedAt, cutoff)))
+        .returning({ id: schema.tasks.id });
+      for (const row of purgedTasks) {
+        this.logger.log(`purged task ${row.id}`);
+      }
+
+      const purgedLists = await this.db
+        .delete(schema.lists)
+        .where(and(isNotNull(schema.lists.deletedAt), lt(schema.lists.deletedAt, cutoff)))
+        .returning({ id: schema.lists.id });
+      for (const row of purgedLists) {
+        this.logger.log(`purged list ${row.id}`);
+      }
+
+      return { tasksPurged: purgedTasks.length, listsPurged: purgedLists.length };
+    }
+  }
+  ```
+
+- [x] **Step 5: Wire `ScheduleModule`, `PurgeService`, and `CLOCK_TOKEN` into `AppModule`**
+
+  In `components/service-task/src/app.module.ts`:
+
+  ```ts
+  import { Module } from '@nestjs/common';
+  import { ScheduleModule } from '@nestjs/schedule';
+
+  import { DeletedController } from './deleted/deleted.controller.js';
+  import { IdempotencyModule } from './idempotency/idempotency.module.js';
+  import { ListModule } from './list/list.module.js';
+  import { CLOCK_TOKEN, PurgeService } from './purge/purge.service.js';
+  import { TaskModule } from './task/task.module.js';
+  import { VersionModule } from './version/version.module.js';
+
+  @Module({
+    imports: [TaskModule, ListModule, IdempotencyModule, VersionModule, ScheduleModule.forRoot()],
+    controllers: [DeletedController],
+    providers: [PurgeService, { provide: CLOCK_TOKEN, useValue: () => new Date() }],
+  })
+  export class AppModule {}
+  ```
+
+- [x] **Step 6: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/purge/purge.service.ts components/service-task/src/app.module.ts \
+    components/service-task/tests/integration/recently-deleted-purge.integration.test.ts \
+    components/service-task/package.json
+  git commit -m "feat(service-task): add PurgeService with daily 30-day tombstone purge"
+  ```
+
+- [x] **Step 7: Full verification pass**
+
+  ```bash
+  pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
+  pnpm --filter @psykl/service-task test:unit
+  pnpm --filter @psykl/service-task test:integration
+  pnpm --filter @psykl/service-task test:component
+  ```
+
+  Expected: all green.
+
+- [x] **Step 8: Update this spec doc's checkbox state**
+
+  Mark DevTask 8's Steps 1-7 complete above.
+
+### DevTask 9: Orphan sweep heals dangling `list_id`
+
+**Files:** 2 (revised from the planned 1 — see design notes)
+**Branch:** `feat/todo-experience-s2-dt9-orphan-sweep` (stacked on DevTask 7's branch — hard dependency on DevTask 7 per the DESIGN.md breakdown's `Depends on` column; DevTask 7 is still unmerged, so this DevTask branches off it directly rather than off the Spec branch)
+**PR:** _filled once the PR is opened; targets `feat/todo-experience-s2-dt7-restore-and-deleted`_
+**Affected:**
+
+- `components/service-task/src/task/task.service.ts` (modify)
+- `components/service-task/src/task/task-orphan-sweep.ts` (create)
+
+**Design notes carried into implementation:**
+
+- **"Default list" = the earliest-position live list for the user**, matching the client's own definition in `components/web_client/src/hooks/useLists.default-list.ts:24-28` ("The earliest-position active list is the default list"). The server does NOT hardcode the client's well-known `DEFAULT_LIST_ID` constant — that ID is itself just the first list a device creates, and UX.md § 10 says a task whose original list is deleted "goes to the default list," which must still resolve correctly if the well-known list itself is ever deleted and a different list becomes earliest-position.
+- **Heals by write, not by response-shaping.** An orphaned Task's `list_id` is persisted back to the default list's id on the next `listTasks` read — "heals without a background job" per the DESIGN.md decision — not just masked in the response while the stored row stays broken.
+- **No live lists at all → no-op.** If a user has zero live lists (edge case; the client always bootstraps one), orphaned references are left as-is rather than crashing — there is nothing to heal into yet.
+- **Scoped to `listTasks`'s default (non-deleted) rows.** Tombstoned Tasks (`includeDeleted: true`) are not healed — a deleted Task's `list_id` is inert; healing it would just be write amplification with no observable effect since deleted rows are excluded from the client's list views.
+- **Healing logic lives in its own file, `task-orphan-sweep.ts`.** Inlining it in `task.service.ts` pushed that file over the project's `max-lines: 150` ESLint rule (caught by the pre-commit hook during execution) — split by responsibility, matching the existing `openapi/task-paths.ts` / `openapi/list-paths.ts` precedent in `packages/shared-types`. Revises the planned file count from 1 to 2; still well under the ≤10 DevTask ceiling.
+
+**Steps:**
+
+- [x] **Step 1: Write failing integration test for the orphan sweep**
+
+  Create `components/service-task/tests/integration/task-orphan-sweep.integration.test.ts`:
+
+  ```ts
+  import { v7 as uuidv7 } from 'uuid';
+  import { beforeAll, describe, expect, it } from 'vitest';
+
+  import type { Db } from '../../src/db/index.js';
+  import { insertList } from './list.integration-support.js';
+  import { createIntegrationDb, insertTask, taskService } from './task.integration-support.js';
+
+  describe('TaskService orphan sweep', () => {
+    let db: Db;
+
+    beforeAll(async () => {
+      db = await createIntegrationDb();
+    });
+
+    it('reassigns a Task pointing at a deleted list to the earliest-position live list, persisting the fix', async () => {
+      const defaultListId = await insertList(db, {
+        title: 'Tasks',
+        position: 'a0',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      const deletedListId = await insertList(db, {
+        title: 'Gone',
+        position: 'a1',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+        deletedAt: new Date('2026-05-20T11:00:00.000Z'),
+      });
+      const taskId = await insertTask(db, {
+        title: 'orphaned',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      await db.update((await import('../../src/db/index.js')).schema.tasks).set({ listId: deletedListId });
+
+      // Given
+      const service = taskService(db);
+
+      // When
+      const [firstRead] = await service.listTasks('local');
+
+      // Then
+      expect(firstRead).toMatchObject({ id: taskId, list_id: defaultListId });
+
+      // And — the fix is persisted, not just shaped in the response
+      const [secondRead] = await service.listTasks('local');
+      expect(secondRead).toMatchObject({ id: taskId, list_id: defaultListId });
+    });
+
+    it('reassigns a Task pointing at a list id the server has never seen', async () => {
+      const defaultListId = await insertList(db, {
+        title: 'Tasks',
+        position: 'a0',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      const unseenListId = uuidv7();
+      const taskId = await insertTask(db, {
+        id: uuidv7(),
+        title: 'never-seen list',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      await db.update((await import('../../src/db/index.js')).schema.tasks).set({ listId: unseenListId });
+
+      // Given
+      const service = taskService(db);
+
+      // When
+      const rows = await service.listTasks('local');
+
+      // Then
+      expect(rows.find((task) => task.id === taskId)).toMatchObject({ list_id: defaultListId });
+    });
+
+    it('leaves a Task referencing a live list untouched', async () => {
+      const liveListId = await insertList(db, {
+        title: 'Live',
+        position: 'a2',
+        updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      });
+      const taskId = await insertTask(db, { title: 'fine', updatedAt: new Date('2026-05-20T10:00:00.000Z') });
+      await db.update((await import('../../src/db/index.js')).schema.tasks).set({ listId: liveListId });
+
+      // Given
+      const service = taskService(db);
+
+      // When
+      const rows = await service.listTasks('local');
+
+      // Then
+      expect(rows.find((task) => task.id === taskId)).toMatchObject({ list_id: liveListId });
+    });
+  });
+  ```
+
+  (Note: the awkward `db.update(...)` calls set `list_id` after insert because `insertTask` in `task.integration-support.ts` does not currently accept a `listId` field — Step 4 below extends that helper cleanly instead of leaving the inline `db.update` workaround in the final test; see Step 4.)
+
+- [x] **Step 2: Run and verify it fails**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: FAIL — assertions on `list_id` don't match (no healing logic yet).
+
+- [x] **Step 3: Extend `insertTask` to accept `listId`, and rewrite the test using it**
+
+  In `components/service-task/tests/integration/task.integration-support.ts`, add `listId?: string` to `insertTask`'s input type and pass it through to `.values({ ..., listId: input.listId })`. Rewrite the three test bodies above to pass `listId` directly to `insertTask` instead of the inline `db.update(...)` workaround.
+
+- [x] **Step 4: Implement the orphan sweep in `TaskService.listTasks`**
+
+  In `components/service-task/src/task/task.service.ts`, add `import { schema } from '../db/index.js'` already exists; extend the `drizzle-orm` import with `inArray`. Replace `listTasks` with:
+
+  ```ts
+  async listTasks(userId: string, options: { includeDeleted?: boolean } = {}): Promise<TaskResponse[]> {
+    const rows = await this.db
+      .select()
+      .from(schema.tasks)
+      .where(
+        options.includeDeleted
+          ? eq(schema.tasks.userId, userId)
+          : and(eq(schema.tasks.userId, userId), isNull(schema.tasks.deletedAt)),
+      );
+
+    const healedRows = options.includeDeleted ? rows : await this.healOrphanedListReferences(userId, rows);
+    return healedRows.map((row) => this.toResponse(row));
+  }
+
+  private async healOrphanedListReferences(
+    userId: string,
+    rows: (typeof schema.tasks.$inferSelect)[],
+  ): Promise<(typeof schema.tasks.$inferSelect)[]> {
+    const referencedListIds = [...new Set(rows.map((row) => row.listId).filter((id): id is string => id !== null))];
+    if (referencedListIds.length === 0) {
+      return rows;
+    }
+
+    const liveLists = await this.db
+      .select({ id: schema.lists.id })
+      .from(schema.lists)
+      .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt), inArray(schema.lists.id, referencedListIds)));
+    const liveListIds = new Set(liveLists.map((list) => list.id));
+    const orphans = rows.filter((row) => row.listId !== null && !liveListIds.has(row.listId));
+    if (orphans.length === 0) {
+      return rows;
+    }
+
+    const [defaultList] = await this.db
+      .select({ id: schema.lists.id })
+      .from(schema.lists)
+      .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt)))
+      .orderBy(schema.lists.position)
+      .limit(1);
+    if (!defaultList) {
+      return rows;
+    }
+
+    const orphanIds = orphans.map((row) => row.id);
+    await this.db.update(schema.tasks).set({ listId: defaultList.id }).where(inArray(schema.tasks.id, orphanIds));
+
+    return rows.map((row) => (orphanIds.includes(row.id) ? { ...row, listId: defaultList.id } : row));
+  }
+  ```
+
+- [x] **Step 5: Run and verify green, then commit**
+
+  Run: `pnpm --filter @psykl/service-task test:integration`
+  Expected: PASS
+
+  ```bash
+  git add components/service-task/src/task/task.service.ts \
+    components/service-task/tests/integration/task-orphan-sweep.integration.test.ts \
+    components/service-task/tests/integration/task.integration-support.ts
+  git commit -m "feat(service-task): heal orphaned Task list_id references on read"
+  ```
+
+- [x] **Step 6: Full verification pass**
+
+  ```bash
+  pnpm -r lint && pnpm -r typecheck && pnpm -r format:check
+  pnpm --filter @psykl/service-task test:unit
+  pnpm --filter @psykl/service-task test:integration
+  pnpm --filter @psykl/service-task test:component
+  ```
+
+  Expected: all green.
+
+- [x] **Step 7: Update this spec doc's checkbox state**
+
+  Mark DevTask 9's Steps 1-6 complete above.
 
 ## Test Plan
 
-- **Unit:** purge boundary arithmetic; `useSyncPressure` threshold transitions at 24/25/99/100.
-- **Integration:** purge with a controlled clock; restore clears the tombstone; orphan sweep.
-- **Component:** restore route contract incl. `user_id` default-deny; Storybook play function for the Recently Deleted list.
-- **E2E:** `recently_deleted.e2e.spec.ts`, `offline_pressure.e2e.spec.ts`.
+- **Unit:** schema validation for `TaskRestoreInput`/`ListRestoreInput`/`DeletedResponse` (DevTask 7); `TaskService.restoreTask`/`ListService.restoreList` LWW arithmetic (DevTask 7); purge boundary arithmetic (DevTask 8); `useSyncPressure` threshold transitions at 24/25/99/100 (DevTask 11).
+- **Integration:** restore clears the tombstone + 30-day window filtering on `listDeletedTasks`/`listDeletedLists` (DevTask 7); purge with a controlled clock (DevTask 8); orphan sweep (DevTask 9).
+- **Component:** restore + `GET /deleted` route contracts incl. `user_id` default-deny (DevTask 7); Storybook play function for the Recently Deleted list (DevTask 10).
+- **E2E:** `recently_deleted.e2e.spec.ts` (DevTask 10), `offline_pressure.e2e.spec.ts` (DevTask 11).
 
 New user stories to add to `UX.md` § 5 are already written there under Spec 1 and Spec 2 headings.
 
 ---
 
+## Decisions made during spec drafting
+
+- **DevTask 7 split from DESIGN.md's combined "Restore endpoints + 30-day purge job."** See the Trilemma split note under `## DevTasks`. Restore endpoints + `GET /deleted` is now DevTask 7 (10 files); the purge job is a new DevTask 8 (2 files). DevTasks previously numbered 8/9/10 (Orphan sweep / UI / Offline pressure) shift to 9/10/11. No DESIGN.md decision content changed — this is DevTask-count/boundary reshaping only, pre-authorized by AGENTS.md → Design Doc Discipline.
+- **`DeletedController` has no dedicated `DeletedModule`.** Declared directly on `AppModule`'s `controllers` array since it only consumes `TaskService`/`ListService`, already exported by `TaskModule`/`ListModule`. Keeps DevTask 7 at exactly 10 files instead of 11.
+- **Idempotency asymmetry between `/tasks/*` and `/lists/*` is preserved as-is**, not fixed in this DevTask — see `IdempotencyInterceptor.requiresIdempotency`. Flagged as a pre-existing gap, out of scope.
+
+---
+
 ## Open Questions / Risks
 
-- **The purge is destructive and scheduled.** It needs a dry-run mode and a log line per purged row before it runs against robin.
-- **Clock control in tests.** `service-task` has no time-mocking helper yet; DevTask 7 introduces one and later Specs reuse it.
-- **The 25/100 thresholds are guesses.** Premise P3 says live with them and change them if real use disagrees.
+- **The purge is destructive and scheduled (DevTask 8).** It needs a dry-run mode and a log line per purged row before it runs against robin.
+- **Clock control in tests (DevTask 8).** `service-task` has no time-mocking helper yet; DevTask 8 introduces one (e.g. a `CLOCK_TOKEN` DI provider on `PurgeService`, mirroring the `DB_TOKEN` pattern) and later Specs reuse it.
+- **The 25/100 thresholds are guesses (DevTask 11).** Premise P3 says live with them and change them if real use disagrees.
+- **List mutation idempotency gap.** `/lists/*` routes (including the new restore route) are not idempotency-protected, unlike `/tasks/*`. Not this Spec's scope to fix; noted for awareness.
 
 ## Affected by / Depends on
 

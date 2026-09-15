@@ -74,6 +74,14 @@ export const TaskDeleteInputSchema = z
 export type TaskDeleteInput = z.infer<typeof TaskDeleteInputSchema>;
 
 /**
+ * Request body shape for POST /tasks/{id}/restore.
+ * Clears deleted_at server-side; reconciles under Last-Write-Wins like a patch.
+ */
+export const TaskRestoreInputSchema = z.object({ updated_at: TimestampSchema }).strict();
+
+export type TaskRestoreInput = z.infer<typeof TaskRestoreInputSchema>;
+
+/**
  * Response shape for POST /tasks and the individual elements of GET /tasks.
  * Identical to TaskSchema today; kept as a separate name so future
  * server-side derived fields can extend the response without breaking the

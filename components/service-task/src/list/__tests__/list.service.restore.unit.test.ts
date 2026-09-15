@@ -1,0 +1,68 @@
+import { describe, expect, it, vi } from 'vitest';
+
+import type { Db } from '../../db/index.js';
+import { ListService } from '../list.service.js';
+
+function listRow(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: '0193e1c0-1234-7000-8000-000000000000',
+    userId: 'local',
+    title: 'list',
+    position: 'a0',
+    createdAt: new Date('2026-05-20T10:00:00.000Z'),
+    updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+    serverUpdatedAt: new Date('2026-05-20T12:00:00.500Z'),
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function mockRestoreDb(selectRows: unknown[], updateSet: ReturnType<typeof vi.fn>): Db {
+  const where = vi.fn(async () => selectRows);
+  const from = vi.fn(() => ({ where }));
+  return {
+    select: vi.fn(() => ({ from })),
+    update: vi.fn(() => ({ set: updateSet })),
+  } as unknown as Db;
+}
+
+describe('ListService.restoreList', () => {
+  it('clears deleted_at and bumps updated_at when the restore is newer', async () => {
+    const currentRow = listRow({
+      updatedAt: new Date('2026-05-20T12:00:00.000Z'),
+      deletedAt: new Date('2026-05-20T12:00:00.000Z'),
+    });
+    const restoredRow = listRow({ updatedAt: new Date('2026-05-20T12:05:00.000Z'), deletedAt: null });
+    const updateSet = vi.fn(() => ({ where: vi.fn(() => ({ returning: vi.fn(async () => [restoredRow]) })) }));
+    const service = new ListService(mockRestoreDb([currentRow], updateSet));
+
+    // Given
+    const restoreInput = { updated_at: '2026-05-20T12:05:00.000Z' };
+
+    // When
+    const restored = await service.restoreList('local', currentRow.id, restoreInput);
+
+    // Then
+    expect(restored.deleted_at).toBeNull();
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ deletedAt: null }));
+  });
+
+  it('is a no-op returning the stored row when restore updated_at is not newer', async () => {
+    const currentRow = listRow({
+      updatedAt: new Date('2026-05-20T12:05:00.000Z'),
+      deletedAt: new Date('2026-05-20T12:05:00.000Z'),
+    });
+    const updateSet = vi.fn();
+    const service = new ListService(mockRestoreDb([currentRow], updateSet));
+
+    // Given
+    const staleRestoreInput = { updated_at: '2026-05-20T12:00:00.000Z' };
+
+    // When
+    const result = await service.restoreList('local', currentRow.id, staleRestoreInput);
+
+    // Then
+    expect(result.deleted_at).toBe('2026-05-20T12:05:00.000Z');
+    expect(updateSet).not.toHaveBeenCalled();
+  });
+});

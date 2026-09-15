@@ -25,6 +25,10 @@ interface TaskDeleteBody {
   updated_at: string;
 }
 
+interface TaskRestoreBody {
+  updated_at: string;
+}
+
 type RequestBody = string | object | undefined;
 
 export function taskControllerHarness() {
@@ -47,6 +51,9 @@ export function taskControllerHarness() {
   return {
     get db() {
       return db;
+    },
+    get app() {
+      return app;
     },
     postTask(input: { userId?: string; idempotencyKey?: string; body: RequestBody }) {
       const req = request(app.getHttpServer())
@@ -81,6 +88,15 @@ export function taskControllerHarness() {
       }
       return req.send(input.body);
     },
+    restoreTask(input: { id: string; userId?: string; idempotencyKey?: string; body: RequestBody }) {
+      const req = request(app.getHttpServer())
+        .post(`/tasks/${input.id}/restore`)
+        .set('X-User-Id', input.userId ?? 'local');
+      if (input.idempotencyKey) {
+        req.set('Idempotency-Key', input.idempotencyKey);
+      }
+      return req.send(input.body);
+    },
   };
 }
 
@@ -104,6 +120,13 @@ export function taskPatchBody(overrides: Partial<TaskPatchBody> = {}): TaskPatch
 export function taskDeleteBody(overrides: Partial<TaskDeleteBody> = {}): TaskDeleteBody {
   return {
     deleted_at: '2026-05-20T12:00:00.000Z',
+    updated_at: '2026-05-20T12:00:00.000Z',
+    ...overrides,
+  };
+}
+
+export function taskRestoreBody(overrides: Partial<TaskRestoreBody> = {}): TaskRestoreBody {
+  return {
     updated_at: '2026-05-20T12:00:00.000Z',
     ...overrides,
   };

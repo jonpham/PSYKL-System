@@ -85,4 +85,24 @@ describe('buildOpenApiDocument', () => {
     expect(taskId).toMatchObject({ in: 'path', required: true });
     expect(body).toMatchObject({ $ref: '#/components/schemas/TaskDeleteInput' });
   });
+
+  it('produces /tasks/{id}/restore, /lists/{id}/restore, and /deleted paths', () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.paths?.['/tasks/{id}/restore']?.post).toBeDefined();
+    expect(doc.paths?.['/lists/{id}/restore']?.post).toBeDefined();
+    expect(doc.paths?.['/deleted']?.get).toBeDefined();
+    expect(doc.components?.schemas?.TaskRestoreInput).toBeDefined();
+    expect(doc.components?.schemas?.ListRestoreInput).toBeDefined();
+    expect(doc.components?.schemas?.DeletedResponse).toBeDefined();
+  });
+
+  it('requires Idempotency-Key on /tasks/{id}/restore but not on /lists/{id}/restore', () => {
+    const doc = buildOpenApiDocument();
+    const taskRestoreParams = doc.paths?.['/tasks/{id}/restore']?.post?.parameters ?? [];
+    const listRestoreParams = doc.paths?.['/lists/{id}/restore']?.post?.parameters ?? [];
+    const findKey = (params: typeof taskRestoreParams) =>
+      params.find((parameter) => parameter.name === 'Idempotency-Key');
+    expect(findKey(taskRestoreParams)).toMatchObject({ required: true });
+    expect(findKey(listRestoreParams)).toBeUndefined();
+  });
 });
