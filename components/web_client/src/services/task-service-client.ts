@@ -6,7 +6,7 @@ import {
   patchTaskRemote,
   restoreTaskRemote,
 } from '../api/tasks.api-client';
-import { putTask } from '../db/idb';
+import { listTasks, putTask } from '../db/idb';
 import { createSyncClient } from '../sync/sync-client';
 import { createServiceClient, type EntityApiClient } from './service-client';
 
@@ -20,6 +20,7 @@ const taskApiClient: EntityApiClient<Task, TaskInput, TaskPatchInput, TaskDelete
 
 const taskSyncClient = createSyncClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput>({
   entityType: 'task',
+  listLocal: listTasks,
   listRemote: listTasksRemote,
   put: putTask,
 });

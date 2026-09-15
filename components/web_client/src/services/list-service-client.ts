@@ -6,7 +6,7 @@ import {
   patchListRemote,
   restoreListRemote,
 } from '../api/lists.api-client';
-import { putList } from '../db/idb';
+import { listLists, putList } from '../db/idb';
 import { createSyncClient } from '../sync/sync-client';
 import { createServiceClient, type EntityApiClient } from './service-client';
 
@@ -20,6 +20,7 @@ const listApiClient: EntityApiClient<List, ListInput, ListPatchInput, ListDelete
 
 const listSyncClient = createSyncClient<List, ListInput, ListPatchInput, ListDeleteInput>({
   entityType: 'list',
+  listLocal: listLists,
   listRemote: listListsRemote,
   put: putList,
 });
