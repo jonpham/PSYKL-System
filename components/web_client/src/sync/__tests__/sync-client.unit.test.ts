@@ -90,6 +90,21 @@ describe('createSyncClient — task entity (atomic optimistic write)', () => {
     // When / Then
     await expect(client.hydrate()).rejects.toThrow();
   });
+
+  it('restore() writes the optimistic (un-deleted) Task then enqueues a restore op', async () => {
+    // Given
+    const deletedTask: Task = { ...optimisticTask, deleted_at: nowIso };
+    await putTask(deletedTask);
+    const restored: Task = { ...optimisticTask, deleted_at: null, updated_at: nowIso };
+
+    // When
+    await taskClient.restore(taskId, { updated_at: nowIso }, restored);
+
+    // Then
+    await expect(getTask(taskId)).resolves.toEqual(restored);
+    const queue = await listSyncQueue();
+    expect(queue).toMatchObject([{ entity_id: taskId, entity_type: 'task', op: 'restore' }]);
+  });
 });
 
 describe('createSyncClient — list entity (two-step, no atomic primitive exists)', () => {
@@ -155,5 +170,20 @@ describe('createSyncClient — list entity (two-step, no atomic primitive exists
 
     // Then
     await expect(getList(listId)).resolves.toEqual(optimisticList);
+  });
+
+  it('restore() writes the optimistic (un-deleted) List then enqueues a restore op', async () => {
+    // Given
+    const deletedList: List = { ...optimisticList, deleted_at: nowIso };
+    await putList(deletedList);
+    const restored: List = { ...optimisticList, deleted_at: null, updated_at: nowIso };
+
+    // When
+    await listClient.restore(listId, { updated_at: nowIso }, restored);
+
+    // Then
+    await expect(getList(listId)).resolves.toEqual(restored);
+    const queue = await listSyncQueue();
+    expect(queue).toMatchObject([{ entity_id: listId, entity_type: 'list', op: 'restore' }]);
   });
 });

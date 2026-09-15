@@ -17,6 +17,7 @@ function fakeApiClient(overrides: Partial<EntityApiClient<Widget, unknown, unkno
     delete: vi.fn(() => Promise.resolve<EntityApiResult<Widget>>({ data: widget, status: 200 })),
     list: vi.fn(() => Promise.resolve<EntityApiResult<Widget[]>>({ data: [widget], status: 200 })),
     patch: vi.fn(() => Promise.resolve<EntityApiResult<Widget>>({ data: widget, status: 200 })),
+    restore: vi.fn(() => Promise.resolve<EntityApiResult<Widget>>({ data: widget, status: 200 })),
     ...overrides,
   };
 }
@@ -27,6 +28,7 @@ function fakeSyncClient(overrides: Partial<SyncClient<Widget, unknown, unknown, 
     delete: vi.fn(() => Promise.resolve()),
     hydrate: vi.fn(() => Promise.resolve()),
     patch: vi.fn(() => Promise.resolve(widget)),
+    restore: vi.fn(() => Promise.resolve(widget)),
     ...overrides,
   };
 }
@@ -42,16 +44,19 @@ describe('createServiceClient — offlineCapable: true', () => {
     await client.create('w1', {}, widget);
     await client.patch('w1', {}, widget);
     await client.delete('w1', {}, widget);
+    await client.restore('w1', {}, widget);
     await client.hydrate();
 
     // Then
     expect(syncClient.create).toHaveBeenCalledWith('w1', {}, widget);
     expect(syncClient.patch).toHaveBeenCalledWith('w1', {}, widget);
     expect(syncClient.delete).toHaveBeenCalledWith('w1', {}, widget);
+    expect(syncClient.restore).toHaveBeenCalledWith('w1', {}, widget);
     expect(syncClient.hydrate).toHaveBeenCalled();
     expect(apiClient.create).not.toHaveBeenCalled();
     expect(apiClient.patch).not.toHaveBeenCalled();
     expect(apiClient.delete).not.toHaveBeenCalled();
+    expect(apiClient.restore).not.toHaveBeenCalled();
   });
 });
 
@@ -65,13 +70,16 @@ describe('createServiceClient — offlineCapable: false', () => {
     const created = await client.create('w1', {}, widget);
     const patched = await client.patch('w1', {}, widget);
     await client.delete('w1', {}, widget);
+    const restored = await client.restore('w1', {}, widget);
 
     // Then
     expect(created).toEqual(widget);
     expect(patched).toEqual(widget);
+    expect(restored).toEqual(widget);
     expect(apiClient.create).toHaveBeenCalledWith({}, expect.any(String));
     expect(apiClient.patch).toHaveBeenCalledWith('w1', {}, expect.any(String));
     expect(apiClient.delete).toHaveBeenCalledWith('w1', {}, expect.any(String));
+    expect(apiClient.restore).toHaveBeenCalledWith('w1', expect.any(String));
   });
 
   it('hydrate() is a no-op — direct mode has no local cache to fill', async () => {
