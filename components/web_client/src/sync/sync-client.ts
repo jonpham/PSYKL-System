@@ -7,6 +7,7 @@ interface SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   create(entityId: string, body: TInput, optimistic: TEntity): Promise<TEntity>;
   patch(entityId: string, body: TPatchInput, optimistic: TEntity): Promise<TEntity>;
   delete(entityId: string, body: TDeleteInput, optimistic: TEntity): Promise<void>;
+  restore(entityId: string, body: unknown, optimistic: TEntity): Promise<TEntity>;
   hydrate(): Promise<void>;
 }
 
@@ -30,6 +31,10 @@ function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
     },
     async delete(entityId, body, optimistic) {
       await enqueueOptimistic(config, entityId, body, 'delete', optimistic);
+    },
+    async restore(entityId, body, optimistic) {
+      await enqueueOptimistic(config, entityId, body, 'restore', optimistic);
+      return optimistic;
     },
     async hydrate() {
       const result = await config.listRemote();
