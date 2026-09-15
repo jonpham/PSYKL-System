@@ -3,9 +3,10 @@ import 'fake-indexeddb/auto';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { deleteDB } from 'idb';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { listTasks } from '../../../db/idb';
+import { useSyncPressure } from '../../../hooks/useSyncPressure';
 import { resetUseTasksForTest } from '../../../hooks/useTasks';
 import { TaskCreateForm } from '../TaskCreateForm';
 
@@ -19,6 +20,8 @@ vi.mock('../../../sync/replay', async (importOriginal) => {
   };
 });
 
+vi.mock('../../../hooks/useSyncPressure');
+
 const databaseName = 'psykl';
 
 afterEach(async () => {
@@ -28,6 +31,10 @@ afterEach(async () => {
 });
 
 describe('TaskCreateForm (Unit)', () => {
+  beforeEach(() => {
+    vi.mocked(useSyncPressure).mockReturnValue({ count: 0, level: 'ok' });
+  });
+
   it('renders an input and a Create button', () => {
     render(<TaskCreateForm />);
 
@@ -73,5 +80,14 @@ describe('TaskCreateForm (Unit)', () => {
     await user.type(screen.getByRole('textbox', { name: /title/i }), 'second local task');
 
     await waitFor(() => expect(screen.getByRole('button', { name: /create/i })).toBeEnabled());
+  });
+
+  it('disables the capture field at the write ceiling', () => {
+    vi.mocked(useSyncPressure).mockReturnValue({ count: 100, level: 'ceiling' });
+    render(<TaskCreateForm />);
+
+    expect(screen.getByLabelText('title')).toBeDisabled();
+    expect(screen.getByLabelText('title')).toHaveAttribute('placeholder', 'Reconnect to keep adding.');
+    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled();
   });
 });

@@ -1,10 +1,13 @@
 import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 
+import { useSyncPressure } from '../../hooks/useSyncPressure';
 import { useTasks } from '../../hooks/useTasks';
 
 export function TaskCreateForm() {
   const { createTask } = useTasks();
+  const { level } = useSyncPressure();
+  const atCeiling = level === 'ceiling';
   const [title, setTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -38,15 +41,16 @@ export function TaskCreateForm() {
         <input
           id="task-title"
           aria-label="title"
+          disabled={atCeiling}
           maxLength={200}
           name="title"
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="What needs doing?"
+          placeholder={atCeiling ? 'Reconnect to keep adding.' : 'What needs doing?'}
           style={{ flex: 1, padding: '0.5rem' }}
           type="text"
           value={title}
         />
-        <button type="submit" disabled={!title.trim() || submitting}>
+        <button type="submit" disabled={!title.trim() || submitting || atCeiling}>
           Create
         </button>
       </form>
