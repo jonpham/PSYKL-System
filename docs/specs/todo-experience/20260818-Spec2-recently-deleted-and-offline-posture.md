@@ -82,7 +82,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 | 7   | Restore endpoints + `GET /deleted`      | `feat/todo-experience-s2-dt7-restore-and-deleted`  | 10    | Spec 1 DevTask 3 |
 | 8   | 30-day purge job                        | `feat/todo-experience-s2-dt8-purge-job`            | 2     | DevTask 7        |
 | 9   | Orphan sweep heals dangling `list_id`   | `feat/todo-experience-s2-dt9-orphan-sweep`         | 2     | DevTask 7        |
-| 10  | Restore sync-queue plumbing             | `feat/todo-experience-s2-dt10-restore-plumbing`    | 8     | DevTask 7        |
+| 10  | Restore sync-queue plumbing             | `feat/todo-experience-s2-dt10-restore-plumbing`    | 9     | DevTask 7        |
 | 11  | Recently Deleted screen                 | `feat/todo-experience-s2-dt11-recently-deleted-ui` | ~5    | DevTask 10       |
 | 12  | Offline pressure banner + write ceiling | `feat/todo-experience-s2-dt12-offline-pressure`    | ~4    | Spec 1 DevTask 1 |
 
@@ -1145,7 +1145,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 ### DevTask 10: Restore sync-queue plumbing
 
-**Files:** 8
+**Files:** 9 (revised from the planned 8 — `client.ts` needed the new `TaskRestoreInput`/`ListRestoreInput` type exports, missed when scoping the DevTask)
 **Branch:** `feat/todo-experience-s2-dt10-restore-plumbing` (branches directly off the Spec branch — DevTask 7, its only dependency, is already merged there)
 **PR:** _filled once the PR is opened_
 **Affected:**
@@ -1154,10 +1154,16 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 - `components/web_client/src/sync/sync-client.ts` (modify)
 - `components/web_client/src/services/service-client.ts` (modify)
 - `components/web_client/src/sync/replay.transport.ts` (modify)
+- `components/web_client/src/api/client.ts` (modify)
 - `components/web_client/src/api/tasks.api-client.ts` (modify)
 - `components/web_client/src/api/lists.api-client.ts` (modify)
 - `components/web_client/src/services/task-service-client.ts` (modify)
 - `components/web_client/src/services/list-service-client.ts` (modify)
+
+**Deviations from plan during execution:**
+
+- Test files landed in the existing `tasks.api-client.unit.test.ts`/`lists.api-client.unit.test.ts` (extending them) rather than new `*.restore.unit.test.ts` files, matching this codebase's one-file-per-module test convention.
+- `replay.transport.restore.unit.test.ts` drives `sendEntry` against the real `msw` mock server (same pattern as the api-client tests) rather than `vi.spyOn`-ing module exports — more robust and consistent with how the rest of this test suite verifies HTTP dispatch. Required adding `POST /tasks/:id/restore` and `POST /lists/:id/restore` handlers to `msw-handlers.ts`/`msw-handlers.lists.ts` (test fixtures, exempt from the file-count limit).
 
 **Design notes carried into implementation:**
 
@@ -1174,7 +1180,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
 **Steps:**
 
-- [ ] **Step 1: `idb.types.ts` — add `restore` to the op union**
+- [x] **Step 1: `idb.types.ts` — add `restore` to the op union**
 
   In `components/web_client/src/db/idb.types.ts`, change both `SyncQueueEntry.op` and `FailedOpEntry` (which extends `SyncQueueEntry`, so only one edit is needed) from:
 
@@ -1190,7 +1196,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Leave `SyncQueueEntryV1.op` unchanged (pre-Spec-1 schema; restore never existed there).
 
-- [ ] **Step 2: `sync-client.ts` — write failing unit test for `restore()`**
+- [x] **Step 2: `sync-client.ts` — write failing unit test for `restore()`**
 
   In `components/web_client/src/sync/__tests__/sync-client.unit.test.ts`, add to the task `describe` block:
 
@@ -1230,12 +1236,12 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 3: Run and verify both fail**
+- [x] **Step 3: Run and verify both fail**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `taskClient.restore`/`listClient.restore` are not functions.
 
-- [ ] **Step 4: Implement `SyncClient.restore()`**
+- [x] **Step 4: Implement `SyncClient.restore()`**
 
   In `components/web_client/src/sync/sync-client.ts`, add `restore` to the `SyncClient` interface:
 
@@ -1258,7 +1264,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   },
   ```
 
-- [ ] **Step 5: Run and verify green, then commit**
+- [x] **Step 5: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -1269,7 +1275,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(web-client): add SyncClient.restore()"
   ```
 
-- [ ] **Step 6: `service-client.ts` — write failing unit test for `restore()`**
+- [x] **Step 6: `service-client.ts` — write failing unit test for `restore()`**
 
   In `components/web_client/src/services/__tests__/service-client.unit.test.ts`, add `restore` to both `fakeApiClient` and `fakeSyncClient` factories:
 
@@ -1315,12 +1321,12 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   expect(apiClient.restore).toHaveBeenCalledWith('w1', {}, expect.any(String));
   ```
 
-- [ ] **Step 7: Run and verify it fails**
+- [x] **Step 7: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `EntityApiClient`/`ServiceClient` have no `restore`.
 
-- [ ] **Step 8: Implement `EntityApiClient.restore` and `ServiceClient.restore`**
+- [x] **Step 8: Implement `EntityApiClient.restore` and `ServiceClient.restore`**
 
   In `components/web_client/src/services/service-client.ts`, add `restore` to `EntityApiClient`:
 
@@ -1359,7 +1365,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Note `EntityApiClient.restore` takes no `body` parameter (unlike `patch`) — the server derives `updated_at` from the request the same way, but the offline-direct (non-`offlineCapable`) path has no use for the body since there is nothing to reconcile against locally; only `entityId` and `idempotencyKey` are needed to hit the endpoint. (No current entity uses `offlineCapable: false`, so this branch is exercised by the unit test only, not production code, at present.)
 
-- [ ] **Step 9: Run and verify green, then commit**
+- [x] **Step 9: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -1370,7 +1376,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(web-client): add ServiceClient.restore()"
   ```
 
-- [ ] **Step 10: `tasks.api-client.ts` / `lists.api-client.ts` — write failing unit tests**
+- [x] **Step 10: `tasks.api-client.ts` / `lists.api-client.ts` — write failing unit tests**
 
   Create `components/web_client/src/api/__tests__/tasks.api-client.restore.unit.test.ts`:
 
@@ -1415,12 +1421,12 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Create `components/web_client/src/api/__tests__/lists.api-client.restore.unit.test.ts` with the same shape, asserting `POST /lists/{id}/restore` and NOT asserting an `Idempotency-Key` requirement (List routes send the header for consistency, per the design note, but the server does not require it — this test only checks the request shape, not server enforcement).
 
-- [ ] **Step 11: Run and verify both fail**
+- [x] **Step 11: Run and verify both fail**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `restoreTaskRemote`/`restoreListRemote` are not exported.
 
-- [ ] **Step 12: Implement `restoreTaskRemote` and `restoreListRemote`**
+- [x] **Step 12: Implement `restoreTaskRemote` and `restoreListRemote`**
 
   In `components/web_client/src/api/tasks.api-client.ts`, add `type TaskRestoreInput` to the import from `./client`, then add after `deleteTaskRemote`:
 
@@ -1452,7 +1458,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Note both send `updated_at: new Date().toISOString()` at call time rather than accepting it as a parameter — `EntityApiClient.restore`'s signature (Step 8) has no body parameter, matching this. The sync-queue path (Step 4/14) instead sends the client's own recorded `updated_at` through `replay.transport.ts`'s `entry.body`, not through this function — these two paths diverge deliberately: the direct API-client path (used by non-offline-capable entities, currently none) always means "restore now," while the queued path preserves the original intent timestamp for correct Last-Write-Wins reconciliation after a delay.
 
-- [ ] **Step 13: Run and verify green, then commit**
+- [x] **Step 13: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -1464,7 +1470,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(web-client): add restoreTaskRemote and restoreListRemote"
   ```
 
-- [ ] **Step 14: `replay.transport.ts` — write failing unit test for dispatching queued `restore` ops**
+- [x] **Step 14: `replay.transport.ts` — write failing unit test for dispatching queued `restore` ops**
 
   Create `components/web_client/src/sync/__tests__/replay.transport.restore.unit.test.ts`:
 
@@ -1529,12 +1535,12 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   });
   ```
 
-- [ ] **Step 15: Run and verify it fails**
+- [x] **Step 15: Run and verify it fails**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: FAIL — `sendEntry` falls through to the `delete` branch for an unrecognized `op`, calling `deleteTaskRemote`/`deleteListRemote` instead.
 
-- [ ] **Step 16: Implement the `restore` dispatch branch**
+- [x] **Step 16: Implement the `restore` dispatch branch**
 
   In `components/web_client/src/sync/replay.transport.ts`, add `restoreTaskRemote` to the import from `../api/tasks.api-client.js` and `restoreListRemote` to the import from `../api/lists.api-client.js`. Change `sendTaskEntry`:
 
@@ -1572,7 +1578,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Note `entry.body`'s `updated_at` (the original intent timestamp recorded at restore time) is not passed to `restoreTaskRemote`/`restoreListRemote` here either — those functions always send `new Date().toISOString()` (Step 12). This is a known, accepted approximation for this DevTask: a restore replayed after a long offline period reconciles against "now," not the original tap time. Flagged in Open Questions/Risks below rather than solved here — fixing it means changing `EntityApiClient.restore`'s signature to accept a body, which ripples into Step 8's interface; out of scope for this DevTask's file budget.
 
-- [ ] **Step 17: Run and verify green, then commit**
+- [x] **Step 17: Run and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS
@@ -1583,7 +1589,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(web-client): dispatch queued restore ops in replay.transport"
   ```
 
-- [ ] **Step 18: Wire `restore` into `task-service-client.ts` and `list-service-client.ts`**
+- [x] **Step 18: Wire `restore` into `task-service-client.ts` and `list-service-client.ts`**
 
   These two files only assemble existing pieces (`taskApiClient`/`listApiClient` objects, passed to `createServiceClient`) — no new test needed; DevTask 11's hook-level tests exercise this wiring end-to-end.
 
@@ -1611,7 +1617,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   };
   ```
 
-- [ ] **Step 19: Run the full unit suite and verify green, then commit**
+- [x] **Step 19: Run the full unit suite and verify green, then commit**
 
   Run: `pnpm --filter @psykl/web-client test:unit`
   Expected: PASS — including a type-check that `EntityApiClient<Task, ...>` and `EntityApiClient<List, ...>` are now fully satisfied (TypeScript would previously have rejected these objects for missing `restore` once `service-client.ts`'s interface required it in Step 8).
@@ -1621,7 +1627,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
   git commit -m "feat(web-client): wire restore into taskServiceClient and listServiceClient"
   ```
 
-- [ ] **Step 20: Full verification pass**
+- [x] **Step 20: Full verification pass**
 
   ```bash
   pnpm --filter @psykl/service-task build:openapi
@@ -1632,7 +1638,7 @@ This Spec contains 6 DevTasks. Each DevTask is one Pull Request, ≤10 **product
 
   Expected: all green. (`build:openapi`/`codegen` regenerate the gitignored `openapi.json`/`types.ts` locally — required for `typecheck`/`test:unit` to see the restore routes' types; produces no diff to commit.)
 
-- [ ] **Step 21: Update this spec doc's checkbox state**
+- [x] **Step 21: Update this spec doc's checkbox state**
 
   Mark DevTask 10's Steps 1-20 complete above.
 
