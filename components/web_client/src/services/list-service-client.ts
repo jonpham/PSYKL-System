@@ -7,7 +7,7 @@ import {
   restoreListRemote,
 } from '../api/lists.api-client';
 import { listLists, putList } from '../db/idb';
-import { createSyncClient } from '../sync/sync-client';
+import { createSyncClient, resetSyncClientHydrationForTest } from '../sync/sync-client';
 import { createServiceClient, type EntityApiClient } from './service-client';
 
 const listApiClient: EntityApiClient<List, ListInput, ListPatchInput, ListDeleteInput> = {
@@ -31,4 +31,8 @@ const listServiceClient = createServiceClient<List, ListInput, ListPatchInput, L
   syncClient: listSyncClient,
 });
 
-export { listServiceClient };
+function resetListServiceClientForTest(): void {
+  resetSyncClientHydrationForTest(listSyncClient);
+}
+
+export { listServiceClient, resetListServiceClientForTest };

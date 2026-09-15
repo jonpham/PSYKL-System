@@ -2,14 +2,12 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { useCallback, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
-import { listLists } from '../db/idb';
 import type { ListRecord } from '../db/idb.types';
 import { listServiceClient } from '../services/list-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
-import { resetSharedChannelsForTest } from './broadcast-channel';
-import { createChannelNotifier } from './broadcast-notify';
-import { ensureDefaultList, resetDefaultListForTest } from './useLists.default-list';
+import { resetDefaultListForTest } from './useLists.default-list';
+import { getListsSnapshot, notifyListSubscribers, resetListsSyncForTest, subscribeToLists } from './useLists.sync';
 
 interface UseListsResult {
   canDelete: boolean;
@@ -19,14 +17,6 @@ interface UseListsResult {
   moveList(id: string, before: ListRecord | null, after: ListRecord | null): Promise<void>;
   renameList(id: string, title: string): Promise<void>;
 }
-
-const subscribers = new Set<() => void>();
-const channel = createChannelNotifier('psykl-idb', 'lists-changed', () => {
-  void notifyListSubscribers({ broadcast: false });
-});
-
-let hydrated = false;
-let snapshot: ListRecord[] = [];
 
 function mutateList<T>(enqueue: () => Promise<T>): Promise<T> {
   return enqueueWithReplay({ enqueue, notify: notifyListSubscribers, replay });
@@ -107,64 +97,9 @@ function useLists(): UseListsResult {
   return { canDelete: lists.length > 1, createList, deleteList, lists, moveList, renameList };
 }
 
-async function notifyListSubscribers(options: { broadcast?: boolean } = {}): Promise<void> {
-  await reloadListsSnapshot();
-
-  if (options.broadcast ?? true) {
-    channel.post();
-  }
-}
-
 function resetUseListsForTest(): void {
-  channel.reset();
   resetDefaultListForTest();
-  resetSharedChannelsForTest();
-  hydrated = false;
-  snapshot = [];
-  subscribers.clear();
+  resetListsSyncForTest();
 }
 
-function subscribeToLists(callback: () => void): () => void {
-  subscribers.add(callback);
-  channel.ensureChannel();
-  if (!hydrated) {
-    void hydrateThenEnsureDefaultList();
-  }
-
-  return () => {
-    subscribers.delete(callback);
-  };
-}
-
-async function hydrateThenEnsureDefaultList(): Promise<void> {
-  // Pull server-known lists down first (best-effort — offline is expected
-  // and not an error here, matching useTasks.ts's hydrateTasks). Only after
-  // that does ensureDefaultList() decide, from local IDB state, whether this
-  // device still needs to bootstrap the default list itself.
-  try {
-    await listServiceClient.hydrate();
-  } catch {
-    // Offline on first load — ensureDefaultList() below still makes the app
-    // usable; the next successful hydrate() (or replay) catches this device up.
-  }
-  await ensureDefaultList();
-  await reloadListsSnapshot();
-}
-
-function getListsSnapshot(): ListRecord[] {
-  return snapshot;
-}
-
-async function reloadListsSnapshot(): Promise<ListRecord[]> {
-  const lists = await listLists();
-  hydrated = true;
-  setSnapshot(lists.filter((list) => list.deleted_at === null));
-  return snapshot;
-}
-
-function setSnapshot(nextSnapshot: ListRecord[]): void {
-  snapshot = nextSnapshot;
-  subscribers.forEach((callback) => callback());
-}
-
-export { resetUseListsForTest, useLists };
+export { notifyListSubscribers, resetUseListsForTest, useLists };

@@ -28,6 +28,12 @@ class HydrationExhaustedError extends Error {
   }
 }
 
+// Keyed by the returned SyncClient instance so each `createSyncClient(...)`
+// call (production singletons AND ad-hoc test instances alike) gets its own
+// independently resettable hydration flag, without putting a test-only
+// method on the `SyncClient` interface itself.
+const hydrationResets = new WeakMap<object, () => void>();
+
 function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
   config: SyncClientConfig<TEntity>,
 ): SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> {
@@ -52,7 +58,7 @@ function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
     await absorb(result.data);
   }
 
-  return {
+  const client: SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> = {
     async create(entityId, body, optimistic) {
       await enqueueOptimistic(config, entityId, body, 'create', optimistic);
       return optimistic;
@@ -85,6 +91,23 @@ function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
       return queue.filter((entry) => entry.entity_type === config.entityType).map((entry) => entry.entity_id);
     },
   };
+
+  hydrationResets.set(client, () => {
+    hydrated = false;
+  });
+  return client;
+}
+
+/**
+ * Test-only: resets a `SyncClient`'s "hydrated at most once" flag so a
+ * production singleton (`taskSyncClient`/`listSyncClient`) can be
+ * re-hydrated across test cases in the same file. Not part of the
+ * `SyncClient` interface — call via each entity's `resetXServiceClientForTest()`
+ * (`task-service-client.ts`/`list-service-client.ts`), which this app's hook
+ * `resetUseXForTest()` helpers already call.
+ */
+function resetSyncClientHydrationForTest(client: SyncClient<unknown, unknown, unknown, unknown>): void {
+  hydrationResets.get(client)?.();
 }
 
 // `enqueue()`'s `optimisticTask` writes the Task + its queue entry in one
@@ -107,5 +130,5 @@ async function enqueueOptimistic<TEntity>(
   await enqueue({ body, entityId, entityType: config.entityType, op });
 }
 
-export { createSyncClient, HydrationExhaustedError };
+export { createSyncClient, HydrationExhaustedError, resetSyncClientHydrationForTest };
 export type { SyncClient, SyncClientConfig };

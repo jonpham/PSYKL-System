@@ -2,10 +2,10 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
-import { listTasks } from '../db/idb';
-import { taskServiceClient } from '../services/task-service-client';
+import { resetTaskServiceClientForTest, taskServiceClient } from '../services/task-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
+import { HydrationExhaustedError } from '../sync/sync-client';
 import { resetSharedChannelsForTest } from './broadcast-channel';
 import { createChannelNotifier } from './broadcast-notify';
 import { getActiveListId, registerActiveListChangeListener, resetActiveListForTest } from './useActiveList';
@@ -97,6 +97,7 @@ function resetUseTasksForTest(): void {
   channel.reset();
   resetActiveListForTest();
   resetSharedChannelsForTest();
+  resetTaskServiceClientForTest();
   hydrationStarted = false;
   snapshot = {
     error: null,
@@ -127,32 +128,35 @@ async function hydrateTasks(): Promise<void> {
 
   hydrationStarted = true;
   setSnapshot({ ...snapshot, loading: true });
-
-  try {
-    await taskServiceClient.hydrate();
-    await reloadSnapshot({ error: null, loading: false });
-  } catch {
-    const localSnapshot = await reloadSnapshot({ error: null, loading: false });
-    if (localSnapshot.tasks.length === 0) {
-      setSnapshot({ ...localSnapshot, error: 'Failed to load tasks' });
-    }
-  }
+  await reloadSnapshot({ error: null, loading: false });
 }
 
 async function reloadSnapshot(
   overrides: Partial<Pick<TasksSnapshot, 'error' | 'loading'>> = {},
 ): Promise<TasksSnapshot> {
-  const tasks = await listTasks();
-  const nextSnapshot = {
-    error: overrides.error ?? snapshot.error,
-    loading: overrides.loading ?? snapshot.loading,
-    tasks: tasks
-      .filter((task) => task.deleted_at === null && isInActiveList(task))
-      .sort((left, right) => right.created_at.localeCompare(left.created_at)),
-  };
-  setSnapshot(nextSnapshot);
-
-  return nextSnapshot;
+  try {
+    const tasks = await taskServiceClient.list();
+    const nextSnapshot: TasksSnapshot = {
+      error: overrides.error ?? snapshot.error,
+      loading: overrides.loading ?? snapshot.loading,
+      tasks: tasks
+        .filter((task) => task.deleted_at === null && isInActiveList(task))
+        .sort((left, right) => right.created_at.localeCompare(left.created_at)),
+    };
+    setSnapshot(nextSnapshot);
+    return nextSnapshot;
+  } catch (error) {
+    if (!(error instanceof HydrationExhaustedError)) {
+      throw error;
+    }
+    const nextSnapshot: TasksSnapshot = {
+      error: 'Failed to load tasks',
+      loading: overrides.loading ?? snapshot.loading,
+      tasks: [],
+    };
+    setSnapshot(nextSnapshot);
+    return nextSnapshot;
+  }
 }
 
 /**

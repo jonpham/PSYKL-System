@@ -7,7 +7,7 @@ import {
   restoreTaskRemote,
 } from '../api/tasks.api-client';
 import { listTasks, putTask } from '../db/idb';
-import { createSyncClient } from '../sync/sync-client';
+import { createSyncClient, resetSyncClientHydrationForTest } from '../sync/sync-client';
 import { createServiceClient, type EntityApiClient } from './service-client';
 
 const taskApiClient: EntityApiClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput> = {
@@ -31,4 +31,8 @@ const taskServiceClient = createServiceClient<Task, TaskInput, TaskPatchInput, T
   syncClient: taskSyncClient,
 });
 
-export { taskServiceClient };
+function resetTaskServiceClientForTest(): void {
+  resetSyncClientHydrationForTest(taskSyncClient);
+}
+
+export { resetTaskServiceClientForTest, taskServiceClient };

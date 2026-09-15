@@ -1,0 +1,92 @@
+import type { ListRecord } from '../db/idb.types';
+import { listServiceClient, resetListServiceClientForTest } from '../services/list-service-client';
+import { HydrationExhaustedError } from '../sync/sync-client';
+import { resetSharedChannelsForTest } from './broadcast-channel';
+import { createChannelNotifier } from './broadcast-notify';
+import { ensureDefaultList } from './useLists.default-list';
+
+// Split out of useLists.ts to satisfy the project's `max-lines: 150` ESLint
+// rule (same reason DevTask 9 split `task-orphan-sweep.ts` off
+// `list.service.ts`) — this file owns the hydrate/reload/subscribe
+// machinery; useLists.ts owns the mutating hook API.
+const subscribers = new Set<() => void>();
+const channel = createChannelNotifier('psykl-idb', 'lists-changed', () => {
+  void notifyListSubscribers({ broadcast: false });
+});
+
+let hydrated = false;
+let snapshot: ListRecord[] = [];
+
+async function notifyListSubscribers(options: { broadcast?: boolean } = {}): Promise<void> {
+  await reloadListsSnapshot();
+
+  if (options.broadcast ?? true) {
+    channel.post();
+  }
+}
+
+function resetListsSyncForTest(): void {
+  channel.reset();
+  resetSharedChannelsForTest();
+  resetListServiceClientForTest();
+  hydrated = false;
+  snapshot = [];
+  subscribers.clear();
+}
+
+function subscribeToLists(callback: () => void): () => void {
+  subscribers.add(callback);
+  channel.ensureChannel();
+  if (!hydrated) {
+    void hydrateThenEnsureDefaultList();
+  }
+
+  return () => {
+    subscribers.delete(callback);
+  };
+}
+
+async function hydrateThenEnsureDefaultList(): Promise<void> {
+  // Pull server-known lists down first (best-effort — offline is expected
+  // and not an error here, matching useTasks.ts's hydrateTasks). Only after
+  // that does ensureDefaultList() decide, from local IDB state, whether this
+  // device still needs to bootstrap the default list itself.
+  try {
+    await listServiceClient.list();
+  } catch {
+    // Offline on first load — ensureDefaultList() below still makes the app
+    // usable; the next successful list() call catches this device up.
+  }
+  await ensureDefaultList();
+  await reloadListsSnapshot();
+}
+
+function getListsSnapshot(): ListRecord[] {
+  return snapshot;
+}
+
+async function reloadListsSnapshot(): Promise<ListRecord[]> {
+  try {
+    const lists = await listServiceClient.list();
+    hydrated = true;
+    setSnapshot(lists.filter((list) => list.deleted_at === null));
+  } catch (error) {
+    if (!(error instanceof HydrationExhaustedError)) {
+      throw error;
+    }
+    // Unreachable in production: ensureDefaultList() always runs before
+    // this is called from hydrateThenEnsureDefaultList(), guaranteeing at
+    // least one local List exists by the time this executes. Kept for
+    // type-safety symmetry with useTasks.ts's reloadSnapshot().
+    hydrated = true;
+    setSnapshot([]);
+  }
+  return snapshot;
+}
+
+function setSnapshot(nextSnapshot: ListRecord[]): void {
+  snapshot = nextSnapshot;
+  subscribers.forEach((callback) => callback());
+}
+
+export { getListsSnapshot, notifyListSubscribers, resetListsSyncForTest, subscribeToLists };
