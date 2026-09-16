@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Task } from '../api/client';
 import { listDeletedRemote } from '../api/deleted.api-client';
@@ -33,8 +33,20 @@ interface UseRecentlyDeletedResult {
 function useRecentlyDeleted(): UseRecentlyDeletedResult {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [lists, setLists] = useState<ListRecord[]>([]);
+  // Guards against out-of-order concurrent reload() calls: restore()'s own
+  // enqueueWithReplay fires a notify() (triggering a reload() via
+  // subscribeToTaskChanges below) BEFORE restore()'s own explicit
+  // `await reload()` runs — every restore() therefore has at least two
+  // reload() calls in flight, with no guarantee the one that started first
+  // resolves first. Without this guard, an earlier call reading a stale
+  // "still deleted" snapshot can resolve after a newer call and overwrite
+  // its already-correct state (observed as flaky item disappear/reappear in
+  // RecentlyDeleted.stories.tsx's restore flow, more often under CI's
+  // slower/more contended runner).
+  const reloadGeneration = useRef(0);
 
   const reload = useCallback(async () => {
+    const generation = ++reloadGeneration.current;
     // list() already includes every row this device has ever seen, deleted
     // or not — no separate "local" primitive needed. Rows tombstoned on
     // another device and never synced here are merged in from GET /deleted
@@ -48,6 +60,10 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
         .then((result) => result.data ?? null)
         .catch(() => null),
     ]);
+    if (generation !== reloadGeneration.current) {
+      // A newer reload() has since started; this result is stale — discard.
+      return;
+    }
     setTasks(mergeById(localTasks, remoteDeleted?.tasks ?? []));
     setLists(mergeById(localLists, remoteDeleted?.lists ?? []));
   }, []);
