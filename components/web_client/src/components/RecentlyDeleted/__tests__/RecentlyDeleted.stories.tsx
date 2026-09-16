@@ -54,21 +54,11 @@ export const RestoresADeletedTask: Story = {
     });
 
     await step('Delete it (two-tap confirm)', async () => {
-      console.log('DEBUG arm click', Date.now());
       await userEvent.click(canvas.getByRole('button', { name: 'Delete Milk' }));
       // findByRole (not getByRole): the first click arms the confirm state,
       // so wait for the re-rendered "Confirm delete" label rather than
       // racing the render (same pattern as TaskList.mutations.stories.tsx).
-      const confirmButton = await canvas.findByRole('button', { name: 'Confirm delete Milk' });
-      console.log('DEBUG found confirm button', Date.now(), confirmButton.textContent);
-      await userEvent.click(confirmButton);
-      console.log(
-        'DEBUG after confirm click',
-        Date.now(),
-        canvas.queryByRole('button', { name: 'Delete Milk' })?.textContent,
-        canvas.queryByRole('button', { name: 'Confirm delete Milk' })?.textContent,
-        canvas.queryByRole('button', { name: 'Edit Milk' })?.textContent,
-      );
+      await userEvent.click(await canvas.findByRole('button', { name: 'Confirm delete Milk' }));
       await waitFor(() => expect(canvas.queryByRole('button', { name: 'Edit Milk' })).toBeNull(), {
         timeout: MUTATION_WAIT_TIMEOUT_MS,
       });
@@ -84,7 +74,16 @@ export const RestoresADeletedTask: Story = {
     });
 
     await step('Restore it and it returns to the list', async () => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Restore Milk' }));
+      // findByRole (not getByRole): useRecentlyDeleted.ts's reload() churns
+      // through several concurrent notify-triggered reloads around every
+      // mutation (see its staleness-guard comment) — a synchronous getByRole
+      // right after the previous step's mutation cascade can catch the DOM
+      // between two of those re-renders under CI's slower/busier render
+      // cycle (observed: "Unable to find... Restore Milk" even though the
+      // previous step's listitem-visible waitFor had just succeeded).
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Restore Milk' }, { timeout: MUTATION_WAIT_TIMEOUT_MS }),
+      );
       await waitFor(
         () => {
           expect(canvas.getByText('Nothing deleted in the last 30 days.')).toBeVisible();
