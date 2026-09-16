@@ -16,6 +16,10 @@ const channel = createChannelNotifier('psykl-idb', 'lists-changed', () => {
 
 let hydrated = false;
 let snapshot: ListRecord[] = [];
+// Guards against out-of-order concurrent reloadListsSnapshot() calls — same
+// race as useTasks.sync.ts's reloadSnapshot(): enqueueWithReplay fires
+// notify() twice per mutation with no ordering guarantee between them.
+let reloadGeneration = 0;
 
 async function notifyListSubscribers(options: { broadcast?: boolean } = {}): Promise<void> {
   await reloadListsSnapshot();
@@ -66,9 +70,14 @@ function getListsSnapshot(): ListRecord[] {
 }
 
 async function reloadListsSnapshot(): Promise<ListRecord[]> {
+  const generation = ++reloadGeneration;
   try {
     const lists = await listServiceClient.list();
     hydrated = true;
+    if (generation !== reloadGeneration) {
+      // A newer reloadListsSnapshot() has since started; this result is stale.
+      return snapshot;
+    }
     setSnapshot(lists.filter((list) => list.deleted_at === null));
   } catch (error) {
     if (!(error instanceof HydrationExhaustedError)) {
@@ -79,6 +88,9 @@ async function reloadListsSnapshot(): Promise<ListRecord[]> {
     // least one local List exists by the time this executes. Kept for
     // type-safety symmetry with useTasks.ts's reloadSnapshot().
     hydrated = true;
+    if (generation !== reloadGeneration) {
+      return snapshot;
+    }
     setSnapshot([]);
   }
   return snapshot;

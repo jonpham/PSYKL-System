@@ -28,6 +28,15 @@ let snapshot: TasksSnapshot = {
   loading: true,
   tasks: [],
 };
+// Guards against out-of-order concurrent reloadSnapshot() calls:
+// enqueueWithReplay (sync/page-triggers.ts) fires notify() (which defaults
+// to notifyTasksChanged) twice per mutation — once immediately after
+// enqueue, again after the fire-and-forget replay() settles — with no
+// ordering guarantee between the two, or against any other in-flight
+// notify (e.g. useRecentlyDeleted.ts's restore()). An earlier call's
+// result can otherwise resolve after a newer one and overwrite this
+// module-level singleton with stale data.
+let reloadGeneration = 0;
 
 // Re-filters tasks by the (possibly just-changed) active list without
 // `useActiveList` importing this module back.
@@ -82,8 +91,13 @@ async function hydrateTasks(): Promise<void> {
 async function reloadSnapshot(
   overrides: Partial<Pick<TasksSnapshot, 'error' | 'loading'>> = {},
 ): Promise<TasksSnapshot> {
+  const generation = ++reloadGeneration;
   try {
     const tasks = await taskServiceClient.list();
+    if (generation !== reloadGeneration) {
+      // A newer reloadSnapshot() has since started; this result is stale.
+      return snapshot;
+    }
     const nextSnapshot: TasksSnapshot = {
       error: overrides.error ?? snapshot.error,
       loading: overrides.loading ?? snapshot.loading,
@@ -96,6 +110,9 @@ async function reloadSnapshot(
   } catch (error) {
     if (!(error instanceof HydrationExhaustedError)) {
       throw error;
+    }
+    if (generation !== reloadGeneration) {
+      return snapshot;
     }
     const nextSnapshot: TasksSnapshot = {
       error: 'Failed to load tasks',
