@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { Task } from '../api/client';
-import { listHandlers, resetListStore } from './msw-handlers.lists';
+import { getDeletedLists, listHandlers, resetListStore } from './msw-handlers.lists';
 
 let store: Task[] = [];
 
@@ -110,6 +110,47 @@ export const handlers = [
     store = store.map((task) => (task.id === id ? nextTask : task));
 
     return HttpResponse.json(nextTask);
+  }),
+
+  http.post('*/tasks/:id/restore', async ({ params, request }) => {
+    if (request.headers.get('x-user-id') !== 'local') {
+      return new HttpResponse(null, { status: 401 });
+    }
+    if (!request.headers.get('idempotency-key')) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const id = String(params['id']);
+    const existing = store.find((task) => task.id === id);
+    if (!existing) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    const body = (await request.json()) as { updated_at?: string };
+    if (!body.updated_at) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const nextTask: Task = {
+      ...existing,
+      deleted_at: null,
+      updated_at: body.updated_at,
+      server_updated_at: new Date().toISOString(),
+    };
+    store = store.map((task) => (task.id === id ? nextTask : task));
+
+    return HttpResponse.json(nextTask);
+  }),
+
+  http.get('*/deleted', ({ request }) => {
+    if (request.headers.get('x-user-id') !== 'local') {
+      return new HttpResponse(null, { status: 401 });
+    }
+
+    return HttpResponse.json({
+      lists: getDeletedLists(),
+      tasks: store.filter((task) => task.deleted_at !== null),
+    });
   }),
 
   ...listHandlers,

@@ -215,6 +215,50 @@ Husky runs `pnpm exec lint-staged → pnpm -r format:check → pnpm -r typecheck
 
 ---
 
+## Verify locally (UI/UX)
+
+Judging feel and interaction — not the test pyramid — needs the real UI on a real device. Both paths below serve on your workstation's LAN so a phone on the same Wi-Fi can reach them. Per [`AGENTS.md`](AGENTS.md) → UI/UX-First Development Discipline, do this before backend work is built to match an unvalidated experience.
+
+Find your workstation's LAN IP first:
+
+```sh
+ipconfig getifaddr en0            # macOS Wi-Fi (en1 for Ethernet)
+hostname -I | awk '{print $1}'    # Linux
+```
+
+### Storybook (isolated UI Components, no backend)
+
+```sh
+pnpm --filter @psykl/web-client storybook -- --host 0.0.0.0
+```
+
+Prints `On your network: http://<LAN_IP>:6006/` — open that on the phone.
+
+### Full app via Docker Compose
+
+`docker-compose.yml` bakes `localhost` into the client bundle and the API's CORS allowlist — a phone can't resolve that to your workstation. Override both to your LAN IP with an **untracked** `docker-compose.override.yml` (Compose auto-merges it; don't commit it, your IP is DHCP-assigned):
+
+```yaml
+services:
+  service-task:
+    environment:
+      CORS_ORIGIN: http://<LAN_IP>:5173
+  web-client:
+    build:
+      args:
+        VITE_API_URL: http://<LAN_IP>:3000
+```
+
+```sh
+docker compose up --build -d
+```
+
+Open `http://<LAN_IP>:5173` on the phone. `docker compose down` keeps data; `down -v` wipes it. Regenerate the override file if your workstation's IP changes.
+
+Both paths require the phone and workstation on the same Wi-Fi network.
+
+---
+
 ## Deploy
 
 M1's CD release pipeline is wired (M1 Spec 6 — [feature doc](docs/features/%5B20260520%5DGH7_m1-cd-release-pipeline.md)):

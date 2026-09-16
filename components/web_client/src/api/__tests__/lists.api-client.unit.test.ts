@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createListRemote, deleteListRemote, listListsRemote, patchListRemote } from '../lists.api-client';
+import {
+  createListRemote,
+  deleteListRemote,
+  listListsRemote,
+  patchListRemote,
+  restoreListRemote,
+} from '../lists.api-client';
 
 const listId = '0196f0a4-8b5a-7000-8000-000000000010';
 const idempotencyKey = '0196f0a4-8b5a-7000-8000-000000000011';
@@ -65,5 +71,18 @@ describe('lists.api-client', () => {
     // Then
     expect(result.status).toBe(400);
     expect(result.data).toBeUndefined();
+  });
+
+  it('restores a deleted list — sends an Idempotency-Key even though the server does not require one for List routes', async () => {
+    // Given
+    await createListRemote({ id: listId, title: 'Groceries', position: 'a0', updated_at: nowIso }, idempotencyKey);
+    await deleteListRemote(listId, { deleted_at: '2026-06-12T16:01:00.000Z' }, idempotencyKey);
+
+    // When
+    const result = await restoreListRemote(listId, idempotencyKey);
+
+    // Then
+    expect(result.status).toBe(200);
+    expect(result.data?.deleted_at).toBeNull();
   });
 });

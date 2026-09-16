@@ -42,14 +42,15 @@ describe('taskServiceClient — production wiring', () => {
     expect(queue).toMatchObject([{ entity_id: taskId, entity_type: 'task', op: 'create' }]);
   });
 
-  it('hydrate() pulls tasks that already exist server-side into IDB', async () => {
+  it('list() pulls tasks that already exist server-side into IDB', async () => {
     // Given — a task created directly on the server, bypassing the client entirely
     await createTaskRemote({ id: taskId, title: 'wash the car', updated_at: nowIso }, idempotencyKey);
 
     // When
-    await taskServiceClient.hydrate();
+    const result = await taskServiceClient.list();
 
     // Then
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ id: taskId, title: 'wash the car' })]));
     await expect(getTask(taskId)).resolves.toMatchObject({ id: taskId, title: 'wash the car' });
   });
 });

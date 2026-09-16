@@ -1,7 +1,13 @@
 import type { Task, TaskDeleteInput, TaskInput, TaskPatchInput } from '../api/client';
-import { createTaskRemote, deleteTaskRemote, listTasksRemote, patchTaskRemote } from '../api/tasks.api-client';
-import { putTask } from '../db/idb';
-import { createSyncClient } from '../sync/sync-client';
+import {
+  createTaskRemote,
+  deleteTaskRemote,
+  listTasksRemote,
+  patchTaskRemote,
+  restoreTaskRemote,
+} from '../api/tasks.api-client';
+import { listTasks, putTask } from '../db/idb';
+import { createSyncClient, resetSyncClientHydrationForTest } from '../sync/sync-client';
 import { createServiceClient, type EntityApiClient } from './service-client';
 
 const taskApiClient: EntityApiClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput> = {
@@ -9,10 +15,12 @@ const taskApiClient: EntityApiClient<Task, TaskInput, TaskPatchInput, TaskDelete
   delete: deleteTaskRemote,
   list: listTasksRemote,
   patch: patchTaskRemote,
+  restore: restoreTaskRemote,
 };
 
 const taskSyncClient = createSyncClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput>({
   entityType: 'task',
+  listLocal: listTasks,
   listRemote: listTasksRemote,
   put: putTask,
 });
@@ -23,4 +31,8 @@ const taskServiceClient = createServiceClient<Task, TaskInput, TaskPatchInput, T
   syncClient: taskSyncClient,
 });
 
-export { taskServiceClient };
+function resetTaskServiceClientForTest(): void {
+  resetSyncClientHydrationForTest(taskSyncClient);
+}
+
+export { resetTaskServiceClientForTest, taskServiceClient };
