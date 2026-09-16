@@ -23,7 +23,7 @@ async function listLocalSyncQueue(target: BrowserStorageTarget): Promise<SyncQue
  * Seeds `count` fake sync_queue entries directly into IndexedDB, bypassing
  * the real create-Task UI flow — creating 100 real tasks through the form
  * per test run is too slow for CI. Callers must `page.reload()` afterward
- * so `useSyncPressure`'s mount-time read picks up the seeded depth (a
+ * so `useSyncDiscrepancy`'s mount-time read picks up the seeded depth (a
  * direct IDB write does not fire the app's in-memory change notifications).
  */
 async function seedSyncQueue(target: BrowserStorageTarget, count: number): Promise<void> {

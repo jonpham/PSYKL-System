@@ -12,7 +12,7 @@ import { RecentlyDeleted } from '../RecentlyDeleted';
  * stub only the network" approach as `ListSwitcher.stories.tsx`.
  *
  * `TaskCreateForm` is deliberately NOT mounted here: every `useTasks()`
- * call (including TaskCreateForm's, and useSyncPressure's inside it)
+ * call (including TaskCreateForm's, and useSyncDiscrepancy's inside it)
  * subscribes to the same task-change notifications `useRecentlyDeleted`'s
  * own reload() reacts to. Create-then-delete via the real UI is already
  * covered by `TaskCreateForm.stories.tsx` and

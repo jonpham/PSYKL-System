@@ -7,10 +7,9 @@ import { getActiveListId, registerActiveListChangeListener, resetActiveListForTe
 import { getDefaultListId } from './useLists.default-list';
 
 // Split out of useTasks.ts to satisfy the project's `max-lines: 150` ESLint
-// rule (same reason DevTask 9 split `task-orphan-sweep.ts` off
-// `list.service.ts`, and this DevTask split `useLists.sync.ts` off
-// `useLists.ts`) — this file owns the hydrate/reload/subscribe machinery;
-// useTasks.ts owns the mutating hook API.
+// rule. This file owns the hydrate/reload/subscribe machinery — pulling
+// server state into the local snapshot and notifying subscribers when it
+// changes; useTasks.ts owns the mutating hook API.
 interface TasksSnapshot {
   error: string | null;
   loading: boolean;

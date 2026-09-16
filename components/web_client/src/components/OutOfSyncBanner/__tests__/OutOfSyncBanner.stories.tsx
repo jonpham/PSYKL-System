@@ -3,17 +3,17 @@ import { expect, waitFor, within } from '@storybook/test';
 
 import { enqueueSyncOp } from '../../../db/idb';
 import { notifyTasksChanged } from '../../../hooks/useTasks';
-import { SyncPressureBanner } from '../SyncPressureBanner';
+import { OutOfSyncBanner } from '../OutOfSyncBanner';
 
-const meta: Meta<typeof SyncPressureBanner> = {
-  title: 'PSYKL/SyncPressureBanner',
-  component: SyncPressureBanner,
+const meta: Meta<typeof OutOfSyncBanner> = {
+  title: 'PSYKL/OutOfSyncBanner',
+  component: OutOfSyncBanner,
   parameters: { layout: 'centered' },
 };
 
 export default meta;
 
-type Story = StoryObj<typeof SyncPressureBanner>;
+type Story = StoryObj<typeof OutOfSyncBanner>;
 
 export const BelowThreshold: Story = {
   play: async ({ canvasElement }) => {

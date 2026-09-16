@@ -7,7 +7,7 @@ import type { List } from '../../api/client';
 import type { EntityApiResult } from '../../api/tasks.api-client';
 import { enqueueSyncOp, listSyncQueue } from '../../db/idb';
 import { createSyncClient } from '../sync-client';
-import { SyncWriteCeilingError, WRITE_CEILING } from '../sync-pressure';
+import { SyncWriteCeilingError, WRITE_CEILING } from '../sync-discrepancy';
 
 const databaseName = 'psykl';
 

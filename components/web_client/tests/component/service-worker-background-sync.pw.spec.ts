@@ -7,9 +7,9 @@ const taskApiPattern = 'http://localhost:3000/tasks**';
 const listApiPattern = 'http://localhost:3000/lists**';
 
 /**
- * `App` (DevTask 6, `todo-experience` Spec 1) creates a default "Tasks" list
- * on first mount and enqueues its own `entity_type: 'list'` create op — the
- * queue these tests seed into is no longer guaranteed empty at that point.
+ * `App` creates a default "Tasks" list on first mount and enqueues its own
+ * `entity_type: 'list'` create op — the queue these tests seed into is no
+ * longer guaranteed empty at that point.
  * Wait for the bootstrap write to settle (two consecutive equal reads) so
  * the tests can assert relative to a known baseline instead of a hardcoded
  * absolute count.

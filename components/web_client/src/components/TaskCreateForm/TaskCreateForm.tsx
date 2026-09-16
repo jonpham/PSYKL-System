@@ -1,12 +1,12 @@
 import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 
-import { useSyncPressure } from '../../hooks/useSyncPressure';
+import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { useTasks } from '../../hooks/useTasks';
 
 export function TaskCreateForm() {
   const { createTask } = useTasks();
-  const { level } = useSyncPressure();
+  const { level } = useSyncDiscrepancy();
   const atCeiling = level === 'ceiling';
   const [title, setTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);

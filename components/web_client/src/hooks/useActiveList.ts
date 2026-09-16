@@ -2,9 +2,8 @@ import { useSyncExternalStore } from 'react';
 
 import { getMeta, putMeta } from '../db/idb';
 
-// The active list id is device-local, not synced — same `sync_meta` store the
-// theme preference will use in a later Spec (per UX.md § 10 decision 1 /
-// DevTask 6 interfaces note). It scopes which tasks `useTasks` shows and
+// The active list id is device-local, not synced — same `sync_meta` store a
+// future theme preference will use. It scopes which tasks `useTasks` shows and
 // which list new tasks are stamped with on create. `useTasks` registers a
 // listener below so changing the active list re-filters tasks without this
 // module importing `useTasks` back (which would be circular).

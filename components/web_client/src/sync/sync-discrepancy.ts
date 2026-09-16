@@ -1,9 +1,9 @@
 const NAG_THRESHOLD = 25;
 const WRITE_CEILING = 100;
 
-type SyncPressureLevel = 'ok' | 'nag' | 'ceiling';
+type SyncDiscrepancyLevel = 'ok' | 'nag' | 'ceiling';
 
-function syncPressureLevel(queueLength: number): SyncPressureLevel {
+function syncDiscrepancyLevel(queueLength: number): SyncDiscrepancyLevel {
   if (queueLength >= WRITE_CEILING) {
     return 'ceiling';
   }
@@ -16,7 +16,7 @@ function syncPressureLevel(queueLength: number): SyncPressureLevel {
 /**
  * Thrown by `sync-client.ts`'s `enqueueOptimistic` when the local queue is
  * already at `WRITE_CEILING` — offline is a degraded mode and new writes
- * are refused until the queue drains, per DESIGN.md's Offline Posture.
+ * are refused until the queue drains.
  */
 class SyncWriteCeilingError extends Error {
   constructor() {
@@ -25,5 +25,5 @@ class SyncWriteCeilingError extends Error {
   }
 }
 
-export { NAG_THRESHOLD, syncPressureLevel, SyncWriteCeilingError, WRITE_CEILING };
-export type { SyncPressureLevel };
+export { NAG_THRESHOLD, syncDiscrepancyLevel, SyncWriteCeilingError, WRITE_CEILING };
+export type { SyncDiscrepancyLevel };

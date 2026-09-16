@@ -3,7 +3,7 @@ import type { EntityApiResult } from '../api/tasks.api-client';
 import { listSyncQueue } from '../db/idb';
 import type { EntityType, PsyklDb, SyncQueueEntry } from '../db/idb.types';
 import { enqueue } from './replay';
-import { syncPressureLevel, SyncWriteCeilingError } from './sync-pressure';
+import { syncDiscrepancyLevel, SyncWriteCeilingError } from './sync-discrepancy';
 
 interface SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   create(entityId: string, body: TInput, optimistic: TEntity): Promise<TEntity>;
@@ -130,7 +130,7 @@ async function enqueueOptimistic<TEntity>(
   optimistic: TEntity,
 ): Promise<void> {
   const queue = await listSyncQueue();
-  if (syncPressureLevel(queue.length) === 'ceiling') {
+  if (syncDiscrepancyLevel(queue.length) === 'ceiling') {
     throw new SyncWriteCeilingError();
   }
   if (config.entityType === 'task') {

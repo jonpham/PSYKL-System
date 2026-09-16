@@ -72,8 +72,8 @@ describe('useRecentlyDeleted', () => {
     // + deleteTaskRemote left server-side; nothing local yet. (Separately,
     // taskServiceClient.list()'s own pre-existing hydrate — unrelated to
     // this merge — also absorbs it locally, since listTasksRemote() already
-    // requests include_deleted=1; that's an existing Spec 1 behavior, not
-    // something this merge relies on or needs to avoid.)
+    // requests include_deleted=1; that's existing behavior this merge
+    // relies on but doesn't need to prevent.)
     const taskId = uuidv7();
     const now = new Date().toISOString();
     await createTaskRemote({ id: taskId, title: 'Bread', updated_at: now }, uuidv7());

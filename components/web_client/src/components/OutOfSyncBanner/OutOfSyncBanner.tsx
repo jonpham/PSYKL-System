@@ -1,7 +1,7 @@
-import { useSyncPressure } from '../../hooks/useSyncPressure';
+import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 
-export function SyncPressureBanner() {
-  const { count, level } = useSyncPressure();
+export function OutOfSyncBanner() {
+  const { count, level } = useSyncDiscrepancy();
 
   if (level === 'ok') {
     return null;

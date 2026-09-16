@@ -5,7 +5,7 @@ import { deleteDB } from 'idb';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { enqueueSyncOp } from '../../db/idb';
-import { useSyncPressure } from '../useSyncPressure';
+import { useSyncDiscrepancy } from '../useSyncDiscrepancy';
 import { notifyTasksChanged } from '../useTasks';
 
 const databaseName = 'psykl';
@@ -14,10 +14,10 @@ afterEach(async () => {
   await deleteDB(databaseName);
 });
 
-describe('useSyncPressure', () => {
+describe('useSyncDiscrepancy', () => {
   it('reports the current queue depth and level, and updates on change notifications', async () => {
     // Given an empty queue
-    const { result } = renderHook(() => useSyncPressure());
+    const { result } = renderHook(() => useSyncDiscrepancy());
     await waitFor(() => expect(result.current.count).toBe(0));
     expect(result.current.level).toBe('ok');
 

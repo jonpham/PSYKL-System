@@ -6,7 +6,7 @@ import { deleteDB } from 'idb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { listTasks } from '../../../db/idb';
-import { useSyncPressure } from '../../../hooks/useSyncPressure';
+import { useSyncDiscrepancy } from '../../../hooks/useSyncDiscrepancy';
 import { resetUseTasksForTest } from '../../../hooks/useTasks';
 import { TaskCreateForm } from '../TaskCreateForm';
 
@@ -20,7 +20,7 @@ vi.mock('../../../sync/replay', async (importOriginal) => {
   };
 });
 
-vi.mock('../../../hooks/useSyncPressure');
+vi.mock('../../../hooks/useSyncDiscrepancy');
 
 const databaseName = 'psykl';
 
@@ -32,7 +32,7 @@ afterEach(async () => {
 
 describe('TaskCreateForm (Unit)', () => {
   beforeEach(() => {
-    vi.mocked(useSyncPressure).mockReturnValue({ count: 0, level: 'ok' });
+    vi.mocked(useSyncDiscrepancy).mockReturnValue({ count: 0, level: 'ok' });
   });
 
   it('renders an input and a Create button', () => {
@@ -83,7 +83,7 @@ describe('TaskCreateForm (Unit)', () => {
   });
 
   it('disables the capture field at the write ceiling', () => {
-    vi.mocked(useSyncPressure).mockReturnValue({ count: 100, level: 'ceiling' });
+    vi.mocked(useSyncDiscrepancy).mockReturnValue({ count: 100, level: 'ceiling' });
     render(<TaskCreateForm />);
 
     expect(screen.getByLabelText('title')).toBeDisabled();
