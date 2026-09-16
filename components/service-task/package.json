@@ -23,6 +23,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/schedule": "^12.0.1",
     "@psykl/shared-types": "workspace:*",
     "drizzle-orm": "^0.36.0",
     "nestjs-zod": "^4.3.0",

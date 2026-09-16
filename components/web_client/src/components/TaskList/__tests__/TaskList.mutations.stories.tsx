@@ -64,11 +64,20 @@ export const EditTitleEnqueuesPatch: Story = {
 
     // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
+    // `attempts > 0` (not just "entry exists"): `enqueueWithReplay`
+    // (sync/page-triggers.ts) fires `runReplay()` as fire-and-forget, so the
+    // entry is written to IDB before the mocked 500 round-trip completes.
+    // Waiting for `scheduleRetry()`'s attempts bump forces this play()
+    // function to not resolve until that background replay has actually
+    // settled — otherwise it can land after the NEXT story's `deleteDB`
+    // reset (preview.ts loader) and re-write this entry into the freshly
+    // wiped database, bleeding state across stories (observed in CI).
     await waitFor(async () => {
       const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
       expect(queue).toHaveLength(1);
       expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'patch' });
       expect((queue[0]?.body as { title?: string }).title).toBe('seed task edited');
+      expect(queue[0]?.attempts).toBeGreaterThan(0);
     });
     expect(await canvas.findByRole('button', { name: /edit seed task edited/i })).toBeInTheDocument();
   },
@@ -93,11 +102,15 @@ export const CompleteEnqueuesPatch: Story = {
 
     // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
+    // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
+    // this play() to wait for the fire-and-forget replay to settle before
+    // the next story's `deleteDB` reset runs.
     await waitFor(async () => {
       const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
       expect(queue).toHaveLength(1);
       expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'patch' });
       expect((queue[0]?.body as { completed_at?: string | null }).completed_at).toEqual(expect.any(String));
+      expect(queue[0]?.attempts).toBeGreaterThan(0);
     });
     expect(await canvas.findByRole('checkbox', { name: /mark seed task incomplete/i })).toBeChecked();
   },
@@ -126,11 +139,15 @@ export const DeleteEnqueuesDelete: Story = {
 
     // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
+    // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
+    // this play() to wait for the fire-and-forget replay to settle before
+    // the next story's `deleteDB` reset runs.
     await waitFor(async () => {
       const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
       expect(queue).toHaveLength(1);
       expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'delete' });
       expect((queue[0]?.body as { deleted_at?: string }).deleted_at).toEqual(expect.any(String));
+      expect(queue[0]?.attempts).toBeGreaterThan(0);
     });
     await waitFor(() => expect(canvas.queryByText('seed task')).not.toBeInTheDocument());
   },

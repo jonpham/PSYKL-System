@@ -10,7 +10,7 @@ import { ListService } from './list.service.js';
  * `useFactory: async () => createDb()` here would open a second, disconnected
  * PGlite instance — Lists and Tasks would live in two different databases,
  * and in production two PGlite instances would race to open the same
- * PGLITE_DATA_DIR directory concurrently. See DevTask 3 brief -> Deviation 1.
+ * PGLITE_DATA_DIR directory concurrently.
  */
 @Module({
   imports: [TaskModule],

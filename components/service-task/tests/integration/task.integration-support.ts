@@ -53,6 +53,7 @@ export async function insertTask(
     title: string;
     updatedAt: Date;
     deletedAt?: Date;
+    listId?: string;
   },
 ): Promise<string> {
   const id = input.id ?? uuidv7();
@@ -62,6 +63,7 @@ export async function insertTask(
     title: input.title,
     updatedAt: input.updatedAt,
     deletedAt: input.deletedAt,
+    listId: input.listId,
   });
   return id;
 }

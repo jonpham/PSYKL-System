@@ -8,9 +8,9 @@ import type {
   TaskInput,
   TaskPatchInput,
 } from '../api/client';
-import { createListRemote, deleteListRemote, patchListRemote } from '../api/lists.api-client';
+import { createListRemote, deleteListRemote, patchListRemote, restoreListRemote } from '../api/lists.api-client';
 import type { EntityApiResult } from '../api/tasks.api-client';
-import { createTaskRemote, deleteTaskRemote, patchTaskRemote } from '../api/tasks.api-client';
+import { createTaskRemote, deleteTaskRemote, patchTaskRemote, restoreTaskRemote } from '../api/tasks.api-client';
 import type { SyncQueueEntry } from '../db/idb.types';
 import type { ReplayTransportResult } from './replay';
 
@@ -25,6 +25,9 @@ async function sendTaskEntry(entry: SyncQueueEntry): Promise<ReplayTransportResu
   if (entry.op === 'patch') {
     return withStatus(await patchTaskRemote(entry.entity_id, entry.body as TaskPatchInput, entry.idempotency_key));
   }
+  if (entry.op === 'restore') {
+    return withStatus(await restoreTaskRemote(entry.entity_id, entry.idempotency_key));
+  }
   return withStatus(await deleteTaskRemote(entry.entity_id, entry.body as TaskDeleteInput, entry.idempotency_key));
 }
 
@@ -34,6 +37,9 @@ async function sendListEntry(entry: SyncQueueEntry): Promise<ReplayTransportResu
   }
   if (entry.op === 'patch') {
     return withStatus(await patchListRemote(entry.entity_id, entry.body as ListPatchInput, entry.idempotency_key));
+  }
+  if (entry.op === 'restore') {
+    return withStatus(await restoreListRemote(entry.entity_id, entry.idempotency_key));
   }
   return withStatus(await deleteListRemote(entry.entity_id, entry.body as ListDeleteInput, entry.idempotency_key));
 }

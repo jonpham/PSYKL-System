@@ -8,10 +8,12 @@ export const TimestampSchema = z.string().datetime({ offset: true });
 /**
  * PSYKL Task data-model entity.
  * Stored in service-task's pglite database. Identified by app-generated UUID v7.
- * `user_id` carries ownership (see DESIGN.md Premise 7 + 8).
+ * `user_id` carries ownership.
  *
- * NOTE: this is the PSYKL data-model `Task` entity. The workflow concept "DevTask"
- * (a PR-sized unit of work) is unrelated. See AGENTS.md -> Key Stages.
+ * NOTE: this is the PSYKL data-model `Task` entity — a user-facing to-do
+ * item. It is unrelated to any unit of engineering work this codebase's
+ * contributors track elsewhere; the two happen to share a name in casual
+ * conversation but nothing else.
  */
 export const TaskSchema = z
   .object({
@@ -72,6 +74,14 @@ export const TaskDeleteInputSchema = z
   });
 
 export type TaskDeleteInput = z.infer<typeof TaskDeleteInputSchema>;
+
+/**
+ * Request body shape for POST /tasks/{id}/restore.
+ * Clears deleted_at server-side; reconciles under Last-Write-Wins like a patch.
+ */
+export const TaskRestoreInputSchema = z.object({ updated_at: TimestampSchema }).strict();
+
+export type TaskRestoreInput = z.infer<typeof TaskRestoreInputSchema>;
 
 /**
  * Response shape for POST /tasks and the individual elements of GET /tasks.

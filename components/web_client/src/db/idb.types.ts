@@ -10,7 +10,7 @@ interface SyncQueueEntry {
   id: string;
   entity_type: EntityType;
   entity_id: string;
-  op: 'create' | 'patch' | 'delete';
+  op: 'create' | 'patch' | 'delete' | 'restore';
   body: unknown;
   idempotency_key: string;
   attempts: number;

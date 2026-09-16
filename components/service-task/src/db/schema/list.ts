@@ -5,8 +5,8 @@ import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
  *
  * NO foreign key from tasks.list_id to lists.id. An offline client can create a
  * Task inside a List before that List has synced, and the server must accept the
- * reference. Integrity is an application concern (orphan sweep, Spec 2).
- * See docs/initiatives/todo-experience/DESIGN.md -> Offline Posture.
+ * reference. Integrity is an application concern, healed by a scheduled orphan
+ * sweep rather than enforced by the schema.
  *
  * `position` is a fractional-index key and MUST be created with COLLATE "C" so
  * Postgres byte ordering matches JavaScript string comparison on the client.

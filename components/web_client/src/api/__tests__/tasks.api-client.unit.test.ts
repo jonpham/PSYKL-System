@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createTaskRemote, deleteTaskRemote, listTasksRemote, patchTaskRemote } from '../tasks.api-client';
+import {
+  createTaskRemote,
+  deleteTaskRemote,
+  listTasksRemote,
+  patchTaskRemote,
+  restoreTaskRemote,
+} from '../tasks.api-client';
 
 const taskId = '0196f0a4-8b5a-7000-8000-000000000001';
 const idempotencyKey = '0196f0a4-8b5a-7000-8000-000000000002';
@@ -62,5 +68,19 @@ describe('tasks.api-client', () => {
     // Then
     expect(result.status).toBe(400);
     expect(result.data).toBeUndefined();
+  });
+
+  it('restores a deleted task', async () => {
+    // Given
+    await createTaskRemote({ id: taskId, title: 'wash the car', updated_at: nowIso }, idempotencyKey);
+    const deletedAt = '2026-06-12T16:01:00.000Z';
+    await deleteTaskRemote(taskId, { deleted_at: deletedAt, updated_at: deletedAt }, idempotencyKey);
+
+    // When
+    const result = await restoreTaskRemote(taskId, idempotencyKey);
+
+    // Then
+    expect(result.status).toBe(200);
+    expect(result.data?.deleted_at).toBeNull();
   });
 });

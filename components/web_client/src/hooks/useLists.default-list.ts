@@ -12,8 +12,7 @@ const defaultListFlagKey = 'default_list_created';
 const defaultListTitle = 'Tasks';
 
 // A fixed, well-known id rather than uuidv7(): PSYKL is single-user,
-// multi-device (docs/PRODUCT.md → Sync and Sharing Model), so there is only
-// ever one default list per account. A random per-device id lets two
+// multi-device, so there is only ever one default list per account. A random per-device id lets two
 // devices that both bootstrap before either has synced create two distinct
 // "Tasks" lists, silently splitting a task's list_id from the active
 // device's local list id. A shared constant makes every device agree

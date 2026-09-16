@@ -10,6 +10,12 @@ export function resetListStore() {
   listStore = [];
 }
 
+export function getDeletedLists(): List[] {
+  return listStore.filter((list) => list.deleted_at !== null);
+}
+
+export type { List };
+
 export const listHandlers = [
   http.get('*/lists', ({ request }) => {
     if (request.headers.get('x-user-id') !== 'local') {
@@ -103,6 +109,33 @@ export const listHandlers = [
     const nextList: List = {
       ...existing,
       deleted_at: body.deleted_at,
+      server_updated_at: new Date().toISOString(),
+    };
+    listStore = listStore.map((list) => (list.id === id ? nextList : list));
+
+    return HttpResponse.json(nextList);
+  }),
+
+  http.post('*/lists/:id/restore', async ({ params, request }) => {
+    if (request.headers.get('x-user-id') !== 'local') {
+      return new HttpResponse(null, { status: 401 });
+    }
+
+    const id = String(params['id']);
+    const existing = listStore.find((list) => list.id === id);
+    if (!existing) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    const body = (await request.json()) as { updated_at?: string };
+    if (!body.updated_at) {
+      return new HttpResponse(null, { status: 400 });
+    }
+
+    const nextList: List = {
+      ...existing,
+      deleted_at: null,
+      updated_at: body.updated_at,
       server_updated_at: new Date().toISOString(),
     };
     listStore = listStore.map((list) => (list.id === id ? nextList : list));

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { listSyncQueue } from '../../db/idb';
 import { useTasks } from '../../hooks/useTasks';
+import { taskServiceClient } from '../../services/task-service-client';
 import { EmptyState } from './EmptyState';
 import { TaskListSkeleton } from './TaskListSkeleton';
 import { TaskRow } from './TaskRow';
@@ -21,13 +21,13 @@ export function TaskList() {
     }
 
     let cancelled = false;
-    void listSyncQueue().then((queue) => {
+    void taskServiceClient.listPending().then((ids) => {
       if (!cancelled) {
         setPendingTaskIds((current) => {
-          if (queue.length === 0 && current.size === 0) {
+          if (ids.length === 0 && current.size === 0) {
             return current;
           }
-          return new Set(queue.map((entry) => entry.entity_id));
+          return new Set(ids);
         });
       }
     });
