@@ -146,7 +146,7 @@ Number the order in which tests get written:
 
 This Spec contains {N} DevTasks. Each DevTask is one Pull Request, ≤10 **production behavior source files** (tests, config, docs, lockfiles, and generated migrations are exempt — see AGENTS.md → Git Conventions). Each DevTask **branches off the Spec integration branch `spec/{tag}-s{N}-{slug}` and PRs into that branch**, not into `main`; the Spec integration branch is the long-lived PR into `main`. Stack a DevTask onto a sibling only when it has a hard dependency on that sibling's unmerged work. Each DevTask contains multiple Steps; each Step ends with one commit.
 
-**Trilemma rule (AGENTS.md → Design Doc Discipline):** if a planned DevTask's implementation files + required test files exceed 10, split the DevTask. Never defer tests to a later PR.
+**Trilemma rule (`docs/workflows/production-dev-workflow.md` → Design Doc Discipline):** if a planned DevTask's implementation files + required test files exceed 10, split the DevTask. Never defer tests to a later PR.
 
 ### DevTask {GLOBAL_NUMBER}: {short imperative title}
 

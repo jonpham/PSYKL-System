@@ -10,6 +10,7 @@
 **Next executable spec:** `todo-experience` Spec 3 — Sections. Start with `superpowers:writing-plans` against `DESIGN.md`/`UX.md` § "Spec 3 — Sections", per the initiative's UI/UX-first DevTask ordering.
 **Branch:** `main` — no active Spec branch. Release `v0.4.0` cut from Spec 2's merge commit; deploy pin bump to `PSYKL-GitOps` in progress (see Homelab deploy section below).
 **Known blockers:** None.
+**Workflow lanes:** Production (Initiative → Spec → DevTask) per [`docs/workflows/production-dev-workflow.md`](workflows/production-dev-workflow.md); Experimental (UI/UX prototyping at `/exp/{slug}`) per [`docs/workflows/experimental-feature-workflow.md`](workflows/experimental-feature-workflow.md). Routing table in [`AGENTS.md`](../AGENTS.md) → Workflow Routing. **No experiment is active.**
 
 **Homelab deploy** (k3s cluster **robin**, LAN-only at `psykl.lan.witty-m.com`, GitOps via `PSYKL-GitOps`): live, deployed via ArgoCD, semver-pinned image tags. Full runbook at [`README.md` → Deploy to k3s](../README.md#deploy-to-k3s-homelab--robin); architecture at [ADR-M2-010](ARCHITECTURE.md). Not tied to any active Spec — update `PSYKL-GitOps/apps/psykl/values-robin.yaml` and merge to redeploy.
 
@@ -17,11 +18,11 @@
 
 ## How to Pick Up This Project (for any AI agent)
 
-1. **Read in this order:** [`README.md`](../README.md) (quickstart) → [`CLAUDE.md`](../CLAUDE.md)/[`AGENTS.md`](../AGENTS.md) (working agreement, vocabulary, Test Discipline, Git Conventions) → [`docs/PRODUCT.md`](PRODUCT.md) (product brief, Sync and Sharing Model) → [`docs/STACK.md`](STACK.md) (shipped stack) → [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) (ADRs) → this file → [`docs/features/`](features/) (completed-feature records) → the active initiative's `DESIGN.md`/`UX.md`/`MILESTONE.md` under `docs/initiatives/todo-experience/`.
+1. **Read in this order:** [`README.md`](../README.md) (quickstart) → [`CLAUDE.md`](../CLAUDE.md)/[`AGENTS.md`](../AGENTS.md) (working agreement, vocabulary, Test Discipline, Git Conventions, Workflow Routing) → [`docs/workflows/`](workflows/) (the lane you are working in) → [`docs/PRODUCT.md`](PRODUCT.md) (product brief, Sync and Sharing Model) → [`docs/STACK.md`](STACK.md) (shipped stack) → [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) (ADRs) → this file → [`docs/features/`](features/) (completed-feature records) → the active initiative's `DESIGN.md`/`UX.md`/`MILESTONE.md` under `docs/initiatives/todo-experience/`.
 2. **Vocabulary:** `DevTask` = workflow concept (PR-sized unit). `Task` = PSYKL data-model entity. Unrelated.
 3. **The Decisions appendix in any `APPROVED` design doc is normative.** Surface for discussion, don't silently rework.
 4. **TDD ordering is mandatory:** failing test → implementation → green → refactor → commit. Tests live in the same PR as the implementation.
-5. **DevTask branching:** each DevTask gets its own PR, merged before the next starts (AGENTS.md → Subagent-Driven Development Discipline); stack only on a real dependency; rebase onto `origin/<target>` before opening any PR.
+5. **DevTask branching:** each DevTask gets its own PR, merged before the next starts ([`docs/workflows/production-dev-workflow.md`](workflows/production-dev-workflow.md) → Subagent-Driven Development Discipline); stack only on a real dependency; rebase onto `origin/<target>` before opening any PR.
 
 ## Current Stack
 
