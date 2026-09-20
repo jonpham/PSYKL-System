@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ListSwitcher } from './components/ListSwitcher';
 import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
+import { Settings } from './components/Settings';
 import { TaskCreateForm } from './components/TaskCreateForm';
 import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
@@ -15,6 +16,7 @@ export default function App() {
   const activeListId = useActiveListId();
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [recentlyDeletedOpen, setRecentlyDeletedOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
   // first run, per UX.md § 10 decision 1) if no active list has been chosen
@@ -74,6 +76,21 @@ export default function App() {
       >
         Recently Deleted
       </button>
+      <button
+        onClick={() => setSettingsOpen(true)}
+        style={{
+          background: 'none',
+          border: '1px solid #ccc',
+          borderRadius: 4,
+          cursor: 'pointer',
+          fontSize: '1rem',
+          margin: '1rem 0 0 0.5rem',
+          padding: '0.5rem 0.75rem',
+        }}
+        type="button"
+      >
+        Settings
+      </button>
       <ListSwitcher
         activeListId={activeListId}
         onClose={() => setSwitcherOpen(false)}
@@ -84,6 +101,7 @@ export default function App() {
         open={switcherOpen}
       />
       <RecentlyDeleted onClose={() => setRecentlyDeletedOpen(false)} open={recentlyDeletedOpen} />
+      <Settings onClose={() => setSettingsOpen(false)} open={settingsOpen} />
       <OutOfSyncBanner />
       <section data-testid="task-ui-slot">
         <TaskCreateForm />

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-import App from './App';
+import { Root } from './Root';
 import { registerPageSyncTriggers } from './sync/page-triggers';
 
 const root = document.getElementById('root');
@@ -14,7 +14,7 @@ registerServiceWorker();
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <App />
+    <Root />
   </React.StrictMode>,
 );
 
