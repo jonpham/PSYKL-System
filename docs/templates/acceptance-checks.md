@@ -1,7 +1,7 @@
 # Acceptance Checks — {Feature name}
 
 > Experimental lane — `docs/workflows/experimental-feature-workflow.md`.
-> Copy to `docs/experiments/{slug}/acceptance-checks.md`.
+> Copy to `docs/experiments/{slug}/{iteration}/acceptance-checks.md`.
 > 3–8 checks. Each must be observable by a person using the experiment at `/exp/{slug}`.
 > This is not a requirements document — delete any check you would not actually verify.
 

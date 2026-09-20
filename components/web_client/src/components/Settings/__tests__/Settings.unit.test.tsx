@@ -20,7 +20,7 @@ describe('Settings', () => {
     // Assert
     expect(screen.getByRole('dialog', { name: 'Settings' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Experiments' })).toBeVisible();
-    expect(screen.getByText(/no experiments are registered/i)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Apple Reminders UX' })).toBeVisible();
   });
 
   it('closes when dismissed', async () => {

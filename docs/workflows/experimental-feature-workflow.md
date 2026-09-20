@@ -39,20 +39,20 @@ This workflow is intended to create Experimental views with new features that ca
 
 ### Client Experiment Paths
 
-| Client       | Folder                                         | Route                 |
-| ------------ | ---------------------------------------------- | --------------------- |
-| `web_client` | `components/web_client/src/experiment/{slug}/` | `/exp/{feature-slug}` |
+| Client       | Folder                                         | Route                    |
+| ------------ | ---------------------------------------------- | ------------------------ |
+| `web_client` | `components/web_client/src/experiment/{slug}/` | `/exp/{experiment-slug}` |
 
 Inside `components/web_client/src/experiment/`:
 
-| Path                | Purpose                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `{slug}/`           | One experiment. Follows the UI Component folder layout in `AGENTS.md`.              |
-| `registry.ts`       | The list of experiments. Adding an experiment is one entry here.                    |
-| `ExperimentRouter/` | Dispatches `/exp/*` to the matching registry entry.                                 |
-| `ExperimentsIndex/` | The `/exp` landing list; also rendered inside Settings → Experiments.               |
-| `ExperimentFrame/`  | Shared chrome — the "not production" banner and the back-to-app link.               |
-| `index.ts`          | The only sanctioned import seam for production code. Deep imports are lint-blocked. |
+| Path                | Purpose                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| `{slug}/`           | One experiment, across all of its iterations. Follows the UI Component folder layout in `AGENTS.md`. |
+| `registry.ts`       | The list of experiments. Adding an experiment is one entry here.                                     |
+| `ExperimentRouter/` | Dispatches `/exp/*` to the matching registry entry.                                                  |
+| `ExperimentsIndex/` | The `/exp` landing list; also rendered inside Settings → Experiments.                                |
+| `ExperimentFrame/`  | Shared chrome — the "not production" banner and the back-to-app link.                                |
+| `index.ts`          | The only sanctioned import seam for production code. Deep imports are lint-blocked.                  |
 
 Experiments may import production components, hooks, and services freely. Production code
 must not import experiment internals; ESLint enforces this one-way boundary.
@@ -159,25 +159,45 @@ Additional rigor may be added here, but only when justified.
 
 ## Required Artifacts
 
-For Standard Lane work, create a feature folder with the following minimum artifacts:
+For Standard Lane work, create an experiment folder containing one iteration folder with the
+following minimum artifacts:
 
 ```text
-[feature-folder]/
-  feature-card.md
-  visual-artifact.md
-  acceptance-checks.md
-  implementation-notes.md
-  screenshots/        # created after implementation or review
+docs/experiments/<experiment-slug>/
+  feature-card.md                 # the experiment: hypothesis, scope, iteration log, verdict
+  <iteration-slug>/
+    feature-card.md
+    visual-artifact.md
+    acceptance-checks.md
+    implementation-notes.md
+    screenshots/                  # created after implementation or review
 ```
 
-Repository location:
-
-```text
-docs/experiments/<feature-slug>/
-```
+The experiment folder name matches the route (`/exp/<experiment-slug>`) and the code folder
+(`src/experiment/<experiment-slug>/`). An experiment that will only ever have one iteration still
+gets the nesting — the second iteration should not force a reorganization.
 
 `docs/initiatives/` is reserved for gstack initiative planning (`DESIGN.md`, `MILESTONE.md`)
 and `docs/specs/` for production execution plans. Experiment artifacts never go there.
+
+---
+
+## Iterating an Experiment
+
+An experiment is a surface, not a single feature. A Reminders-parity shell, for example, is iterated
+feature by feature against the same route: sidebar navigation, then list sections, then swipe
+actions. The route, the code folder, and the registry entry stay fixed across all of them.
+
+Each iteration:
+
+- gets its own `docs/experiments/<experiment-slug>/<iteration-slug>/` with the full artifact set —
+  **never overwrite a previous iteration's artifacts**, they are the record of what was tried,
+- adds a row to the experiment card's `## Iterations` table (slug, status, verdict),
+- adds code under the existing `src/experiment/<experiment-slug>/` tree rather than a new folder,
+- and passes through the same review checkpoint (workflow step 6) on its own.
+
+The experiment card stays thin: shell-level user, problem, outcome, shared non-goals, and the
+iteration log. Anything specific to one feature belongs in that iteration's card, not the root.
 
 ---
 
@@ -242,9 +262,8 @@ This should stay brief and practical:
 
 Experiments sit under the E2E carve-out in `AGENTS.md` → Test Discipline. The floor is:
 
-- **one Storybook story** exercising the primary acceptance check (this is the Component layer),
 - **Unit tests** only where the experiment contains real logic worth pinning,
-- **no E2E spec and no Integration test.**
+- **no Storybook story play tests, E2E spec, and no Integration test.**
 
 Static analysis is not reduced: lint, format, and typecheck must pass exactly as they do for
 production code. Promoting an experiment restores the full mandate — the promotion DevTask
@@ -256,11 +275,22 @@ writes the E2E spec.
 
 Every experiment ends in one of three ways. None of them is "leave it there".
 
-| Exit        | Code                                                                                                           | Docs                                                                                                                      |
-| ----------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Discard** | Delete `src/experiment/{slug}/` and its `registry.ts` entry.                                                   | Move `docs/experiments/{slug}/` to `docs/experiments/archive/` with a one-line verdict in the feature card.               |
-| **Pause**   | Leave in place; set the registry entry's `status` to `paused`.                                                 | Leave in place; note what would unblock it.                                                                               |
-| **Promote** | Leave in place until the production implementation merges, then delete both the folder and the registry entry. | The four artifacts become inputs to the Production lane. Move to `docs/experiments/archive/` once the feature doc exists. |
+Exits apply per iteration and, once every iteration has exited, to the experiment as a whole.
+
+| Exit        | Code                                                                                                                 | Docs                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Discard** | Remove the iteration's components; delete `src/experiment/{slug}/` and its `registry.ts` entry once nothing is left. | Move `docs/experiments/{slug}/{iteration}/` to `docs/experiments/archive/{slug}/{iteration}/` with a one-line verdict in both cards.                                        |
+| **Pause**   | Leave in place; set the registry entry's `status` to `paused` when the whole experiment is parked.                   | Leave in place; note what would unblock it in the iteration card.                                                                                                           |
+| **Promote** | Leave in place until the production implementation merges, then remove the promoted iteration's code from the shell. | **One iteration maps to one production Spec.** Its four artifacts are the Spec's inputs. Archive that iteration's folder once the feature doc exists; the shell stays live. |
+
+What each promoted artifact feeds:
+
+| Artifact                  | Feeds                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `acceptance-checks.md`    | Spec acceptance criteria, and the E2E test titles the promotion DevTask must write |
+| `visual-artifact.md`      | the initiative's `UX.md` section for that feature                                  |
+| `implementation-notes.md` | DevTask breakdown seed, plus the production modules the real version must touch    |
+| `screenshots/`            | evidence in the resulting `docs/features/` doc                                     |
 
 ---
 
@@ -268,7 +298,8 @@ Every experiment ends in one of three ways. None of them is "leave it there".
 
 1. Read repository `AGENTS.md` and any relevant project-level instructions.
 2. Read the applicable style guide, architecture documents, and testing standards.
-3. Create `feature-card.md`.
+3. Pick the experiment: a new `docs/experiments/{slug}/` with an experiment card, or a new
+   `{iteration}/` subfolder under an existing one. Then create the iteration's `feature-card.md`.
 4. Create exactly one visual artifact.
 5. Create `acceptance-checks.md`.
 6. Pause for human review unless the task is already explicitly approved to continue.
@@ -289,11 +320,13 @@ A `task-sections` experiment, once the groundwork exists:
 
 ```text
 docs/experiments/task-sections/
-  feature-card.md              # ~14 lines
-  visual-artifact.md           # one Mermaid flow, or 3 wireframes
-  acceptance-checks.md         # 5 checks
-  implementation-notes.md      # ~6 bullets
-  screenshots/
+  feature-card.md              # the experiment — ~14 lines
+  sections-in-list/
+    feature-card.md            # the iteration — ~14 lines
+    visual-artifact.md         # one Mermaid flow, or 3 wireframes
+    acceptance-checks.md       # 5 checks
+    implementation-notes.md    # ~6 bullets
+    screenshots/
 
 components/web_client/src/experiment/task-sections/
   TaskSectionsExperiment.tsx
@@ -301,9 +334,11 @@ components/web_client/src/experiment/task-sections/
   __tests__/TaskSectionsExperiment.stories.tsx
 ```
 
-Plus one entry appended to `components/web_client/src/experiment/registry.ts`.
+Plus one entry appended to `components/web_client/src/experiment/registry.ts`. A second iteration
+adds one doc subfolder, one row in the experiment card's iteration table, and components under the
+existing `task-sections/` tree — no new route and no new registry entry.
 
-Total: three new code files, one registry line, four short documents, one ordinary feature
+Total: three new code files, one registry line, five short documents, one ordinary feature
 branch and PR. No Spec branch, no DevTask breakdown, no feature doc, no close-out checklist.
 
 ---

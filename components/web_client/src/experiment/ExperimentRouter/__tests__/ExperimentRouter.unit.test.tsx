@@ -7,6 +7,7 @@ import { ExperimentRouter } from '../ExperimentRouter';
 const experiments: Experiment[] = [
   {
     Component: () => <p>sections body</p>,
+    layout: 'full',
     slug: 'task-sections',
     status: 'exploring',
     summary: 'Group tasks under headings.',
@@ -22,7 +23,8 @@ describe('ExperimentRouter', () => {
     // Assert
     expect(screen.getByRole('heading', { name: 'Task Sections' })).toBeVisible();
     expect(screen.getByText('sections body')).toBeVisible();
-    expect(screen.getByRole('note')).toHaveTextContent(/experiment/i);
+    expect(screen.getByRole('button', { name: 'Expand experiment controls' })).toBeVisible();
+    expect(screen.getByRole('main')).toHaveStyle({ maxWidth: 'none' });
   });
 
   it('lists the experiments at the index route', () => {

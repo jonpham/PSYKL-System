@@ -1,0 +1,52 @@
+.reminders-sidebar-nav {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 1rem;
+}
+
+.reminders-sidebar-nav__close,
+.reminders-sidebar-nav__item {
+  background: transparent;
+  border: 0;
+  border-radius: 0.5rem;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.reminders-sidebar-nav__close {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.reminders-sidebar-nav__label {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.35rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.reminders-sidebar-nav__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reminders-sidebar-nav__item[aria-current='page'] {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 650;
+}
+
+.reminders-sidebar-nav__utilities {
+  border-top: 1px solid #d1d5db;
+  display: grid;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}

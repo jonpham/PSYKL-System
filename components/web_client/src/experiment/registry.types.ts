@@ -7,6 +7,7 @@ type ExperimentStatus = 'exploring' | 'paused';
 
 interface Experiment {
   Component: ComponentType;
+  layout?: 'centered' | 'full';
   slug: string;
   status: ExperimentStatus;
   summary: string;

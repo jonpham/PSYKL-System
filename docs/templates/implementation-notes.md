@@ -1,7 +1,7 @@
 # Implementation Notes — {Feature name}
 
 > Experimental lane — `docs/workflows/experimental-feature-workflow.md`.
-> Copy to `docs/experiments/{slug}/implementation-notes.md`. Keep it to bullets.
+> Copy to `docs/experiments/{slug}/{iteration}/implementation-notes.md`. Keep it to bullets.
 > Scope is the thinnest slice that proves the outcome — not the production design.
 
 ## First slice
@@ -10,7 +10,7 @@
 
 ## Files
 
-- `components/web_client/src/experiment/{slug}/…` — new
+- `components/web_client/src/experiment/{slug}/…` — new (the experiment's existing tree, if iterating)
 - `components/web_client/src/experiment/registry.ts` — one entry added
 - {production components/hooks reused, by path — these are read-only from here}
 

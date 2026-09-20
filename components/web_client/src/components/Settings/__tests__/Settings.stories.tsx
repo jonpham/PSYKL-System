@@ -40,7 +40,7 @@ export const OperatorFindsExperimentsUnderSettings: Story = {
     // Assert
     await expect(canvas.getByRole('dialog', { name: 'Settings' })).toBeVisible();
     await expect(canvas.getByRole('heading', { name: 'Experiments' })).toBeVisible();
-    await expect(canvas.getByText('No experiments are registered right now.')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Apple Reminders UX' })).toBeVisible();
 
     // Act
     await userEvent.click(canvas.getByRole('button', { name: 'Close' }));

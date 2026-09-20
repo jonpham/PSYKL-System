@@ -16,7 +16,7 @@ export function ExperimentRouter({ experiments = registeredExperiments, pathname
   if (experiment !== null) {
     const { Component } = experiment;
     return (
-      <ExperimentFrame title={experiment.title}>
+      <ExperimentFrame layout={experiment.layout} title={experiment.title}>
         <Component />
       </ExperimentFrame>
     );
