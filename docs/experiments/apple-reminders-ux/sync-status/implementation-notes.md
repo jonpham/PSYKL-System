@@ -22,13 +22,13 @@ Iteration 2 of [`apple-reminders-ux`](../feature-card.md). Planning only; implem
 
 ## Tests
 
-- Storybook state set: clear header, attention header, and attention details at 390px; the attention story activates the control and verifies separate queue/failure counts.
-- Unit-test only the experiment-local status derivation if combining queued and failed counts introduces logic beyond rendering. No End-to-End or Integration test.
+- Storybook: the 390px attention story activates the control and verifies separate queue/failure counts.
+- Unit tests cover clear/attention rendering, activation, detail counts, and the live failed-count hook. No End-to-End or Integration test.
 
 ## Evidence
 
-- Capture 390px clear main view, 390px attention main view, 390px attention details, and 1024px clear main view into `screenshots/`.
+- Captured `390-main.png`, `390-details.png`, and `1024-main.png` in `screenshots/`; the local offline state supplies the yellow attention case.
 
 ## Open questions
 
-- Review decision: whether the yellow control displays the combined count (`queued + failed`) or only a dot; the plan recommends the count because it communicates state without color alone.
+- Implemented the approved combined count (`queued + failed`) so status is communicated without color alone.

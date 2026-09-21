@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
 
+import { enqueueSyncOp, putFailedOp } from '../../../db/idb';
+import { notifyTasksChanged } from '../../../hooks/useTasks';
 import { AppleRemindersUxExperiment } from '../AppleRemindersUxExperiment';
 
 const meta: Meta<typeof AppleRemindersUxExperiment> = {
@@ -65,5 +67,62 @@ export const KeepsTheSidebarBesideTheContentOnDesktop: Story = {
     expect(sidebar).toBeVisible();
     expect(content).toBeVisible();
     expect(sidebar?.getBoundingClientRect().right).toBeLessThanOrEqual(content?.getBoundingClientRect().left ?? 0);
+  },
+};
+
+export const OpensSyncDetailsWithoutShowingABanner: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 390 }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const now = new Date().toISOString();
+
+    await step('A queued and a failed change update the compact control', async () => {
+      await enqueueSyncOp({
+        id: 'story-queued',
+        entity_type: 'task',
+        entity_id: 'story-task-queued',
+        op: 'create',
+        body: {},
+        idempotency_key: 'story-queued',
+        attempts: 0,
+        next_attempt_at: now,
+        created_at: now,
+      });
+      await putFailedOp({
+        id: 'story-failed',
+        entity_type: 'task',
+        entity_id: 'story-task-failed',
+        op: 'create',
+        body: {},
+        idempotency_key: 'story-failed',
+        attempts: 10,
+        next_attempt_at: now,
+        created_at: now,
+        failed_at: now,
+        error: 'Gave up after 10 attempts',
+      });
+      await notifyTasksChanged();
+
+      await waitFor(() => {
+        expect(canvas.getByRole('button', { name: /Sync needs attention/ })).toBeVisible();
+        expect(canvas.queryByText(/changes waiting to sync/i)).not.toBeInTheDocument();
+      });
+    });
+
+    await step('The control opens separate queued and failed details', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: /Sync needs attention/ }));
+
+      await waitFor(() => {
+        expect(canvas.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+        expect(canvas.getByText(/Waiting to sync:/)).toBeVisible();
+        expect(canvas.getByText('Permanently failed: 1')).toBeVisible();
+      });
+    });
   },
 };

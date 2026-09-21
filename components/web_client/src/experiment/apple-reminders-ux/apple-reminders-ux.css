@@ -56,8 +56,16 @@
   padding: 0 1rem 2rem;
 }
 
-.reminders-experiment__content > h2 {
+.reminders-experiment__content > h2,
+.reminders-experiment__content-header h2 {
   margin-top: 0;
+}
+
+.reminders-experiment__content-header {
+  align-items: start;
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 @container reminders-shell (min-width: 768px) {

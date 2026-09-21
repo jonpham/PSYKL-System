@@ -2,20 +2,23 @@ import './apple-reminders-ux.css';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { OutOfSyncBanner } from '../../components/OutOfSyncBanner';
 import { RecentlyDeleted } from '../../components/RecentlyDeleted';
 import { TaskCreateForm } from '../../components/TaskCreateForm';
 import { TaskList } from '../../components/TaskList';
 import { Toast } from '../../components/Toast';
 import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useLists } from '../../hooks/useLists';
+import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { SettingsView } from './SettingsView';
 import { SidebarNav } from './SidebarNav';
+import { SyncStatus, useFailedSyncCount } from './SyncStatus';
 import type { Destination } from './types';
 
 export function AppleRemindersUxExperiment() {
   const { lists } = useLists();
   const activeListId = useActiveListId();
+  const { count: queuedCount } = useSyncDiscrepancy();
+  const failedCount = useFailedSyncCount();
   const [destination, setDestination] = useState<Destination>('list');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -90,10 +93,21 @@ export function AppleRemindersUxExperiment() {
         ) : null}
         <div className="reminders-experiment__content">
           <Toast />
-          {destination === 'settings' ? null : <h2>{title}</h2>}
+          {destination === 'list' || destination === 'sync' ? (
+            <div className="reminders-experiment__content-header">
+              <h2>{title}</h2>
+              <SyncStatus
+                active={destination === 'sync'}
+                failedCount={failedCount}
+                onOpen={() => setDestination('sync')}
+                queuedCount={queuedCount}
+              />
+            </div>
+          ) : destination === 'recently-deleted' ? (
+            <h2>{title}</h2>
+          ) : null}
           {destination === 'list' ? (
             <>
-              <OutOfSyncBanner />
               <TaskCreateForm />
               <TaskList />
             </>
@@ -107,5 +121,6 @@ export function AppleRemindersUxExperiment() {
 }
 
 function destinationTitle(destination: Exclude<Destination, 'list'>): string {
-  return destination === 'recently-deleted' ? 'Recently Deleted' : 'Settings';
+  if (destination === 'recently-deleted') return 'Recently Deleted';
+  return destination === 'settings' ? 'Settings' : 'Sync';
 }
