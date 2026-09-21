@@ -10,10 +10,11 @@ import { sortTasks } from './sortTasks';
 import { TaskRow } from './TaskRow';
 
 interface TaskListViewProps {
+  onCompletedCountChange?: (count: number) => void;
   showCompleted?: boolean;
 }
 
-export function TaskListView({ showCompleted = true }: TaskListViewProps) {
+export function TaskListView({ onCompletedCountChange, showCompleted = true }: TaskListViewProps) {
   const { createTask, error, loading, patchTask, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
@@ -36,6 +37,13 @@ export function TaskListView({ showCompleted = true }: TaskListViewProps) {
     () => sortTasks(tasks).filter((task) => showCompleted || task.completed_at === null),
     [showCompleted, tasks],
   );
+
+  // The shell's list menu needs this number, but it should not open a second
+  // subscription to every task to get it — this view already has them.
+  const completedCount = tasks.filter((task) => task.completed_at !== null).length;
+  useEffect(() => {
+    onCompletedCountChange?.(completedCount);
+  }, [completedCount, onCompletedCountChange]);
   // The capture row belongs at the end of the open tasks, not at the end of the
   // list — a new task should never appear beneath the completed ones.
   const openCount = ordered.filter((task) => task.completed_at === null).length;

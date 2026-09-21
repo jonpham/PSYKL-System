@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useLists } from '../../hooks/useLists';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
-import { useTasks } from '../../hooks/useTasks';
 import { HeaderGlyph, PlusGlyph } from './glyphs';
 import { ListMenu } from './ListMenu';
 import { ListsView } from './ListsView';
@@ -23,8 +22,8 @@ export function AppleRemindersUxExperiment() {
   const { canDelete, deleteList, lists } = useLists();
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
-  const { tasks } = useTasks();
   const failedCount = useFailedSyncCount();
+  const [completedCount, setCompletedCount] = useState(0);
   const [destination, setDestination] = useState<Destination>('list');
   const [showCompleted, setShowCompleted] = useState(true);
   const [creatingList, setCreatingList] = useState(false);
@@ -56,7 +55,6 @@ export function AppleRemindersUxExperiment() {
 
   const activeList = lists.find((list) => list.id === activeListId) ?? lists[0] ?? null;
   const title = destination === 'list' ? (activeList?.title ?? 'Tasks') : destinationTitle(destination);
-  const completedCount = tasks.filter((task) => task.completed_at !== null).length;
 
   useEffect(() => {
     setShowCompleted(showCompletedStore.read(activeList?.id ?? null));
@@ -159,7 +157,9 @@ export function AppleRemindersUxExperiment() {
               />
             ) : null}
           </div>
-          {destination === 'list' ? <TaskListView showCompleted={showCompleted} /> : null}
+          {destination === 'list' ? (
+            <TaskListView onCompletedCountChange={setCompletedCount} showCompleted={showCompleted} />
+          ) : null}
           {destination === 'lists' ? (
             <ListsView creating={creatingList} onCreated={() => setCreatingList(false)} onSelectList={selectList} />
           ) : null}

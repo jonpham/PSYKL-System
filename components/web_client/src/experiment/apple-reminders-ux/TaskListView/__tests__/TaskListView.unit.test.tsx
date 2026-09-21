@@ -119,6 +119,27 @@ describe('TaskListView (Unit)', () => {
     expect(screen.getByRole('checkbox', { name: 'Reopen Book dentist' })).toHaveAttribute('aria-checked', 'true');
   });
 
+  it('reports its completed count upward instead of making the shell subscribe', () => {
+    // Arrange
+    const onCompletedCountChange = vi.fn();
+    mockUseTasks.mockReturnValue({
+      createTask: mockCreateTask,
+      error: null,
+      loading: false,
+      patchTask: mockPatchTask,
+      tasks: [
+        task({ id: 'task-1', title: 'Book dentist' }),
+        task({ id: 'task-2', title: 'Renew passport', completed_at: '2026-02-01T00:00:00.000Z' }),
+      ],
+    });
+
+    // Act
+    render(<TaskListView onCompletedCountChange={onCompletedCountChange} />);
+
+    // Assert
+    expect(onCompletedCountChange).toHaveBeenCalledWith(1);
+  });
+
   it('drops the completed tasks when the list is set to hide them', () => {
     // Arrange
     mockUseTasks.mockReturnValue({
