@@ -4,37 +4,53 @@
 
 .reminders-sync-status__control {
   align-items: center;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 50%;
   box-sizing: border-box;
+  color: var(--r-on-tint);
   cursor: pointer;
   display: inline-flex;
   font: inherit;
-  font-size: 1rem;
-  height: 2rem;
+  font-size: 0.9rem;
+  height: 1.75rem;
   justify-content: center;
   justify-self: end;
   padding: 0;
-  width: 2rem;
+  width: 1.75rem;
+}
+
+.reminders-sync-status__control:focus-visible {
+  outline: 2px solid var(--r-tint);
+  outline-offset: 2px;
 }
 
 .reminders-sync-status__control[data-status='clear'] {
-  background: #dcfce7;
-  border-color: #86efac;
-  color: #166534;
+  background: var(--r-good);
 }
 
 .reminders-sync-status__control[data-status='attention'] {
-  background: #fef3c7;
-  border-color: #fcd34d;
-  color: #92400e;
+  background: var(--r-warn);
+  color: #000;
 }
 
 .reminders-sync-status__details {
+  color: var(--r-label);
   grid-column: 1 / -1;
-  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  padding-top: 1rem;
 }
 
-.reminders-sync-status__details h2 {
-  margin: 0 0 1rem;
+.reminders-experiment .reminders-sync-status__details h2 {
+  color: var(--r-label);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 25px;
+  margin: 0 0 0.75rem;
+}
+
+.reminders-sync-status__details p {
+  color: var(--r-label-secondary);
+  font-size: 15px;
+  line-height: 20px;
+  margin: 0 0 0.5rem;
 }

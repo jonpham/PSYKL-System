@@ -1,35 +1,40 @@
 .reminders-sidebar-nav {
   box-sizing: border-box;
   min-height: 100%;
-  padding: 1rem;
+  padding: 1rem 0.75rem;
 }
 
 .reminders-sidebar-nav__close,
 .reminders-sidebar-nav__item {
+  align-items: center;
   background: transparent;
   border: 0;
-  border-radius: 0.5rem;
-  color: inherit;
+  border-radius: var(--r-radius);
+  color: var(--r-label);
   cursor: pointer;
+  display: flex;
   font: inherit;
-  padding: 0.65rem 0.75rem;
+  font-size: 17px;
+  gap: 0.625rem;
+  min-height: var(--r-row-min);
+  padding: 0.5rem 0.75rem;
   text-align: left;
   width: 100%;
 }
 
 .reminders-sidebar-nav__close {
-  font-size: 1.25rem;
+  color: var(--r-tint);
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .reminders-sidebar-nav__label {
-  color: #6b7280;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  margin: 0 0 0.35rem 0.75rem;
-  text-transform: uppercase;
+  color: var(--r-label-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.25rem 0.75rem;
 }
 
 .reminders-sidebar-nav__items {
@@ -39,37 +44,47 @@
 }
 
 .reminders-sidebar-nav__item[aria-current='page'] {
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-weight: 650;
+  background: var(--r-fill-selected);
+  font-weight: 600;
+}
+
+.reminders-sidebar-nav__item:active {
+  background: var(--r-fill-pressed);
+}
+
+.reminders-sidebar-nav__close:focus-visible,
+.reminders-sidebar-nav__item:focus-visible {
+  outline: 2px solid var(--r-tint);
+  outline-offset: -2px;
 }
 
 .reminders-sidebar-nav__utilities {
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid var(--r-separator);
   display: grid;
   margin-top: 1rem;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
 }
 
+/* Reminders puts a filled round tile in front of each smart list; the sync tile
+ * doubles as the status light, so its fill carries the state. */
 .reminders-sidebar-nav__sync-icon {
   align-items: center;
-  border: 1px solid transparent;
   border-radius: 50%;
   box-sizing: border-box;
+  color: var(--r-on-tint);
   display: inline-flex;
-  height: 1.5rem;
+  flex: none;
+  font-size: 0.85rem;
+  height: 1.75rem;
   justify-content: center;
-  width: 1.5rem;
+  width: 1.75rem;
 }
 
 .reminders-sidebar-nav__item[data-status='clear'] .reminders-sidebar-nav__sync-icon {
-  background: #dcfce7;
-  border-color: #86efac;
-  color: #166534;
+  background: var(--r-good);
 }
 
 .reminders-sidebar-nav__item[data-status='attention'] .reminders-sidebar-nav__sync-icon {
-  background: #fef3c7;
-  border-color: #fcd34d;
-  color: #92400e;
+  background: var(--r-warn);
+  color: #000;
 }

@@ -129,3 +129,43 @@ export const OpensSyncDetailsWithoutShowingABanner: Story = {
     });
   },
 };
+
+export const CapturesATaskAndSinksItOnCompletion: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 390 }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+
+    await step('Capture two tasks from the New Reminder row', async () => {
+      // Arrange / Act
+      await userEvent.click(canvas.getByRole('button', { name: 'New Reminder' }));
+      const input = await canvas.findByRole('textbox', { name: 'New task title' });
+      await userEvent.type(input, 'Book dentist{Enter}');
+      await userEvent.type(input, 'Pay invoice{Enter}');
+      await userEvent.type(input, '{Escape}');
+
+      // Assert
+      await waitFor(() => {
+        expect(canvas.getByRole('checkbox', { name: 'Complete Book dentist' })).toBeVisible();
+        expect(canvas.getByRole('checkbox', { name: 'Complete Pay invoice' })).toBeVisible();
+      });
+    });
+
+    await step('Completing the first task sinks it below the open one', async () => {
+      // Act
+      await userEvent.click(canvas.getByRole('checkbox', { name: 'Complete Book dentist' }));
+
+      // Assert
+      await waitFor(() => {
+        const titles = canvas.getAllByRole('listitem').map((row) => row.textContent);
+        expect(titles).toEqual(['Pay invoice', 'Book dentist']);
+        expect(canvas.getByRole('checkbox', { name: 'Reopen Book dentist' })).toHaveAttribute('aria-checked', 'true');
+      });
+    });
+  },
+};

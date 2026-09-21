@@ -1,0 +1,84 @@
+.reminders-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.reminders-list__rows {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reminders-list__placeholder {
+  color: var(--r-label-secondary);
+  flex: 1;
+  font-size: 17px;
+  margin: 0;
+  padding: 25% 0 0;
+  text-align: center;
+}
+
+.reminders-list__error {
+  color: var(--r-label-secondary);
+  font-size: 15px;
+  line-height: 20px;
+  margin: 0.75rem 0 0;
+  text-align: center;
+}
+
+/* Bottom-anchored like Reminders' New Reminder button: it sticks to the bottom
+ * of the scroll container so it rides above the keyboard on iOS. */
+.reminders-list__capture-bar {
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0%), var(--r-bg) 45%);
+  bottom: 0;
+  margin-top: auto;
+  padding: 1rem 0 max(0.5rem, env(safe-area-inset-bottom));
+  position: sticky;
+}
+
+.reminders-list__capture {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--r-radius);
+  color: var(--r-tint);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  gap: 0.5rem;
+  margin-inline-start: -0.5rem;
+  min-height: var(--r-row-min);
+  padding: 0 0.5rem;
+}
+
+.reminders-list__capture:active {
+  background: var(--r-fill-pressed);
+}
+
+.reminders-list__capture:focus-visible {
+  outline: 2px solid var(--r-tint);
+  outline-offset: 1px;
+}
+
+.reminders-list__capture-glyph {
+  align-items: center;
+  border: 1.5px solid currentcolor;
+  border-radius: 50%;
+  display: flex;
+  font-size: 15px;
+  height: 22px;
+  justify-content: center;
+  line-height: 1;
+  width: 22px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .reminders-list__capture-bar {
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0%), var(--r-bg) 45%);
+  }
+}

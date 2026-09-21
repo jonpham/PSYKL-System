@@ -1,0 +1,49 @@
+/* Iteration-local tokens for the `apple-reminders-ui` iteration, derived from
+ * Apple Reminders rather than from `docs/DESIGN.md` — this prototype is the
+ * proposal that supersedes it. Scoped to the experiment root so nothing leaks
+ * into production surfaces. */
+
+.reminders-experiment {
+  --r-bg: #fff;
+  --r-bg-grouped: #f2f2f7;
+  --r-bg-elevated: #fff;
+  --r-fill-pressed: #d1d1d6;
+  --r-fill-selected: #e5e5ea;
+
+  --r-label: #000;
+  --r-label-secondary: #8e8e93;
+  --r-label-tertiary: #c7c7cc;
+  --r-on-tint: #fff;
+
+  --r-separator: #c6c6c8;
+  --r-tint: #007aff;
+  --r-warn: #ff9f0a;
+  --r-good: #34c759;
+  --r-destructive: #ff3b30;
+
+  --r-font: -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', roboto, sans-serif;
+  --r-radius: 10px;
+  --r-gutter: 1rem;
+  --r-row-min: 44px;
+  --r-content-max: 680px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .reminders-experiment {
+    --r-bg: #000;
+    --r-bg-grouped: #1c1c1e;
+    --r-bg-elevated: #1c1c1e;
+    --r-fill-pressed: #2c2c2e;
+    --r-fill-selected: #2c2c2e;
+
+    --r-label: #fff;
+    --r-label-secondary: #98989f;
+    --r-label-tertiary: #48484a;
+
+    --r-separator: #38383a;
+    --r-tint: #0a84ff;
+    --r-warn: #ffd60a;
+    --r-good: #30d158;
+    --r-destructive: #ff453a;
+  }
+}

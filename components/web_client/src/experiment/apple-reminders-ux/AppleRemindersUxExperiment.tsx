@@ -1,10 +1,9 @@
+import './tokens.css';
 import './apple-reminders-ux.css';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { RecentlyDeleted } from '../../components/RecentlyDeleted';
-import { TaskCreateForm } from '../../components/TaskCreateForm';
-import { TaskList } from '../../components/TaskList';
 import { Toast } from '../../components/Toast';
 import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useLists } from '../../hooks/useLists';
@@ -12,6 +11,7 @@ import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { SettingsView } from './SettingsView';
 import { SidebarNav } from './SidebarNav';
 import { SyncStatus, useFailedSyncCount } from './SyncStatus';
+import { TaskListView } from './TaskListView';
 import type { Destination } from './types';
 
 export function AppleRemindersUxExperiment() {
@@ -107,12 +107,7 @@ export function AppleRemindersUxExperiment() {
           ) : destination === 'recently-deleted' ? (
             <h2>{title}</h2>
           ) : null}
-          {destination === 'list' ? (
-            <>
-              <TaskCreateForm />
-              <TaskList />
-            </>
-          ) : null}
+          {destination === 'list' ? <TaskListView /> : null}
           {destination === 'recently-deleted' ? <RecentlyDeleted open /> : null}
           {destination === 'settings' ? <SettingsView /> : null}
         </div>
