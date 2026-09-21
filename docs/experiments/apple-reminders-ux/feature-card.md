@@ -37,6 +37,7 @@ No schema, API, or shared-model changes. No production-module edits — the shel
 | --- | ----------------------------------------------------------- | --------- | ------- |
 | 1   | [`sidebar-navigation/`](sidebar-navigation/feature-card.md) | exploring | —       |
 | 2   | [`sync-status/`](sync-status/feature-card.md)               | exploring | —       |
+| 3   | [`apple-reminders-ui/`](apple-reminders-ui/feature-card.md) | exploring | —       |
 
 Add a row per iteration. On promotion, move that subfolder to
 `docs/experiments/archive/apple-reminders-ux/{iteration}/` and record the verdict here; the shell
