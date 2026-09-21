@@ -1,0 +1,1 @@
+export { RecentlyDeletedView } from './RecentlyDeletedView';

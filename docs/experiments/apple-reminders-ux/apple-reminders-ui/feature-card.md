@@ -16,11 +16,11 @@ Add a task from a (+) affordance and complete it in a list whose rows, checkbox,
 
 ## Scope
 
-Experiment-local task row, list, and inline capture components consuming `useTasks`; a token set for this iteration derived from Apple Reminders (system type scale, 22px circle checkbox, inset separators, system blue tint, light + dark); completed rows filled, struck, dimmed, and sorted below open tasks.
+Experiment-local task row, list, and inline capture components consuming `useTasks`; a token set for this iteration derived from Apple Reminders (system type scale, 22px circle checkbox, inset separators, system blue tint, light + dark); completed rows filled, struck, dimmed, and sorted below open tasks. Widened by the 2026-09-21 review round (see `acceptance-checks.md` → Review round 2): one glyph set at one tile size, a collapsible Lists section with Recently Deleted inside it, a Lists page for rename and re-order, a per-list show/hide-completed toggle, and Sync / Recently Deleted / Settings rendered in the same visual language.
 
 ## Not now
 
-Swipe actions, detail sheet, sections, due dates, tags, reorder, list tint colors, and any edit to production components, schema, or API. Reconciling this look with `docs/DESIGN.md` / `UX.md` is deferred to promotion — this prototype is the proposal that supersedes them.
+Swipe actions, detail sheet, sections, due dates, tags, task reorder, list tint colors, drag-to-reorder lists, and any edit to production components, schema, or API. Reconciling this look with `docs/DESIGN.md` / `UX.md` is deferred to promotion — this prototype is the proposal that supersedes them.
 
 ## Done when
 

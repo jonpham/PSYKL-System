@@ -1,5 +1,7 @@
 import './sync-status.css';
 
+import { DestinationGlyph } from '../glyphs';
+
 interface SyncStatusProps {
   active: boolean;
   failedCount: number;
@@ -22,7 +24,7 @@ export function SyncStatus({ active, failedCount, onOpen, queuedCount }: SyncSta
         onClick={onOpen}
         type="button"
       >
-        <span aria-hidden="true">↻</span>
+        <DestinationGlyph name="sync" />
       </button>
       {active ? (
         <section aria-labelledby="reminders-sync-status-title" className="reminders-sync-status__details">

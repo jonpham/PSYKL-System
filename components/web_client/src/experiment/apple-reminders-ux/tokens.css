@@ -17,9 +17,58 @@
 
   --r-separator: #c6c6c8;
   --r-tint: #007aff;
-  --r-warn: #ff9f0a;
+  --r-warn: #fc0; /* systemYellow — reads as caution without shouting like orange */
   --r-good: #34c759;
   --r-destructive: #ff3b30;
+
+  /* One tile size for every destination and action glyph, matched to the
+   * experiment shell's floating control so nothing reads as an afterthought. */
+  --r-icon-tile: 2.5rem;
+  --r-icon-glyph: 1.25rem;
+}
+
+.reminders-glyph {
+  align-items: center;
+  background: var(--r-tint);
+  border-radius: 50%;
+  color: var(--r-on-tint);
+  display: inline-flex;
+  flex: none;
+  height: var(--r-icon-tile);
+  justify-content: center;
+  width: var(--r-icon-tile);
+}
+
+.reminders-glyph svg {
+  fill: none;
+  height: var(--r-icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+  width: var(--r-icon-glyph);
+}
+
+.reminders-glyph[data-glyph='recently-deleted'],
+.reminders-glyph[data-glyph='settings'] {
+  background: var(--r-label-secondary);
+}
+
+.reminders-chevron {
+  fill: none;
+  height: var(--r-icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: transform 150ms ease-in-out;
+  width: var(--r-icon-glyph);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reminders-chevron {
+    transition: none;
+  }
 
   --r-font: -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', roboto, sans-serif;
   --r-radius: 10px;
@@ -42,7 +91,7 @@
 
     --r-separator: #38383a;
     --r-tint: #0a84ff;
-    --r-warn: #ffd60a;
+    --r-warn: #ffd60a; /* systemYellow, dark */
     --r-good: #30d158;
     --r-destructive: #ff453a;
   }

@@ -78,8 +78,8 @@
 .reminders-experiment__content-header {
   align-items: center;
   display: grid;
-  gap: 0 1rem;
-  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   margin-bottom: 0.25rem;
 }
 

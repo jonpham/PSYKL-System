@@ -1,7 +1,9 @@
 import './sidebar-nav.css';
 
 import type { Ref } from 'react';
+import { useState } from 'react';
 
+import { ChevronGlyph, DestinationGlyph } from '../glyphs';
 import type { Destination } from '../types';
 
 interface SidebarList {
@@ -30,6 +32,8 @@ export function SidebarNav({
   onSelectList,
   syncNeedsAttention = false,
 }: SidebarNavProps) {
+  const [listsExpanded, setListsExpanded] = useState(true);
+
   return (
     <nav aria-label="PSYKL navigation" className="reminders-sidebar-nav">
       <button
@@ -41,24 +45,63 @@ export function SidebarNav({
       >
         <span aria-hidden="true">×</span> PSYKL
       </button>
-      <p className="reminders-sidebar-nav__label">Lists</p>
-      <ul className="reminders-sidebar-nav__items">
-        {lists.map((list) => {
-          const current = destination === 'list' && list.id === activeListId;
-          return (
-            <li key={list.id}>
-              <button
-                aria-current={current ? 'page' : undefined}
-                className="reminders-sidebar-nav__item"
-                onClick={() => onSelectList(list.id)}
-                type="button"
-              >
-                <span aria-hidden="true">•</span> {list.title}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+
+      <div className="reminders-sidebar-nav__heading">
+        <p className="reminders-sidebar-nav__label" id="reminders-sidebar-lists">
+          Lists
+        </p>
+        <button
+          className="reminders-sidebar-nav__heading-action"
+          onClick={() => onSelectDestination('lists')}
+          type="button"
+        >
+          Edit Lists
+        </button>
+        <button
+          aria-expanded={listsExpanded}
+          aria-label={`${listsExpanded ? 'Collapse' : 'Expand'} Lists`}
+          className="reminders-sidebar-nav__disclosure"
+          data-expanded={listsExpanded}
+          onClick={() => setListsExpanded((expanded) => !expanded)}
+          type="button"
+        >
+          <ChevronGlyph />
+        </button>
+      </div>
+
+      {listsExpanded ? (
+        <ul aria-labelledby="reminders-sidebar-lists" className="reminders-sidebar-nav__items">
+          {lists.map((list) => {
+            const current = destination === 'list' && list.id === activeListId;
+            return (
+              <li key={list.id}>
+                <button
+                  aria-current={current ? 'page' : undefined}
+                  className="reminders-sidebar-nav__item"
+                  onClick={() => onSelectList(list.id)}
+                  type="button"
+                >
+                  <DestinationGlyph name="list" />
+                  {list.title}
+                </button>
+              </li>
+            );
+          })}
+          {/* Recently Deleted is a list you can open, not a utility — review note 5. */}
+          <li>
+            <button
+              aria-current={destination === 'recently-deleted' ? 'page' : undefined}
+              className="reminders-sidebar-nav__item"
+              onClick={() => onSelectDestination('recently-deleted')}
+              type="button"
+            >
+              <DestinationGlyph name="recently-deleted" />
+              Recently Deleted
+            </button>
+          </li>
+        </ul>
+      ) : null}
+
       <div className="reminders-sidebar-nav__utilities">
         <button
           aria-current={destination === 'sync' ? 'page' : undefined}
@@ -68,18 +111,8 @@ export function SidebarNav({
           onClick={() => onSelectDestination('sync')}
           type="button"
         >
-          <span aria-hidden="true" className="reminders-sidebar-nav__sync-icon">
-            ↻
-          </span>{' '}
+          <DestinationGlyph name="sync" />
           Sync
-        </button>
-        <button
-          aria-current={destination === 'recently-deleted' ? 'page' : undefined}
-          className="reminders-sidebar-nav__item"
-          onClick={() => onSelectDestination('recently-deleted')}
-          type="button"
-        >
-          <span aria-hidden="true">↺</span> Recently Deleted
         </button>
         <button
           aria-current={destination === 'settings' ? 'page' : undefined}
@@ -87,7 +120,8 @@ export function SidebarNav({
           onClick={() => onSelectDestination('settings')}
           type="button"
         >
-          <span aria-hidden="true">⚙</span> Settings
+          <DestinationGlyph name="settings" />
+          Settings
         </button>
       </div>
     </nav>

@@ -119,6 +119,53 @@ describe('TaskListView (Unit)', () => {
     expect(screen.getByRole('checkbox', { name: 'Reopen Book dentist' })).toHaveAttribute('aria-checked', 'true');
   });
 
+  it('drops the completed tasks when the list is set to hide them', () => {
+    // Arrange
+    mockUseTasks.mockReturnValue({
+      createTask: mockCreateTask,
+      error: null,
+      loading: false,
+      patchTask: mockPatchTask,
+      tasks: [
+        task({ id: 'task-1', title: 'Book dentist' }),
+        task({ id: 'task-2', title: 'Renew passport', completed_at: '2026-02-01T00:00:00.000Z' }),
+      ],
+    });
+
+    // Act
+    render(<TaskListView showCompleted={false} />);
+
+    // Assert
+    expect(screen.getByRole('checkbox', { name: 'Complete Book dentist' })).toBeVisible();
+    expect(screen.queryByText('Renew passport')).not.toBeInTheDocument();
+  });
+
+  it('opens the capture row below the last open task, above the completed ones', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    mockUseTasks.mockReturnValue({
+      createTask: mockCreateTask,
+      error: null,
+      loading: false,
+      patchTask: mockPatchTask,
+      tasks: [
+        task({ id: 'task-1', title: 'Book dentist' }),
+        task({ id: 'task-2', title: 'Renew passport', completed_at: '2026-02-01T00:00:00.000Z' }),
+      ],
+    });
+    render(<TaskListView />);
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'New Reminder' }));
+
+    // Assert
+    const rows = screen.getAllByRole('listitem');
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Book dentist');
+    expect(within(rows[1] as HTMLElement).getByRole('textbox', { name: 'New task title' })).toBeVisible();
+    expect(rows[2]).toHaveTextContent('Renew passport');
+  });
+
   it('stays quiet about a failed load while local tasks are on screen', () => {
     // Arrange — offline-first: the device's own tasks are the truth, and the
     // header's sync control already carries the unreachable-server signal.

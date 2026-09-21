@@ -27,7 +27,7 @@ describe('SyncStatus', () => {
     const control = screen.getByRole('button', { name: 'Sync needs attention' });
     expect(control).toHaveAttribute('data-status', 'attention');
     expect(control).toHaveAttribute('aria-current', 'page');
-    expect(control).toHaveTextContent('↻');
+    expect(control.querySelector('[data-glyph="sync"]')).toBeInTheDocument();
     expect(control).not.toHaveTextContent('Sync');
     expect(control).not.toHaveTextContent('3');
     expect(screen.getByRole('heading', { name: 'Needs attention' })).toBeInTheDocument();

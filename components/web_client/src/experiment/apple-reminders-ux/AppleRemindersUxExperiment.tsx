@@ -3,12 +3,16 @@ import './apple-reminders-ux.css';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { RecentlyDeleted } from '../../components/RecentlyDeleted';
 import { Toast } from '../../components/Toast';
 import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useLists } from '../../hooks/useLists';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
+import { useTasks } from '../../hooks/useTasks';
+import { ListMenu } from './ListMenu';
+import { ListsView } from './ListsView';
+import { RecentlyDeletedView } from './RecentlyDeletedView';
 import { SettingsView } from './SettingsView';
+import { showCompletedStore } from './showCompletedStore';
 import { SidebarNav } from './SidebarNav';
 import { SyncStatus, useFailedSyncCount } from './SyncStatus';
 import { TaskListView } from './TaskListView';
@@ -18,8 +22,10 @@ export function AppleRemindersUxExperiment() {
   const { lists } = useLists();
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
+  const { tasks } = useTasks();
   const failedCount = useFailedSyncCount();
   const [destination, setDestination] = useState<Destination>('list');
+  const [showCompleted, setShowCompleted] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -47,6 +53,16 @@ export function AppleRemindersUxExperiment() {
 
   const activeList = lists.find((list) => list.id === activeListId) ?? lists[0] ?? null;
   const title = destination === 'list' ? (activeList?.title ?? 'Tasks') : destinationTitle(destination);
+  const completedCount = tasks.filter((task) => task.completed_at !== null).length;
+
+  useEffect(() => {
+    setShowCompleted(showCompletedStore.read(activeList?.id ?? null));
+  }, [activeList?.id]);
+
+  function toggleCompleted(next: boolean) {
+    setShowCompleted(next);
+    showCompletedStore.write(activeList?.id ?? null, next);
+  }
 
   function selectList(listId: string) {
     void setActiveListId(listId);
@@ -94,21 +110,27 @@ export function AppleRemindersUxExperiment() {
         ) : null}
         <div className="reminders-experiment__content">
           <Toast />
-          {destination === 'list' || destination === 'sync' ? (
-            <div className="reminders-experiment__content-header">
-              <h2>{title}</h2>
-              <SyncStatus
-                active={destination === 'sync'}
-                failedCount={failedCount}
-                onOpen={() => setDestination('sync')}
-                queuedCount={queuedCount}
-              />
-            </div>
-          ) : destination === 'recently-deleted' ? (
+          {/* One header for every destination, so Sync, Lists, Recently Deleted
+           * and Settings read as the same app as the task list. */}
+          <div className="reminders-experiment__content-header">
             <h2>{title}</h2>
-          ) : null}
-          {destination === 'list' ? <TaskListView /> : null}
-          {destination === 'recently-deleted' ? <RecentlyDeleted open /> : null}
+            {destination === 'list' ? (
+              <ListMenu
+                completedCount={completedCount}
+                onToggleCompleted={toggleCompleted}
+                showCompleted={showCompleted}
+              />
+            ) : null}
+            <SyncStatus
+              active={destination === 'sync'}
+              failedCount={failedCount}
+              onOpen={() => setDestination('sync')}
+              queuedCount={queuedCount}
+            />
+          </div>
+          {destination === 'list' ? <TaskListView showCompleted={showCompleted} /> : null}
+          {destination === 'lists' ? <ListsView /> : null}
+          {destination === 'recently-deleted' ? <RecentlyDeletedView /> : null}
           {destination === 'settings' ? <SettingsView /> : null}
         </div>
       </div>
@@ -118,5 +140,6 @@ export function AppleRemindersUxExperiment() {
 
 function destinationTitle(destination: Exclude<Destination, 'list'>): string {
   if (destination === 'recently-deleted') return 'Recently Deleted';
+  if (destination === 'lists') return 'Lists';
   return destination === 'settings' ? 'Settings' : 'Sync';
 }

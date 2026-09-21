@@ -1,6 +1,6 @@
 import './task-list-view.css';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import type { Task } from '../../../api/client';
 import { useTasks } from '../../../hooks/useTasks';
@@ -9,7 +9,11 @@ import { CaptureRow } from './CaptureRow';
 import { sortTasks } from './sortTasks';
 import { TaskRow } from './TaskRow';
 
-export function TaskListView() {
+interface TaskListViewProps {
+  showCompleted?: boolean;
+}
+
+export function TaskListView({ showCompleted = true }: TaskListViewProps) {
   const { createTask, error, loading, patchTask, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
@@ -28,7 +32,13 @@ export function TaskListView() {
     };
   }, [tasks]);
 
-  const ordered = useMemo(() => sortTasks(tasks), [tasks]);
+  const ordered = useMemo(
+    () => sortTasks(tasks).filter((task) => showCompleted || task.completed_at === null),
+    [showCompleted, tasks],
+  );
+  // The capture row belongs at the end of the open tasks, not at the end of the
+  // list — a new task should never appear beneath the completed ones.
+  const openCount = ordered.filter((task) => task.completed_at === null).length;
 
   function toggle(task: Task): void {
     const now = new Date().toISOString();
@@ -44,6 +54,15 @@ export function TaskListView() {
     const now = new Date().toISOString();
     void patchTask(task.id, { title, updated_at: now }, { ...task, title, updated_at: now });
   }
+
+  const captureRow = (
+    <CaptureRow
+      onCancel={() => setCapturing(false)}
+      onCreate={async (title) => {
+        await createTask(title);
+      }}
+    />
+  );
 
   return (
     <div className="reminders-list">
@@ -61,32 +80,31 @@ export function TaskListView() {
         <p className="reminders-list__placeholder">No Reminders</p>
       ) : (
         <ul className="reminders-list__rows">
-          {ordered.map((task) => (
-            <TaskRow
-              isPending={pendingTaskIds.has(task.id)}
-              key={task.id}
-              onRename={(title) => rename(task, title)}
-              onToggle={() => toggle(task)}
-              task={task}
-            />
+          {ordered.map((task, index) => (
+            <Fragment key={task.id}>
+              <TaskRow
+                isPending={pendingTaskIds.has(task.id)}
+                onRename={(title) => rename(task, title)}
+                onToggle={() => toggle(task)}
+                task={task}
+              />
+              {capturing && index + 1 === openCount ? captureRow : null}
+            </Fragment>
           ))}
-          {capturing ? (
-            <CaptureRow
-              onCancel={() => setCapturing(false)}
-              onCreate={async (title) => {
-                await createTask(title);
-              }}
-            />
-          ) : null}
+          {capturing && openCount === 0 ? captureRow : null}
         </ul>
       )}
 
       <div className="reminders-list__capture-bar">
-        <button className="reminders-list__capture" onClick={() => setCapturing(true)} type="button">
-          <span aria-hidden="true" className="reminders-list__capture-glyph">
-            +
-          </span>
-          New Reminder
+        <button
+          aria-label="New Reminder"
+          className="reminders-list__capture"
+          onClick={() => setCapturing(true)}
+          type="button"
+        >
+          <svg aria-hidden="true" className="reminders-list__capture-glyph" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
         </button>
       </div>
     </div>

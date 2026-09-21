@@ -29,12 +29,56 @@
   margin-bottom: 1rem;
 }
 
+.reminders-sidebar-nav__heading {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0.25rem 0.75rem;
+}
+
 .reminders-sidebar-nav__label {
   color: var(--r-label-secondary);
+  flex: 1;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  margin: 0 0 0.25rem 0.75rem;
+  margin: 0;
+}
+
+.reminders-sidebar-nav__heading-action {
+  background: none;
+  border: 0;
+  border-radius: var(--r-radius);
+  color: var(--r-tint);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0.35rem 0.4rem;
+}
+
+.reminders-sidebar-nav__disclosure {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  color: var(--r-label-secondary);
+  cursor: pointer;
+  display: flex;
+  height: 1.75rem;
+  justify-content: center;
+  padding: 0;
+  width: 1.75rem;
+}
+
+.reminders-sidebar-nav__disclosure[data-expanded='false'] .reminders-chevron {
+  transform: rotate(-90deg);
+}
+
+.reminders-sidebar-nav__heading-action:focus-visible,
+.reminders-sidebar-nav__disclosure:focus-visible {
+  outline: 2px solid var(--r-tint);
+  outline-offset: 1px;
 }
 
 .reminders-sidebar-nav__items {
@@ -65,26 +109,12 @@
   padding-top: 0.5rem;
 }
 
-/* Reminders puts a filled round tile in front of each smart list; the sync tile
- * doubles as the status light, so its fill carries the state. */
-.reminders-sidebar-nav__sync-icon {
-  align-items: center;
-  border-radius: 50%;
-  box-sizing: border-box;
-  color: var(--r-on-tint);
-  display: inline-flex;
-  flex: none;
-  font-size: 0.85rem;
-  height: 1.75rem;
-  justify-content: center;
-  width: 1.75rem;
-}
-
-.reminders-sidebar-nav__item[data-status='clear'] .reminders-sidebar-nav__sync-icon {
+/* The sync tile doubles as the status light, so its fill carries the state. */
+.reminders-sidebar-nav__item[data-status='clear'] .reminders-glyph {
   background: var(--r-good);
 }
 
-.reminders-sidebar-nav__item[data-status='attention'] .reminders-sidebar-nav__sync-icon {
+.reminders-sidebar-nav__item[data-status='attention'] .reminders-glyph {
   background: var(--r-warn);
   color: #000;
 }
