@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
 
-import { enqueueSyncOp, putFailedOp } from '../../../db/idb';
+import { deleteFailedOp, deleteSyncOp, deleteTask, enqueueSyncOp, listTasks, putFailedOp } from '../../../db/idb';
 import { notifyTasksChanged } from '../../../hooks/useTasks';
 import { AppleRemindersUxExperiment } from '../AppleRemindersUxExperiment';
 
@@ -127,6 +127,15 @@ export const OpensSyncDetailsWithoutShowingABanner: Story = {
         expect(canvasElement.querySelector('nav')).not.toBeVisible();
       });
     });
+
+    // Same reason as the capture story below: the preview loader's deleteDB is
+    // blocked by this page's own open connection, so queued and failed ops
+    // would otherwise carry into the next story's sync counts.
+    await step('Leave no queued or failed ops behind', async () => {
+      await deleteSyncOp('story-queued');
+      await deleteFailedOp('story-failed');
+      await notifyTasksChanged();
+    });
   },
 };
 
@@ -166,6 +175,19 @@ export const CapturesATaskAndSinksItOnCompletion: Story = {
         expect(titles).toEqual(['Pay invoice', 'Book dentist']);
         expect(canvas.getByRole('checkbox', { name: 'Reopen Book dentist' })).toHaveAttribute('aria-checked', 'true');
       });
+    });
+
+    // This is the only story that writes real Tasks to IndexedDB. The preview
+    // loader's `deleteDB('psykl')` cannot reclaim them while this page still
+    // holds an open connection, so the rows would survive into whichever story
+    // runs next — which is how PSYKL/TaskList's empty-state assertions started
+    // failing in CI. Clean up what this story created rather than leaning on a
+    // reset that is blocked by our own connection.
+    await step('Leave no tasks behind for the next story', async () => {
+      for (const task of await listTasks()) {
+        await deleteTask(task.id);
+      }
+      await notifyTasksChanged();
     });
   },
 };
