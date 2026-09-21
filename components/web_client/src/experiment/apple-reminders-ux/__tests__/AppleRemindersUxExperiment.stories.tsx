@@ -115,13 +115,16 @@ export const OpensSyncDetailsWithoutShowingABanner: Story = {
       });
     });
 
-    await step('The control opens separate queued and failed details', async () => {
-      await userEvent.click(canvas.getByRole('button', { name: /Sync needs attention/ }));
+    await step('The sidebar Sync row opens separate queued and failed details', async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Open PSYKL navigation' }));
+      const sidebar = within(canvas.getByRole('navigation', { name: 'PSYKL navigation' }));
+      await userEvent.click(sidebar.getByRole('button', { name: 'Sync needs attention' }));
 
       await waitFor(() => {
         expect(canvas.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
         expect(canvas.getByText(/Waiting to sync:/)).toBeVisible();
         expect(canvas.getByText('Permanently failed: 1')).toBeVisible();
+        expect(canvasElement.querySelector('nav')).not.toBeVisible();
       });
     });
   },

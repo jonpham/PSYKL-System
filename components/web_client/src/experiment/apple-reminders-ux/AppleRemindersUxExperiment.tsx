@@ -81,6 +81,7 @@ export function AppleRemindersUxExperiment() {
             onClose={closeSidebar}
             onSelectDestination={selectDestination}
             onSelectList={selectList}
+            syncNeedsAttention={queuedCount + failedCount > 0}
           />
         </aside>
         {sidebarOpen ? (

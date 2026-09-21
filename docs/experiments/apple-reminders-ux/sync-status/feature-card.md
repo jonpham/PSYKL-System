@@ -16,7 +16,7 @@ A compact green/yellow sync icon communicates status at a glance and opens a rea
 
 ## Scope
 
-Replace the experiment's banner with a content-header sync icon; show queued and permanently failed change counts only in a Sync destination.
+Replace the experiment's banner with a circular content-header sync icon and a status-colored Sidebar row; show queued and permanently failed counts only in a Sync destination.
 
 ## Not now
 

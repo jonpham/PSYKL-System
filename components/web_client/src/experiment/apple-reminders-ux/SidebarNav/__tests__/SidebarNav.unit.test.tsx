@@ -54,4 +54,28 @@ describe('SidebarNav', () => {
     // Assert
     expect(onSelectDestination).toHaveBeenCalledWith('settings');
   });
+
+  it('opens Sync from an attention-colored utility row', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onSelectDestination = vi.fn();
+    render(
+      <SidebarNav
+        activeListId="list-1"
+        destination="list"
+        lists={lists}
+        onClose={() => undefined}
+        onSelectDestination={onSelectDestination}
+        onSelectList={() => undefined}
+        syncNeedsAttention
+      />,
+    );
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Sync needs attention' }));
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Sync needs attention' })).toHaveAttribute('data-status', 'attention');
+    expect(onSelectDestination).toHaveBeenCalledWith('sync');
+  });
 });

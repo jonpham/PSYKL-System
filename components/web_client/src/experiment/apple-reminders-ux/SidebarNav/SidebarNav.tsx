@@ -17,6 +17,7 @@ interface SidebarNavProps {
   onClose: () => void;
   onSelectDestination: (destination: Exclude<Destination, 'list'>) => void;
   onSelectList: (listId: string) => void;
+  syncNeedsAttention?: boolean;
 }
 
 export function SidebarNav({
@@ -27,6 +28,7 @@ export function SidebarNav({
   onClose,
   onSelectDestination,
   onSelectList,
+  syncNeedsAttention = false,
 }: SidebarNavProps) {
   return (
     <nav aria-label="PSYKL navigation" className="reminders-sidebar-nav">
@@ -58,6 +60,19 @@ export function SidebarNav({
         })}
       </ul>
       <div className="reminders-sidebar-nav__utilities">
+        <button
+          aria-current={destination === 'sync' ? 'page' : undefined}
+          aria-label={syncNeedsAttention ? 'Sync needs attention' : 'Sync clear'}
+          className="reminders-sidebar-nav__item"
+          data-status={syncNeedsAttention ? 'attention' : 'clear'}
+          onClick={() => onSelectDestination('sync')}
+          type="button"
+        >
+          <span aria-hidden="true" className="reminders-sidebar-nav__sync-icon">
+            ↻
+          </span>{' '}
+          Sync
+        </button>
         <button
           aria-current={destination === 'recently-deleted' ? 'page' : undefined}
           className="reminders-sidebar-nav__item"

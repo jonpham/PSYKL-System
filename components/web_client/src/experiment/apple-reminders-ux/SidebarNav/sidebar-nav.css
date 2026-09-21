@@ -50,3 +50,26 @@
   margin-top: 1rem;
   padding-top: 1rem;
 }
+
+.reminders-sidebar-nav__sync-icon {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 1.5rem;
+  justify-content: center;
+  width: 1.5rem;
+}
+
+.reminders-sidebar-nav__item[data-status='clear'] .reminders-sidebar-nav__sync-icon {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.reminders-sidebar-nav__item[data-status='attention'] .reminders-sidebar-nav__sync-icon {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
