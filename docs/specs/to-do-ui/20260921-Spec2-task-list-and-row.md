@@ -140,9 +140,11 @@ Walk acceptance checks **Complete**, **Row craft**, **Persistence** and **Dark m
 
 ## Open Questions / Risks
 
-- **The unchecked checkbox stroke is the sharp end of the contrast decision** carried in Spec 1.
-  `--text-tertiary` at 1.7:1 is the app's least legible non-text indicator, and it is the affordance
-  the whole list is built around. Whatever the operator decides, this row is where it shows.
+- **The unchecked checkbox stroke is the sharp end of the contrast decision** settled in
+  [`docs/DESIGN.md`](../../DESIGN.md). It is `--text-tertiary`, which moves from 1.7:1 at Standard to
+  3.3:1 at Increased — the largest visible difference between the two levels in the whole app. The row
+  must read correctly at both, so **verify and screenshot it at Standard and Increased**, in light and
+  dark, not just at the default.
 - Row craft is where "Reminders-grade" is won or lost; measure the metrics rather than eyeballing them.
 - Completion animation must respect `prefers-reduced-motion` — and the reduced-motion block must
   contain **only** motion rules. Orphaning tokens there is the exact mistake review round 1 caught.

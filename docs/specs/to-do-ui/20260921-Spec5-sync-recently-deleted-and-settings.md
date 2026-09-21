@@ -12,6 +12,7 @@ honors_decisions:
   - 1
   - 3
   - 4
+  - 5
 ---
 
 # Sync, Recently Deleted, and Settings — Implementation Spec
@@ -25,10 +26,10 @@ honors_decisions:
 **Date:** 2026-09-21
 **Initiative:** `to-do-ui`
 **Spec:** 5/6
-**Spec User Story:** _As someone who works offline and on more than one device, I open a Sync destination to see what is still waiting, what failed, and where another device replaced an edit of mine; I restore things I deleted by mistake; and I choose the app's appearance and find that choice still set tomorrow._
+**Spec User Story:** _As someone who works offline and on more than one device, I open a Sync destination to see what is still waiting, what failed, and where another device replaced an edit of mine; I restore things I deleted by mistake; and I choose how the app looks — light or dark, standard or increased contrast — and find those choices still set tomorrow._
 **Status:** see frontmatter
 **Time-box:** ~3 days
-**Reads from:** [`docs/initiatives/to-do-ui/DESIGN.md`](../../initiatives/to-do-ui/DESIGN.md) — **Decisions 3 and 4 are load-bearing here.**
+**Reads from:** [`docs/initiatives/to-do-ui/DESIGN.md`](../../initiatives/to-do-ui/DESIGN.md) — **Decisions 3, 4 and 5 are load-bearing here.**
 **UI reference:** `screenshots/390-settings.png`, `390-recently-deleted.png`.
 
 ---
@@ -42,8 +43,11 @@ surfaces the bootstrap shell used:
   (Decision 3: a stale write is a fact about data, not an event; it belongs somewhere durable the user
   can open hours later). Retires `components/OutOfSyncBanner/` and `components/Toast/`.
 - **Recently Deleted** — the existing 30-day restore surface, re-rendered in row language.
-- **Settings** — System / Light / Dark appearance, persisted device-locally to `sync_meta` using the
-  pattern Spec 4 established.
+- **Settings** — **two** device-local preferences, both persisted to `sync_meta` using the pattern
+  Spec 4 established: **Appearance** (System / Light / Dark) and **Contrast** (Standard / Increased).
+  Contrast is new in production — the prototype shipped only appearance — and was decided on
+  2026-09-21 rather than choosing between Apple's conventional grays and WCAG AA. It composes with
+  appearance: four combinations, all of which must render correctly.
 
 Touches `components/web_client`. **Possibly `components/service-task` — see below.**
 
@@ -82,8 +86,10 @@ an inferred contract change.
 - `src/components/SyncView/` (new) — queued, failed, and stale-write records.
 - `src/preferences/staleWrites.ts` (new) — records fed by the existing `sync:stale-write` event.
 - `src/components/RecentlyDeleted/` — re-rendered in row language; keeps `useRecentlyDeleted`.
-- `src/components/SettingsView/` (new) — System / Light / Dark, `sync_meta`-backed, replacing the
-  prototype's `localStorage` `themeStore.ts`.
+- `src/components/SettingsView/` (new) — Appearance (System / Light / Dark) and Contrast (Standard /
+  Increased), both `sync_meta`-backed, replacing the prototype's `localStorage` `themeStore.ts`.
+  Appearance stamps `data-theme`; contrast stamps `data-contrast`. The palette both switches between
+  already shipped in Spec 1's token sheet — this Spec adds only the controls and their persistence.
 - `src/components/OutOfSyncBanner/`, `src/components/Toast/` — **deleted**.
 - `src/App.tsx` — drops both.
 
@@ -93,28 +99,31 @@ an inferred contract change.
 
 ### Unit tests
 
-| File                                                       | What it asserts                                                                               |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `src/preferences/__tests__/appearance.unit.test.ts`        | the choice round-trips through `sync_meta` and is never enqueued                              |
-| `src/preferences/__tests__/staleWrites.unit.test.ts`       | a `sync:stale-write` event produces a record; records are readable after a reload             |
-| `src/components/SyncView/__tests__/SyncView.unit.test.tsx` | queued, failed, and stale-write sections render independently; each empty state reads plainly |
+| File                                                       | What it asserts                                                                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/preferences/__tests__/appearance.unit.test.ts`        | the choice round-trips through `sync_meta` and is never enqueued                                                                                     |
+| `src/preferences/__tests__/contrast.unit.test.ts`          | Standard is the default when nothing is stored; Increased round-trips and is never enqueued; it composes with an appearance rather than replacing it |
+| `src/preferences/__tests__/staleWrites.unit.test.ts`       | a `sync:stale-write` event produces a record; records are readable after a reload                                                                    |
+| `src/components/SyncView/__tests__/SyncView.unit.test.tsx` | queued, failed, and stale-write sections render independently; each empty state reads plainly                                                        |
 
 ### Component tests (Storybook + play functions + MSW)
 
-| File                                                                   | What it asserts                                                                    |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `src/components/SyncView/__tests__/SyncView.stories.tsx`               | a queued op appears and clears when it drains; a failure is listed with its reason |
-| `src/components/RecentlyDeleted/__tests__/RecentlyDeleted.stories.tsx` | restore returns the item to its list                                               |
-| `src/components/SettingsView/__tests__/SettingsView.stories.tsx`       | switching appearance repaints without a reload                                     |
+| File                                                                   | What it asserts                                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `src/components/SyncView/__tests__/SyncView.stories.tsx`               | a queued op appears and clears when it drains; a failure is listed with its reason               |
+| `src/components/RecentlyDeleted/__tests__/RecentlyDeleted.stories.tsx` | restore returns the item to its list                                                             |
+| `src/components/SettingsView/__tests__/SettingsView.stories.tsx`       | switching appearance repaints without a reload                                                   |
+| `src/components/SettingsView/__tests__/SettingsView.stories.tsx`       | switching contrast repaints without a reload; all four appearance x contrast combinations render |
 
 ### End-to-End tests
 
-| File                               | Title                                                  |
-| ---------------------------------- | ------------------------------------------------------ |
-| `e2e/recently_deleted.e2e.spec.ts` | a user restores a task from Recently Deleted           |
-| `e2e/sync_view.e2e.spec.ts`        | a user opens Sync and sees what is waiting             |
-| `e2e/sync_view.e2e.spec.ts`        | a user is told when another device replaced their edit |
-| `e2e/settings.e2e.spec.ts`         | a user switches appearance and it survives a reload    |
+| File                               | Title                                                       |
+| ---------------------------------- | ----------------------------------------------------------- |
+| `e2e/recently_deleted.e2e.spec.ts` | a user restores a task from Recently Deleted                |
+| `e2e/sync_view.e2e.spec.ts`        | a user opens Sync and sees what is waiting                  |
+| `e2e/sync_view.e2e.spec.ts`        | a user is told when another device replaced their edit      |
+| `e2e/settings.e2e.spec.ts`         | a user switches appearance and it survives a reload         |
+| `e2e/settings.e2e.spec.ts`         | a user turns on increased contrast and it survives a reload |
 
 **Existing E2E specs to update in the same PR:** `e2e/offline_pressure.e2e.spec.ts` (the nag banner it
 asserts on is retired — the signal moves to the header sync control and the Sync view),
@@ -126,7 +135,7 @@ asserts on is retired — the signal moves to the header sync control and the Sy
 
 ### TDD order
 
-1. Appearance preference unit tests (including never-enqueued) → implement → green
+1. Appearance and contrast preference unit tests (including never-enqueued) → implement → green
 2. Stale-write record unit tests → implement → green
 3. `SyncView` unit tests and story → implement → green
 4. Recently Deleted and Settings stories → re-render → green
@@ -149,7 +158,7 @@ asserts on is retired — the signal moves to the header sync control and the Sy
 **Files:** ~5
 **Branch:** `feat/to-do-ui-s5-dt11-stale-writes`
 
-### DevTask 12: Re-render Recently Deleted and ship Settings appearance
+### DevTask 12: Re-render Recently Deleted and ship the Settings appearance and contrast controls
 
 **Files:** ~5
 **Branch:** `feat/to-do-ui-s5-dt12-recently-deleted-and-settings`
@@ -161,8 +170,9 @@ asserts on is retired — the signal moves to the header sync control and the Sy
 1. With the API down, make several edits — the header control and the Sync view both show the queue.
 2. Bring the API back — the queue drains and the view empties.
 3. Edit the same task on two devices — the losing device lists a stale-write record in Sync.
-4. Switch appearance, reload — still set; check a second device — **not** set there.
-5. Delete and restore a task.
+4. Switch appearance and contrast, reload — both still set; check a second device — **neither** is set there.
+5. Walk the row and the empty state at all four appearance x contrast combinations.
+6. Delete and restore a task.
 
 ## Open Questions / Risks
 

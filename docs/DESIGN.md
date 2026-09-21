@@ -2,7 +2,7 @@
 
 Rewritten on 2026-09-21 from the accepted `apple-reminders-ux` experiment, which shipped in `v0.4.1` after four operator review rounds. That prototype — not this document's previous revision — is the baseline the production app is built to. The 2026-08-14 revision was written before any of it was built; where the two disagree, the built and reviewed surface wins.
 
-**Status:** APPROVED — the visual baseline for the [`to-do-ui`](initiatives/to-do-ui/DESIGN.md) initiative and everything after it. One accessibility decision is open; see [Contrast — an open decision](#contrast--an-open-decision).
+**Status:** APPROVED — the visual baseline for the [`to-do-ui`](initiatives/to-do-ui/DESIGN.md) initiative and everything after it. No open decisions.
 **Scope:** Durable. This document outlives any one initiative and is refreshed, not deleted, at close-out.
 **Source of truth for pixels:** `docs/experiments/apple-reminders-ux/apple-reminders-ui/visual-artifact.md` and its `screenshots/`. This file is the durable statement of what those screenshots mean; the screenshots are the evidence.
 **Companion:** [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) covers screens, behavior, and gestures for the paused `todo-experience` initiative, and has been reconciled with this baseline.
@@ -101,16 +101,21 @@ A theme may change values. A theme may not change these, because they are correc
 - **No theme may remove a state signal.** Completion, pending sync, failure, and focus must each remain distinguishable without relying on hue alone.
 - **Row metrics are not themable.** Themes change color and type; layout stays fixed so the density work is not re-litigated per theme.
 
-### Appearance vs. theme
+### Appearance, contrast, and theme
 
-Two distinct, orthogonal choices:
+Three distinct, orthogonal choices:
 
-| Choice         | Values                     | Where it lives                                       |
-| -------------- | -------------------------- | ---------------------------------------------------- |
-| **Appearance** | System · Light · Dark      | Shipped. Settings; persisted device-locally.         |
-| **Theme**      | Plain _(default)_ · Ledger | Not built. Plain is the only theme in the app today. |
+| Choice         | Values                           | Where it lives                                                 |
+| -------------- | -------------------------------- | -------------------------------------------------------------- |
+| **Appearance** | System · Light · Dark            | Shipped in the prototype. Settings; persisted device-locally.  |
+| **Contrast**   | Standard _(default)_ · Increased | New in production (`to-do-ui` Spec 5). Settings; device-local. |
+| **Theme**      | Plain _(default)_ · Ledger       | Not built. Plain is the only theme in the app today.           |
 
-`System` stamps nothing and lets `prefers-color-scheme` decide; `Light` and `Dark` stamp `data-theme` on the root and win in both directions. Both are **device-local preferences, never synced** — how you like to look at one device is not a property of your data. They live in the `sync_meta` IndexedDB store, which is never enqueued (`todo-experience/DESIGN.md` → Data-model decisions locked here).
+`System` stamps nothing and lets `prefers-color-scheme` decide; `Light` and `Dark` stamp `data-theme` on the root and win in both directions. `Increased` stamps `data-contrast="increased"` and composes with all three appearances.
+
+All three are **device-local preferences, never synced** — how you like to look at one device is not a property of your data. They live in the `sync_meta` IndexedDB store, which is never enqueued (`todo-experience/DESIGN.md` → Data-model decisions locked here).
+
+**A theme must define both contrast levels.** Standard is the theme as designed; Increased is the same design with the values that fall below WCAG AA raised until they clear it. A theme that ships only Standard is incomplete.
 
 ### Themes
 
@@ -214,7 +219,9 @@ This replaces the 2026-08-14 palette wholesale. That palette derived its own blu
 
 **Overdue styling is in.** A past due date renders in `--destructive`. Premise P2 refuses _scheduling_ the user's attention, not stating facts. (Due dates are not built yet; this rule is waiting for them.)
 
-### Contrast — an open decision
+### Contrast — Standard and Increased
+
+**Decided 2026-09-21: ship both.** Standard is the prototype exactly as built and accepted; Increased is a second contrast level the user selects in Settings, in which every value below WCAG AA is raised until it clears.
 
 Adopting Apple's system colors imports Apple's contrast behavior, which does not clear WCAG AA. Measured against `--bg-app` in light mode:
 
@@ -225,15 +232,36 @@ Adopting Apple's system colors imports Apple's contrast behavior, which does not
 | `--text-tertiary`  | unchecked checkbox stroke                | **1.7:1** | 3:1                       | **fails AA for a non-text indicator** |
 | `--accent`         | tint, links, checkbox fill               | 3.9:1     | 4.5:1 text · 3:1 non-text | passes as non-text; fails as text     |
 
-The 2026-08-14 revision required every theme to clear AA for `--text-primary` and `--text-secondary`. The shipped prototype does not, and neither does Apple Reminders — this is a genuine conflict between "be conventional" and "clear AA," not an oversight in the build.
+The 2026-08-14 revision required every theme to clear AA for `--text-primary` and `--text-secondary`. The shipped prototype does not, and neither does Apple Reminders — a genuine conflict between "be conventional" and "clear AA," not an oversight in the build. Rather than resolve it by picking a side, the app lets the user pick.
 
-**This needs an operator decision before Spec 2 implements the row.** Three options, in the order I'd recommend them:
+**Increased Contrast is a small override, not a second palette.** Measuring every token showed only four need to move; the rest already clear their bar.
 
-1. **Darken the secondary and tertiary grays in PSYKL's palette only** (e.g. `#6d6d72` at 4.6:1, checkbox stroke `#8e8e93` at 3.3:1). Keeps the tint, keeps the feel, clears AA. Deviates from Apple's exact values in a way that is very hard to see side by side.
-2. **Keep Apple's values and record the AA exception** explicitly here, scoped to these two tokens, with the non-color signals (strike-through, fill, pending dot) carrying the meaning.
-3. **Ship both** — Plain as built, and an accessible variant as a second appearance option. The most work; defensible only if the operator wants the choice.
+```css
+:root[data-contrast='increased'] {
+  --text-secondary: #6d6d72; /* 5.1:1  was 3.3:1 */
+  --text-tertiary: #8e8e93; /* 3.3:1  was 1.7:1 — non-text bar is 3:1 */
+  --accent: #0069e0; /* 5.1:1  was 3.9:1 — clears AA as link text */
+}
 
-Until this is answered, the values above are what the prototype shipped and the row-level contrast rule below is what constrains implementation.
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='increased']:not([data-theme='light']) {
+    --text-tertiary: #6e6e73; /* 4.1:1  was 2.3:1 */
+  }
+}
+
+:root[data-theme='dark'][data-contrast='increased'] {
+  --text-tertiary: #6e6e73;
+}
+```
+
+Dark mode needs only one override: `--text-secondary` already measures 7.3:1 there and `--accent` 5.8:1, both clearing AA without help. Light mode carries the other three. **`--text-primary`, `--destructive`, and the status colors are unchanged at both levels.**
+
+Two rules follow, and they are correctness rather than taste:
+
+- **Standard stays the default**, because it is what was designed, built, and accepted across four review rounds.
+- **Increased may only raise contrast.** It is not a second design surface and not a place to revisit hues. If a future change makes Standard clear AA on its own, the corresponding override is deleted, not repurposed.
+
+`--contrast` composes with appearance, not with theme selection: a theme supplies both levels (see Appearance, contrast, and theme above).
 
 ### Spacing and metrics
 
@@ -339,26 +367,27 @@ Note what left this list in the 2026-08-14 rewrite and stays gone: cards, drop s
 
 ## Decisions Log
 
-| Date       | Decision                                                                 | Rationale                                                                                                                                                                                                       |
-| ---------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-13 | Design system created as the bespoke "Ledger" identity                   | `/design-consultation`. Superseded 2026-08-14; recoverable at commit `e8c0ef6`.                                                                                                                                 |
-| 2026-08-14 | **Conventional-first baseline replaces the bespoke identity**            | An interactive prototype of the Ledger direction read as rigid and engineering-focused in real use. Innovation budget moves to `psykl-loop`.                                                                    |
-| 2026-08-14 | **Two-tier token architecture; themes are first-class**                  | Components reference semantic tokens only. Adding a theme supplies primitives and changes no component CSS. **Still holds.**                                                                                    |
-| 2026-08-14 | **Ledger demoted to a selectable theme, not deleted**                    | The token structure and designed dark theme were correct work regardless of direction. **Still holds**, now explicitly unscheduled.                                                                             |
-| 2026-08-14 | **Theme choice is device-local, not synced**                             | A theme describes how you want to look at one device, not your data. **Still holds**, and now also governs appearance.                                                                                          |
-| 2026-08-14 | **`--accent-session` stays reserved across every theme**                 | The only rule carried wholesale from the Ledger system. **Still holds.**                                                                                                                                        |
-| 2026-08-14 | **Platform font stack in the default theme**                             | Reads as native and removes ~50KB of precached font from the app shell. **Still holds.**                                                                                                                        |
-| 2026-08-14 | **Overdue styling is in**                                                | Premise P2 refuses _scheduling_ attention, not stating facts. **Still holds**; due dates are not built yet.                                                                                                     |
-| 2026-09-21 | **The shipped `apple-reminders-ux` prototype is the visual baseline**    | Four operator review rounds against a running build at 390px and 1024px, light and dark. Proposed values that were never built do not outrank reviewed ones.                                                    |
-| 2026-09-21 | **Apple system colors replace the derived palette**                      | `#007aff` / `#0a84ff` tint, `#8e8e93` secondary, `#c6c6c8` separator. "Craft parity with Reminders" and "a blue we picked ourselves" are not compatible goals. Imports an AA exception — see the open decision. |
-| 2026-09-21 | **Task title is 17/22, the list title 34/41**                            | Built at 390px against real titles. 16px still read as a table cell; 17px is where Reminders sits, for the same reason.                                                                                         |
-| 2026-09-21 | **Titles wrap and never truncate; the two-line cap is dropped**          | The cap cut real titles where the meaning was, for no layout benefit. The list is vertical and has room.                                                                                                        |
-| 2026-09-21 | **Row floor 44px, checkbox column 36px, content column 680px**           | Measured, not argued. 48px cost rows on screen; a 44px column reached into the gutter; 720px read as stretched at 1024px.                                                                                       |
-| 2026-09-21 | **Wrapped rows align the checkbox and pending dot to the first line**    | Center alignment on a two-line title reads as a misalignment bug.                                                                                                                                               |
-| 2026-09-21 | **Capture is a floating trailing-corner button, not a bottom bar**       | Both the 2026-08-14 revision and the prototype's first wireframe specified a 56px bottom bar; review replaced it, and the floating affordance is what shipped and was accepted.                                 |
-| 2026-09-21 | **A drawer with glyph destinations replaces the list-switcher sheet**    | The sheet was a modal detour for the app's most common navigation. The drawer also gives Sync, Recently Deleted, and Settings a home.                                                                           |
-| 2026-09-21 | **`--separator-strong` retired; one separator color**                    | A second weight invited the spreadsheet look the inset rule exists to prevent.                                                                                                                                  |
-| 2026-09-21 | **`--status-warn` / `--status-good` added for sync state**               | Sync is chrome with three legible states. systemYellow reads as caution without competing with `--accent-session`.                                                                                              |
-| 2026-09-21 | **Every token is defined at the theme root; media blocks only redefine** | Five tokens were orphaned inside a `prefers-reduced-motion` block during review round 1 and were inert for a full round. Correctness, not style.                                                                |
-| 2026-09-21 | **Appearance (System/Light/Dark) is distinct from theme (Plain/Ledger)** | Orthogonal choices. Appearance shipped; theme is deferred with nothing scheduling it.                                                                                                                           |
-| 2026-09-21 | **Contrast exception recorded as OPEN, not resolved**                    | `--text-secondary` at 3.3:1 and `--text-tertiary` at 1.7:1 fail WCAG AA. Apple ships the same. Needs an operator decision before the row is implemented.                                                        |
+| Date       | Decision                                                                 | Rationale                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-13 | Design system created as the bespoke "Ledger" identity                   | `/design-consultation`. Superseded 2026-08-14; recoverable at commit `e8c0ef6`.                                                                                                                                                                                                                                                          |
+| 2026-08-14 | **Conventional-first baseline replaces the bespoke identity**            | An interactive prototype of the Ledger direction read as rigid and engineering-focused in real use. Innovation budget moves to `psykl-loop`.                                                                                                                                                                                             |
+| 2026-08-14 | **Two-tier token architecture; themes are first-class**                  | Components reference semantic tokens only. Adding a theme supplies primitives and changes no component CSS. **Still holds.**                                                                                                                                                                                                             |
+| 2026-08-14 | **Ledger demoted to a selectable theme, not deleted**                    | The token structure and designed dark theme were correct work regardless of direction. **Still holds**, now explicitly unscheduled.                                                                                                                                                                                                      |
+| 2026-08-14 | **Theme choice is device-local, not synced**                             | A theme describes how you want to look at one device, not your data. **Still holds**, and now also governs appearance.                                                                                                                                                                                                                   |
+| 2026-08-14 | **`--accent-session` stays reserved across every theme**                 | The only rule carried wholesale from the Ledger system. **Still holds.**                                                                                                                                                                                                                                                                 |
+| 2026-08-14 | **Platform font stack in the default theme**                             | Reads as native and removes ~50KB of precached font from the app shell. **Still holds.**                                                                                                                                                                                                                                                 |
+| 2026-08-14 | **Overdue styling is in**                                                | Premise P2 refuses _scheduling_ attention, not stating facts. **Still holds**; due dates are not built yet.                                                                                                                                                                                                                              |
+| 2026-09-21 | **The shipped `apple-reminders-ux` prototype is the visual baseline**    | Four operator review rounds against a running build at 390px and 1024px, light and dark. Proposed values that were never built do not outrank reviewed ones.                                                                                                                                                                             |
+| 2026-09-21 | **Apple system colors replace the derived palette**                      | `#007aff` / `#0a84ff` tint, `#8e8e93` secondary, `#c6c6c8` separator. "Craft parity with Reminders" and "a blue we picked ourselves" are not compatible goals. Imports an AA exception — see the open decision.                                                                                                                          |
+| 2026-09-21 | **Task title is 17/22, the list title 34/41**                            | Built at 390px against real titles. 16px still read as a table cell; 17px is where Reminders sits, for the same reason.                                                                                                                                                                                                                  |
+| 2026-09-21 | **Titles wrap and never truncate; the two-line cap is dropped**          | The cap cut real titles where the meaning was, for no layout benefit. The list is vertical and has room.                                                                                                                                                                                                                                 |
+| 2026-09-21 | **Row floor 44px, checkbox column 36px, content column 680px**           | Measured, not argued. 48px cost rows on screen; a 44px column reached into the gutter; 720px read as stretched at 1024px.                                                                                                                                                                                                                |
+| 2026-09-21 | **Wrapped rows align the checkbox and pending dot to the first line**    | Center alignment on a two-line title reads as a misalignment bug.                                                                                                                                                                                                                                                                        |
+| 2026-09-21 | **Capture is a floating trailing-corner button, not a bottom bar**       | Both the 2026-08-14 revision and the prototype's first wireframe specified a 56px bottom bar; review replaced it, and the floating affordance is what shipped and was accepted.                                                                                                                                                          |
+| 2026-09-21 | **A drawer with glyph destinations replaces the list-switcher sheet**    | The sheet was a modal detour for the app's most common navigation. The drawer also gives Sync, Recently Deleted, and Settings a home.                                                                                                                                                                                                    |
+| 2026-09-21 | **`--separator-strong` retired; one separator color**                    | A second weight invited the spreadsheet look the inset rule exists to prevent.                                                                                                                                                                                                                                                           |
+| 2026-09-21 | **`--status-warn` / `--status-good` added for sync state**               | Sync is chrome with three legible states. systemYellow reads as caution without competing with `--accent-session`.                                                                                                                                                                                                                       |
+| 2026-09-21 | **Every token is defined at the theme root; media blocks only redefine** | Five tokens were orphaned inside a `prefers-reduced-motion` block during review round 1 and were inert for a full round. Correctness, not style.                                                                                                                                                                                         |
+| 2026-09-21 | **Appearance (System/Light/Dark) is distinct from theme (Plain/Ledger)** | Orthogonal choices. Appearance shipped; theme is deferred with nothing scheduling it.                                                                                                                                                                                                                                                    |
+| 2026-09-21 | **Contrast ships as a user choice: Standard (default) and Increased**    | `--text-secondary` at 3.3:1 and `--text-tertiary` at 1.7:1 fail WCAG AA, as Apple's own values do. Rather than choose between "be conventional" and "clear AA," the app lets the user choose. Increased is a four-token override, not a second palette; Standard stays the default because it is what was designed, built, and accepted. |
+| 2026-09-21 | **A theme must define both contrast levels**                             | Otherwise adding a theme silently removes the accessible option. Increased may only raise contrast — never revisit hues.                                                                                                                                                                                                                 |

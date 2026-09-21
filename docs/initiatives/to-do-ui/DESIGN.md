@@ -138,14 +138,14 @@ All under `components/web_client/src/experiment/apple-reminders-ux/`: `tokens.cs
 
 Chrome first, so everything after it renders inside its final container.
 
-| Spec | Slice                                                                                                                                                                                         | Retires                                            | ~DevTasks | Risk it carries                                                  |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------- | ---------------------------------------------------------------- |
-| 1    | **Shell, navigation, list management** — tokens, glyph set, header, drawer, destinations, header sync control, Lists page (create / rename / reorder / delete)                                | `components/ListSwitcher/`                         | 3         | Largest slice; touches every existing E2E spec's selectors       |
-| 2    | **Task list and row** — circle checkbox with fill animation, 17px wrapping title, inset separators, inline edit, completed sunk below open, first-line alignment, pending-dot column          | rewrites `components/TaskList/`                    | 2         | Row craft is where "Reminders-grade" is won or lost              |
-| 3    | **Capture** — trailing `+` opening an inline row after the last open task; Return saves and reopens                                                                                           | `components/TaskCreateForm/`                       | 1-2       | Focus timing; the already-flaky `IntegratedWithCreateForm` story |
-| 4    | **List options and completed visibility** — overflow menu, delete list, show/hide completed persisted to `sync_meta`                                                                          | —                                                  | 1-2       | First `sync_meta` preference; sets the pattern Spec 5 reuses     |
-| 5    | **Sync, Recently Deleted, Settings** — Sync destination carrying queued, failed **and stale-write** records; Recently Deleted in row language; Settings with System/Light/Dark in `sync_meta` | `components/OutOfSyncBanner/`, `components/Toast/` | 2-3       | Most likely place a backend proposal surfaces                    |
-| 6    | **Retire the experiment and close out** — unregister, delete, archive iterations, feature doc, rewrite `docs/DESIGN.md`                                                                       | `src/experiment/apple-reminders-ux/`               | 1         | None; docs and deletion only                                     |
+| Spec | Slice                                                                                                                                                                                                                                            | Retires                                            | ~DevTasks | Risk it carries                                                  |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------- | ---------------------------------------------------------------- |
+| 1    | **Shell, navigation, list management** — tokens, glyph set, header, drawer, destinations, header sync control, Lists page (create / rename / reorder / delete)                                                                                   | `components/ListSwitcher/`                         | 3         | Largest slice; touches every existing E2E spec's selectors       |
+| 2    | **Task list and row** — circle checkbox with fill animation, 17px wrapping title, inset separators, inline edit, completed sunk below open, first-line alignment, pending-dot column                                                             | rewrites `components/TaskList/`                    | 2         | Row craft is where "Reminders-grade" is won or lost              |
+| 3    | **Capture** — trailing `+` opening an inline row after the last open task; Return saves and reopens                                                                                                                                              | `components/TaskCreateForm/`                       | 1-2       | Focus timing; the already-flaky `IntegratedWithCreateForm` story |
+| 4    | **List options and completed visibility** — overflow menu, delete list, show/hide completed persisted to `sync_meta`                                                                                                                             | —                                                  | 1-2       | First `sync_meta` preference; sets the pattern Spec 5 reuses     |
+| 5    | **Sync, Recently Deleted, Settings** — Sync destination carrying queued, failed **and stale-write** records; Recently Deleted in row language; Settings with appearance (System/Light/Dark) **and contrast (Standard/Increased)** in `sync_meta` | `components/OutOfSyncBanner/`, `components/Toast/` | 2-3       | Most likely place a backend proposal surfaces                    |
+| 6    | **Retire the experiment and close out** — unregister, delete, archive iterations, feature doc, rewrite `docs/DESIGN.md`                                                                                                                          | `src/experiment/apple-reminders-ux/`               | 1         | None; docs and deletion only                                     |
 
 **Spec 1 is deliberately the largest** because splitting it would leave a capability gap:
 `ListSwitcher` owns list create / rename / delete today, and the drawer alone does not replace it. It
@@ -254,3 +254,23 @@ existing `sync_meta` object store.
 enqueued and therefore never syncs, which is exactly the semantics a device-local preference needs.
 The prototype's `localStorage` stores were an experiment-lane shortcut. No schema version bump is
 required; the store is already in schema v2.
+
+### Decision 5 — Contrast ships as a user choice, not a compromise
+
+The app offers **Standard** (default) and **Increased** contrast in Settings, alongside appearance.
+Standard is the prototype exactly as accepted; Increased raises the four measured values that fall
+below WCAG AA until they clear it.
+
+**Why:** adopting Apple's system colors imports Apple's contrast behaviour — `--text-secondary` at
+3.3:1 and the unchecked checkbox stroke at 1.7:1 both fail AA, as Reminders' own do. "Be conventional"
+and "clear AA" are genuinely in tension here, and picking either one silently costs the other. Letting
+the user choose costs one more device-local preference and one override block.
+
+**Scope control, so this does not become a second design surface:** Increased is a four-token override
+(three in light, one in dark), not a parallel palette. It may only raise contrast, never revisit hues.
+A theme must define both levels — shipping only Standard would silently remove the accessible option.
+Values in [`docs/DESIGN.md`](../../DESIGN.md) → Contrast — Standard and Increased.
+
+**Where it lands:** Spec 1 ships the override block in the token sheet; Spec 5 ships the control and
+its persistence. Spec 2 verifies the row at both levels, since the checkbox stroke is where the
+difference is most visible.

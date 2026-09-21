@@ -39,17 +39,17 @@ Two things this initiative does not do:
 
 ↺ **Reconciled 2026-09-21** — the list-switcher sheet is gone, and three surfaces now arrive in `to-do-ui` rather than here.
 
-| Screen                             | Purpose                                                             | Arrives in                          |
-| ---------------------------------- | ------------------------------------------------------------------- | ----------------------------------- |
-| **List view**                      | The app. One list's tasks, in sections, in the user's order.        | Spec 1                              |
-| **Navigation drawer**              | Move between lists and destinations. Replaces the switcher sheet.   | `to-do-ui` Spec 1                   |
-| **Lists page**                     | Create, rename, reorder, delete lists.                              | `to-do-ui` Spec 1                   |
-| **Task detail** (sheet)            | Title, notes, due date, tags. Later: Start PSYKL + session history. | Spec 5                              |
-| **Search** (overlay)               | Query across all lists.                                             | Spec 7                              |
-| **Recently Deleted** (destination) | Deleted lists, sections, and tasks. Restore, or wait 30 days.       | Spec 2 · restyled `to-do-ui` Spec 5 |
-| **Sync** (destination)             | Queued, failed, and stale-write records.                            | `to-do-ui` Spec 5                   |
-| **Settings** (destination)         | Appearance (System / Light / Dark).                                 | `to-do-ui` Spec 5                   |
-| **Live session** (full screen)     | Reserved. Not built here.                                           | `psykl-loop`                        |
+| Screen                             | Purpose                                                                 | Arrives in                          |
+| ---------------------------------- | ----------------------------------------------------------------------- | ----------------------------------- |
+| **List view**                      | The app. One list's tasks, in sections, in the user's order.            | Spec 1                              |
+| **Navigation drawer**              | Move between lists and destinations. Replaces the switcher sheet.       | `to-do-ui` Spec 1                   |
+| **Lists page**                     | Create, rename, reorder, delete lists.                                  | `to-do-ui` Spec 1                   |
+| **Task detail** (sheet)            | Title, notes, due date, tags. Later: Start PSYKL + session history.     | Spec 5                              |
+| **Search** (overlay)               | Query across all lists.                                                 | Spec 7                              |
+| **Recently Deleted** (destination) | Deleted lists, sections, and tasks. Restore, or wait 30 days.           | Spec 2 · restyled `to-do-ui` Spec 5 |
+| **Sync** (destination)             | Queued, failed, and stale-write records.                                | `to-do-ui` Spec 5                   |
+| **Settings** (destination)         | Appearance (System / Light / Dark) and Contrast (Standard / Increased). | `to-do-ui` Spec 5                   |
+| **Live session** (full screen)     | Reserved. Not built here.                                               | `psykl-loop`                        |
 
 **The list switcher is retired.** It was a modal detour for the app's most common navigation. The drawer replaces it and also gives Sync, Recently Deleted, and Settings a home; list management moves to a full Lists page rather than living inside a sheet.
 
@@ -267,6 +267,7 @@ The initiative's honest success criterion is that the operator prefers PSYKL for
 | Search                               | ✅                       | ✅ Spec 7                        | **Match**              |
 | Swipe to complete / delete           | ✅                       | ✅ Spec 6                        | **Match**              |
 | Appearance (System / Light / Dark)   | ✅                       | ✅ `to-do-ui` Spec 5             | **Match**              |
+| User-selectable increased contrast   | ⚠️ OS-level only         | ✅ in-app, `to-do-ui` Spec 5     | **Beat**               |
 | Theming beyond appearance            | ❌                       | ⚪ deferred, nothing scheduled   | **Not yet**            |
 | Offline-first with multi-device sync | ⚠️ iCloud, opaque        | ✅ shipped in M2, tested         | **Beat**               |
 | Subtasks                             | ✅                       | ❌ deferred by P3                | **Lose, deliberately** |
@@ -277,7 +278,7 @@ The initiative's honest success criterion is that the operator prefers PSYKL for
 | Shared lists, assignees              | ✅                       | ❌ single-user by design         | **Out of scope**       |
 | Focused work sessions against a task | ❌                       | ✅ `psykl-loop`                  | **The differentiator** |
 
-↺ The theming row split on 2026-09-21: appearance shipped and is a match, not a beat; a fuller theme layer is deferred with nothing scheduling it. Ten matches, two beats. If the operator misses something in the out-of-scope rows during real use, that is the signal premise P3 exists to catch, and it should change the roadmap rather than be endured.
+↺ The theming row split on 2026-09-21: appearance shipped and is a match, not a beat; in-app increased contrast is a new beat; a fuller theme layer is deferred with nothing scheduling it. Ten matches, three beats. If the operator misses something in the out-of-scope rows during real use, that is the signal premise P3 exists to catch, and it should change the roadmap rather than be endured.
 
 ---
 
