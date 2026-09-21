@@ -19,19 +19,17 @@ describe('SyncStatus', () => {
     expect(onOpen).toHaveBeenCalledOnce();
   });
 
-  it('shows separate queued and failed counts in the attention detail view', () => {
+  it('keeps status details out of the icon-only attention control', () => {
     // Arrange / Act
     render(<SyncStatus active failedCount={1} onOpen={() => undefined} queuedCount={2} />);
 
     // Assert
-    expect(screen.getByRole('button', { name: 'Sync needs attention: 3 changes' })).toHaveAttribute(
-      'data-status',
-      'attention',
-    );
-    expect(screen.getByRole('button', { name: 'Sync needs attention: 3 changes' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    const control = screen.getByRole('button', { name: 'Sync needs attention' });
+    expect(control).toHaveAttribute('data-status', 'attention');
+    expect(control).toHaveAttribute('aria-current', 'page');
+    expect(control).toHaveTextContent('↻');
+    expect(control).not.toHaveTextContent('Sync');
+    expect(control).not.toHaveTextContent('3');
     expect(screen.getByRole('heading', { name: 'Needs attention' })).toBeInTheDocument();
     expect(screen.getByText(/Waiting to sync/)).toHaveTextContent('2');
     expect(screen.getByText(/Permanently failed/)).toHaveTextContent('1');

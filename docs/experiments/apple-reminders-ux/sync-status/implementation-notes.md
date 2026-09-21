@@ -4,7 +4,7 @@ Iteration 2 of [`apple-reminders-ux`](../feature-card.md). Planning only; implem
 
 ## First slice
 
-- Replace `OutOfSyncBanner` in the experiment shell with a compact content-header Sync control and add `sync` to the experiment's destination state.
+- Replace `OutOfSyncBanner` in the experiment shell with a compact content-header sync icon and add `sync` to the experiment's destination state.
 - Render a read-only Sync view from existing queue and failed-operation stores; green means both counts are zero, yellow means either count is non-zero.
 
 ## Files
@@ -23,7 +23,7 @@ Iteration 2 of [`apple-reminders-ux`](../feature-card.md). Planning only; implem
 ## Tests
 
 - Storybook: the 390px attention story activates the control and verifies separate queue/failure counts.
-- Unit tests cover clear/attention rendering, activation, detail counts, and the live failed-count hook. No End-to-End or Integration test.
+- Unit tests cover icon-only clear/attention rendering, activation, detail counts, and the live failed-count hook. No End-to-End or Integration test.
 
 ## Evidence
 
@@ -31,4 +31,4 @@ Iteration 2 of [`apple-reminders-ux`](../feature-card.md). Planning only; implem
 
 ## Open questions
 
-- Implemented the approved combined count (`queued + failed`) so status is communicated without color alone.
+- Implemented the approved icon-only control; its accessible name communicates clear/attention state, while queued and failed counts remain in details.

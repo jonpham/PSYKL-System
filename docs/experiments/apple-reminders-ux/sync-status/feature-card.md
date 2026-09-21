@@ -12,11 +12,11 @@ The sync banner takes focus and vertical space from the Task list, while detaile
 
 ## Outcome
 
-A compact green/yellow Sync control communicates status at a glance and opens a read-only detail view.
+A compact green/yellow sync icon communicates status at a glance and opens a read-only detail view.
 
 ## Scope
 
-Replace the experiment's banner with a content-header Sync control; show queued and permanently failed change counts in a Sync destination.
+Replace the experiment's banner with a content-header sync icon; show queued and permanently failed change counts only in a Sync destination.
 
 ## Not now
 

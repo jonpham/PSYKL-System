@@ -10,7 +10,7 @@ interface SyncStatusProps {
 export function SyncStatus({ active, failedCount, onOpen, queuedCount }: SyncStatusProps) {
   const attentionCount = failedCount + queuedCount;
   const needsAttention = attentionCount > 0;
-  const accessibleLabel = needsAttention ? `Sync needs attention: ${attentionCount} changes` : 'Sync clear';
+  const accessibleLabel = needsAttention ? 'Sync needs attention' : 'Sync clear';
 
   return (
     <div className="reminders-sync-status">
@@ -22,8 +22,7 @@ export function SyncStatus({ active, failedCount, onOpen, queuedCount }: SyncSta
         onClick={onOpen}
         type="button"
       >
-        <span aria-hidden="true">↻</span> Sync
-        {needsAttention ? <span className="reminders-sync-status__count">{attentionCount}</span> : null}
+        <span aria-hidden="true">↻</span>
       </button>
       {active ? (
         <section aria-labelledby="reminders-sync-status-title" className="reminders-sync-status__details">
