@@ -3,10 +3,6 @@
 A time-independent planning tool for accomplishing and building / expending **PSY** (energy) across nested cycles:
 
 - **PSYKL** — a self-defined period of work (minutes)
-- **Earth** — day
-- **Moon** — month
-- **HelioArc** — season / quarter
-- **Sun** — year
 
 For people who want to build on their accomplishments using **repetition and energy levels** rather than standardized hours and periods.
 
