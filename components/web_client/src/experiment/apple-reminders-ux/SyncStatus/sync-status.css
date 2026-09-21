@@ -2,14 +2,14 @@
   display: contents;
 }
 
-/* Always the trailing column of the content header, whether or not the list
- * menu sits beside it. */
+/* Column 2 of the content header — to the left of the list menu, and directly
+ * above the task rows' pending-sync dots. */
 .reminders-sync-status__control {
   background: none;
   border: 0;
   cursor: pointer;
   display: inline-flex;
-  grid-column: -2 / -1;
+  grid-column: 2;
   padding: 0;
 }
 

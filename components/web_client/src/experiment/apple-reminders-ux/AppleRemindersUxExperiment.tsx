@@ -8,6 +8,7 @@ import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useLists } from '../../hooks/useLists';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { useTasks } from '../../hooks/useTasks';
+import { HeaderGlyph, PlusGlyph } from './glyphs';
 import { ListMenu } from './ListMenu';
 import { ListsView } from './ListsView';
 import { RecentlyDeletedView } from './RecentlyDeletedView';
@@ -19,13 +20,14 @@ import { TaskListView } from './TaskListView';
 import type { Destination } from './types';
 
 export function AppleRemindersUxExperiment() {
-  const { lists } = useLists();
+  const { canDelete, deleteList, lists } = useLists();
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
   const { tasks } = useTasks();
   const failedCount = useFailedSyncCount();
   const [destination, setDestination] = useState<Destination>('list');
   const [showCompleted, setShowCompleted] = useState(true);
+  const [creatingList, setCreatingList] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -64,6 +66,13 @@ export function AppleRemindersUxExperiment() {
     showCompletedStore.write(activeList?.id ?? null, next);
   }
 
+  function deleteActiveList() {
+    if (!activeList) return;
+    void deleteList(activeList.id);
+    const next = lists.find((list) => list.id !== activeList.id);
+    if (next) void setActiveListId(next.id);
+  }
+
   function selectList(listId: string) {
     void setActiveListId(listId);
     setDestination('list');
@@ -81,12 +90,13 @@ export function AppleRemindersUxExperiment() {
         <button
           aria-expanded={sidebarOpen}
           aria-label="Open PSYKL navigation"
-          className="reminders-experiment__trigger"
+          className="reminders-experiment__header-button reminders-experiment__trigger"
           onClick={() => setSidebarOpen(true)}
           ref={triggerRef}
           type="button"
         >
-          <span aria-hidden="true">☰</span> PSYKL
+          <HeaderGlyph name="menu" />
+          PSYKL
         </button>
         <aside className="reminders-experiment__sidebar" data-open={sidebarOpen}>
           <SidebarNav
@@ -111,25 +121,43 @@ export function AppleRemindersUxExperiment() {
         <div className="reminders-experiment__content">
           <Toast />
           {/* One header for every destination, so Sync, Lists, Recently Deleted
-           * and Settings read as the same app as the task list. */}
+           * and Settings read as the same app as the task list. The action
+           * column is the sync control on the surfaces where sync is the
+           * relevant action, and the destination's own action elsewhere. */}
           <div className="reminders-experiment__content-header">
             <h2>{title}</h2>
+            {destination === 'list' || destination === 'sync' ? (
+              <SyncStatus
+                active={destination === 'sync'}
+                failedCount={failedCount}
+                onOpen={() => setDestination('sync')}
+                queuedCount={queuedCount}
+              />
+            ) : null}
+            {destination === 'lists' ? (
+              <button
+                aria-label="New List"
+                className="reminders-experiment__header-action"
+                onClick={() => setCreatingList(true)}
+                type="button"
+              >
+                <PlusGlyph />
+              </button>
+            ) : null}
             {destination === 'list' ? (
               <ListMenu
+                canDelete={canDelete}
                 completedCount={completedCount}
+                onDeleteList={deleteActiveList}
                 onToggleCompleted={toggleCompleted}
                 showCompleted={showCompleted}
               />
             ) : null}
-            <SyncStatus
-              active={destination === 'sync'}
-              failedCount={failedCount}
-              onOpen={() => setDestination('sync')}
-              queuedCount={queuedCount}
-            />
           </div>
           {destination === 'list' ? <TaskListView showCompleted={showCompleted} /> : null}
-          {destination === 'lists' ? <ListsView /> : null}
+          {destination === 'lists' ? (
+            <ListsView creating={creatingList} onCreated={() => setCreatingList(false)} onSelectList={selectList} />
+          ) : null}
           {destination === 'recently-deleted' ? <RecentlyDeletedView /> : null}
           {destination === 'settings' ? <SettingsView /> : null}
         </div>

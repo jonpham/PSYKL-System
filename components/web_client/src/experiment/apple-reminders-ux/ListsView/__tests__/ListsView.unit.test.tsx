@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListsView } from '../ListsView';
 
 const mockUseLists = vi.hoisted(() => vi.fn());
-const mockRenameList = vi.hoisted(() => vi.fn());
 const mockMoveList = vi.hoisted(() => vi.fn());
 const mockCreateList = vi.hoisted(() => vi.fn());
+const mockDeleteList = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../../hooks/useLists', () => ({
   useLists: mockUseLists,
@@ -21,29 +21,30 @@ const lists = [
 
 describe('ListsView (Unit)', () => {
   beforeEach(() => {
-    mockRenameList.mockReset().mockResolvedValue(undefined);
     mockMoveList.mockReset().mockResolvedValue(undefined);
     mockCreateList.mockReset().mockResolvedValue(undefined);
+    mockDeleteList.mockReset().mockResolvedValue(undefined);
     mockUseLists.mockReturnValue({
+      canDelete: true,
       createList: mockCreateList,
+      deleteList: mockDeleteList,
       lists,
       moveList: mockMoveList,
-      renameList: mockRenameList,
     });
   });
 
-  it('renames a list in place', async () => {
+  it('opens a list rather than renaming it when its name is tapped', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<ListsView />);
+    const onSelectList = vi.fn();
+    render(<ListsView onSelectList={onSelectList} />);
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Rename Groceries' }));
-    await user.clear(screen.getByRole('textbox', { name: 'List name' }));
-    await user.type(screen.getByRole('textbox', { name: 'List name' }), 'Shopping{Enter}');
+    await user.click(screen.getByRole('button', { name: 'Groceries' }));
 
     // Assert
-    await waitFor(() => expect(mockRenameList).toHaveBeenCalledWith('list-2', 'Shopping'));
+    expect(onSelectList).toHaveBeenCalledWith('list-2');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
   it('moves a list up between its new neighbours', async () => {
@@ -79,16 +80,31 @@ describe('ListsView (Unit)', () => {
     expect(screen.getByRole('button', { name: 'Move Reading down' })).toBeDisabled();
   });
 
-  it('adds a list from the inline new-list row', async () => {
+  it('deletes a list only after a confirming second tap', async () => {
     // Arrange
     const user = userEvent.setup();
     render(<ListsView />);
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'New List' }));
+    await user.click(screen.getByRole('button', { name: 'Delete Groceries' }));
+
+    // Assert
+    expect(mockDeleteList).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Confirm delete Groceries' }));
+    await waitFor(() => expect(mockDeleteList).toHaveBeenCalledWith('list-2'));
+  });
+
+  it('adds a list from the row the header opens', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onCreated = vi.fn();
+    render(<ListsView creating onCreated={onCreated} />);
+
+    // Act
     await user.type(screen.getByRole('textbox', { name: 'New list name' }), 'Errands{Enter}');
 
     // Assert
     await waitFor(() => expect(mockCreateList).toHaveBeenCalledWith('Errands'));
+    expect(onCreated).toHaveBeenCalled();
   });
 });

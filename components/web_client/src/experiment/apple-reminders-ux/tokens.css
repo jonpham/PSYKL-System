@@ -25,6 +25,12 @@
    * experiment shell's floating control so nothing reads as an afterthought. */
   --r-icon-tile: 2.5rem;
   --r-icon-glyph: 1.25rem;
+
+  --r-font: -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', roboto, sans-serif;
+  --r-radius: 10px;
+  --r-gutter: 1rem;
+  --r-row-min: 44px;
+  --r-content-max: 680px;
 }
 
 .reminders-glyph {
@@ -69,12 +75,6 @@
   .reminders-chevron {
     transition: none;
   }
-
-  --r-font: -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', roboto, sans-serif;
-  --r-radius: 10px;
-  --r-gutter: 1rem;
-  --r-row-min: 44px;
-  --r-content-max: 680px;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -38,7 +38,9 @@ export function ExperimentFrame({ children, layout = 'centered', title }: Experi
           maxWidth: 'min(20rem, calc(100vw - 1.5rem))',
           padding: controlsExpanded ? '0.35rem' : 0,
           position: 'fixed',
-          right: 'max(0.75rem, env(safe-area-inset-right))',
+          // Leading corner, so experiments own the trailing corner where a
+          // primary action naturally sits on a phone.
+          left: 'max(0.75rem, env(safe-area-inset-left))',
           zIndex: 1000,
         }}
       >

@@ -105,7 +105,7 @@ describe('SidebarNav lists section', () => {
     expect(screen.getByRole('button', { name: 'Groceries' })).toBeVisible();
   });
 
-  it('keeps Recently Deleted with the lists rather than the utilities', () => {
+  it('keeps Recently Deleted a peer of Lists rather than one of its children', () => {
     // Arrange / Act
     render(
       <SidebarNav
@@ -118,12 +118,14 @@ describe('SidebarNav lists section', () => {
       />,
     );
 
-    // Assert
-    const group = screen.getByRole('list', { name: 'Lists' });
-    expect(within(group).getByRole('button', { name: 'Recently Deleted' })).toBeVisible();
+    // Assert — the second level holds list names only
+    const names = screen.getByRole('list', { name: 'Lists' });
+    expect(within(names).queryByRole('button', { name: 'Recently Deleted' })).not.toBeInTheDocument();
+    expect(within(names).getByRole('button', { name: 'Groceries' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Recently Deleted' })).toBeVisible();
   });
 
-  it('opens the list-management page from the section heading', async () => {
+  it('opens the list-management page from the Lists row itself', async () => {
     // Arrange
     const user = userEvent.setup();
     const onSelectDestination = vi.fn();
@@ -139,7 +141,7 @@ describe('SidebarNav lists section', () => {
     );
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Edit Lists' }));
+    await user.click(screen.getByRole('button', { name: 'Lists' }));
 
     // Assert
     expect(onSelectDestination).toHaveBeenCalledWith('lists');

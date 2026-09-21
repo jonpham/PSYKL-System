@@ -5,13 +5,17 @@ import { useRef, useState } from 'react';
 import { useLists } from '../../../hooks/useLists';
 import { DestinationGlyph } from '../glyphs';
 
-/** Rename and re-order lists — the mechanism review note 4 found missing.
- * Re-ordering is click-driven rather than drag-driven on purpose: the gesture
- * belongs to a later iteration, and click order is testable today. */
-export function ListsView() {
-  const { createList, lists, moveList, renameList } = useLists();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+interface ListsViewProps {
+  creating?: boolean;
+  onCreated?: () => void;
+  onSelectList?: (listId: string) => void;
+}
+
+/** Re-order and remove lists. Renaming deliberately does not live here — the
+ * name opens its list, and renaming will happen there (review round 2). */
+export function ListsView({ creating = false, onCreated, onSelectList }: ListsViewProps) {
+  const { canDelete, createList, deleteList, lists, moveList } = useLists();
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
   function move(index: number, direction: -1 | 1): void {
     const target = lists[index];
@@ -23,36 +27,39 @@ export function ListsView() {
     void moveList(target.id, before, after);
   }
 
+  function remove(listId: string): void {
+    if (confirmingDeleteId !== listId) {
+      setConfirmingDeleteId(listId);
+      return;
+    }
+    setConfirmingDeleteId(null);
+    void deleteList(listId);
+  }
+
   return (
     <div className="reminders-lists">
       <ul className="reminders-lists__rows">
         {lists.map((list, index) => (
           <li className="reminders-lists__row" key={list.id}>
             <DestinationGlyph name="list" />
-            {editingId === list.id ? (
-              <InlineName
-                initial={list.title}
-                label="List name"
-                onCancel={() => setEditingId(null)}
-                onCommit={(title) => {
-                  setEditingId(null);
-                  if (title !== list.title) void renameList(list.id, title);
-                }}
-              />
-            ) : (
+            <button className="reminders-lists__name" onClick={() => onSelectList?.(list.id)} type="button">
+              {list.title}
+            </button>
+            <div className="reminders-lists__actions">
               <button
-                aria-label={`Rename ${list.title}`}
-                className="reminders-lists__name"
-                onClick={() => setEditingId(list.id)}
+                aria-label={confirmingDeleteId === list.id ? `Confirm delete ${list.title}` : `Delete ${list.title}`}
+                className="reminders-lists__action"
+                data-armed={confirmingDeleteId === list.id}
+                data-destructive="true"
+                disabled={!canDelete}
+                onClick={() => remove(list.id)}
                 type="button"
               >
-                {list.title}
+                <TrashGlyph />
               </button>
-            )}
-            <div className="reminders-lists__move">
               <button
                 aria-label={`Move ${list.title} up`}
-                className="reminders-lists__move-button"
+                className="reminders-lists__action"
                 disabled={index === 0}
                 onClick={() => move(index, -1)}
                 type="button"
@@ -61,7 +68,7 @@ export function ListsView() {
               </button>
               <button
                 aria-label={`Move ${list.title} down`}
-                className="reminders-lists__move-button"
+                className="reminders-lists__action"
                 disabled={index === lists.length - 1}
                 onClick={() => move(index, 1)}
                 type="button"
@@ -75,41 +82,27 @@ export function ListsView() {
         {creating ? (
           <li className="reminders-lists__row">
             <DestinationGlyph name="list" />
-            <InlineName
-              initial=""
-              label="New list name"
-              onCancel={() => setCreating(false)}
+            <NewListName
+              onCancel={() => onCreated?.()}
               onCommit={(title) => {
-                setCreating(false);
+                onCreated?.();
                 if (title) void createList(title);
               }}
             />
           </li>
         ) : null}
       </ul>
-
-      <button className="reminders-lists__add" onClick={() => setCreating(true)} type="button">
-        <span aria-hidden="true">+</span> New List
-      </button>
     </div>
   );
 }
 
-interface InlineNameProps {
-  initial: string;
-  label: string;
-  onCancel: () => void;
-  onCommit: (title: string) => void;
-}
-
-function InlineName({ initial, label, onCancel, onCommit }: InlineNameProps) {
-  const [draft, setDraft] = useState(initial);
-  const inputRef = useRef<HTMLInputElement>(null);
+function NewListName({ onCancel, onCommit }: { onCancel: () => void; onCommit: (title: string) => void }) {
+  const [draft, setDraft] = useState('');
   const cancelledRef = useRef(false);
 
   return (
     <input
-      aria-label={label}
+      aria-label="New list name"
       autoFocus
       className="reminders-lists__input"
       maxLength={100}
@@ -126,7 +119,6 @@ function InlineName({ initial, label, onCancel, onCommit }: InlineNameProps) {
         if (event.key === 'Escape') cancelledRef.current = true;
         if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur();
       }}
-      ref={inputRef}
       type="text"
       value={draft}
     />
@@ -135,8 +127,16 @@ function InlineName({ initial, label, onCancel, onCommit }: InlineNameProps) {
 
 function MoveGlyph({ direction }: { direction: 'down' | 'up' }) {
   return (
-    <svg aria-hidden="true" className="reminders-lists__move-glyph" data-direction={direction} viewBox="0 0 24 24">
+    <svg aria-hidden="true" className="reminders-lists__glyph" data-direction={direction} viewBox="0 0 24 24">
       <path d="M8 10l4 4 4-4" />
+    </svg>
+  );
+}
+
+function TrashGlyph() {
+  return (
+    <svg aria-hidden="true" className="reminders-lists__glyph" viewBox="0 0 24 24">
+      <path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />
     </svg>
   );
 }

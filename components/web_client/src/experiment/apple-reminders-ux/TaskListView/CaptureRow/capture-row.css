@@ -1,5 +1,5 @@
 .reminders-capture-row {
-  align-items: start;
+  align-items: center;
   display: grid;
   grid-template-columns: 2.25rem minmax(0, 1fr);
   min-height: var(--r-row-min);

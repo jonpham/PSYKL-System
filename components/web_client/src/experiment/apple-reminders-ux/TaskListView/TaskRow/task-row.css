@@ -1,7 +1,10 @@
+/* Checkbox, title and pending dot share one horizontal centre line, and the two
+ * trailing columns mirror the content header so the dot sits under the sync
+ * control (review round 2). */
 .reminders-row {
-  align-items: start;
+  align-items: center;
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  grid-template-columns: 2.25rem minmax(0, 1fr) var(--r-icon-tile) calc(var(--r-icon-tile) + 0.5rem);
   min-height: var(--r-row-min);
   position: relative;
 }
@@ -20,7 +23,6 @@
 
 .reminders-row__checkbox {
   align-items: center;
-  align-self: start;
   background: none;
   border: 0;
   cursor: pointer;
@@ -100,11 +102,11 @@
 }
 
 .reminders-row__pending {
-  align-self: center;
   background: var(--r-warn);
   border-radius: 50%;
+  grid-column: 3;
   height: 8px;
-  margin-inline-start: 0.5rem;
+  justify-self: center;
   width: 8px;
 }
 

@@ -1,4 +1,6 @@
 .reminders-list-menu {
+  grid-column: 3;
+  justify-self: end;
   position: relative;
 }
 
@@ -33,29 +35,36 @@
 
 .reminders-list-menu__sheet {
   background: var(--r-bg-elevated);
-  border-radius: var(--r-radius);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
-  min-width: 13rem;
+  border: 1px solid var(--r-separator);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 20%);
+  display: grid;
+  gap: 0.125rem;
+  min-width: 15rem;
   overflow: hidden;
-  padding: 0.25rem;
+  padding: 0.5rem;
   position: absolute;
   right: 0;
-  top: calc(var(--r-icon-tile) + 0.25rem);
+  top: calc(var(--r-icon-tile) + 0.5rem);
   z-index: 5;
 }
 
 .reminders-list-menu__item {
   background: none;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--r-label);
   cursor: pointer;
   font: inherit;
   font-size: 17px;
-  min-height: var(--r-row-min);
-  padding: 0 0.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
   text-align: left;
   width: 100%;
+}
+
+.reminders-list-menu__item[data-destructive='true'] {
+  color: var(--r-destructive);
 }
 
 .reminders-list-menu__item:active {

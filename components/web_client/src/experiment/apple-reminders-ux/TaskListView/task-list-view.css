@@ -31,22 +31,29 @@
 
 /* Bottom-anchored like Reminders' New Reminder button: it sticks to the bottom
  * of the scroll container so it rides above the keyboard on iOS. */
-/* Bottom-anchored and trailing-aligned, per review note 7. The end padding
- * clears the experiment shell's own floating control, which shares this corner
- * and would not exist in a production build. */
+/* Floats in the trailing bottom corner, slightly above and inward of where the
+ * experiment shell's own control sits (review round 2); that control now lives
+ * in the opposite corner. */
 .reminders-list__capture-bar {
-  background: linear-gradient(to bottom, rgb(255 255 255 / 0%), var(--r-bg) 45%);
-  bottom: 0;
+  bottom: max(1.75rem, calc(env(safe-area-inset-bottom) + 1.25rem));
   display: flex;
   justify-content: flex-end;
   margin-top: auto;
-  padding: 1rem 3.5rem max(0.75rem, env(safe-area-inset-bottom)) 0;
+  pointer-events: none;
   position: sticky;
+  /* Below the drawer and its backdrop — a floating action has no business
+   * sitting on top of an open sidebar. */
+  z-index: 1;
+}
+
+.reminders-list__capture-bar > * {
+  pointer-events: auto;
 }
 
 .reminders-list__capture {
   align-items: center;
   background: var(--r-tint);
+  margin-inline-end: 0.5rem;
   border: 0;
   border-radius: 50%;
   box-shadow: 0 2px 8px rgb(0 0 0 / 18%);

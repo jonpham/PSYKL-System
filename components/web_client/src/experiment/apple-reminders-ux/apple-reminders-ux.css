@@ -8,11 +8,17 @@
 }
 
 .reminders-experiment__layout {
+  /* flow-root, so the trigger's margin cannot collapse out of the layout and
+   * move the drawer's containing block out from under it. */
+  display: flow-root;
   min-height: calc(100dvh - 8rem);
   position: relative;
 }
 
-.reminders-experiment__trigger {
+/* One header button, used by both the closed-state trigger and the sidebar's
+ * close control, so the glyph and wordmark occupy identical coordinates in both
+ * states and opening the sidebar does not shift them (review round 2). */
+.reminders-experiment__header-button {
   align-items: center;
   background: transparent;
   border: 0;
@@ -20,18 +26,45 @@
   cursor: pointer;
   display: flex;
   font: inherit;
-  font-size: 17px;
-  font-weight: 500;
+  font-size: 22px;
+  font-weight: 700;
   gap: 0.5rem;
   min-height: var(--r-row-min);
-  padding: 0.5rem var(--r-gutter);
+  padding: 0;
 }
 
+.reminders-experiment__header-button:focus-visible {
+  border-radius: 6px;
+  outline: 2px solid var(--r-tint);
+  outline-offset: 2px;
+}
+
+.reminders-header-glyph {
+  fill: none;
+  flex: none;
+  height: 1.5rem;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2;
+  width: 1.5rem;
+}
+
+/* Margin, not padding, so the 44px button box matches the sidebar's close
+ * button exactly and the glyph lands on the same pixel in both states. */
+.reminders-experiment__trigger {
+  margin: 0.5rem 0;
+  padding: 0 var(--r-gutter);
+}
+
+/* Anchored to the layout box rather than the viewport, so the drawer shares the
+ * content column's coordinate space and the PSYKL wordmark does not jump by the
+ * page margin when the sidebar opens (review round 2). */
 .reminders-experiment__sidebar {
   background: var(--r-bg-grouped);
   bottom: 0;
   left: 0;
-  position: fixed;
+  min-height: 100dvh;
+  position: absolute;
   top: 0;
   transform: translateX(-100%);
   transition: none;
@@ -75,12 +108,48 @@
   margin: 0.25rem 0 0.75rem;
 }
 
+/* Three columns: title, the sync/action slot, then the list menu. Task rows
+ * repeat the trailing two column widths so a row's pending-sync dot sits on the
+ * same vertical line as the sync control above it (review round 2). */
 .reminders-experiment__content-header {
   align-items: center;
+  column-gap: 0;
   display: grid;
-  gap: 0 0.5rem;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) var(--r-icon-tile) calc(var(--r-icon-tile) + 0.5rem);
   margin-bottom: 0.25rem;
+}
+
+.reminders-experiment__header-action {
+  align-items: center;
+  background: var(--r-bg-grouped);
+  border: 0;
+  border-radius: 50%;
+  color: var(--r-tint);
+  cursor: pointer;
+  display: flex;
+  grid-column: 2;
+  height: var(--r-icon-tile);
+  justify-content: center;
+  padding: 0;
+  width: var(--r-icon-tile);
+}
+
+.reminders-experiment__header-action:active {
+  background: var(--r-fill-pressed);
+}
+
+.reminders-experiment__header-action:focus-visible {
+  outline: 2px solid var(--r-tint);
+  outline-offset: 2px;
+}
+
+.reminders-plus-glyph {
+  fill: none;
+  height: var(--r-icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2.25;
+  width: var(--r-icon-glyph);
 }
 
 @container reminders-shell (min-width: 768px) {

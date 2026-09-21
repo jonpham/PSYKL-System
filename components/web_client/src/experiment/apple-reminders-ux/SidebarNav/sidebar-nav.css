@@ -1,10 +1,23 @@
 .reminders-sidebar-nav {
   box-sizing: border-box;
   min-height: 100%;
-  padding: 1rem 0.75rem;
+  /* Matches the content column's header padding exactly, so the PSYKL wordmark
+   * and its glyph do not shift when the sidebar opens (review round 2). */
+  padding: 0.5rem var(--r-gutter);
 }
 
-.reminders-sidebar-nav__close,
+.reminders-sidebar-nav__items {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.reminders-sidebar-nav__row {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+
 .reminders-sidebar-nav__item {
   align-items: center;
   background: transparent;
@@ -13,48 +26,52 @@
   color: var(--r-label);
   cursor: pointer;
   display: flex;
+  flex: 1;
   font: inherit;
   font-size: 17px;
-  gap: 0.625rem;
-  min-height: var(--r-row-min);
-  padding: 0.5rem 0.75rem;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  min-width: 0;
+  padding: 0 0.5rem 0 0;
+  text-align: left;
+}
+
+.reminders-sidebar-nav__item[aria-current='page'] {
+  font-weight: 600;
+}
+
+.reminders-sidebar-nav__item:active {
+  background: var(--r-fill-pressed);
+}
+
+/* Second level: names only, smaller, no glyph — the indent carries the nesting. */
+.reminders-sidebar-nav__sublist {
+  list-style: none;
+  margin: 0 0 0.25rem;
+  padding: 0 0 0 calc(var(--r-icon-tile) + 0.75rem);
+}
+
+.reminders-sidebar-nav__subitem {
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-radius);
+  color: var(--r-label);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
   text-align: left;
   width: 100%;
 }
 
-.reminders-sidebar-nav__close {
-  color: var(--r-tint);
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.reminders-sidebar-nav__heading {
-  align-items: center;
-  display: flex;
-  gap: 0.5rem;
-  padding: 0 0.25rem 0.25rem 0.75rem;
-}
-
-.reminders-sidebar-nav__label {
-  color: var(--r-label-secondary);
-  flex: 1;
-  font-size: 13px;
+.reminders-sidebar-nav__subitem[aria-current='page'] {
+  background: var(--r-fill-selected);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  margin: 0;
 }
 
-.reminders-sidebar-nav__heading-action {
-  background: none;
-  border: 0;
-  border-radius: var(--r-radius);
-  color: var(--r-tint);
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 0.35rem 0.4rem;
+.reminders-sidebar-nav__subitem:active {
+  background: var(--r-fill-pressed);
 }
 
 .reminders-sidebar-nav__disclosure {
@@ -65,48 +82,22 @@
   color: var(--r-label-secondary);
   cursor: pointer;
   display: flex;
-  height: 1.75rem;
+  flex: none;
+  height: var(--r-icon-tile);
   justify-content: center;
   padding: 0;
-  width: 1.75rem;
+  width: var(--r-icon-tile);
 }
 
 .reminders-sidebar-nav__disclosure[data-expanded='false'] .reminders-chevron {
   transform: rotate(-90deg);
 }
 
-.reminders-sidebar-nav__heading-action:focus-visible,
+.reminders-sidebar-nav__item:focus-visible,
+.reminders-sidebar-nav__subitem:focus-visible,
 .reminders-sidebar-nav__disclosure:focus-visible {
   outline: 2px solid var(--r-tint);
-  outline-offset: 1px;
-}
-
-.reminders-sidebar-nav__items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.reminders-sidebar-nav__item[aria-current='page'] {
-  background: var(--r-fill-selected);
-  font-weight: 600;
-}
-
-.reminders-sidebar-nav__item:active {
-  background: var(--r-fill-pressed);
-}
-
-.reminders-sidebar-nav__close:focus-visible,
-.reminders-sidebar-nav__item:focus-visible {
-  outline: 2px solid var(--r-tint);
   outline-offset: -2px;
-}
-
-.reminders-sidebar-nav__utilities {
-  border-top: 1px solid var(--r-separator);
-  display: grid;
-  margin-top: 1rem;
-  padding-top: 0.5rem;
 }
 
 /* The sync tile doubles as the status light, so its fill carries the state. */

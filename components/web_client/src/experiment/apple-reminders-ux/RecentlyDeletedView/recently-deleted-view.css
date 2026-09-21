@@ -16,8 +16,19 @@
   background: var(--r-separator);
   content: '';
   height: 1px;
-  inset: 0 0 auto;
+  left: calc(var(--r-icon-tile) + 0.75rem);
   position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.reminders-deleted__row [role='img'] {
+  display: inline-flex;
+  flex: none;
+}
+
+.reminders-deleted__row .reminders-glyph[data-glyph='task'] {
+  background: var(--r-label-secondary);
 }
 
 .reminders-deleted__title {
