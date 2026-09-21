@@ -183,6 +183,11 @@ being replaced: `e2e/lists.e2e.spec.ts`, `e2e/task_list.e2e.spec.ts`,
 
 ## Open Questions / Risks
 
+- **BLOCKED pending an operator decision: the contrast exception.** This DevTask writes the token
+  sheet, so it is where the answer is spent. `--text-secondary` measures 3.3:1 and `--text-tertiary`
+  1.7:1 against `--bg-app` — both fail WCAG AA, as Apple's own values do. See
+  [`docs/DESIGN.md`](../../DESIGN.md) → Contrast — an open decision for the three options. Do not pick
+  one unilaterally.
 - The largest selector churn in the initiative lands here; budget for E2E rework, not just new tests.
 - Mixed styling on `/` is at its most visible after this Spec (new chrome, old list). Accepted in
   Decision 1; Spec 2 closes it.

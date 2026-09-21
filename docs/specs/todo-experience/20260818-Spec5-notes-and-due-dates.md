@@ -58,7 +58,7 @@ dueHasTime: boolean('due_has_time').notNull().default(false),
 
 Three metrics validated in the 2026-08-13 prototype against 44 real tasks, all now normative in `docs/DESIGN.md`:
 
-- The title wraps to **two lines** then truncates. Single-line truncation cut more than half of real titles at phone width.
+- The title **wraps and never truncates**. Revised 2026-09-21 against the `apple-reminders-ux` baseline: the earlier two-line-then-truncate cap was built and removed, because it cut real titles where the meaning was for no layout benefit. See [`docs/DESIGN.md`](../../DESIGN.md) → Spacing and metrics.
 - The due date sits on the **title's first line**, always, whether or not a metadata line exists. Letting it drop to the second line made the date column alternate between two vertical offsets and stop reading as a column.
 - A past due date renders in `--destructive`. Overdue styling was reinstated at the 2026-08-14 re-scope.
 

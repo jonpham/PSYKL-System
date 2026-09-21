@@ -31,9 +31,14 @@ honors_decisions:
 
 ## Overview
 
-Deletes the promoted experiment, archives its three iteration folders with recorded verdicts, writes
-the initiative's feature doc, and rewrites the docs this initiative superseded so the repo stops
-describing a design that no longer exists.
+Deletes the promoted experiment, archives its three iteration folders with recorded verdicts, and
+writes the initiative's feature doc.
+
+> **Changed 2026-09-21:** the baseline doc rewrite that was planned here **moved to the front of the
+> initiative and is already done.** `docs/DESIGN.md` was rewritten to the prototype's built values,
+> `docs/STYLE.md` gained a Styling section, and `todo-experience/UX.md` was reconciled in place —
+> all before any implementation, so no Spec can pull the old production surface in by reading a
+> stale doc. What remains here is verification that the shipped app matches them.
 
 Docs and deletion only — no behaviour change.
 
@@ -65,11 +70,13 @@ Docs and deletion only — no behaviour change.
   verdict. All three are **promoted** — this migration absorbed all of them.
 - `docs/features/[YYYYMMDD]P{n}_to-do-ui-reminders-grade-surface.md` (new) — the consolidated record,
   from `docs/templates/FEATURE.md`.
-- `docs/DESIGN.md` — rewritten from the shipped production surface; it currently describes a
-  superseded visual system and is status Proposed, so no re-open ceremony applies.
-- `docs/initiatives/todo-experience/UX.md` — a superseded-by note at the top pointing at the shipped
-  surface; its feature-level UX for Sections / ordering / tags is untouched and rebases later.
-- `docs/PROJECT_STATUS.md` — `to-do-ui` marked done; the next initiative named.
+- `docs/DESIGN.md` — **already the baseline** (rewritten 2026-09-21). This Spec only reconciles it
+  against what actually shipped: correct any value the five implementing Specs changed, and resolve
+  the recorded contrast decision if it is still open.
+- `docs/STYLE.md`, `docs/initiatives/todo-experience/UX.md` — **already reconciled**. Same treatment:
+  check, do not rewrite.
+- `docs/PROJECT_STATUS.md` — `to-do-ui` marked done; `todo-experience` Specs 3-7 unpaused; the next
+  initiative named.
 - `CHANGELOG.md` — the initiative's entry.
 
 **`docs/initiatives/todo-experience/DESIGN.md` is not edited.** It is APPROVED and nothing here
@@ -125,7 +132,7 @@ outcome.
 ## Open Questions / Risks
 
 - Archiving is a `git mv`; make sure the screenshots move with their iteration folder.
-- The `docs/DESIGN.md` rewrite is the largest doc change; keep `--accent-session` reserved for a live
+- The `docs/DESIGN.md` reconciliation is now a check, not a rewrite; keep `--accent-session` reserved for a live
   PSYKL session and nothing else.
 
 ## Affected by / Depends on

@@ -16,6 +16,16 @@ This document records project style preferences and static-tool ownership for ru
 - Prefer non-exported declarations in the behavior module and a single named export block at the bottom when it improves scanability.
 - Keep imports and named exports alphabetized. ESLint enforces this through `simple-import-sort/imports` and `simple-import-sort/exports`.
 
+## Styling
+
+Visual values themselves live in [`docs/DESIGN.md`](DESIGN.md); these are the code-level rules that keep them honest.
+
+- **No inline `style={{…}}` objects in components.** A component's appearance lives in its adjacent stylesheet. The M1 bootstrap shell used inline styles throughout and is the reason this rule is written down.
+- **No raw color, radius, or metric literals in a component stylesheet.** Reference a semantic token. A hex literal in a component is a value that will not follow the theme.
+- **Every token is defined at the theme's root selector.** A `@media` block — `prefers-color-scheme`, `prefers-reduced-motion` — may only redefine a token's value or set rules. A token whose sole definition sits inside one is dead everywhere else, silently. This has cost a full review round once already.
+- **A reduced-motion block contains motion rules only.** Nothing else belongs in it.
+- **One stylesheet per UI Component directory**, named for the component in kebab-case (`task-row.css` beside `TaskRow.tsx`), consistent with the UI Component folder layout in `AGENTS.md`.
+
 ## Code Comments
 
 - **Production code comments** exist only for what naming and structure can't convey — a non-obvious constraint, a cross-file behavior the reader can't see locally, a deliberate deviation from the obvious approach. If a comment just restates what the code already says (variable names, control flow), delete it.
