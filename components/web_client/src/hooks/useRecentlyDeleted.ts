@@ -76,6 +76,11 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
     const unsubscribeTasks = subscribeToTaskChanges(() => void reload());
     const unsubscribeLists = subscribeToListChanges(() => void reload());
     return () => {
+      // Bumping the generation also invalidates any reload() still in flight,
+      // so it cannot write state after unmount. In a browser that write is
+      // merely wasted; under test jsdom's globals are already gone and it
+      // throws "window is not defined" (see Root.unit.test.tsx).
+      reloadGeneration.current += 1;
       unsubscribeTasks();
       unsubscribeLists();
     };

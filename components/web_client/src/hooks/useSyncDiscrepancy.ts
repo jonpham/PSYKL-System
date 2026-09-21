@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { listSyncQueue } from '../db/idb';
 import { type SyncDiscrepancyLevel, syncDiscrepancyLevel } from '../sync/sync-discrepancy';
@@ -19,13 +19,22 @@ interface UseSyncDiscrepancyResult {
 
 function useSyncDiscrepancy(): UseSyncDiscrepancyResult {
   const [count, setCount] = useState(0);
+  // A reload() started before unmount still resolves afterwards. Writing state
+  // then is harmless in a browser but throws under test, where jsdom's globals
+  // are gone the moment the test ends — surfacing as an unhandled
+  // "window is not defined" that fails the run (see Root.unit.test.tsx).
+  const mountedRef = useRef(true);
 
   const reload = useCallback(async () => {
     const queue = await listSyncQueue();
+    if (!mountedRef.current) {
+      return;
+    }
     setCount(queue.length);
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     void reload();
     // Same live-update pattern as useRecentlyDeleted.ts: enqueueWithReplay's
     // notify() fires right after every enqueue and again after every
@@ -34,6 +43,7 @@ function useSyncDiscrepancy(): UseSyncDiscrepancyResult {
     const unsubscribeTasks = subscribeToTaskChanges(() => void reload());
     const unsubscribeLists = subscribeToListChanges(() => void reload());
     return () => {
+      mountedRef.current = false;
       unsubscribeTasks();
       unsubscribeLists();
     };
