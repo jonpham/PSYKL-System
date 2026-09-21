@@ -1,3 +1,11 @@
+/* The app has no CSS reset, so the document keeps the UA's 8px body margin.
+ * That margin is what stopped this shell reaching the edges of the viewport and
+ * left a gap under the content. Scoped with :has so it only applies while this
+ * experiment is mounted, and lives here rather than in production CSS. */
+body:has(.reminders-experiment) {
+  margin: 0;
+}
+
 .reminders-experiment {
   background: var(--r-bg);
   box-sizing: border-box;
@@ -11,7 +19,7 @@
   /* flow-root, so the trigger's margin cannot collapse out of the layout and
    * move the drawer's containing block out from under it. */
   display: flow-root;
-  min-height: calc(100dvh - 8rem);
+  min-height: 100dvh;
   position: relative;
 }
 
@@ -92,7 +100,8 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 8rem);
+  /* Fills what the layout leaves after the header button's 60px band. */
+  min-height: calc(100dvh - 3.75rem);
   padding: 0 var(--r-gutter) 0;
 }
 
@@ -115,8 +124,14 @@
   align-items: center;
   column-gap: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--r-icon-tile) calc(var(--r-icon-tile) + 0.5rem);
+  /* Only the task list reserves both trailing columns; elsewhere they collapse
+   * so a long title like "Recently Deleted" keeps one line at 390px. */
+  grid-template-columns: minmax(0, 1fr) auto auto;
   margin-bottom: 0.25rem;
+}
+
+.reminders-experiment__content-header[data-destination='list'] {
+  grid-template-columns: minmax(0, 1fr) var(--r-icon-tile) calc(var(--r-icon-tile) + 0.5rem);
 }
 
 .reminders-experiment__header-action {
@@ -127,9 +142,12 @@
   color: var(--r-tint);
   cursor: pointer;
   display: flex;
-  grid-column: 2;
+  /* The trailing slot, so New List lands where the list menu sits on the task
+   * view rather than floating mid-header. */
+  grid-column: 3;
   height: var(--r-icon-tile);
   justify-content: center;
+  justify-self: end;
   padding: 0;
   width: var(--r-icon-tile);
 }

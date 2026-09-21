@@ -103,7 +103,8 @@ export function SidebarNav({
           </button>
         </li>
 
-        <li>
+        {/* Sync and Settings are app-level, not places your tasks live. */}
+        <li className="reminders-sidebar-nav__divider">
           <button
             aria-current={destination === 'sync' ? 'page' : undefined}
             aria-label={syncNeedsAttention ? 'Sync needs attention' : 'Sync clear'}

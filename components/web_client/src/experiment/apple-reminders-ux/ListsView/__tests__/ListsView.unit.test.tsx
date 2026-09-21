@@ -80,18 +80,12 @@ describe('ListsView (Unit)', () => {
     expect(screen.getByRole('button', { name: 'Move Reading down' })).toBeDisabled();
   });
 
-  it('deletes a list only after a confirming second tap', async () => {
-    // Arrange
-    const user = userEvent.setup();
+  it('keeps deletion out of this page — it belongs to the list itself', () => {
+    // Arrange / Act
     render(<ListsView />);
 
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Delete Groceries' }));
-
     // Assert
-    expect(mockDeleteList).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Confirm delete Groceries' }));
-    await waitFor(() => expect(mockDeleteList).toHaveBeenCalledWith('list-2'));
+    expect(screen.queryByRole('button', { name: /^Delete / })).not.toBeInTheDocument();
   });
 
   it('adds a list from the row the header opens', async () => {

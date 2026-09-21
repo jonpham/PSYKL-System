@@ -3,7 +3,6 @@ import './apple-reminders-ux.css';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Toast } from '../../components/Toast';
 import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useLists } from '../../hooks/useLists';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
@@ -17,6 +16,7 @@ import { showCompletedStore } from './showCompletedStore';
 import { SidebarNav } from './SidebarNav';
 import { SyncStatus, useFailedSyncCount } from './SyncStatus';
 import { TaskListView } from './TaskListView';
+import { type ThemeChoice, themeStore } from './themeStore';
 import type { Destination } from './types';
 
 export function AppleRemindersUxExperiment() {
@@ -28,6 +28,7 @@ export function AppleRemindersUxExperiment() {
   const [destination, setDestination] = useState<Destination>('list');
   const [showCompleted, setShowCompleted] = useState(true);
   const [creatingList, setCreatingList] = useState(false);
+  const [theme, setTheme] = useState<ThemeChoice>(() => themeStore.read());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -84,8 +85,13 @@ export function AppleRemindersUxExperiment() {
     closeSidebar();
   }
 
+  function chooseTheme(next: ThemeChoice) {
+    setTheme(next);
+    themeStore.write(next);
+  }
+
   return (
-    <div className="reminders-experiment">
+    <div className="reminders-experiment" data-theme={theme === 'system' ? undefined : theme}>
       <div className="reminders-experiment__layout">
         <button
           aria-expanded={sidebarOpen}
@@ -119,12 +125,11 @@ export function AppleRemindersUxExperiment() {
           />
         ) : null}
         <div className="reminders-experiment__content">
-          <Toast />
           {/* One header for every destination, so Sync, Lists, Recently Deleted
            * and Settings read as the same app as the task list. The action
            * column is the sync control on the surfaces where sync is the
            * relevant action, and the destination's own action elsewhere. */}
-          <div className="reminders-experiment__content-header">
+          <div className="reminders-experiment__content-header" data-destination={destination}>
             <h2>{title}</h2>
             {destination === 'list' || destination === 'sync' ? (
               <SyncStatus
@@ -159,7 +164,7 @@ export function AppleRemindersUxExperiment() {
             <ListsView creating={creatingList} onCreated={() => setCreatingList(false)} onSelectList={selectList} />
           ) : null}
           {destination === 'recently-deleted' ? <RecentlyDeletedView /> : null}
-          {destination === 'settings' ? <SettingsView /> : null}
+          {destination === 'settings' ? <SettingsView onThemeChange={chooseTheme} theme={theme} /> : null}
         </div>
       </div>
     </div>

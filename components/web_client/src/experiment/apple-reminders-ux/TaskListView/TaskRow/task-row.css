@@ -1,8 +1,9 @@
-/* Checkbox, title and pending dot share one horizontal centre line, and the two
- * trailing columns mirror the content header so the dot sits under the sync
- * control (review round 2). */
+/* Checkbox, title and pending dot share one horizontal centre line — that line
+ * being the centre of the title's FIRST line, so a wrapped title grows downward
+ * and leaves the row's furniture where it was. The two trailing columns mirror
+ * the content header so the dot sits under the sync control. */
 .reminders-row {
-  align-items: center;
+  align-items: start;
   display: grid;
   grid-template-columns: 2.25rem minmax(0, 1fr) var(--r-icon-tile) calc(var(--r-icon-tile) + 0.5rem);
   min-height: var(--r-row-min);
@@ -101,12 +102,17 @@
   text-decoration-color: var(--r-label-tertiary);
 }
 
+/* 18px puts the 8px dot's centre on 22px — the centre of a 22px first line
+ * sitting under the title's 11px top padding, which is also where the 44px
+ * checkbox centres. */
 .reminders-row__pending {
+  align-self: start;
   background: var(--r-warn);
   border-radius: 50%;
   grid-column: 3;
   height: 8px;
   justify-self: center;
+  margin-top: 18px;
   width: 8px;
 }
 

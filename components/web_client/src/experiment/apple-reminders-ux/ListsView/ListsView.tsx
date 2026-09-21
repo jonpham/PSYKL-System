@@ -11,11 +11,10 @@ interface ListsViewProps {
   onSelectList?: (listId: string) => void;
 }
 
-/** Re-order and remove lists. Renaming deliberately does not live here — the
- * name opens its list, and renaming will happen there (review round 2). */
+/** Re-order lists, and add one. Renaming happens in the list itself, and
+ * deletion lives in that list's options menu — this page stays uncluttered. */
 export function ListsView({ creating = false, onCreated, onSelectList }: ListsViewProps) {
-  const { canDelete, createList, deleteList, lists, moveList } = useLists();
-  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const { createList, lists, moveList } = useLists();
 
   function move(index: number, direction: -1 | 1): void {
     const target = lists[index];
@@ -25,15 +24,6 @@ export function ListsView({ creating = false, onCreated, onSelectList }: ListsVi
         ? [lists[index - 2] ?? null, lists[index - 1] ?? null]
         : [lists[index + 1] ?? null, lists[index + 2] ?? null];
     void moveList(target.id, before, after);
-  }
-
-  function remove(listId: string): void {
-    if (confirmingDeleteId !== listId) {
-      setConfirmingDeleteId(listId);
-      return;
-    }
-    setConfirmingDeleteId(null);
-    void deleteList(listId);
   }
 
   return (
@@ -46,17 +36,6 @@ export function ListsView({ creating = false, onCreated, onSelectList }: ListsVi
               {list.title}
             </button>
             <div className="reminders-lists__actions">
-              <button
-                aria-label={confirmingDeleteId === list.id ? `Confirm delete ${list.title}` : `Delete ${list.title}`}
-                className="reminders-lists__action"
-                data-armed={confirmingDeleteId === list.id}
-                data-destructive="true"
-                disabled={!canDelete}
-                onClick={() => remove(list.id)}
-                type="button"
-              >
-                <TrashGlyph />
-              </button>
               <button
                 aria-label={`Move ${list.title} up`}
                 className="reminders-lists__action"
@@ -129,14 +108,6 @@ function MoveGlyph({ direction }: { direction: 'down' | 'up' }) {
   return (
     <svg aria-hidden="true" className="reminders-lists__glyph" data-direction={direction} viewBox="0 0 24 24">
       <path d="M8 10l4 4 4-4" />
-    </svg>
-  );
-}
-
-function TrashGlyph() {
-  return (
-    <svg aria-hidden="true" className="reminders-lists__glyph" viewBox="0 0 24 24">
-      <path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />
     </svg>
   );
 }

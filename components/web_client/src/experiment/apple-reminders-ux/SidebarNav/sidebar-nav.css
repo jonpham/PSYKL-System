@@ -1,4 +1,8 @@
 .reminders-sidebar-nav {
+  /* Destination tiles are smaller here than the header controls — the sidebar
+   * is a list of places, not a row of actions. */
+  --r-sidebar-tile: 2rem;
+
   box-sizing: border-box;
   min-height: 100%;
   /* Matches the content column's header padding exactly, so the PSYKL wordmark
@@ -6,10 +10,21 @@
   padding: 0.5rem var(--r-gutter);
 }
 
+.reminders-sidebar-nav .reminders-glyph {
+  height: var(--r-sidebar-tile);
+  width: var(--r-sidebar-tile);
+}
+
 .reminders-sidebar-nav__items {
   list-style: none;
   margin: 0.75rem 0 0;
   padding: 0;
+}
+
+.reminders-sidebar-nav__divider {
+  border-top: 1px solid var(--r-separator);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 .reminders-sidebar-nav__row {
@@ -44,11 +59,12 @@
   background: var(--r-fill-pressed);
 }
 
-/* Second level: names only, smaller, no glyph — the indent carries the nesting. */
+/* Second level: names only, smaller, no glyph. The names line up with the word
+ * "Lists" above them rather than sitting in from it. */
 .reminders-sidebar-nav__sublist {
   list-style: none;
   margin: 0 0 0.25rem;
-  padding: 0 0 0 calc(var(--r-icon-tile) + 0.75rem);
+  padding: 0 0 0 calc(var(--r-sidebar-tile) + 0.75rem - 0.5rem);
 }
 
 .reminders-sidebar-nav__subitem {
