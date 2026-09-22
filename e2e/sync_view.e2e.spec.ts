@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-
+import { expect, test } from './helpers/isolated-test';
 import { openDevice, setOffline } from './helpers/multi-device';
 
 test.describe('sync view', () => {
