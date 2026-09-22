@@ -833,7 +833,7 @@ export function useFailedSyncCount(): number;
 
 **Steps:**
 
-- [ ] **Step 1: Write the failing `SyncStatus` unit test.** Create
+- [x] **Step 1: Write the failing `SyncStatus` unit test.** Create
       `src/components/SyncStatus/__tests__/SyncStatus.unit.test.tsx`.
 
 ```tsx
@@ -883,11 +883,11 @@ describe('SyncStatus', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail.** Run:
+- [x] **Step 2: Run it and watch it fail.** Run:
       `pnpm --filter @psykl/web-client test:unit SyncStatus`
       Expected: FAIL — cannot resolve `../SyncStatus`.
 
-- [ ] **Step 3: Port `SyncStatus`.** Create the four files from
+- [x] **Step 3: Port `SyncStatus`.** Create the four files from
       `src/experiment/apple-reminders-ux/SyncStatus/`. Rename the class prefix
       `reminders-sync-status` → `psykl-sync-status` and swap the `--r-*` variables per the Token mapping
       table. **Port the control only, not the `details` panel** — the prototype's inline
@@ -895,26 +895,26 @@ describe('SyncStatus', () => {
       work. Keep the `active` prop; it marks the control `aria-current="page"` while the Sync destination
       is open.
 
-- [ ] **Step 4: Run the test and watch it pass.** Run:
+- [x] **Step 4: Run the test and watch it pass.** Run:
       `pnpm --filter @psykl/web-client test:unit SyncStatus`
       Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Wire the control and the remaining destinations into `App.tsx`.** Pass `SyncStatus` as
+- [x] **Step 5: Wire the control and the remaining destinations into `App.tsx`.** Pass `SyncStatus` as
       `AppShell`'s `headerAction` on the `list` and `sync` destinations, reading `useSyncDiscrepancy()`
       for the queued count and `useFailedSyncCount()` for the failed count. Render `RecentlyDeleted` and
       `Settings` as destination content rather than modals — pass `open` permanently true and
       `onClose={() => goTo('list')}` so their existing close affordance returns to the list.
 
-- [ ] **Step 6: Write the `SyncStatus` story.** Create
+- [x] **Step 6: Write the `SyncStatus` story.** Create
       `src/components/SyncStatus/__tests__/SyncStatus.stories.tsx` with `Clear` and `NeedsAttention`
       stories, each asserting the rendered `data-status` in a play function. MSW handlers only; no
       IndexedDB writes.
 
-- [ ] **Step 7: Run the stories.** Run:
+- [x] **Step 7: Run the stories.** Run:
       `pnpm --filter @psykl/web-client test:component:stories`
       Expected: PASS.
 
-- [ ] **Step 8: Un-skip and green the E2E rows this DevTask activates.** Remove `.skip` from
+- [x] **Step 8: Un-skip and green the E2E rows this DevTask activates.** Remove `.skip` from
       `e2e/navigation.e2e.spec.ts` → "a user reaches Recently Deleted and Settings from the navigation"
       and "a user returns to their list with the browser back button". Rewrite
       `e2e/recently_deleted.e2e.spec.ts:14` to open the drawer and choose the Recently Deleted
@@ -922,11 +922,11 @@ describe('SyncStatus', () => {
       `pnpm test:e2e -- navigation recently_deleted`
       Expected: PASS.
 
-- [ ] **Step 9: Verify static analysis.** Run:
+- [x] **Step 9: Verify static analysis.** Run:
       `pnpm --filter @psykl/web-client lint && pnpm --filter @psykl/web-client typecheck && pnpm --filter @psykl/web-client format:check`
       Expected: all three pass.
 
-- [ ] **Step 10: Commit.**
+- [x] **Step 10: Commit.**
 
 ```bash
 git add components/web_client/src/components/SyncStatus components/web_client/src/App.tsx e2e

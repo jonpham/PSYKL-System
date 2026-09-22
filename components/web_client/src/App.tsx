@@ -5,6 +5,7 @@ import { ListSwitcher } from './components/ListSwitcher';
 import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
 import { Settings } from './components/Settings';
+import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
 import { TaskCreateForm } from './components/TaskCreateForm';
 import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
@@ -12,11 +13,14 @@ import { VersionFooter } from './components/VersionFooter';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
 import { useDestination } from './hooks/useDestination';
 import { useLists } from './hooks/useLists';
+import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
 
 export default function App() {
   const { lists } = useLists();
   const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
+  const { count: queuedCount } = useSyncDiscrepancy();
+  const failedCount = useFailedSyncCount();
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
@@ -48,15 +52,13 @@ export default function App() {
   return (
     <AppShell
       headerAction={
-        destination === 'list' ? (
-          <button
-            aria-label={`Open list switcher: ${activeListTitle}`}
-            className="psykl-app-shell__header-action"
-            onClick={() => setSwitcherOpen(true)}
-            type="button"
-          >
-            {activeListTitle}
-          </button>
+        destination === 'list' || destination === 'sync' ? (
+          <SyncStatus
+            active={destination === 'sync'}
+            failedCount={failedCount}
+            onOpen={() => goTo('sync')}
+            queuedCount={queuedCount}
+          />
         ) : undefined
       }
       title={title}

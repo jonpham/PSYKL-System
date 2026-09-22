@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test.describe.skip('recently deleted', () => {
+test.describe('recently deleted', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
   test('a user sees how many days remain before a deleted task is purged, then restores it', async ({ page }) => {
     await page.goto('/');
     await page.getByPlaceholder('What needs doing?').fill('Milk');

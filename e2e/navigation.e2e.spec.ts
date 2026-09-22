@@ -72,7 +72,7 @@ test.describe('navigation', () => {
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   });
 
-  test.skip('a user sees at a glance whether their changes have synced', async ({ page }) => {
+  test('a user sees at a glance whether their changes have synced', async ({ page }) => {
     await page.goto('/');
 
     // Chrome, not an interruption: one control in the header carries the signal.
