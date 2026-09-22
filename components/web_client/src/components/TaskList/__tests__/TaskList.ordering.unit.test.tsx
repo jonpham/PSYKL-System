@@ -10,6 +10,11 @@ vi.mock('../../../hooks/useTasks', () => ({
   useTasks: mockUseTasks,
 }));
 
+// The capture control reads the write ceiling; this suite is about the list.
+vi.mock('../../../hooks/useSyncDiscrepancy', () => ({
+  useSyncDiscrepancy: () => ({ count: 0, level: 'ok' }),
+}));
+
 function task(overrides: Partial<Task> & Pick<Task, 'id'>): Task {
   return {
     completed_at: null,

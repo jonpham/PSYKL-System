@@ -22,7 +22,7 @@ function useActiveListId(): string | null {
   return useSyncExternalStore(subscribeActiveList, getActiveListIdSnapshot);
 }
 
-/** Synchronous accessor for callers (e.g. `TaskCreateForm`) that need the
+/** Synchronous accessor for callers (e.g. the capture row) that need the
  * current active list id without subscribing to it, to stamp `list_id` on a
  * newly created task. */
 function getActiveListId(): string | null {

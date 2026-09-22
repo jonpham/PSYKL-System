@@ -7,7 +7,6 @@ import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
 import { Settings } from './components/Settings';
 import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
-import { TaskCreateForm } from './components/TaskCreateForm';
 import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
 import { VersionFooter } from './components/VersionFooter';
@@ -87,7 +86,6 @@ export default function App() {
       ) : null}
       {destination === 'list' ? (
         <section data-testid="task-ui-slot">
-          <TaskCreateForm />
           <TaskList />
         </section>
       ) : null}

@@ -2,6 +2,7 @@ import './task-list.css';
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
 
+import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { useTasks } from '../../hooks/useTasks';
 import { taskServiceClient } from '../../services/task-service-client';
 import { PlusGlyph } from '../AppShell/Glyphs';
@@ -14,6 +15,9 @@ import { TaskRow } from './TaskRow';
 export function TaskList() {
   const { createTask, error, loading, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
+  // Past the offline write ceiling the device stops accepting new work rather
+  // than piling up changes it may never be able to send.
+  const atCeiling = useSyncDiscrepancy().level === 'ceiling';
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -84,13 +88,14 @@ export function TaskList() {
       )}
 
       <button
-        aria-label="New Task"
+        aria-label={atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
         className="psykl-task-list__capture"
+        disabled={atCeiling}
         onClick={() => setCapturing(true)}
         type="button"
       >
         <PlusGlyph />
-        New Task
+        {atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
       </button>
     </>
   );

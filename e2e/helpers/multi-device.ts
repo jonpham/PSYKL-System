@@ -41,8 +41,10 @@ async function setOffline(device: Device, offline: boolean): Promise<void> {
 }
 
 async function createTask(device: Device, title: string): Promise<void> {
-  await device.page.getByRole('textbox', { name: /^title$/i }).fill(title);
-  await device.page.getByRole('button', { name: /create/i }).click();
+  await device.page.getByRole('button', { name: 'New Task' }).click();
+  await device.page.getByRole('textbox', { name: 'New task title' }).fill(title);
+  await device.page.keyboard.press('Enter');
+  await device.page.keyboard.press('Escape');
 }
 
 async function editTask(device: Device, currentTitle: string, nextTitle: string): Promise<void> {

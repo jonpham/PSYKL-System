@@ -9,7 +9,7 @@ import { listSyncQueue } from '../../db/idb';
 import { resetUseListsForTest, useLists } from '../useLists';
 import { DEFAULT_LIST_ID } from '../useLists.default-list';
 
-// Same isolation strategy as TaskCreateForm.unit.test.tsx: createList/etc.
+// Same isolation strategy as the capture row's unit tests: createList/etc.
 // now call enqueueWithReplay (fixing the asymmetry with Task mutations),
 // which fires a detached background replay(). Left real, that replay would
 // race real network + IDB work across tests via the shared fake-indexeddb.

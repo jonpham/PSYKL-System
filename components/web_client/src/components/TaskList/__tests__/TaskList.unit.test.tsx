@@ -10,6 +10,11 @@ vi.mock('../../../hooks/useTasks', () => ({
   useTasks: mockUseTasks,
 }));
 
+// The capture control reads the write ceiling; this suite is about the list.
+vi.mock('../../../hooks/useSyncDiscrepancy', () => ({
+  useSyncDiscrepancy: () => ({ count: 0, level: 'ok' }),
+}));
+
 const sampleTasks: Task[] = [
   {
     id: '01940000-0000-7000-8000-000000000001',

@@ -69,8 +69,10 @@ test.describe('lists', () => {
     await page.keyboard.press('Enter');
     await page.getByRole('button', { name: 'Groceries', exact: true }).click();
 
-    await page.getByPlaceholder('What needs doing?').fill('Milk');
+    await page.getByRole('button', { name: 'New Task' }).click();
+    await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
     await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();

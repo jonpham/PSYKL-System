@@ -143,8 +143,10 @@ test.describe('Task list', () => {
 });
 
 async function createTask(page: Page, title: string): Promise<void> {
-  await page.getByRole('textbox', { name: /^title$/i }).fill(title);
-  await page.getByRole('button', { name: /create/i }).click();
+  await page.getByRole('button', { name: 'New Task' }).click();
+  await page.getByRole('textbox', { name: 'New task title' }).fill(title);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
 }
 
 async function editTaskTitle(page: Page, currentTitle: string, nextTitle: string): Promise<void> {

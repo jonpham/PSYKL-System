@@ -29,7 +29,7 @@ test.describe('Offline sync pressure', () => {
     await seedSyncQueue(device, 100);
     await triggerQueuedReplay(device);
 
-    await expect(device.page.getByLabel('title')).toBeDisabled();
-    await expect(device.page.getByLabel('title')).toHaveAttribute('placeholder', 'Reconnect to keep adding.');
+    // Capture is refused at the control itself now, not inside a form field.
+    await expect(device.page.getByRole('button', { name: 'Reconnect to keep adding.' })).toBeDisabled();
   });
 });

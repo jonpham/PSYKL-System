@@ -11,11 +11,11 @@ import { RecentlyDeleted } from '../RecentlyDeleted';
  * the actual UI and verify it reappears — the same "drive it for real,
  * stub only the network" approach as `TaskList.stories.tsx`.
  *
- * `TaskCreateForm` is deliberately NOT mounted here: every `useTasks()`
- * call (including TaskCreateForm's, and useSyncDiscrepancy's inside it)
+ * The capture surface is deliberately NOT mounted here: every `useTasks()`
+ * call (including the list's, and useSyncDiscrepancy's alongside it)
  * subscribes to the same task-change notifications `useRecentlyDeleted`'s
  * own reload() reacts to. Create-then-delete via the real UI is already
- * covered by `TaskCreateForm.stories.tsx` and
+ * covered by `TaskList.capture.stories.tsx` and
  * `TaskList.mutations.stories.tsx`; this story seeds an already-deleted
  * Task directly (below) so it isolates what it's actually testing —
  * restore — from that unrelated concurrent-reload churn, which was

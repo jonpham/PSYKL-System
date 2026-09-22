@@ -5,8 +5,10 @@ test.describe('recently deleted', () => {
 
   test('a user sees how many days remain before a deleted task is purged, then restores it', async ({ page }) => {
     await page.goto('/');
-    await page.getByPlaceholder('What needs doing?').fill('Milk');
+    await page.getByRole('button', { name: 'New Task' }).click();
+    await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
     await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
     await page.getByRole('button', { name: 'Delete Milk' }).click();
@@ -33,8 +35,10 @@ test.describe('recently deleted', () => {
     await page.keyboard.press('Enter');
     await page.getByRole('button', { name: 'Groceries' }).click();
 
-    await page.getByPlaceholder('What needs doing?').fill('Milk');
+    await page.getByRole('button', { name: 'New Task' }).click();
+    await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
     await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
     // Deleting a list takes a second tap rather than a dialog: the delete is
