@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
 import { listLocalMeta } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 
 test.describe('list options', () => {
   test.use({ viewport: { height: 844, width: 390 } });
