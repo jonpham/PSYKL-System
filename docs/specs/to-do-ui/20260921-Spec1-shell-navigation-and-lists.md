@@ -637,7 +637,7 @@ export function AppShell(props: {
 
 **Steps:**
 
-- [ ] **Step 1: Write the failing `SidebarNav` unit test.** Create
+- [x] **Step 1: Write the failing `SidebarNav` unit test.** Create
       `src/components/AppShell/SidebarNav/__tests__/SidebarNav.unit.test.tsx`. Arrange / Act / Assert per
       the UI convention.
 
@@ -721,29 +721,29 @@ describe('SidebarNav', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail.** Run:
+- [x] **Step 2: Run it and watch it fail.** Run:
       `pnpm --filter @psykl/web-client test:unit SidebarNav`
       Expected: FAIL — cannot resolve `../SidebarNav`.
 
-- [ ] **Step 3: Port `SidebarNav`.** Create the three files from
+- [x] **Step 3: Port `SidebarNav`.** Create the three files from
       `src/experiment/apple-reminders-ux/SidebarNav/`. Rename the class prefix
       `reminders-sidebar-nav` → `psykl-sidebar-nav`, swap the `--r-*` variables per the Token mapping
       table, and import the glyphs from `../Glyphs` rather than `../glyphs`. Keep the structure exactly:
       Lists is a destination in its own right, its chevron unfolds the list names beneath it, and
       Recently Deleted sits inside the Lists section.
 
-- [ ] **Step 4: Run the test and watch it pass.** Run:
+- [x] **Step 4: Run the test and watch it pass.** Run:
       `pnpm --filter @psykl/web-client test:unit SidebarNav`
       Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 git add components/web_client/src/components/AppShell/SidebarNav
 git commit -m "feat: add the navigation sidebar with collapsible lists"
 ```
 
-- [ ] **Step 6: Write the failing `AppShell` story.** Create
+- [x] **Step 6: Write the failing `AppShell` story.** Create
       `src/components/AppShell/__tests__/AppShell.stories.tsx` with four stories, each carrying a play
       function. `Closed` asserts the drawer is not exposed and the trigger reads `Open PSYKL navigation`.
       `Opened` clicks the trigger, asserts the nav is exposed, presses `Escape`, and asserts focus returns
@@ -757,11 +757,11 @@ git commit -m "feat: add the navigation sidebar with collapsible lists"
       viewport on a `Desktop` story asserting the content column is at most 680px wide. **No IndexedDB
       writes — MSW handlers only, `resetStore()` in `beforeEach`.**
 
-- [ ] **Step 7: Run it and watch it fail.** Run:
+- [x] **Step 7: Run it and watch it fail.** Run:
       `pnpm --filter @psykl/web-client test:component:stories`
       Expected: FAIL — cannot resolve `../AppShell`.
 
-- [ ] **Step 8: Port the shell.** Create `AppShell.tsx`, `app-shell.css` and `index.ts` from
+- [x] **Step 8: Port the shell.** Create `AppShell.tsx`, `app-shell.css` and `index.ts` from
       `src/experiment/apple-reminders-ux/AppleRemindersUxExperiment.tsx:95-135` and the
       `.reminders-experiment__*` rules in `apple-reminders-ux.css`. `AppShell` owns the header button, the
       `aside` drawer, the dismiss backdrop, the Escape handler, focus restoration to the trigger, the
@@ -771,7 +771,7 @@ git commit -m "feat: add the navigation sidebar with collapsible lists"
       `display: flow-root` on the layout, the drawer `position: absolute` not `fixed`, and the header
       glyph at x=24 / cy=38 in both states.
 
-- [ ] **Step 9: Rewrite `src/App.tsx`.** Delete `<h1>PSYKL</h1>`, the "M1 bootstrap shell" line, the
+- [x] **Step 9: Rewrite `src/App.tsx`.** Delete `<h1>PSYKL</h1>`, the "M1 bootstrap shell" line, the
       three bordered buttons, and every inline `style={{…}}` object. `App` reads `useDestination` and
       renders `AppShell` around the destination's content: the existing `TaskCreateForm` + `TaskList` for
       `list`, the existing `RecentlyDeleted` for `recently-deleted`, the existing `Settings` for
@@ -780,11 +780,11 @@ git commit -m "feat: add the navigation sidebar with collapsible lists"
       disappear a DevTask earlier than planned. Keep `OutOfSyncBanner`, `Toast` and `VersionFooter`
       untouched — Spec 5 retires the first two.
 
-- [ ] **Step 10: Run the stories and watch them pass.** Run:
+- [x] **Step 10: Run the stories and watch them pass.** Run:
       `pnpm --filter @psykl/web-client test:component:stories`
       Expected: PASS.
 
-- [ ] **Step 11: Un-skip and green the E2E rows this DevTask activates.** Remove `.skip` from
+- [x] **Step 11: Un-skip and green the E2E rows this DevTask activates.** Remove `.skip` from
       `e2e/navigation.e2e.spec.ts` → "a user opens the navigation and switches between lists", and from
       the two retargeted `e2e/lists.e2e.spec.ts` tests that only needed new navigation selectors. Update
       `e2e/task_list.e2e.spec.ts:22` from `getByRole('heading', { name: 'PSYKL' })` to
@@ -792,7 +792,7 @@ git commit -m "feat: add the navigation sidebar with collapsible lists"
       `pnpm test:e2e -- navigation lists task_list`
       Expected: PASS, with only the rows marked DevTask 3 / DevTask 4 still skipped.
 
-- [ ] **Step 12: Commit.**
+- [x] **Step 12: Commit.**
 
 ```bash
 git add components/web_client/src/components/AppShell components/web_client/src/App.tsx e2e

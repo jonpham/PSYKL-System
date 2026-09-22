@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { AppShell } from './components/AppShell';
 import { ListSwitcher } from './components/ListSwitcher';
 import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
@@ -9,14 +10,14 @@ import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
 import { VersionFooter } from './components/VersionFooter';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
+import { useDestination } from './hooks/useDestination';
 import { useLists } from './hooks/useLists';
 
 export default function App() {
   const { lists } = useLists();
+  const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
   const [switcherOpen, setSwitcherOpen] = useState(false);
-  const [recentlyDeletedOpen, setRecentlyDeletedOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
   // first run, per UX.md § 10 decision 1) if no active list has been chosen
@@ -33,64 +34,34 @@ export default function App() {
   const activeList = lists.find((list) => list.id === activeListId) ?? lists[0] ?? null;
   const activeListTitle = activeList?.title ?? 'Tasks';
 
+  const title =
+    destination === 'list'
+      ? activeListTitle
+      : destination === 'recently-deleted'
+        ? 'Recently Deleted'
+        : destination === 'settings'
+          ? 'Settings'
+          : destination === 'lists'
+            ? 'Lists'
+            : 'Sync';
+
   return (
-    <main
-      style={{
-        fontFamily: 'system-ui, sans-serif',
-        margin: '0 auto',
-        maxWidth: 640,
-        padding: '2rem',
-      }}
+    <AppShell
+      headerAction={
+        destination === 'list' ? (
+          <button
+            aria-label={`Open list switcher: ${activeListTitle}`}
+            className="psykl-app-shell__header-action"
+            onClick={() => setSwitcherOpen(true)}
+            type="button"
+          >
+            {activeListTitle}
+          </button>
+        ) : undefined
+      }
+      title={title}
     >
-      <h1>PSYKL</h1>
-      <p>Time-independent planning. M1 bootstrap shell.</p>
       <Toast />
-      <button
-        aria-label={`Open list switcher: ${activeListTitle}`}
-        onClick={() => setSwitcherOpen(true)}
-        style={{
-          background: 'none',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          cursor: 'pointer',
-          fontSize: '1rem',
-          margin: '1rem 0 0',
-          padding: '0.5rem 0.75rem',
-        }}
-        type="button"
-      >
-        {activeListTitle}
-      </button>
-      <button
-        onClick={() => setRecentlyDeletedOpen(true)}
-        style={{
-          background: 'none',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          cursor: 'pointer',
-          fontSize: '1rem',
-          margin: '1rem 0 0 0.5rem',
-          padding: '0.5rem 0.75rem',
-        }}
-        type="button"
-      >
-        Recently Deleted
-      </button>
-      <button
-        onClick={() => setSettingsOpen(true)}
-        style={{
-          background: 'none',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          cursor: 'pointer',
-          fontSize: '1rem',
-          margin: '1rem 0 0 0.5rem',
-          padding: '0.5rem 0.75rem',
-        }}
-        type="button"
-      >
-        Settings
-      </button>
       <ListSwitcher
         activeListId={activeListId}
         onClose={() => setSwitcherOpen(false)}
@@ -100,14 +71,16 @@ export default function App() {
         }}
         open={switcherOpen}
       />
-      <RecentlyDeleted onClose={() => setRecentlyDeletedOpen(false)} open={recentlyDeletedOpen} />
-      <Settings onClose={() => setSettingsOpen(false)} open={settingsOpen} />
+      <RecentlyDeleted onClose={() => goTo('list')} open={destination === 'recently-deleted'} />
+      <Settings onClose={() => goTo('list')} open={destination === 'settings'} />
       <OutOfSyncBanner />
-      <section data-testid="task-ui-slot">
-        <TaskCreateForm />
-        <TaskList />
-      </section>
+      {destination === 'list' ? (
+        <section data-testid="task-ui-slot">
+          <TaskCreateForm />
+          <TaskList />
+        </section>
+      ) : null}
       <VersionFooter />
-    </main>
+    </AppShell>
   );
 }
