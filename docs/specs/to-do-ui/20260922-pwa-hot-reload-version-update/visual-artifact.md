@@ -12,13 +12,13 @@ About
 
 ## States
 
-| State                | What the user sees                                                                                                                     | How they got here                                                             |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **Checking**         | `Currently loaded  3f9a1c2` / `Available  checking…` — no button                                                                       | Opened Settings; the update check is in flight                                |
-| **Up to date**       | `Currently loaded  3f9a1c2` / `Available  3f9a1c2` and a status line **Up to date** — no button                                        | Check finished, versions match                                                |
-| **Update available** | `Currently loaded  3f9a1c2` / `Available  8b12d44`, status **A new version is available**, primary button **Update to latest version** | Check finished, a newer bundle is on the server                               |
-| **Updating**         | Button replaced by a disabled **Updating…** state; the rest of Settings stays visible                                                  | Tapped the button; skip-waiting handshake then reload is in progress          |
-| **Offline / failed** | `Available  unavailable`, status **Couldn't check for updates**, secondary button **Try again**                                        | The version check failed (offline, server unreachable), or the update stalled |
+| State                | What the user sees                                                                                                            | How they got here                                                             |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Checking**         | `Current  3f9a1c2` / `Available  checking…` — no button                                                                       | Opened Settings; the update check is in flight                                |
+| **Up to date**       | `Current  3f9a1c2` / `Available  3f9a1c2` and a status line **Up to date** — no button                                        | Check finished, versions match                                                |
+| **Update available** | `Current  3f9a1c2` / `Available  8b12d44`, status **A new version is available**, primary button **Update to latest version** | Check finished, a newer bundle is on the server                               |
+| **Updating**         | Button replaced by a disabled **Updating…** state; the rest of Settings stays visible                                         | Tapped the button; skip-waiting handshake then reload is in progress          |
+| **Offline / failed** | `Available  unavailable`, status **Couldn't check for updates**, secondary button **Try again**                               | The version check failed (offline, server unreachable), or the update stalled |
 
 ## Reference wireframe — Update available
 
@@ -26,7 +26,7 @@ About
 ┌─────────────────────────────────────┐
 │ About                               │
 │ ─────────────────────────────────── │
-│ Currently loaded          3f9a1c2   │
+│ Current                   3f9a1c2   │
 │ Available                 8b12d44   │
 │                                     │
 │ A new version is available.         │
