@@ -1,11 +1,11 @@
 ---
-status: IN-PROGRESS
+status: DONE
 issue: GH124
 branches:
   - feat/124-pwa-hot-reload-version-update
 prs:
-  -  # PR URL once opened
-completed_at:
+  - https://github.com/jonpham/PSYKL-System/pull/131
+completed_at: 2026-09-22
 created_at: 2026-09-22
 initiative: to-do-ui
 spec: docs/specs/to-do-ui/20260922-pwa-hot-reload-version-update/ (deleted at close-out; see git history)
@@ -101,6 +101,14 @@ and a desktop browser; the UX was accepted on the fourth.
    tests alone while the UX iterated; the Storybook stories and E2E specs were written before merge,
    in this same PR. Static analysis was never reduced.
 
+8. **CI retries the component command, not the individual test.** A Storybook play test that waits on
+   a deliberately delayed affordance has far less slack on a contended runner, and `PendingQueuedTask`
+   was failing there intermittently; its `waitFor` budget is raised from 3s to 8s. `jest.retryTimes`
+   inside `.storybook/test-runner.ts` was tried as a second line of defence and rejected — a story
+   rigged to throw on every run was reported as **passed** on its retry, so that mechanism can turn
+   real breakage green. The CI step retries the whole command instead, where a genuine failure still
+   fails every attempt.
+
 ## Architecture Decisions (ADR)
 
 - None. No schema, API, or shared-model change; `GET /version` is used exactly as before. The one
@@ -108,6 +116,7 @@ and a desktop browser; the UX was accepted on the fourth.
 
 ## Change Log
 
-| Date       | PR    | Summary                                                                   |
-| ---------- | ----- | ------------------------------------------------------------------------- |
-| 2026-09-22 | _tbd_ | In-app update from Settings → About; `VersionFooter` renamed `AppVersion` |
+| Date       | PR                                                       | Summary                                                                                               |
+| ---------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 2026-09-22 | [#131](https://github.com/jonpham/PSYKL-System/pull/131) | In-app update from Settings → About; `VersionFooter` renamed `AppVersion`                             |
+| 2026-09-22 | [#131](https://github.com/jonpham/PSYKL-System/pull/131) | CI component job retries at the command level; `PendingQueuedTask`'s wait budget raised from 3s to 8s |
