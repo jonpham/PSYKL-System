@@ -35,7 +35,7 @@ test.describe('PWA Service Worker', () => {
     await context.setOffline(true);
     await page.goto('/offline-shell-check');
 
-    await expect(page.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'PSYKL navigation' })).toBeVisible();
   });
 
   test('serves stale GET /tasks data and refreshes the cache in the background', async ({ context, page }) => {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test.describe.skip('lists', () => {
-  test('a user creates a list and it appears in the navigation', async ({ page }) => {
+test.describe('lists', () => {
+  test.skip('a user creates a list and it appears in the navigation', async ({ page }) => {
     await page.goto('/lists');
 
     await page.getByRole('button', { name: 'New List' }).click();
@@ -16,7 +16,7 @@ test.describe.skip('lists', () => {
     ).toBeVisible();
   });
 
-  test('a user abandons a half-typed list name and no list is created', async ({ page }) => {
+  test.skip('a user abandons a half-typed list name and no list is created', async ({ page }) => {
     await page.goto('/lists');
 
     await page.getByRole('button', { name: 'New List' }).click();
@@ -26,7 +26,7 @@ test.describe.skip('lists', () => {
     await expect(page.getByRole('button', { name: 'Groceri' })).toHaveCount(0);
   });
 
-  test('a user re-orders their lists', async ({ page }) => {
+  test.skip('a user re-orders their lists', async ({ page }) => {
     await page.goto('/lists');
 
     for (const title of ['Groceries', 'Reading']) {
@@ -46,7 +46,7 @@ test.describe.skip('lists', () => {
     await expect(names).toHaveText(['Tasks', 'Reading', 'Groceries']);
   });
 
-  test('a user cannot move the first list any higher or the last list any lower', async ({ page }) => {
+  test.skip('a user cannot move the first list any higher or the last list any lower', async ({ page }) => {
     await page.goto('/lists');
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
@@ -56,7 +56,7 @@ test.describe.skip('lists', () => {
     await expect(page.getByRole('button', { name: 'Move Groceries down' })).toBeDisabled();
   });
 
-  test('a user creates a task while a specific list is open and the task lands in that list', async ({ page }) => {
+  test.skip('a user creates a task while a specific list is open and the task lands in that list', async ({ page }) => {
     await page.goto('/lists');
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
