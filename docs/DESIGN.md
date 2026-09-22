@@ -237,10 +237,18 @@ The 2026-08-14 revision required every theme to clear AA for `--text-primary` an
 **Increased Contrast is a small override, not a second palette.** Measuring every token showed only four need to move; the rest already clear their bar.
 
 ```css
-:root[data-contrast='increased'] {
+:root[data-theme='light'][data-contrast='increased'] {
   --text-secondary: #6d6d72; /* 5.1:1  was 3.3:1 */
   --text-tertiary: #8e8e93; /* 3.3:1  was 1.7:1 — non-text bar is 3:1 */
   --accent: #0069e0; /* 5.1:1  was 3.9:1 — clears AA as link text */
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-contrast='increased']:not([data-theme='dark']) {
+    --text-secondary: #6d6d72;
+    --text-tertiary: #8e8e93;
+    --accent: #0069e0;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
