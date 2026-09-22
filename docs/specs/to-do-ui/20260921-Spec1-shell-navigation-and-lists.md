@@ -371,7 +371,7 @@ are numbered globally across the initiative; `to-do-ui` starts at 1.
 ### DevTask 1: Land the production token sheet, glyph set, and URL-backed destinations
 
 **Files:** 6 production
-**Branch:** `feat/to-do-ui-s1-dt1-tokens-and-glyphs`
+**Branch:** `feat/to-do-ui-s1-dt1-foundation`
 **PR:** _filled once opened_
 
 **Affected:**
@@ -497,14 +497,14 @@ describe('tokens.css', () => {
       `pnpm --filter @psykl/web-client test:unit tokens`
       Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 git add components/web_client/src/styles components/web_client/src/main.tsx
 git commit -m "feat: land the production token sheet with both contrast levels"
 ```
 
-- [ ] **Step 6: Write the failing `useDestination` test.** Create
+- [x] **Step 6: Write the failing `useDestination` test.** Create
       `src/hooks/__tests__/useDestination.unit.test.ts`.
 
 ```ts
@@ -536,11 +536,11 @@ describe('useDestination', () => {
 });
 ```
 
-- [ ] **Step 7: Run it and watch it fail.** Run:
+- [x] **Step 7: Run it and watch it fail.** Run:
       `pnpm --filter @psykl/web-client test:unit useDestination`
       Expected: FAIL — cannot resolve `../useDestination`.
 
-- [ ] **Step 8: Implement `src/hooks/useDestination.ts`.**
+- [x] **Step 8: Implement `src/hooks/useDestination.ts`.**
 
 ```ts
 import { navigate, usePathname } from './usePathname';
@@ -580,11 +580,11 @@ function useDestination(): { destination: Destination; goTo: (next: Destination)
 export { type Destination, destinationForPath, pathForDestination, useDestination };
 ```
 
-- [ ] **Step 9: Run the test and watch it pass.** Run:
+- [x] **Step 9: Run the test and watch it pass.** Run:
       `pnpm --filter @psykl/web-client test:unit useDestination`
       Expected: PASS, 3 tests.
 
-- [ ] **Step 10: Port the glyph set.** Create `src/components/AppShell/Glyphs/Glyphs.tsx`,
+- [x] **Step 10: Port the glyph set.** Create `src/components/AppShell/Glyphs/Glyphs.tsx`,
       `glyphs.css` and `index.ts` from `src/experiment/apple-reminders-ux/glyphs.tsx` and the
       `.reminders-glyph` rules in `src/experiment/apple-reminders-ux/tokens.css:37-72`. Rename the class
       prefix to `psykl-glyph`, and swap `--r-tint` → `--accent`, `--r-on-tint` → `--text-on-accent`,
@@ -592,11 +592,11 @@ export { type Destination, destinationForPath, pathForDestination, useDestinatio
       `--icon-glyph`. Keep the utility-destination rule: Recently Deleted and Settings take
       `--text-secondary` as their tile fill so the lists read as the primary destinations.
 
-- [ ] **Step 11: Verify static analysis.** Run:
+- [x] **Step 11: Verify static analysis.** Run:
       `pnpm --filter @psykl/web-client lint && pnpm --filter @psykl/web-client typecheck && pnpm --filter @psykl/web-client format:check`
       Expected: all three pass.
 
-- [ ] **Step 12: Commit.**
+- [x] **Step 12: Commit.**
 
 ```bash
 git add components/web_client/src/hooks components/web_client/src/components/AppShell
