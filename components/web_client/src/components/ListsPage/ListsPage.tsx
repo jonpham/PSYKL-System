@@ -23,7 +23,12 @@ export function ListsPage({ creating = false, onCreated, onSelectList }: ListsPa
       direction === -1
         ? [lists[index - 2] ?? null, lists[index - 1] ?? null]
         : [lists[index + 1] ?? null, lists[index + 2] ?? null];
-    void moveList(target.id, before, after);
+    // Not `void`: a discarded rejection is an arrow that does nothing and says
+    // nothing. Re-ordering heals a position collision rather than failing, so
+    // anything left is a genuine fault and belongs somewhere a reader can find.
+    moveList(target.id, before, after).catch((error: unknown) => {
+      console.error('Could not re-order the lists', error);
+    });
   }
 
   return (
