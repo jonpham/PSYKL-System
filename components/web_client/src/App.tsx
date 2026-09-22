@@ -8,6 +8,7 @@ import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
 import { Settings } from './components/Settings';
 import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
+import { SyncView } from './components/SyncView';
 import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
 import { VersionFooter } from './components/VersionFooter';
@@ -16,6 +17,7 @@ import { useCompletedVisibility } from './hooks/useCompletedVisibility';
 import { useDestination } from './hooks/useDestination';
 import { useLists } from './hooks/useLists';
 import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
+import { useSyncRecords } from './hooks/useSyncRecords';
 
 export default function App() {
   const { canDelete, deleteList, lists } = useLists();
@@ -25,6 +27,7 @@ export default function App() {
   const failedCount = useFailedSyncCount();
   const { setShowCompleted, showCompleted } = useCompletedVisibility();
   const [completedCount, setCompletedCount] = useState(0);
+  const syncRecords = useSyncRecords();
   const [creatingList, setCreatingList] = useState(false);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
@@ -91,6 +94,7 @@ export default function App() {
       <RecentlyDeleted onClose={() => goTo('list')} open={destination === 'recently-deleted'} />
       <Settings onClose={() => goTo('list')} open={destination === 'settings'} />
       <OutOfSyncBanner />
+      {destination === 'sync' ? <SyncView failed={syncRecords.failed} queued={syncRecords.queued} /> : null}
       {destination === 'lists' ? (
         <ListsPage
           creating={creatingList}
