@@ -1,0 +1,91 @@
+:root {
+  --bg-app: #fff;
+  --bg-grouped: #f2f2f7;
+  --bg-elevated: #fff;
+  --bg-pressed: #d1d1d6;
+  --bg-selected: #e5e5ea;
+
+  --text-primary: #000;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #c7c7cc;
+  --text-on-accent: #fff;
+
+  --separator: #c6c6c8;
+
+  --accent: #007aff;
+  --accent-session: #d8410a;
+  --status-warn: #fc0;
+  --status-good: #34c759;
+  --destructive: #ff3b30;
+  --focus-ring: #007aff;
+
+  --font-ui: -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', roboto, sans-serif;
+  --font-numeric: ui-monospace, sfmono-regular, menlo, monospace;
+  --radius-control: 10px;
+  --radius-field: 6px;
+  --icon-tile: 2.5rem;
+  --icon-glyph: 1.25rem;
+  --gutter: 1rem;
+  --row-min: 44px;
+  --content-max: 680px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-app: #000;
+    --bg-grouped: #1c1c1e;
+    --bg-elevated: #1c1c1e;
+    --bg-pressed: #2c2c2e;
+    --bg-selected: #2c2c2e;
+
+    --text-primary: #fff;
+    --text-secondary: #98989f;
+    --text-tertiary: #48484a;
+
+    --separator: #38383a;
+
+    --accent: #0a84ff;
+    --accent-session: #ff6a1f;
+    --status-warn: #ffd60a;
+    --status-good: #30d158;
+    --destructive: #ff453a;
+    --focus-ring: #0a84ff;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg-app: #000;
+  --bg-grouped: #1c1c1e;
+  --bg-elevated: #1c1c1e;
+  --bg-pressed: #2c2c2e;
+  --bg-selected: #2c2c2e;
+
+  --text-primary: #fff;
+  --text-secondary: #98989f;
+  --text-tertiary: #48484a;
+
+  --separator: #38383a;
+
+  --accent: #0a84ff;
+  --accent-session: #ff6a1f;
+  --status-warn: #ffd60a;
+  --status-good: #30d158;
+  --destructive: #ff453a;
+  --focus-ring: #0a84ff;
+}
+
+:root[data-contrast='increased'] {
+  --text-secondary: #6d6d72;
+  --text-tertiary: #8e8e93;
+  --accent: #0069e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='increased']:not([data-theme='light']) {
+    --text-tertiary: #6e6e73;
+  }
+}
+
+:root[data-theme='dark'][data-contrast='increased'] {
+  --text-tertiary: #6e6e73;
+}

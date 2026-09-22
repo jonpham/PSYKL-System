@@ -404,7 +404,7 @@ export function destinationForPath(pathname: string): Destination;
 
 **Steps:**
 
-- [ ] **Step 1: Write the failing token-sheet guard test.** Create
+- [x] **Step 1: Write the failing token-sheet guard test.** Create
       `src/styles/__tests__/tokens.unit.test.ts`. It reads `src/styles/tokens.css` as text (via
       `readFileSync`) and asserts the rule that was earned in review round 1 — five tokens were silently
       orphaned inside `prefers-reduced-motion` and the 16px gutter, 44px row floor and 680px column were
@@ -481,11 +481,11 @@ describe('tokens.css', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail.** Run:
+- [x] **Step 2: Run it and watch it fail.** Run:
       `pnpm --filter @psykl/web-client test:unit tokens`
       Expected: FAIL — `ENOENT: no such file or directory … src/styles/tokens.css`.
 
-- [ ] **Step 3: Write `src/styles/tokens.css`.** Use the Token mapping table above for the ported
+- [x] **Step 3: Write `src/styles/tokens.css`.** Use the Token mapping table above for the ported
       values and the four added tokens. Structure, in this order: a bare `:root { … }` block carrying
       **every** token at its light value; then `@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { … } }`
       redefining only the dark values; then `:root[data-theme='dark'] { … }` repeating them so an explicit
@@ -493,7 +493,7 @@ describe('tokens.css', () => {
       from `docs/DESIGN.md` → Contrast — Standard and Increased. Add
       `import './styles/tokens.css';` at the top of `src/main.tsx`.
 
-- [ ] **Step 4: Run the test and watch it pass.** Run:
+- [x] **Step 4: Run the test and watch it pass.** Run:
       `pnpm --filter @psykl/web-client test:unit tokens`
       Expected: PASS, 3 tests.
 
