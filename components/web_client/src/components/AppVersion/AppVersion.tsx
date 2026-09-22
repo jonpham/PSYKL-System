@@ -12,22 +12,25 @@ interface AppVersionProps {
   updateOptions?: UseAppUpdateOptions;
 }
 
-const statusLabels: Record<AppUpdateStatus, string> = {
-  checking: 'Checking for updates…',
-  failed: "Couldn't check for updates",
-  'up-to-date': 'Up to date',
-  'update-available': 'A new version is available',
+const buttonLabels: Record<AppUpdateStatus, string> = {
+  checking: 'Checking…',
+  failed: 'Check for updates',
+  'up-to-date': 'Check for updates',
+  'update-available': 'Update to Latest',
   updating: 'Updating…',
 };
 
+const timestamp = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
 /**
- * Settings → About → Version. Shows the web bundle the user is running against
- * the one the origin is serving, and offers the one-press update that swaps
- * them without reinstalling the PWA. The service-task build commit stays as a
- * provenance detail below.
+ * Settings → About. Shows the web bundle the user is running and, when the
+ * origin is serving a newer one, the one-press update that swaps them without
+ * reinstalling the PWA. The checking and updating work lives in `useAppUpdate`.
  */
 export function AppVersion({ updateOptions }: AppVersionProps = {}) {
-  const { applyUpdate, availableCommit, currentCommit, recheck, status } = useAppUpdate(updateOptions ?? {});
+  const { applyUpdate, availableCommit, currentCommit, lastCheckedAt, recheck, status } = useAppUpdate(
+    updateOptions ?? {},
+  );
   const [api, setApi] = useState<ApiState>({ status: 'loading' });
 
   useEffect(() => {
@@ -44,47 +47,43 @@ export function AppVersion({ updateOptions }: AppVersionProps = {}) {
     };
   }, []);
 
-  const availableLabel =
-    status === 'checking' ? 'checking…' : availableCommit === null ? 'unavailable' : shortCommit(availableCommit);
+  // An available version only says something when it differs from the loaded
+  // one; otherwise the row is noise and the check button carries the meaning.
+  const updatePending = status === 'update-available' || status === 'updating';
+  const busy = status === 'checking' || status === 'updating';
   const apiLabel = api.status === 'loading' ? '…' : api.status === 'error' ? 'unavailable' : shortCommit(api.commit);
 
   return (
     <section className="app-version">
-      <h4>Version</h4>
-
       <dl className="app-version__rows">
         <div className="app-version__row">
-          <dt>Current</dt>
+          <dt>Current Version:</dt>
           <dd aria-label="current web version" title={`web_client build commit: ${currentCommit}`}>
             <code>{shortCommit(currentCommit)}</code>
           </dd>
         </div>
-        <div className="app-version__row">
-          <dt>Available</dt>
-          <dd
-            aria-label="available web version"
-            title={availableCommit ? `deployed build commit: ${availableCommit}` : undefined}
-          >
-            <code>{availableLabel}</code>
-          </dd>
-        </div>
+        {updatePending && availableCommit ? (
+          <div className="app-version__row">
+            <dt>Available:</dt>
+            <dd aria-label="available web version" title={`deployed build commit: ${availableCommit}`}>
+              <code>{shortCommit(availableCommit)}</code>
+            </dd>
+          </div>
+        ) : null}
       </dl>
 
+      <button
+        className={updatePending ? 'app-version__button app-version__button--update' : 'app-version__button'}
+        disabled={busy}
+        onClick={status === 'update-available' ? applyUpdate : recheck}
+        type="button"
+      >
+        {buttonLabels[status]}
+      </button>
+
       <p className="app-version__status" role="status">
-        {statusLabels[status]}
+        {statusText(status, lastCheckedAt)}
       </p>
-
-      {status === 'update-available' || status === 'updating' ? (
-        <button className="app-version__update" disabled={status === 'updating'} onClick={applyUpdate} type="button">
-          {status === 'updating' ? 'Updating…' : 'Update to latest version'}
-        </button>
-      ) : null}
-
-      {status === 'failed' ? (
-        <button className="app-version__retry" onClick={recheck} type="button">
-          Try again
-        </button>
-      ) : null}
 
       <p className="app-version__detail">
         <span
@@ -96,4 +95,19 @@ export function AppVersion({ updateOptions }: AppVersionProps = {}) {
       </p>
     </section>
   );
+}
+
+function statusText(status: AppUpdateStatus, lastCheckedAt: Date | null): string {
+  switch (status) {
+    case 'checking':
+      return 'Checking for updates…';
+    case 'failed':
+      return "Couldn't check for updates";
+    case 'update-available':
+      return 'A new version is available';
+    case 'updating':
+      return 'Updating…';
+    case 'up-to-date':
+      return lastCheckedAt ? `Last checked: ${timestamp.format(lastCheckedAt)}` : 'Up to date';
+  }
 }

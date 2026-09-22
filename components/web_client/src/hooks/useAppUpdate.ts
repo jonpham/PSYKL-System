@@ -18,6 +18,8 @@ interface AppUpdate {
   applyUpdate: () => void;
   availableCommit: string | null;
   currentCommit: string;
+  /** When the last successful check completed — the "Last checked" stamp. */
+  lastCheckedAt: Date | null;
   recheck: () => void;
   status: AppUpdateStatus;
 }
@@ -39,6 +41,7 @@ function useAppUpdate(options: UseAppUpdateOptions = {}): AppUpdate {
   const currentCommit = getWebCommit();
   const [status, setStatus] = useState<AppUpdateStatus>('checking');
   const [availableCommit, setAvailableCommit] = useState<string | null>(null);
+  const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -63,6 +66,7 @@ function useAppUpdate(options: UseAppUpdateOptions = {}): AppUpdate {
       const commit = await fetchAvailableWebVersion();
       if (!mounted.current) return;
       setAvailableCommit(commit);
+      setLastCheckedAt(new Date());
       setStatus(commit === currentCommit ? 'up-to-date' : 'update-available');
     } catch {
       if (!mounted.current) return;
@@ -106,6 +110,7 @@ function useAppUpdate(options: UseAppUpdateOptions = {}): AppUpdate {
     applyUpdate,
     availableCommit,
     currentCommit,
+    lastCheckedAt,
     recheck: () => void check(),
     status,
   };
