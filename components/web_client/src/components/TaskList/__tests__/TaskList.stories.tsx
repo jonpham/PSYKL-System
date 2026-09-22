@@ -6,6 +6,7 @@ import type { Task } from '../../../api/client';
 import App from '../../../App';
 import { enqueueSyncOp, listSyncQueue, putTask } from '../../../db/idb';
 import { handlers as defaultHandlers } from '../../../test/msw-handlers';
+import { listHandlers } from '../../../test/msw-handlers.lists';
 import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {
@@ -59,7 +60,7 @@ export const Loading: Story = {
 export const ErrorState: Story = {
   parameters: {
     msw: {
-      handlers: [http.get('*/tasks', () => HttpResponse.error())],
+      handlers: [http.get('*/tasks', () => HttpResponse.error()), ...listHandlers],
     },
   },
   render: () => <App />,
@@ -69,7 +70,7 @@ export const ErrorState: Story = {
 export const WithTasks: Story = {
   parameters: {
     msw: {
-      handlers: [http.get('*/tasks', () => HttpResponse.json(sampleTasks))],
+      handlers: [http.get('*/tasks', () => HttpResponse.json(sampleTasks)), ...listHandlers],
     },
   },
   render: () => <App />,
@@ -131,7 +132,7 @@ export const IntegratedWithCreateForm: Story = {
 export const AppLoadError: Story = {
   parameters: {
     msw: {
-      handlers: [http.get('*/tasks', () => HttpResponse.error())],
+      handlers: [http.get('*/tasks', () => HttpResponse.error()), ...listHandlers],
     },
   },
   render: () => <App />,

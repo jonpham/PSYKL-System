@@ -1,8 +1,9 @@
 import type { Preview } from '@storybook/react';
 import { configure } from '@storybook/test';
-import { deleteDB } from 'idb';
 import { initialize, mswLoader } from 'msw-storybook-addon';
 
+import { openPsyklDb } from '../src/db/idb';
+import { resetUseListsForTest } from '../src/hooks/useLists';
 import { resetUseTasksForTest } from '../src/hooks/useTasks';
 import { handlers, resetStore } from '../src/test/msw-handlers';
 
@@ -26,6 +27,24 @@ initialize({
 // patching an explicit timeout into every individual assertion.
 configure({ asyncUtilTimeout: 5000 });
 
+/**
+ * Empties every object store rather than deleting the database.
+ *
+ * `deleteDB` is blocked for as long as any other connection is open, and a
+ * background replay from the story before can still be holding one — the
+ * delete then never lands, the next story inherits that story's rows, and a
+ * story that asserts on empty local state (AppLoadError) fails. Clearing
+ * through a connection of our own cannot be blocked.
+ */
+async function clearLocalDatabase(): Promise<void> {
+  const database = await openPsyklDb();
+  try {
+    await Promise.all([...database.objectStoreNames].map((store) => database.clear(store)));
+  } finally {
+    database.close();
+  }
+}
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -45,7 +64,8 @@ const preview: Preview = {
       // are deterministic, mirroring the Vitest `beforeEach(resetStore)` setup.
       resetStore();
       resetUseTasksForTest();
-      await deleteDB('psykl');
+      resetUseListsForTest();
+      await clearLocalDatabase();
       return {};
     },
     mswLoader,
