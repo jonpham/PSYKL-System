@@ -9,3 +9,22 @@
 .psykl-task-list .psykl-task-row:last-child {
   border-bottom: 0;
 }
+
+.psykl-task-list__capture {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 17px;
+  gap: 0.5rem;
+  min-height: var(--row-min);
+  padding: 0;
+}
+
+.psykl-task-list__capture:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

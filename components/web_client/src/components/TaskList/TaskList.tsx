@@ -1,16 +1,19 @@
 import './task-list.css';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import { useTasks } from '../../hooks/useTasks';
 import { taskServiceClient } from '../../services/task-service-client';
+import { PlusGlyph } from '../AppShell/Glyphs';
+import { CaptureRow } from './CaptureRow';
 import { EmptyState } from './EmptyState';
 import { sortTasks } from './sortTasks';
 import { TaskListSkeleton } from './TaskListSkeleton';
 import { TaskRow } from './TaskRow';
 
 export function TaskList() {
-  const { error, loading, tasks } = useTasks();
+  const { createTask, error, loading, tasks } = useTasks();
+  const [capturing, setCapturing] = useState(false);
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -51,15 +54,44 @@ export function TaskList() {
     return <p role="alert">{error}</p>;
   }
 
-  if (tasks.length === 0) {
-    return <EmptyState />;
-  }
+  const captureRow = (
+    <CaptureRow
+      onCancel={() => setCapturing(false)}
+      onCreate={async (title) => {
+        await createTask(title);
+      }}
+    />
+  );
+
+  // Capture belongs at the end of the open tasks, not the end of the list — a
+  // new task should never appear beneath the completed ones.
+  const openCount = ordered.filter((task) => task.completed_at === null).length;
 
   return (
-    <ul className="psykl-task-list">
-      {ordered.map((task) => (
-        <TaskRow isPending={pendingTaskIds.has(task.id)} key={task.id} task={task} />
-      ))}
-    </ul>
+    <>
+      {tasks.length === 0 && !capturing ? (
+        <EmptyState />
+      ) : (
+        <ul className="psykl-task-list">
+          {ordered.map((task, index) => (
+            <Fragment key={task.id}>
+              <TaskRow isPending={pendingTaskIds.has(task.id)} task={task} />
+              {capturing && index + 1 === openCount ? captureRow : null}
+            </Fragment>
+          ))}
+          {capturing && openCount === 0 ? captureRow : null}
+        </ul>
+      )}
+
+      <button
+        aria-label="New Task"
+        className="psykl-task-list__capture"
+        onClick={() => setCapturing(true)}
+        type="button"
+      >
+        <PlusGlyph />
+        New Task
+      </button>
+    </>
   );
 }
