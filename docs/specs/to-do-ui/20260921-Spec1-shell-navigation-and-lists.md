@@ -267,28 +267,49 @@ None — `web_client` has no service-level concerns at this layer.
 
 ### End-to-End tests
 
-**New**, titled as user stories:
+Written on the Spec branch ahead of DevTask 1 and titled as user stories. Collapsed to their titles,
+these are the plain-language record of what the shell lets a user do.
 
-| File                         | Title                                                            | Activated in |
-| ---------------------------- | ---------------------------------------------------------------- | ------------ |
-| `e2e/navigation.e2e.spec.ts` | a user opens the navigation and switches between lists           | DevTask 2    |
-| `e2e/navigation.e2e.spec.ts` | a user reaches Recently Deleted and Settings from the navigation | DevTask 3    |
-| `e2e/navigation.e2e.spec.ts` | a user returns to their list with the browser back button        | DevTask 3    |
-| `e2e/lists.e2e.spec.ts`      | a user creates a list and it appears in the navigation           | DevTask 4    |
-| `e2e/lists.e2e.spec.ts`      | a user re-orders their lists                                     | DevTask 4    |
+| File                         | Title                                                                          | Activated in |
+| ---------------------------- | ------------------------------------------------------------------------------ | ------------ |
+| `e2e/navigation.e2e.spec.ts` | a user opens the navigation and sees every place they can go                   | DevTask 2    |
+| `e2e/navigation.e2e.spec.ts` | a user folds their lists away to see the rest of the navigation                | DevTask 2    |
+| `e2e/navigation.e2e.spec.ts` | a user dismisses the navigation with the keyboard and lands back on their list | DevTask 2    |
+| `e2e/navigation.e2e.spec.ts` | a user reaches Recently Deleted and Settings from the navigation               | DevTask 3    |
+| `e2e/navigation.e2e.spec.ts` | a user returns to their list with the browser back button                      | DevTask 3    |
+| `e2e/navigation.e2e.spec.ts` | a user opens a destination directly from a pasted link                         | DevTask 3    |
+| `e2e/navigation.e2e.spec.ts` | a user sees at a glance whether their changes have synced                      | DevTask 3    |
+| `e2e/navigation.e2e.spec.ts` | a user switches between their lists from the navigation                        | DevTask 4    |
+| `e2e/lists.e2e.spec.ts`      | a user creates a list and it appears in the navigation                         | DevTask 4    |
+| `e2e/lists.e2e.spec.ts`      | a user abandons a half-typed list name and no list is created                  | DevTask 4    |
+| `e2e/lists.e2e.spec.ts`      | a user re-orders their lists                                                   | DevTask 4    |
+| `e2e/lists.e2e.spec.ts`      | a user cannot move the first list any higher or the last list any lower        | DevTask 4    |
+
+**Switching lists is a DevTask 4 story, not DevTask 2.** With only the bootstrap `Tasks` list there is
+nothing to switch _to_; the story needs list creation, which lands with the Lists page.
 
 **Existing E2E specs this Spec must update.** Audited against the chrome being replaced:
 
-| File                                     | What breaks                                                                                                             | Updated in                          |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `e2e/lists.e2e.spec.ts`                  | all three tests drive `Open list switcher` (`lists.e2e.spec.ts:6,17,23`)                                                | DevTask 2 (nav), DevTask 4 (create) |
-| `e2e/task_list.e2e.spec.ts`              | `getByRole('heading', { name: 'PSYKL' })` (`task_list.e2e.spec.ts:22`) — PSYKL becomes a header button                  | DevTask 2                           |
-| `e2e/recently_deleted.e2e.spec.ts`       | `Recently Deleted` and `Close` buttons (`recently_deleted.e2e.spec.ts:14,21`) become a drawer destination               | DevTask 3                           |
-| `e2e/offline_pressure.e2e.spec.ts`       | audited — drives `getByLabel('title')` (`TaskCreateForm`, Spec 3) and the banner (Spec 5). **Unaffected by this Spec.** | n/a                                 |
-| `e2e/task_list-offline-sync.e2e.spec.ts` | audited — drives task rows and the pending dot (Spec 2) via `helpers/multi-device`. **Unaffected by this Spec.**        | n/a                                 |
+| File                                     | What breaks                                                                                                             | Rewritten                      | Activated in            |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----------------------- |
+| `e2e/lists.e2e.spec.ts`                  | all three tests drive `Open list switcher`                                                                              | on the Spec branch, skipped    | DevTask 2 and DevTask 4 |
+| `e2e/recently_deleted.e2e.spec.ts`       | `Recently Deleted` and `Close` buttons become a drawer destination and a back navigation                                | on the Spec branch, skipped    | DevTask 3 (see caveat)  |
+| `e2e/task_list.e2e.spec.ts`              | one line — `getByRole('heading', { name: 'PSYKL' })` at `:22`; PSYKL becomes a header button                            | **left green, changed in DT2** | DevTask 2               |
+| `e2e/offline_pressure.e2e.spec.ts`       | audited — drives `getByLabel('title')` (`TaskCreateForm`, Spec 3) and the banner (Spec 5). **Unaffected by this Spec.** | not touched                    | n/a                     |
+| `e2e/task_list-offline-sync.e2e.spec.ts` | audited — drives task rows and the pending dot (Spec 2) via `helpers/multi-device`. **Unaffected by this Spec.**        | not touched                    | n/a                     |
 
-**A slice that leaves one red or skipped has not landed.** Every spec above is green by the end of
-the DevTask named in its row.
+**Why `task_list.e2e.spec.ts` is treated differently.** It is the only affected file where the change
+is a single selector rather than a change in the user's journey. Rewriting it up front would skip five
+currently-green tests covering task create, edit, complete and delete in order to review one line that
+carries no UX decision. DevTask 2 changes that line in place.
+
+**Caveat on `recently_deleted.e2e.spec.ts`.** Its second test — _a user restores a deleted list and its
+tasks come back_ — drives the list options menu, which is Spec 4's work (drafting decision C). It stays
+individually `test.skip`ped when DevTask 3 activates the rest of the file, and **`to-do-ui` Spec 4
+un-skips it.** This is the one test this Spec knowingly leaves skipped past its own close-out.
+
+**Otherwise: a slice that leaves one red or skipped has not landed.** Every other row above is green by
+the end of the DevTask named in it.
 
 ### TDD order during implementation
 
