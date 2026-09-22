@@ -59,6 +59,16 @@ test.describe('list options', () => {
     await page.getByRole('menuitem', { name: 'Delete List' }).click();
     await page.getByRole('menuitem', { name: 'Delete List?' }).click();
 
+    // Wait for the queued delete to reach the service before a new page load
+    // hydrates its list snapshot from the server.
+    await expect
+      .poll(async () => {
+        const response = await fetch('http://localhost:3000/lists', { headers: { 'X-User-Id': 'local' } });
+        expect(response.ok).toBe(true);
+        const lists = (await response.json()) as Array<{ title: string }>;
+        return lists.some((list) => list.title === 'Errands');
+      })
+      .toBe(false);
     await page.goto('/lists');
     await expect(page.getByRole('button', { name: 'Errands', exact: true })).toHaveCount(0);
   });

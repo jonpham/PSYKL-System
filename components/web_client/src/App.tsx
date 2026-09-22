@@ -9,7 +9,6 @@ import { SettingsView } from './components/SettingsView';
 import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
 import { SyncView } from './components/SyncView';
 import { TaskList } from './components/TaskList';
-import { VersionFooter } from './components/VersionFooter';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
 import { useCompletedVisibility } from './hooks/useCompletedVisibility';
 import { useDestination } from './hooks/useDestination';
@@ -113,7 +112,6 @@ export default function App() {
           <TaskList onCompletedCountChange={setCompletedCount} />
         </section>
       ) : null}
-      <VersionFooter />
     </AppShell>
   );
 }

@@ -88,7 +88,7 @@ export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
   const openCount = ordered.filter((task) => task.completed_at === null).length;
 
   return (
-    <>
+    <div className="psykl-task-list__body">
       {tasks.length === 0 && !capturing ? (
         <EmptyState />
       ) : (
@@ -103,16 +103,17 @@ export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
         </ul>
       )}
 
-      <button
-        aria-label={atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
-        className="psykl-task-list__capture"
-        disabled={atCeiling}
-        onClick={() => setCapturing(true)}
-        type="button"
-      >
-        <PlusGlyph />
-        {atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
-      </button>
-    </>
+      <div className="psykl-task-list__capture-bar">
+        <button
+          aria-label={atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
+          className="psykl-task-list__capture"
+          disabled={atCeiling}
+          onClick={() => setCapturing(true)}
+          type="button"
+        >
+          <PlusGlyph />
+        </button>
+      </div>
+    </div>
   );
 }

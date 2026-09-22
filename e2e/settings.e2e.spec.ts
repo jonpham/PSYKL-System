@@ -6,6 +6,16 @@ import { expect, test } from './helpers/isolated-test';
 test.describe('settings', () => {
   test.use({ viewport: { height: 844, width: 390 } });
 
+  test('a user finds version information only in Settings', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByLabel('web client commit')).toHaveCount(0);
+    await page.goto('/settings');
+    await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Version' })).toBeVisible();
+    await expect(page.getByLabel('web client commit')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+
   test('a user switches appearance and it survives a reload', async ({ page }) => {
     await page.goto('/settings');
 

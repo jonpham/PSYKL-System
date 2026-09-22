@@ -122,43 +122,6 @@ export const CompleteEnqueuesPatch: Story = {
 };
 
 /**
- * Component-layer proof that the two-click delete confirmation enqueues a
- * `delete` op and optimistically removes the row (the `useTasks` snapshot
- * filters tombstoned tasks). `DELETE` returns 500 so the op stays queued.
- */
-export const DeleteEnqueuesDelete: Story = {
-  parameters: {
-    msw: { handlers: [...appHandlers, http.delete('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
-  },
-  render: () => <App />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    // Arrange
-    await canvas.findByRole('button', { name: /^delete seed task/i });
-
-    // Act
-    await userEvent.click(canvas.getByRole('button', { name: /^delete seed task/i }));
-    // findByRole (not getByRole): the first click arms the confirm state, so wait
-    // for the re-rendered "Confirm delete" label rather than racing the render.
-    await userEvent.click(await canvas.findByRole('button', { name: /confirm delete seed task/i }));
-
-    // Assert — `App` also mounts the lists hook, which enqueues the default
-    // list's own create op on first run, so filter to this task's entry.
-    // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
-    // this play() to wait for the fire-and-forget replay to settle before
-    // the next story's `deleteDB` reset runs.
-    await waitFor(async () => {
-      const queue = (await listSyncQueue()).filter((entry) => entry.entity_id === seedTask.id);
-      expect(queue).toHaveLength(1);
-      expect(queue[0]).toMatchObject({ entity_id: seedTask.id, entity_type: 'task', op: 'delete' });
-      expect((queue[0]?.body as { deleted_at?: string }).deleted_at).toEqual(expect.any(String));
-      expect(queue[0]?.attempts).toBeGreaterThan(0);
-    });
-    await waitFor(() => expect(canvas.queryByText('seed task')).not.toBeInTheDocument());
-  },
-};
-
-/**
  * Stale-write reconciliation: the user edits a task locally (optimistic), but
  * the server responds with a newer row. On successful replay the sync engine
  * overwrites the local edit with the server row (last-write-wins), and the

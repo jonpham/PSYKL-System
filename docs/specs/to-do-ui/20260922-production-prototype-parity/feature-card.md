@@ -36,4 +36,4 @@ green with the task-delete affordance removed.
 
 ## Verdict
 
-Filled at close-out.
+Implemented on `feat/122-production-prototype-v0.5-parity`. The acceptance checks are covered by browser checks and phone/desktop screenshots in `screenshots/`. Ready for PR review; merge remains operator-gated.

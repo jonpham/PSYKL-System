@@ -75,7 +75,11 @@ body:has(.psykl-app-shell) {
   /* title | sync control | list options — the task rows' pending dots line up
    * under the sync column. */
   grid-template-columns: minmax(0, 1fr) auto auto;
+  column-gap: 0;
   margin-bottom: 0.25rem;
+}
+.psykl-app-shell__content-header[data-destination='list'] {
+  grid-template-columns: minmax(0, 1fr) var(--icon-tile) calc(var(--icon-tile) + 0.5rem);
 }
 .psykl-app-shell__content-header h2 {
   color: var(--accent);
@@ -86,12 +90,26 @@ body:has(.psykl-app-shell) {
   margin: 0.25rem 0 0.75rem;
 }
 .psykl-app-shell__header-action {
-  background: transparent;
+  align-items: center;
+  background: var(--bg-grouped);
   border: 0;
+  border-radius: 50%;
   color: var(--accent);
   cursor: pointer;
-  font: inherit;
-  padding: 0.5rem;
+  display: flex;
+  grid-column: 3;
+  height: var(--icon-tile);
+  justify-content: center;
+  justify-self: end;
+  padding: 0;
+  width: var(--icon-tile);
+}
+.psykl-app-shell__header-action:active {
+  background: var(--bg-pressed);
+}
+.psykl-app-shell__header-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 @container psykl-shell (min-width: 768px) {
   .psykl-app-shell__layout {
