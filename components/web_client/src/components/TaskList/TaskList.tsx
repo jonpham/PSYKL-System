@@ -2,6 +2,7 @@ import './task-list.css';
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
 
+import { useCompletedVisibility } from '../../hooks/useCompletedVisibility';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { useTasks } from '../../hooks/useTasks';
 import { taskServiceClient } from '../../services/task-service-client';
@@ -18,6 +19,7 @@ export function TaskList() {
   // Past the offline write ceiling the device stops accepting new work rather
   // than piling up changes it may never be able to send.
   const atCeiling = useSyncDiscrepancy().level === 'ceiling';
+  const { showCompleted } = useCompletedVisibility();
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -46,7 +48,10 @@ export function TaskList() {
     };
   }, [tasks]);
 
-  const ordered = useMemo(() => sortTasks(tasks), [tasks]);
+  const ordered = useMemo(
+    () => sortTasks(tasks).filter((task) => showCompleted || task.completed_at === null),
+    [showCompleted, tasks],
+  );
 
   if (loading) {
     return <TaskListSkeleton />;
