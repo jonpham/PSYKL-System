@@ -1,0 +1,62 @@
+.psykl-glyph {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 50%;
+  color: var(--text-on-accent);
+  display: inline-flex;
+  flex: none;
+  height: var(--icon-tile);
+  justify-content: center;
+  width: var(--icon-tile);
+}
+
+.psykl-glyph svg {
+  fill: none;
+  height: var(--icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+  width: var(--icon-glyph);
+}
+
+.psykl-glyph[data-glyph='recently-deleted'],
+.psykl-glyph[data-glyph='settings'] {
+  background: var(--text-secondary);
+}
+
+.psykl-header-glyph {
+  fill: none;
+  flex: none;
+  height: 1.5rem;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2;
+  width: 1.5rem;
+}
+
+.psykl-plus-glyph {
+  fill: none;
+  height: var(--icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2.25;
+  width: var(--icon-glyph);
+}
+
+.psykl-chevron {
+  fill: none;
+  height: var(--icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: transform 150ms ease-in-out;
+  width: var(--icon-glyph);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psykl-chevron {
+    transition: none;
+  }
+}

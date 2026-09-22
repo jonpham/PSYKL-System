@@ -1,5 +1,7 @@
 import { type Browser, expect, type Page } from '@playwright/test';
 
+import { waitForServiceWorkerControl } from './service-worker';
+
 const apiBaseUrl = process.env['E2E_API_URL'] ?? 'http://localhost:3000';
 
 type Device = Awaited<ReturnType<typeof openDevice>>;
@@ -26,7 +28,7 @@ async function openDevice(browser: Browser, userId = uniqueUserId()) {
     });
   });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
   return { context, page, userId };
 }
 
@@ -37,12 +39,21 @@ async function openTwoDevices(browser: Browser, userId = uniqueUserId()) {
 }
 
 async function setOffline(device: Device, offline: boolean): Promise<void> {
+  // Going offline is only safe once the service worker is actually controlling
+  // the page: until then nothing can serve a navigation, and `page.goto` while
+  // offline fails outright with ERR_INTERNET_DISCONNECTED. Registration
+  // finishing is not the same thing as control being taken.
+  if (offline) {
+    await waitForServiceWorkerControl(device.page);
+  }
   await device.context.setOffline(offline);
 }
 
 async function createTask(device: Device, title: string): Promise<void> {
-  await device.page.getByRole('textbox', { name: /^title$/i }).fill(title);
-  await device.page.getByRole('button', { name: /create/i }).click();
+  await device.page.getByRole('button', { name: 'New Task' }).click();
+  await device.page.getByRole('textbox', { name: 'New task title' }).fill(title);
+  await device.page.keyboard.press('Enter');
+  await device.page.keyboard.press('Escape');
 }
 
 async function editTask(device: Device, currentTitle: string, nextTitle: string): Promise<void> {

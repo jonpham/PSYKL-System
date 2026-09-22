@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
 import { listLocalSyncQueue, listLocalTasks, type SyncQueueEntry } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 import {
   createTask,
   deleteTask,
@@ -74,6 +73,9 @@ test.describe('Task list offline sync', () => {
     await expectServerTaskVisible(userId, newerTitle);
     await setOffline(first, false);
     await triggerQueuedReplay(first);
+    // The losing device keeps its own edit on screen until that edit has
+    // actually been sent: an unsent change is not the server's to overwrite.
+    await expect.poll(async () => taskQueueEntries(first)).toEqual([]);
 
     await reloadAndExpectTaskVisible(first, newerTitle);
     await reloadAndExpectTaskVisible(second, newerTitle);

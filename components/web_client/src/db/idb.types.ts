@@ -79,6 +79,7 @@ type PsyklDb = IDBPDatabase<PsyklDbSchema>;
 export type {
   EntityType,
   FailedOpEntry,
+  JsonValue,
   ListRecord,
   PsyklDb,
   PsyklDbSchema,

@@ -1,10 +1,17 @@
-import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
-test.describe.skip('recently deleted', () => {
+import { listLocalSyncQueue } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
+
+test.describe('recently deleted', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
   test('a user sees how many days remain before a deleted task is purged, then restores it', async ({ page }) => {
     await page.goto('/');
-    await page.getByPlaceholder('What needs doing?').fill('Milk');
+    await page.getByRole('button', { name: 'New Task' }).click();
+    await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
     await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
     await page.getByRole('button', { name: 'Delete Milk' }).click();
@@ -29,10 +36,12 @@ test.describe.skip('recently deleted', () => {
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
     await page.keyboard.press('Enter');
-    await page.getByRole('button', { name: 'Groceries' }).click();
+    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
 
-    await page.getByPlaceholder('What needs doing?').fill('Milk');
+    await page.getByRole('button', { name: 'New Task' }).click();
+    await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
     await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
     // Deleting a list takes a second tap rather than a dialog: the delete is
@@ -41,12 +50,20 @@ test.describe.skip('recently deleted', () => {
     await page.getByRole('menuitem', { name: 'Delete List' }).click();
     await page.getByRole('menuitem', { name: 'Delete List?' }).click();
 
+    // Recently Deleted is served by the back end, so the delete has to have
+    // reached it before a full page load can show the list there.
+    await expectSyncQueueEmpty(page);
+
     await page.goto('/recently-deleted');
     await expect(page.getByRole('listitem', { name: 'Groceries' })).toBeVisible();
     await page.getByRole('button', { name: 'Restore Groceries' }).click();
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
-    await page.getByRole('button', { name: 'Groceries' }).click();
+    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
     await expect(page.getByText('Milk')).toBeVisible();
   });
 });
+
+async function expectSyncQueueEmpty(page: Page): Promise<void> {
+  await expect.poll(async () => listLocalSyncQueue({ page }), { timeout: 10_000 }).toEqual([]);
+}

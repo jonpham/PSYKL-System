@@ -35,7 +35,7 @@ class HydrationExhaustedError extends Error {
 // method on the `SyncClient` interface itself.
 const hydrationResets = new WeakMap<object, () => void>();
 
-function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
+function createSyncClient<TEntity extends { id: string }, TInput, TPatchInput, TDeleteInput>(
   config: SyncClientConfig<TEntity>,
 ): SyncClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   // The in-flight/settled promise itself, not a boolean — two `list()` calls
@@ -46,8 +46,16 @@ function createSyncClient<TEntity, TInput, TPatchInput, TDeleteInput>(
   // first attempt with a premature "local is empty" read.
   let hydratePromise: Promise<void> | null = null;
 
+  // A record this device has changed but not yet sent is NOT the server's to
+  // overwrite: absorbing it would silently roll the user's change back, and the
+  // queued op would then replay a change the UI no longer shows. The queue
+  // entry is the authority until it drains.
   async function absorb(records: TEntity[]): Promise<void> {
-    await Promise.all(records.map((record) => config.put(record)));
+    const queue = await listSyncQueue();
+    const pending = new Set(
+      queue.filter((entry) => entry.entity_type === config.entityType).map((entry) => entry.entity_id),
+    );
+    await Promise.all(records.filter((record) => !pending.has(record.id)).map((record) => config.put(record)));
   }
 
   // Attempts a remote refresh at most once per page load — later calls

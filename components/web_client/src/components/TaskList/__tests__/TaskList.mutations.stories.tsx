@@ -5,6 +5,7 @@ import { http, HttpResponse } from 'msw';
 import type { Task } from '../../../api/client';
 import App from '../../../App';
 import { listSyncQueue } from '../../../db/idb';
+import { listHandlers } from '../../../test/msw-handlers.lists';
 import { TaskList } from '../TaskList';
 
 const meta: Meta<typeof TaskList> = {
@@ -34,7 +35,11 @@ const seedTask: Task = {
   list_id: null,
 };
 
+// `<App />` bootstraps this device's default list on first render, so the
+// list routes have to be answered too — a story whose fake back-end omits them
+// leaves that create stuck in the sync queue for the rest of the story.
 const seedListHandler = http.get('*/tasks', () => HttpResponse.json([seedTask]));
+const appHandlers = [seedListHandler, ...listHandlers];
 
 /**
  * Component-layer proof that the inline title edit routes through the sync
@@ -48,7 +53,7 @@ const seedListHandler = http.get('*/tasks', () => HttpResponse.json([seedTask]))
  */
 export const EditTitleEnqueuesPatch: Story = {
   parameters: {
-    msw: { handlers: [seedListHandler, http.patch('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
+    msw: { handlers: [...appHandlers, http.patch('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
   },
   render: () => <App />,
   play: async ({ canvasElement }) => {
@@ -62,7 +67,7 @@ export const EditTitleEnqueuesPatch: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'seed task edited{Enter}');
 
-    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // Assert — `App` also mounts the lists hook, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
     // `attempts > 0` (not just "entry exists"): `enqueueWithReplay`
     // (sync/page-triggers.ts) fires `runReplay()` as fire-and-forget, so the
@@ -89,7 +94,7 @@ export const EditTitleEnqueuesPatch: Story = {
  */
 export const CompleteEnqueuesPatch: Story = {
   parameters: {
-    msw: { handlers: [seedListHandler, http.patch('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
+    msw: { handlers: [...appHandlers, http.patch('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
   },
   render: () => <App />,
   play: async ({ canvasElement }) => {
@@ -100,7 +105,7 @@ export const CompleteEnqueuesPatch: Story = {
     // Act
     await userEvent.click(canvas.getByRole('checkbox', { name: /mark seed task complete/i }));
 
-    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // Assert — `App` also mounts the lists hook, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
     // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
     // this play() to wait for the fire-and-forget replay to settle before
@@ -123,7 +128,7 @@ export const CompleteEnqueuesPatch: Story = {
  */
 export const DeleteEnqueuesDelete: Story = {
   parameters: {
-    msw: { handlers: [seedListHandler, http.delete('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
+    msw: { handlers: [...appHandlers, http.delete('*/tasks/:id', () => new HttpResponse(null, { status: 500 }))] },
   },
   render: () => <App />,
   play: async ({ canvasElement }) => {
@@ -137,7 +142,7 @@ export const DeleteEnqueuesDelete: Story = {
     // for the re-rendered "Confirm delete" label rather than racing the render.
     await userEvent.click(await canvas.findByRole('button', { name: /confirm delete seed task/i }));
 
-    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // Assert — `App` also mounts the lists hook, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
     // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
     // this play() to wait for the fire-and-forget replay to settle before
@@ -166,7 +171,7 @@ export const StaleWriteReconciliation: Story = {
   parameters: {
     msw: {
       handlers: [
-        seedListHandler,
+        ...appHandlers,
         http.patch('*/tasks/:id', () =>
           HttpResponse.json({
             ...seedTask,

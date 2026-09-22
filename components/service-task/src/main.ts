@@ -4,14 +4,11 @@ import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module.js';
 import { UserIdGuard } from './auth/user-id.guard.js';
+import { corsOptions } from './http/cors.options.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-    allowedHeaders: ['Content-Type', 'X-User-Id'],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  });
+  app.enableCors(corsOptions());
   app.useGlobalGuards(new UserIdGuard());
 
   const port = Number(process.env.PORT ?? 3000);

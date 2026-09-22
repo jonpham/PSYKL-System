@@ -1,0 +1,59 @@
+.psykl-capture-row {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  min-height: var(--row-min);
+  position: relative;
+}
+
+.psykl-capture-row::before {
+  background: var(--separator);
+  content: '';
+  height: 1px;
+  left: 2.25rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.psykl-capture-row:first-child::before {
+  display: none;
+}
+
+.psykl-capture-row__bullet {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  height: var(--row-min);
+}
+
+.psykl-capture-row__bullet svg {
+  height: 22px;
+  width: 22px;
+}
+
+.psykl-capture-row__input {
+  background: none;
+  border: 0;
+  box-sizing: border-box;
+  caret-color: var(--accent);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 17px;
+  line-height: 22px;
+  min-height: var(--row-min);
+  padding: 11px 0;
+  width: 100%;
+}
+
+.psykl-capture-row__input:focus {
+  outline: none;
+}
+
+.psykl-capture-row__error {
+  color: var(--destructive);
+  font-size: 13px;
+  grid-column: 2;
+  line-height: 18px;
+  margin: 0 0 0.5rem;
+}

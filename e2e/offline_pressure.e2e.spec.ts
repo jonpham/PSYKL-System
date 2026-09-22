@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
 import { seedSyncQueue } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 import { openDevice, setOffline, triggerQueuedReplay } from './helpers/multi-device';
 
 test.describe('Offline sync pressure', () => {
@@ -20,7 +19,12 @@ test.describe('Offline sync pressure', () => {
     // (useLists.default-list.ts) also enqueues one 'list' create entry on
     // first load, independent of this test's seeded 25 (same caveat as
     // task_list-offline-sync.e2e.spec.ts's taskQueueEntries filter).
-    await expect(device.page.getByText(/\d+ changes waiting to sync\. Reconnect to save them\./)).toBeVisible();
+    // The nag is no longer a banner over the list: the header control carries
+    // the signal, and the Sync destination carries the detail.
+    await expect(device.page.getByRole('button', { name: 'Sync needs attention' })).toBeVisible();
+
+    await device.page.goto('/sync');
+    await expect(device.page.getByRole('region', { name: 'Waiting to sync' })).toBeVisible();
   });
 
   test('a user offline with 100 queued changes cannot add a new task until they reconnect', async ({ browser }) => {
@@ -30,7 +34,7 @@ test.describe('Offline sync pressure', () => {
     await seedSyncQueue(device, 100);
     await triggerQueuedReplay(device);
 
-    await expect(device.page.getByLabel('title')).toBeDisabled();
-    await expect(device.page.getByLabel('title')).toHaveAttribute('placeholder', 'Reconnect to keep adding.');
+    // Capture is refused at the control itself now, not inside a form field.
+    await expect(device.page.getByRole('button', { name: 'Reconnect to keep adding.' })).toBeDisabled();
   });
 });

@@ -1,3 +1,6 @@
+import 'fake-indexeddb/auto';
+
+import { deleteDB } from 'idb';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Task } from '../../api/client';
@@ -32,17 +35,21 @@ function serverTask(updatedAt: string): Task {
   };
 }
 
+afterEach(async () => {
+  await deleteDB('psykl');
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe('emitStaleWriteIfSuperseded', () => {
-  it('dispatches sync:stale-write when the server did not echo the sent updated_at', () => {
+  it('dispatches sync:stale-write when the server did not echo the sent updated_at', async () => {
     // Given a patch whose updated_at the server replaced with its own newer row
     const dispatch = vi.spyOn(globalThis, 'dispatchEvent');
 
     // When
-    emitStaleWriteIfSuperseded(patchEntry('2026-06-01T09:00:00.000Z'), serverTask('2026-06-01T12:00:00.000Z'));
+    await emitStaleWriteIfSuperseded(patchEntry('2026-06-01T09:00:00.000Z'), serverTask('2026-06-01T12:00:00.000Z'));
 
     // Then
     expect(dispatch).toHaveBeenCalledTimes(1);
@@ -51,24 +58,24 @@ describe('emitStaleWriteIfSuperseded', () => {
     expect(event.detail.task.title).toBe('theirs');
   });
 
-  it('does not dispatch when the server echoed the sent updated_at (our write won)', () => {
+  it('does not dispatch when the server echoed the sent updated_at (our write won)', async () => {
     // Given
     const dispatch = vi.spyOn(globalThis, 'dispatchEvent');
 
     // When
-    emitStaleWriteIfSuperseded(patchEntry('2026-06-01T09:00:00.000Z'), serverTask('2026-06-01T09:00:00.000Z'));
+    await emitStaleWriteIfSuperseded(patchEntry('2026-06-01T09:00:00.000Z'), serverTask('2026-06-01T09:00:00.000Z'));
 
     // Then
     expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it('does not dispatch for non-patch ops', () => {
+  it('does not dispatch for non-patch ops', async () => {
     // Given
     const dispatch = vi.spyOn(globalThis, 'dispatchEvent');
     const deleteEntry: SyncQueueEntry = { ...patchEntry('2026-06-01T09:00:00.000Z'), op: 'delete' };
 
     // When
-    emitStaleWriteIfSuperseded(deleteEntry, serverTask('2026-06-01T12:00:00.000Z'));
+    await emitStaleWriteIfSuperseded(deleteEntry, serverTask('2026-06-01T12:00:00.000Z'));
 
     // Then
     expect(dispatch).not.toHaveBeenCalled();

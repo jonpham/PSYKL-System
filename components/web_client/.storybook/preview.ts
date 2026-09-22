@@ -1,9 +1,10 @@
 import type { Preview } from '@storybook/react';
 import { configure } from '@storybook/test';
-import { deleteDB } from 'idb';
 import { initialize, mswLoader } from 'msw-storybook-addon';
 
+import { resetUseListsForTest } from '../src/hooks/useLists';
 import { resetUseTasksForTest } from '../src/hooks/useTasks';
+import { clearLocalDatabase } from '../src/test/local-database';
 import { handlers, resetStore } from '../src/test/msw-handlers';
 
 // Initialize MSW for the Storybook browser runtime. The service worker is
@@ -45,7 +46,8 @@ const preview: Preview = {
       // are deterministic, mirroring the Vitest `beforeEach(resetStore)` setup.
       resetStore();
       resetUseTasksForTest();
-      await deleteDB('psykl');
+      resetUseListsForTest();
+      await clearLocalDatabase();
       return {};
     },
     mswLoader,

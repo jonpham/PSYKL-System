@@ -1,0 +1,103 @@
+.psykl-sidebar-nav {
+  --sidebar-tile: 2rem;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 0.5rem var(--gutter);
+}
+.psykl-sidebar-nav .psykl-glyph {
+  height: var(--sidebar-tile);
+  width: var(--sidebar-tile);
+}
+.psykl-sidebar-nav__items {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+.psykl-sidebar-nav__divider {
+  border-top: 1px solid var(--separator);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+.psykl-sidebar-nav__row {
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+}
+.psykl-sidebar-nav__item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font: inherit;
+  font-size: 17px;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  min-width: 0;
+  padding: 0 0.5rem 0 0;
+  text-align: left;
+}
+.psykl-sidebar-nav__item[aria-current='page'] {
+  font-weight: 600;
+}
+.psykl-sidebar-nav__item:active {
+  background: var(--bg-pressed);
+}
+.psykl-sidebar-nav__sublist {
+  list-style: none;
+  margin: 0 0 0.25rem;
+  padding: 0 0 0 calc(var(--sidebar-tile) + 0.25rem);
+}
+.psykl-sidebar-nav__subitem {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
+  text-align: left;
+  width: 100%;
+}
+.psykl-sidebar-nav__subitem[aria-current='page'] {
+  background: var(--bg-selected);
+  font-weight: 600;
+}
+.psykl-sidebar-nav__subitem:active {
+  background: var(--bg-pressed);
+}
+.psykl-sidebar-nav__disclosure {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  height: var(--icon-tile);
+  justify-content: center;
+  padding: 0;
+  width: var(--icon-tile);
+}
+.psykl-sidebar-nav__disclosure[data-expanded='false'] .psykl-chevron {
+  transform: rotate(-90deg);
+}
+.psykl-sidebar-nav__item:focus-visible,
+.psykl-sidebar-nav__subitem:focus-visible,
+.psykl-sidebar-nav__disclosure:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.psykl-sidebar-nav__item[data-status='clear'] .psykl-glyph {
+  background: var(--status-good);
+}
+.psykl-sidebar-nav__item[data-status='attention'] .psykl-glyph {
+  background: var(--status-warn);
+  color: #000;
+}

@@ -1,8 +1,11 @@
-import { expect, type Page, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { listLocalSyncQueue } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 
 test.describe('Task list', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
   test.beforeEach(async ({ page }) => {
     const userId = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -19,7 +22,7 @@ test.describe('Task list', () => {
   test('a user creates a task and sees it in the list', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open PSYKL navigation' })).toBeVisible();
     await expect(page.getByText(/no tasks yet/i)).toBeVisible();
 
     const title = `buy milk ${Date.now()}`;
@@ -29,7 +32,7 @@ test.describe('Task list', () => {
     await expect(page.getByText(/no tasks yet/i)).not.toBeVisible();
   });
 
-  test('a user sees their tasks listed newest first', async ({ page }) => {
+  test('a user sees their tasks in the order they captured them', async ({ page }) => {
     await page.goto('/');
 
     const titles = [`first ${Date.now()}`, `second ${Date.now()}`, `third ${Date.now()}`];
@@ -38,7 +41,58 @@ test.describe('Task list', () => {
       await expect(page.getByText(title)).toBeVisible();
     }
 
-    await expect(taskTitleButtons(page)).toHaveText([...titles].reverse());
+    // A new task lands at the bottom, next to where the user is typing.
+    await expect(taskTitleButtons(page)).toHaveText(titles);
+  });
+
+  test('a user completes a task and it settles below the ones still open', async ({ page }) => {
+    await page.goto('/');
+
+    const stamp = Date.now();
+    const titles = [`rake leaves ${stamp}`, `call the vet ${stamp}`, `pay rent ${stamp}`];
+    for (const title of titles) {
+      await createTask(page, title);
+      await expect(page.getByText(title)).toBeVisible();
+    }
+
+    await page.getByRole('checkbox', { name: markCompleteName(titles[0] as string) }).click();
+
+    await expect(taskTitleButtons(page)).toHaveText([titles[1] as string, titles[2] as string, titles[0] as string]);
+  });
+
+  test('a user reopens a completed task', async ({ page }) => {
+    await page.goto('/');
+
+    const stamp = Date.now();
+    const done = `water the plants ${stamp}`;
+    const open = `book the ferry ${stamp}`;
+    for (const title of [done, open]) {
+      await createTask(page, title);
+      await expect(page.getByText(title)).toBeVisible();
+    }
+
+    await page.getByRole('checkbox', { name: markCompleteName(done) }).click();
+    await expect(taskTitleButtons(page)).toHaveText([open, done]);
+
+    await page.getByRole('checkbox', { name: markIncompleteName(done) }).click();
+
+    // Reopened, it rejoins the open tasks in capture order.
+    await expect(taskTitleButtons(page)).toHaveText([done, open]);
+  });
+
+  test('a long task title wraps instead of truncating', async ({ page }) => {
+    await page.goto('/');
+
+    const title = `${'plan the summer trip along the whole coast '.repeat(3)}${Date.now()}`;
+    await createTask(page, title);
+
+    const row = page.getByRole('listitem', { name: title });
+    await expect(row).toBeVisible();
+
+    // Two lines or more, and every word is on screen rather than clipped.
+    const box = await row.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThan(44);
+    await expect(page.getByRole('button', { name: `Edit ${title}` })).toHaveText(title);
   });
 
   test('a user edits a task title inline and it persists', async ({ page }) => {
@@ -89,8 +143,10 @@ test.describe('Task list', () => {
 });
 
 async function createTask(page: Page, title: string): Promise<void> {
-  await page.getByRole('textbox', { name: /^title$/i }).fill(title);
-  await page.getByRole('button', { name: /create/i }).click();
+  await page.getByRole('button', { name: 'New Task' }).click();
+  await page.getByRole('textbox', { name: 'New task title' }).fill(title);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
 }
 
 async function editTaskTitle(page: Page, currentTitle: string, nextTitle: string): Promise<void> {

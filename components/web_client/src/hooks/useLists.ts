@@ -1,4 +1,3 @@
-import { generateKeyBetween } from 'fractional-indexing';
 import { useCallback, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
@@ -6,7 +5,8 @@ import type { ListRecord } from '../db/idb.types';
 import { listServiceClient } from '../services/list-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
-import { resetDefaultListForTest } from './useLists.default-list';
+import { ensureDefaultList, resetDefaultListForTest } from './useLists.default-list';
+import { nextListPosition, positionBetween } from './useLists.positions';
 import {
   getListsSnapshot,
   notifyListSubscribers,
@@ -33,13 +33,17 @@ function useLists(): UseListsResult {
 
   const createList = useCallback(
     async (title: string): Promise<ListRecord> => {
-      const last = lists.at(-1) ?? null;
+      // The default list is established first, whatever order the user and the
+      // bootstrap arrive in: a user who opens the Lists page and adds a list
+      // straight away used to write their list first, which made the bootstrap
+      // believe this device already had a default list and skip creating one.
+      await ensureDefaultList();
       const now = new Date().toISOString();
       const list: ListRecord = {
         id: uuidv7(),
         user_id: 'local',
         title,
-        position: generateKeyBetween(last?.position ?? null, null),
+        position: await nextListPosition(),
         created_at: now,
         updated_at: now,
         server_updated_at: now,
@@ -75,11 +79,19 @@ function useLists(): UseListsResult {
 
   const moveList = useCallback(
     async (id: string, before: ListRecord | null, after: ListRecord | null): Promise<void> => {
-      const position = generateKeyBetween(before?.position ?? null, after?.position ?? null);
-      const updated_at = new Date().toISOString();
       const existing = lists.find((list) => list.id === id);
       if (!existing) {
         return;
+      }
+      const updated_at = new Date().toISOString();
+      const { position, respaced } = await positionBetween(before, after);
+      for (const list of respaced) {
+        if (list.id === id) {
+          continue;
+        }
+        await mutateList(() =>
+          listServiceClient.patch(list.id, { position: list.position, updated_at }, { ...list, updated_at }),
+        );
       }
       const optimistic: ListRecord = { ...existing, position, updated_at };
       await mutateList(() => listServiceClient.patch(id, { position, updated_at }, optimistic));

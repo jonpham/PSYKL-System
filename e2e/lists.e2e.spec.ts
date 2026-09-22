@@ -1,6 +1,8 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers/isolated-test';
 
-test.describe.skip('lists', () => {
+test.describe('lists', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
   test('a user creates a list and it appears in the navigation', async ({ page }) => {
     await page.goto('/lists');
 
@@ -8,7 +10,7 @@ test.describe.skip('lists', () => {
     await page.getByLabel('New list name').fill('Groceries');
     await page.keyboard.press('Enter');
 
-    await expect(page.getByRole('button', { name: 'Groceries' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Groceries', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
     await expect(
@@ -23,7 +25,7 @@ test.describe.skip('lists', () => {
     await page.getByLabel('New list name').fill('Groceri');
     await page.keyboard.press('Escape');
 
-    await expect(page.getByRole('button', { name: 'Groceri' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Groceri', exact: true })).toHaveCount(0);
   });
 
   test('a user re-orders their lists', async ({ page }) => {
@@ -33,12 +35,16 @@ test.describe.skip('lists', () => {
       await page.getByRole('button', { name: 'New List' }).click();
       await page.getByLabel('New list name').fill(title);
       await page.keyboard.press('Enter');
+      // Each list takes its position from the one before it, so let it land
+      // before naming the next — a user cannot type two names in one tick.
+      await expect(page.getByRole('button', { name: title, exact: true })).toBeVisible();
     }
 
     // Tasks, Groceries, Reading — move the last one to the middle.
     await page.getByRole('button', { name: 'Move Reading up' }).click();
 
-    const names = page.getByRole('listitem').getByRole('button');
+    // The move controls are buttons too; the names are the ones that carry text.
+    const names = page.getByRole('listitem').getByRole('button', { name: /^(?!Move ).+/ });
     await expect(names).toHaveText(['Tasks', 'Reading', 'Groceries']);
 
     // The order is a property of the lists, not of this render.
@@ -61,10 +67,12 @@ test.describe.skip('lists', () => {
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
     await page.keyboard.press('Enter');
-    await page.getByRole('button', { name: 'Groceries' }).click();
+    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
 
-    await page.getByPlaceholder('What needs doing?').fill('Milk');
+    await page.getByRole('button', { name: 'New Task' }).click();
+    await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
     await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();

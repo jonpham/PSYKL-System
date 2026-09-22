@@ -1,9 +1,15 @@
 # E2E overlay (Decision #27): swaps the pglite named volume for a tmpfs mount
-# so every CI run starts with an empty database.
+# so every CI run starts with an empty database, and opens the test-only reset
+# route so every *test* starts with an empty database too.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up
 
 services:
   service-task:
+    environment:
+      # Opens POST /test/reset. Set here and nowhere else: the base compose
+      # file, the Dockerfile, and the deployed chart all leave it unset, so the
+      # route answers 404 in every environment a user can reach.
+      PSYKL_TEST_RESET: enabled
     tmpfs:
       - /var/lib/psykl/pglite
     # Clear the inherited named-volume mount from the base compose file.
