@@ -3,6 +3,8 @@ import { expect, type Page, test } from '@playwright/test';
 import { listLocalSyncQueue } from './helpers/idb-storage';
 
 test.describe('Task list', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
   test.beforeEach(async ({ page }) => {
     const userId = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -19,7 +21,7 @@ test.describe('Task list', () => {
   test('a user creates a task and sees it in the list', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Open PSYKL navigation' })).toBeVisible();
     await expect(page.getByText(/no tasks yet/i)).toBeVisible();
 
     const title = `buy milk ${Date.now()}`;

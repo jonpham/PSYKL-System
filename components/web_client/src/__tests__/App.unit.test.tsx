@@ -19,9 +19,9 @@ afterEach(async () => {
 });
 
 describe('App shell', () => {
-  it('renders the PSYKL header', async () => {
+  it('renders the production navigation header', async () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /PSYKL/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open PSYKL navigation' })).toBeInTheDocument();
     expect(await screen.findByText(/no tasks yet/i)).toBeInTheDocument();
   });
 
@@ -31,7 +31,7 @@ describe('App shell', () => {
     expect(await screen.findByText(/no tasks yet/i)).toBeInTheDocument();
   });
 
-  it('opens and closes the Recently Deleted screen from a temporary button', async () => {
+  it('opens and closes Recently Deleted from navigation', async () => {
     render(<App />);
     await userEvent.click(await screen.findByRole('button', { name: 'Recently Deleted' }));
     expect(await screen.findByRole('dialog', { name: 'Recently Deleted' })).toBeVisible();

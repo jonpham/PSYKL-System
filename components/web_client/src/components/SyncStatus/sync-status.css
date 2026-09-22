@@ -1,0 +1,28 @@
+.psykl-sync-status {
+  display: contents;
+}
+
+/* Column 2 of the content header — to the left of the list menu, and directly
+ * above the task rows' pending-sync dots. */
+.psykl-sync-status__control {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  grid-column: 2;
+  padding: 0;
+}
+
+.psykl-sync-status__control:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.psykl-sync-status__control[data-status='clear'] .psykl-glyph {
+  background: var(--status-good);
+}
+
+.psykl-sync-status__control[data-status='attention'] .psykl-glyph {
+  background: var(--status-warn);
+  color: #000;
+}

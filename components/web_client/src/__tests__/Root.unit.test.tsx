@@ -20,7 +20,7 @@ describe('Root', () => {
 
     // Assert
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+      expect(screen.getByRole('heading', { name: 'Tasks' })).toBeVisible();
     });
   });
 
@@ -43,7 +43,7 @@ describe('Root', () => {
     window.history.pushState({}, '', '/');
     render(<Root />);
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+      expect(screen.getByRole('heading', { name: 'Tasks' })).toBeVisible();
     });
 
     // Act
