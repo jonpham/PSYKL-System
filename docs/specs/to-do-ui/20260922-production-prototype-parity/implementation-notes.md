@@ -40,8 +40,11 @@ in the API client — only its UI trigger is removed.
 
 Screenshots into `screenshots/`: task list (idle, capturing, offline ceiling), Lists header, Settings (light + dark, standard + increased contrast), at 390px and 1280px.
 
-## Open questions — operator decisions before slice 3
+## Decisions (operator, 2026-09-22)
 
-1. **Task deletion disappears from the UI.** The prototype has no per-task delete and no swipe gesture. Removing the button means a task can be completed but never deleted, and Recently Deleted (tasks) becomes reachable only for lists. Options: (a) remove now, accept the gap, restore later via swipe; (b) keep parity but add swipe-to-delete in this change (larger, and arguably an escalation); (c) keep the button.
-2. **Floating button's accessible label.** The prototype says `New Reminder`; PSYKL's domain noun is `Task`, and six E2E specs address `New Task`. Proposed: keep `New Task`.
-3. **PR size.** 11 production source files, 5 of them CSS. Proposed: one PR, since the eleven are one coherent visual change; split into chrome/settings and task-list PRs if review prefers.
+1. **Task deletion** — remove the row's Delete button now and accept the gap. A task can be completed but not deleted from the UI until swipe-to-delete lands as its own later change; Recently Deleted keeps working for lists. `recently_deleted.e2e.spec.ts`, `task_list-offline-sync.e2e.spec.ts` and `e2e/helpers/multi-device.ts` delete through the API instead.
+2. **Floating button label** — keep `New Task`. Visual parity with the prototype, PSYKL's domain noun, no E2E selector churn. Deliberate deviation from the prototype's `New Reminder`.
+
+## Open questions
+
+- **PR size.** 11 production source files, 5 of them CSS. Proposed: one PR, since the eleven are one coherent visual change; split into chrome/settings and task-list PRs if review prefers.
