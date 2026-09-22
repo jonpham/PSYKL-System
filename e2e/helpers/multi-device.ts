@@ -26,7 +26,7 @@ async function openDevice(browser: Browser, userId = uniqueUserId()) {
     });
   });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
   return { context, page, userId };
 }
 
