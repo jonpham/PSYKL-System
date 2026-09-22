@@ -8,6 +8,9 @@ const mockUseTasks = vi.hoisted(() => vi.fn());
 const mockUseSyncDiscrepancy = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../hooks/useTasks', () => ({ useTasks: mockUseTasks }));
+vi.mock('../../../hooks/useCompletedVisibility', () => ({
+  useCompletedVisibility: () => ({ setShowCompleted: () => {}, showCompleted: true }),
+}));
 vi.mock('../../../hooks/useSyncDiscrepancy', () => ({ useSyncDiscrepancy: mockUseSyncDiscrepancy }));
 
 describe('TaskList capture (Unit)', () => {

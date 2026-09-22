@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { AppShell } from './components/AppShell';
 import { PlusGlyph } from './components/AppShell/Glyphs';
+import { ListMenu } from './components/ListMenu';
 import { ListsPage } from './components/ListsPage';
 import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
@@ -11,16 +12,19 @@ import { TaskList } from './components/TaskList';
 import { Toast } from './components/Toast';
 import { VersionFooter } from './components/VersionFooter';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
+import { useCompletedVisibility } from './hooks/useCompletedVisibility';
 import { useDestination } from './hooks/useDestination';
 import { useLists } from './hooks/useLists';
 import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
 
 export default function App() {
-  const { lists } = useLists();
+  const { canDelete, deleteList, lists } = useLists();
   const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
   const failedCount = useFailedSyncCount();
+  const { setShowCompleted, showCompleted } = useCompletedVisibility();
+  const [completedCount, setCompletedCount] = useState(0);
   const [creatingList, setCreatingList] = useState(false);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
@@ -51,12 +55,25 @@ export default function App() {
 
   const headerAction =
     destination === 'list' || destination === 'sync' ? (
-      <SyncStatus
-        active={destination === 'sync'}
-        failedCount={failedCount}
-        onOpen={() => goTo('sync')}
-        queuedCount={queuedCount}
-      />
+      <>
+        <SyncStatus
+          active={destination === 'sync'}
+          failedCount={failedCount}
+          onOpen={() => goTo('sync')}
+          queuedCount={queuedCount}
+        />
+        {destination === 'list' ? (
+          <ListMenu
+            canDelete={canDelete}
+            completedCount={completedCount}
+            onDeleteList={() => {
+              if (activeList) void deleteList(activeList.id);
+            }}
+            onToggleCompleted={setShowCompleted}
+            showCompleted={showCompleted}
+          />
+        ) : null}
+      </>
     ) : destination === 'lists' ? (
       <button
         aria-label="New List"
@@ -86,7 +103,7 @@ export default function App() {
       ) : null}
       {destination === 'list' ? (
         <section data-testid="task-ui-slot">
-          <TaskList />
+          <TaskList onCompletedCountChange={setCompletedCount} />
         </section>
       ) : null}
       <VersionFooter />

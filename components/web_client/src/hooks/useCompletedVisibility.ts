@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 import { readCompletedVisibility, writeCompletedVisibility } from '../preferences/completedVisibility';
 import { useActiveListId } from './useActiveList';
@@ -8,18 +8,53 @@ interface UseCompletedVisibilityResult {
   showCompleted: boolean;
 }
 
-/** Reads the active list's device-local completed-visibility preference. The
- * default is to show them, so the list never hides work while the preference is
- * still being read. */
+// Module-level, like useActiveList: the header's menu and the list itself both
+// read this preference, and a per-hook useState would let the two disagree
+// until the next reload.
+const subscribers = new Set<() => void>();
+const visibilityByList = new Map<string, boolean>();
+
+function notify(): void {
+  for (const subscriber of subscribers) {
+    subscriber();
+  }
+}
+
+function subscribe(listener: () => void): () => void {
+  subscribers.add(listener);
+  return () => {
+    subscribers.delete(listener);
+  };
+}
+
+function snapshotFor(listId: string | null): boolean {
+  // Shows completed tasks by default, including while the stored preference is
+  // still being read, so the list never briefly hides a user's work.
+  return listId === null ? true : (visibilityByList.get(listId) ?? true);
+}
+
+function resetCompletedVisibilityForTest(): void {
+  visibilityByList.clear();
+  subscribers.clear();
+}
+
 function useCompletedVisibility(): UseCompletedVisibilityResult {
   const listId = useActiveListId();
-  const [showCompleted, setShowCompletedState] = useState(true);
+  const showCompleted = useSyncExternalStore(
+    subscribe,
+    () => snapshotFor(listId),
+    () => true,
+  );
 
   useEffect(() => {
+    if (listId === null || visibilityByList.has(listId)) {
+      return;
+    }
     let cancelled = false;
     void readCompletedVisibility(listId).then((visible) => {
       if (!cancelled) {
-        setShowCompletedState(visible);
+        visibilityByList.set(listId, visible);
+        notify();
       }
     });
     return () => {
@@ -29,7 +64,11 @@ function useCompletedVisibility(): UseCompletedVisibilityResult {
 
   const setShowCompleted = useCallback(
     (visible: boolean) => {
-      setShowCompletedState(visible);
+      if (listId === null) {
+        return;
+      }
+      visibilityByList.set(listId, visible);
+      notify();
       void writeCompletedVisibility(listId, visible);
     },
     [listId],
@@ -38,4 +77,4 @@ function useCompletedVisibility(): UseCompletedVisibilityResult {
   return { setShowCompleted, showCompleted };
 }
 
-export { useCompletedVisibility };
+export { resetCompletedVisibilityForTest, useCompletedVisibility };

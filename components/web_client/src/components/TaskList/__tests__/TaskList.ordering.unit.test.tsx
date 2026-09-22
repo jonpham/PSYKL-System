@@ -11,6 +11,9 @@ vi.mock('../../../hooks/useTasks', () => ({
 }));
 
 // The capture control reads the write ceiling; this suite is about the list.
+vi.mock('../../../hooks/useCompletedVisibility', () => ({
+  useCompletedVisibility: () => ({ setShowCompleted: () => {}, showCompleted: true }),
+}));
 vi.mock('../../../hooks/useSyncDiscrepancy', () => ({
   useSyncDiscrepancy: () => ({ count: 0, level: 'ok' }),
 }));

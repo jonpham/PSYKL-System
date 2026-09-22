@@ -13,7 +13,13 @@ import { sortTasks } from './sortTasks';
 import { TaskListSkeleton } from './TaskListSkeleton';
 import { TaskRow } from './TaskRow';
 
-export function TaskList() {
+interface TaskListProps {
+  /** The header's list menu needs this number, but it should not open a second
+   * subscription to every task to get it — this list already has them. */
+  onCompletedCountChange?: (count: number) => void;
+}
+
+export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
   const { createTask, error, loading, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
   // Past the offline write ceiling the device stops accepting new work rather
@@ -47,6 +53,11 @@ export function TaskList() {
       cancelled = true;
     };
   }, [tasks]);
+
+  const completedCount = tasks.filter((task) => task.completed_at !== null).length;
+  useEffect(() => {
+    onCompletedCountChange?.(completedCount);
+  }, [completedCount, onCompletedCountChange]);
 
   const ordered = useMemo(
     () => sortTasks(tasks).filter((task) => showCompleted || task.completed_at === null),

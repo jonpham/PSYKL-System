@@ -72,7 +72,9 @@ body:has(.psykl-app-shell) {
 .psykl-app-shell__content-header {
   align-items: center;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* title | sync control | list options — the task rows' pending dots line up
+   * under the sync column. */
+  grid-template-columns: minmax(0, 1fr) auto auto;
   margin-bottom: 0.25rem;
 }
 .psykl-app-shell__content-header h2 {

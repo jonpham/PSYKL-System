@@ -3,6 +3,10 @@ import type { Page } from '@playwright/test';
 import type { TaskRow } from './multi-device';
 
 type BrowserStorageTarget = { page: Page };
+type MetaEntry = {
+  key: string;
+  value: unknown;
+};
 type SyncQueueEntry = {
   entity_id: string;
   entity_type: 'list' | 'task';
@@ -17,6 +21,10 @@ async function listLocalTasks(target: BrowserStorageTarget): Promise<TaskRow[]> 
 
 async function listLocalSyncQueue(target: BrowserStorageTarget): Promise<SyncQueueEntry[]> {
   return readObjectStore<SyncQueueEntry>(target.page, 'sync_queue');
+}
+
+async function listLocalMeta(target: BrowserStorageTarget): Promise<MetaEntry[]> {
+  return readObjectStore<MetaEntry>(target.page, 'sync_meta');
 }
 
 /**
@@ -121,5 +129,5 @@ async function readObjectStore<T>(page: Page, storeName: string): Promise<T[]> {
   }, storeName);
 }
 
-export { listLocalSyncQueue, listLocalTasks, seedSyncQueue };
-export type { SyncQueueEntry };
+export { listLocalMeta, listLocalSyncQueue, listLocalTasks, seedSyncQueue };
+export type { MetaEntry, SyncQueueEntry };

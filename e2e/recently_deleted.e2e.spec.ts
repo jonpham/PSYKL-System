@@ -1,3 +1,6 @@
+import type { Page } from '@playwright/test';
+
+import { listLocalSyncQueue } from './helpers/idb-storage';
 import { expect, test } from './helpers/isolated-test';
 
 test.describe('recently deleted', () => {
@@ -33,7 +36,7 @@ test.describe('recently deleted', () => {
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
     await page.keyboard.press('Enter');
-    await page.getByRole('button', { name: 'Groceries' }).click();
+    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
 
     await page.getByRole('button', { name: 'New Task' }).click();
     await page.getByRole('textbox', { name: 'New task title' }).fill('Milk');
@@ -47,12 +50,20 @@ test.describe('recently deleted', () => {
     await page.getByRole('menuitem', { name: 'Delete List' }).click();
     await page.getByRole('menuitem', { name: 'Delete List?' }).click();
 
+    // Recently Deleted is served by the back end, so the delete has to have
+    // reached it before a full page load can show the list there.
+    await expectSyncQueueEmpty(page);
+
     await page.goto('/recently-deleted');
     await expect(page.getByRole('listitem', { name: 'Groceries' })).toBeVisible();
     await page.getByRole('button', { name: 'Restore Groceries' }).click();
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
-    await page.getByRole('button', { name: 'Groceries' }).click();
+    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
     await expect(page.getByText('Milk')).toBeVisible();
   });
 });
+
+async function expectSyncQueueEmpty(page: Page): Promise<void> {
+  await expect.poll(async () => listLocalSyncQueue({ page }), { timeout: 10_000 }).toEqual([]);
+}
