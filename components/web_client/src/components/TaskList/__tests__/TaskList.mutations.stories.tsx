@@ -67,7 +67,7 @@ export const EditTitleEnqueuesPatch: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'seed task edited{Enter}');
 
-    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // Assert — `App` also mounts the lists hook, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
     // `attempts > 0` (not just "entry exists"): `enqueueWithReplay`
     // (sync/page-triggers.ts) fires `runReplay()` as fire-and-forget, so the
@@ -105,7 +105,7 @@ export const CompleteEnqueuesPatch: Story = {
     // Act
     await userEvent.click(canvas.getByRole('checkbox', { name: /mark seed task complete/i }));
 
-    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // Assert — `App` also mounts the lists hook, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
     // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
     // this play() to wait for the fire-and-forget replay to settle before
@@ -142,7 +142,7 @@ export const DeleteEnqueuesDelete: Story = {
     // for the re-rendered "Confirm delete" label rather than racing the render.
     await userEvent.click(await canvas.findByRole('button', { name: /confirm delete seed task/i }));
 
-    // Assert — `App` also mounts `ListSwitcher`, which enqueues the default
+    // Assert — `App` also mounts the lists hook, which enqueues the default
     // list's own create op on first run, so filter to this task's entry.
     // `attempts > 0`: see EditTitleEnqueuesPatch's comment above — forces
     // this play() to wait for the fire-and-forget replay to settle before

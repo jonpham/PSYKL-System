@@ -79,17 +79,20 @@ test.describe('navigation', () => {
     await expect(page.getByRole('button', { name: /^Sync (clear|needs attention)$/ })).toBeVisible();
   });
 
-  test.skip('a user switches between their lists from the navigation', async ({ page }) => {
+  test('a user switches between their lists from the navigation', async ({ page }) => {
     await page.goto('/');
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
-    await page.getByRole('button', { name: 'Lists' }).click();
+    await page.getByRole('button', { name: 'Lists', exact: true }).click();
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
     await page.keyboard.press('Enter');
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
-    await page.getByRole('button', { name: 'Groceries' }).click();
+    await page
+      .getByRole('navigation', { name: 'PSYKL navigation' })
+      .getByRole('button', { name: 'Groceries', exact: true })
+      .click();
 
     // Choosing a list closes the drawer and takes the user straight to it.
     await expect(page.getByRole('navigation', { name: 'PSYKL navigation' })).toBeHidden();

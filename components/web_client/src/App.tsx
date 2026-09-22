@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { AppShell } from './components/AppShell';
-import { ListSwitcher } from './components/ListSwitcher';
+import { PlusGlyph } from './components/AppShell/Glyphs';
+import { ListsPage } from './components/ListsPage';
 import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
 import { Settings } from './components/Settings';
@@ -21,7 +22,7 @@ export default function App() {
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
   const failedCount = useFailedSyncCount();
-  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [creatingList, setCreatingList] = useState(false);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
   // first run, per UX.md § 10 decision 1) if no active list has been chosen
@@ -49,33 +50,41 @@ export default function App() {
             ? 'Lists'
             : 'Sync';
 
-  return (
-    <AppShell
-      headerAction={
-        destination === 'list' || destination === 'sync' ? (
-          <SyncStatus
-            active={destination === 'sync'}
-            failedCount={failedCount}
-            onOpen={() => goTo('sync')}
-            queuedCount={queuedCount}
-          />
-        ) : undefined
-      }
-      title={title}
-    >
-      <Toast />
-      <ListSwitcher
-        activeListId={activeListId}
-        onClose={() => setSwitcherOpen(false)}
-        onSelect={(listId) => {
-          void setActiveListId(listId);
-          setSwitcherOpen(false);
-        }}
-        open={switcherOpen}
+  const headerAction =
+    destination === 'list' || destination === 'sync' ? (
+      <SyncStatus
+        active={destination === 'sync'}
+        failedCount={failedCount}
+        onOpen={() => goTo('sync')}
+        queuedCount={queuedCount}
       />
+    ) : destination === 'lists' ? (
+      <button
+        aria-label="New List"
+        className="psykl-app-shell__header-action"
+        onClick={() => setCreatingList(true)}
+        type="button"
+      >
+        <PlusGlyph />
+      </button>
+    ) : undefined;
+
+  return (
+    <AppShell headerAction={headerAction} title={title}>
+      <Toast />
       <RecentlyDeleted onClose={() => goTo('list')} open={destination === 'recently-deleted'} />
       <Settings onClose={() => goTo('list')} open={destination === 'settings'} />
       <OutOfSyncBanner />
+      {destination === 'lists' ? (
+        <ListsPage
+          creating={creatingList}
+          onCreated={() => setCreatingList(false)}
+          onSelectList={(listId) => {
+            void setActiveListId(listId);
+            goTo('list');
+          }}
+        />
+      ) : null}
       {destination === 'list' ? (
         <section data-testid="task-ui-slot">
           <TaskCreateForm />
