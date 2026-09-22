@@ -173,7 +173,10 @@ export const PendingQueuedTask: Story = {
           expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
           expect(item).toHaveStyle({ opacity: '0.6' });
         },
-        { timeout: 3000 },
+        // The affordance is deliberately delayed 2s after render, so a 3s
+        // budget left only ~1s of slack for loaders, MSW, and hydration —
+        // enough locally, not enough on a contended CI runner.
+        { timeout: 8000 },
       );
     });
   },
