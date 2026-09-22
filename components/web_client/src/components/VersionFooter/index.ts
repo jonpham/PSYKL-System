@@ -1,1 +1,0 @@
-export { VersionFooter } from './VersionFooter';

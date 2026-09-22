@@ -36,8 +36,15 @@ registerRoute(
 );
 
 self.addEventListener('message', (event) => {
-  if ((event.data as { type?: string } | undefined)?.type === 'PSYKL_SW_SOURCE') {
+  const type = (event.data as { type?: string } | undefined)?.type;
+  if (type === 'PSYKL_SW_SOURCE') {
     event.source?.postMessage({ source: sourceMarker });
+  }
+  // Settings → About → "Update to latest version". Without this a replacement
+  // worker waits until every client closes, which on an installed iOS PWA
+  // effectively never happens.
+  if (type === 'PSYKL_SKIP_WAITING') {
+    void self.skipWaiting();
   }
 });
 

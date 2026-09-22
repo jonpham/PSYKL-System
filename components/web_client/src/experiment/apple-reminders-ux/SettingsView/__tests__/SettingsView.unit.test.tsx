@@ -8,8 +8,8 @@ vi.mock('../../../ExperimentsIndex', () => ({
   ExperimentsIndex: () => <p>experiments</p>,
 }));
 
-vi.mock('../../../../components/VersionFooter', () => ({
-  VersionFooter: () => <p>version</p>,
+vi.mock('../../../../components/AppVersion', () => ({
+  AppVersion: () => <p>version</p>,
 }));
 
 describe('SettingsView (Unit)', () => {

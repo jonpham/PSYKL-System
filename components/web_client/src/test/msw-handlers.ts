@@ -12,6 +12,7 @@ export function resetStore() {
 
 export const handlers = [
   http.get('*/version', () => HttpResponse.json({ component: 'service-task', commit: 'dev' })),
+  http.get('*/version.json', () => HttpResponse.json({ commit: 'dev' })),
 
   http.get('*/tasks', ({ request }) => {
     if (request.headers.get('x-user-id') !== 'local') {

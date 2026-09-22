@@ -4,7 +4,7 @@ import { ExperimentsIndex } from '../../experiment';
 import { useAppearance } from '../../hooks/useAppearance';
 import { type Appearance, APPEARANCE_CHOICES } from '../../preferences/appearance';
 import { type Contrast, CONTRAST_CHOICES } from '../../preferences/contrast';
-import { VersionFooter } from '../VersionFooter';
+import { AppVersion } from '../AppVersion';
 
 const appearanceLabels: Record<Appearance, string> = { dark: 'Dark', light: 'Light', system: 'System' };
 const contrastLabels: Record<Contrast, string> = { increased: 'Increased', standard: 'Standard' };
@@ -57,7 +57,7 @@ export function SettingsView() {
       </section>
       <section aria-label="About" className="psykl-settings__section">
         <h3>About</h3>
-        <VersionFooter />
+        <AppVersion />
       </section>
     </div>
   );
