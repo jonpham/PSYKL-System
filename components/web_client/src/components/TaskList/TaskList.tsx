@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import './task-list.css';
+
+import { useEffect, useMemo, useState } from 'react';
 
 import { useTasks } from '../../hooks/useTasks';
 import { taskServiceClient } from '../../services/task-service-client';
 import { EmptyState } from './EmptyState';
+import { sortTasks } from './sortTasks';
 import { TaskListSkeleton } from './TaskListSkeleton';
 import { TaskRow } from './TaskRow';
 
@@ -36,11 +39,15 @@ export function TaskList() {
     };
   }, [tasks]);
 
+  const ordered = useMemo(() => sortTasks(tasks), [tasks]);
+
   if (loading) {
     return <TaskListSkeleton />;
   }
 
-  if (error) {
+  // A failed refresh over a list the device can already show is noise: the
+  // tasks on screen are real, and the banner only says the network is down.
+  if (error && tasks.length === 0) {
     return <p role="alert">{error}</p>;
   }
 
@@ -49,8 +56,8 @@ export function TaskList() {
   }
 
   return (
-    <ul style={{ listStyle: 'none', padding: 0 }}>
-      {tasks.map((task) => (
+    <ul className="psykl-task-list">
+      {ordered.map((task) => (
         <TaskRow isPending={pendingTaskIds.has(task.id)} key={task.id} task={task} />
       ))}
     </ul>
