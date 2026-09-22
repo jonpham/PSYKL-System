@@ -1,0 +1,15 @@
+.version-footer {
+  color: var(--text-secondary);
+  font-family: var(--font-numeric);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.version-footer h4 {
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 22px;
+  margin: 0 0 0.25rem;
+}

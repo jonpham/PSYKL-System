@@ -57,6 +57,12 @@ afterEach(async () => {
 });
 
 describe('TaskRow (Unit)', () => {
+  it('shows no delete control in a task row', () => {
+    renderRow();
+    expect(screen.getByRole('checkbox', { name: /mark walk the dog complete/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit walk the dog/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete walk the dog/i })).not.toBeInTheDocument();
+  });
   describe('inline title edit', () => {
     it('shows an editable input when the title is clicked', async () => {
       // Given

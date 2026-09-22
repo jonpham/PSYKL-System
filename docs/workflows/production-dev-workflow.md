@@ -53,6 +53,7 @@ Output the following before stopping:
 - **Spec integration PRs must include close-out work before they merge to `main`.** The final Spec integration PR is not complete until it carries the feature doc, durable-doc refreshes, status handoff, and obsolete per-Spec artifact deletions. Do not defer close-out docs to a follow-up branch after the Spec PR merges; the next Spec should be startable from `main` without revisiting the previous Spec.
 - **`superpowers:finishing-a-development-branch` does not bypass Spec close-out.** In PSYKL, the final DevTask branch of a Spec is not "implementation complete" until the close-out work above is committed on that same branch. When using `superpowers:finishing-a-development-branch` for the final DevTask in a Spec, complete the feature doc, durable-doc refreshes, `PROJECT_STATUS.md` handoff, and obsolete artifact deletions before marking the PR ready for review or telling the user the branch is ready to merge.
 - Commit feature doc changes as part of the same PR as the implementation. CHANGELOG.md should be updated to include a change log for each feature implemented.
+- **Implementation screenshots are local review material, never committed artifacts.** Capture them after implementation for developer review, keep them in a gitignored local directory, and remove them before Spec close-out. Summarize any finding needed for the durable feature doc in words; do not copy image files or screenshot links into `docs/features/`.
 - **At Spec close-out, consolidate AND delete the per-Spec issue brief and execution-plan spec.** The per-Spec feature doc under `docs/features/` is the consolidated record; `docs/initiatives/{initiative}/issues/{spec-brief}.md` and `docs/specs/{initiative}/{spec}.md` are deleted in the Spec integration PR before it merges. (The initiative-level docs and design docs are deleted later at initiative close-out per the next rule.)
 - After completing an initiative, scan feature documents created over the course of execution. If feature documents successfully summarize the high-level details of the initiative and its specs, the initiative-level docs (`DESIGN.md`, `MILESTONE.md`, remaining issue briefs) can be deleted to minimize document sprawl. Retrospectives at `docs/retrospectives/` are durable and stay across initiative close-outs.
 - **`honors_decisions:` frontmatter must be refreshed on decision re-open.** When a Decisions-appendix entry referenced in any spec doc's `honors_decisions:` is re-opened (rewritten, deprecated, or superseded by a new decision), every spec doc that referenced it must add the new decision number in the same PR that lands the re-open.
@@ -68,9 +69,10 @@ Output the following before stopping:
   5. Durable docs refreshed: `README.md`, `docs/STACK.md`, `docs/ARCHITECTURE.md`, `CHANGELOG.md`, `docs/PROJECT_STATUS.md`.
   6. `honors_decisions:` frontmatter refreshed on every spec doc touched by a decision re-open.
   7. `grep -r` durable docs for references to deleted planning files; update or comment as intentional.
-  8. If the Spec ships a new GitHub Actions workflow, the first run on the merge-to-`main` commit MUST show `conclusion: success`. Failed first runs → post-merge fixup PRs + ADR operational footnotes (precedent: ADR-M1-026, ADR-M1-027). Spec PR description carries a pending-verification checkbox.
-  9. Parent worktree `main` fast-forwarded.
-  10. Merged DevTask + Spec branches deleted locally and remotely.
+  8. Confirm implementation screenshots are absent from the staged diff and PR; delete local review captures at close-out.
+  9. If the Spec ships a new GitHub Actions workflow, the first run on the merge-to-`main` commit MUST show `conclusion: success`. Failed first runs → post-merge fixup PRs + ADR operational footnotes (precedent: ADR-M1-026, ADR-M1-027). Spec PR description carries a pending-verification checkbox.
+  10. Parent worktree `main` fast-forwarded.
+  11. Merged DevTask + Spec branches deleted locally and remotely.
 - **Initiative close-out completeness checklist:**
   1. Spec feature docs cover every DESIGN.md decision (via "Design Decisions" sections or `docs/ARCHITECTURE.md` ADRs).
   2. `docs/initiatives/{initiative}/{DESIGN.md, MILESTONE.md}` deleted; `issues/` directory deleted.

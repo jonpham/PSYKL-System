@@ -18,6 +18,9 @@ export const SwitchAppearance: Story = {
   play: async ({ canvasElement }) => {
     // Arrange
     const canvas = within(canvasElement);
+    await expect(canvas.getByRole('radiogroup', { name: 'Appearance' })).toHaveClass('psykl-settings__segmented');
+    await expect(canvas.getByRole('radiogroup', { name: 'Contrast' })).toHaveClass('psykl-settings__segmented');
+    await expect(canvas.getByRole('heading', { name: 'Version' })).toBeInTheDocument();
 
     // Act
     await userEvent.click(canvas.getByRole('radio', { name: 'Dark' }));

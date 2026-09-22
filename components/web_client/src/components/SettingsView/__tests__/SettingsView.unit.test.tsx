@@ -15,6 +15,13 @@ afterEach(async () => {
 });
 
 describe('SettingsView (Unit)', () => {
+  it('shows both choices as grouped segments and the version under About', () => {
+    render(<SettingsView />);
+    expect(screen.getByRole('radiogroup', { name: 'Appearance' })).toHaveClass('psykl-settings__segmented');
+    expect(screen.getByRole('radiogroup', { name: 'Contrast' })).toHaveClass('psykl-settings__segmented');
+    expect(screen.getByRole('heading', { name: 'About' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Version' })).toBeInTheDocument();
+  });
   it('stamps the chosen appearance on the document', async () => {
     // Arrange
     const user = userEvent.setup();

@@ -1,12 +1,11 @@
 import './task-row.css';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { Task } from '../../../api/client';
 import { useTasks } from '../../../hooks/useTasks';
 import { useDelayedFlag } from './useDelayedFlag';
 
-const CONFIRM_DELETE_WINDOW_MS = 3000;
 // Only surface the pending-sync affordance once a row has been unsynced for this
 // long, so fast online syncs don't flash a distracting dimmed row + dot.
 const PENDING_AFFORDANCE_DELAY_MS = 2000;
@@ -17,21 +16,11 @@ interface TaskRowProps {
 }
 
 export function TaskRow({ isPending = false, task }: TaskRowProps) {
-  const { deleteTask, patchTask } = useTasks();
+  const { patchTask } = useTasks();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(task.title);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const cancelEditRef = useRef(false);
-  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showPending = useDelayedFlag(isPending, PENDING_AFFORDANCE_DELAY_MS);
-
-  useEffect(() => {
-    return () => {
-      if (confirmTimerRef.current) {
-        clearTimeout(confirmTimerRef.current);
-      }
-    };
-  }, []);
 
   function commitTitle(value: string): void {
     const nextTitle = value.trim();
@@ -60,20 +49,6 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
       { completed_at: completedAt, updated_at: now },
       { ...task, completed_at: completedAt, updated_at: now },
     );
-  }
-
-  function handleDeleteClick(): void {
-    if (!confirmingDelete) {
-      setConfirmingDelete(true);
-      confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), CONFIRM_DELETE_WINDOW_MS);
-      return;
-    }
-    if (confirmTimerRef.current) {
-      clearTimeout(confirmTimerRef.current);
-    }
-    setConfirmingDelete(false);
-    const now = new Date().toISOString();
-    void deleteTask(task.id, { deleted_at: now, updated_at: now }, { ...task, deleted_at: now, updated_at: now });
   }
 
   const completed = task.completed_at !== null;
@@ -130,16 +105,6 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
           {task.title}
         </button>
       )}
-
-      <button
-        aria-label={confirmingDelete ? `Confirm delete ${task.title}` : `Delete ${task.title}`}
-        className="psykl-task-row__delete"
-        data-armed={confirmingDelete}
-        onClick={handleDeleteClick}
-        type="button"
-      >
-        {confirmingDelete ? 'Confirm?' : 'Delete'}
-      </button>
 
       {showPending ? <span aria-label="Pending sync" className="psykl-task-row__pending" role="img" /> : null}
     </li>

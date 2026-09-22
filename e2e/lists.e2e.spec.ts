@@ -3,6 +3,16 @@ import { expect, test } from './helpers/isolated-test';
 test.describe('lists', () => {
   test.use({ viewport: { height: 844, width: 390 } });
 
+  test('a user starts a new list from a circled header button', async ({ page }) => {
+    await page.goto('/lists');
+    const add = page.getByRole('button', { name: 'New List' });
+    await expect(add).toHaveCSS('border-radius', '50%');
+    await expect(add).toHaveCSS('width', '40px');
+    await add.click();
+    await expect(page.getByLabel('New list name')).toBeFocused();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+
   test('a user creates a list and it appears in the navigation', async ({ page }) => {
     await page.goto('/lists');
 

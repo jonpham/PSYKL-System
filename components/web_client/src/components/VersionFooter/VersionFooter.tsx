@@ -1,3 +1,5 @@
+import './version-footer.css';
+
 import { useEffect, useState } from 'react';
 
 import { fetchApiVersion, getWebCommit, shortCommit } from '../../api/version';
@@ -41,15 +43,8 @@ export function VersionFooter() {
   }
 
   return (
-    <footer
-      className="version-footer"
-      style={{
-        marginTop: '2rem',
-        fontSize: '0.75rem',
-        color: '#888',
-        fontFamily: 'ui-monospace, monospace',
-      }}
-    >
+    <footer className="version-footer">
+      <h4>Version</h4>
       <span aria-label="web client commit" title={`web_client build commit: ${webCommit}`}>
         web <code>{shortCommit(webCommit)}</code>
       </span>

@@ -1,27 +1,52 @@
+.psykl-task-list__body {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 160px);
+}
+
 .psykl-task-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-/* The last row's separator would draw a line across the bottom of the list with
- * nothing under it. */
-.psykl-task-list .psykl-task-row:last-child {
-  border-bottom: 0;
+.psykl-task-list__capture-bar {
+  bottom: max(1.75rem, calc(env(safe-area-inset-bottom) + 1.25rem));
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  pointer-events: none;
+  position: sticky;
+  z-index: 1;
+}
+
+.psykl-task-list__capture-bar > * {
+  pointer-events: auto;
 }
 
 .psykl-task-list__capture {
   align-items: center;
-  background: none;
+  background: var(--accent);
   border: 0;
-  color: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+  color: var(--text-on-accent);
   cursor: pointer;
   display: flex;
-  font: inherit;
-  font-size: 17px;
-  gap: 0.5rem;
-  min-height: var(--row-min);
+  height: var(--icon-tile);
+  justify-content: center;
+  margin-inline-end: 0.5rem;
   padding: 0;
+  width: var(--icon-tile);
+}
+
+.psykl-task-list__capture:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.psykl-task-list__capture:active:not(:disabled) {
+  transform: scale(0.92);
 }
 
 .psykl-task-list__capture:focus-visible {

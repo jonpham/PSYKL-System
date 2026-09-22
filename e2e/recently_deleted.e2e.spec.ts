@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 
 import { listLocalSyncQueue } from './helpers/idb-storage';
 import { expect, test } from './helpers/isolated-test';
+import { deleteServerTask } from './helpers/task-api';
 
 test.describe('recently deleted', () => {
   test.use({ viewport: { height: 844, width: 390 } });
@@ -14,8 +15,9 @@ test.describe('recently deleted', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Delete Milk' }).click();
-    await page.getByRole('button', { name: 'Confirm delete Milk' }).click();
+    await expectSyncQueueEmpty(page);
+    await deleteServerTask('local', 'Milk');
+    await page.reload();
     await expect(page.getByText('Milk')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();

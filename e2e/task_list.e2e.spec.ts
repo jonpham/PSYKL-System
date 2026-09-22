@@ -127,18 +127,31 @@ test.describe('Task list', () => {
     await expect(page.getByRole('checkbox', { name: markIncompleteName(title) })).toBeChecked();
   });
 
-  test('a user deletes a task with a two-click confirmation', async ({ page }) => {
+  test('a user adds a task from the floating button without a delete control', async ({ page }) => {
     await page.goto('/');
-    const title = `obsolete ${Date.now()}`;
+    const add = page.getByRole('button', { name: 'New Task' });
+    await expect(add).toHaveCSS('border-radius', '50%');
+    const title = `capture ${Date.now()}`;
     await createTask(page, title);
     await expect(page.getByText(title)).toBeVisible();
-    await expectSyncQueueEmpty(page);
+    await expect(page.getByRole('button', { name: `Delete ${title}` })).toHaveCount(0);
+  });
 
-    await deleteTask(page, title);
-
-    await expect(page.getByText(title)).not.toBeVisible();
-    await page.reload();
-    await expect(page.getByText(title)).not.toBeVisible();
+  test('a user sees one inset separator while capturing below an open task', async ({ page }) => {
+    await page.goto('/');
+    await createTask(page, `first ${Date.now()}`);
+    await page.getByRole('button', { name: 'New Task' }).click();
+    const capture = page.locator('.psykl-capture-row');
+    await expect(capture).toBeVisible();
+    const rule = await capture.evaluate((row) => {
+      const style = getComputedStyle(row, '::before');
+      return { color: style.backgroundColor, left: style.left, height: style.height };
+    });
+    expect(rule.left).toBe('36px');
+    expect(rule.height).toBe('1px');
+    expect(rule.color).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(page.locator('.psykl-task-row')).toHaveCSS('border-bottom-width', '0px');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   });
 });
 
@@ -154,11 +167,6 @@ async function editTaskTitle(page: Page, currentTitle: string, nextTitle: string
   const input = page.getByRole('textbox', { name: /edit title/i });
   await input.fill(nextTitle);
   await input.press('Enter');
-}
-
-async function deleteTask(page: Page, title: string): Promise<void> {
-  await page.getByRole('button', { name: new RegExp(`^delete ${escapeRegExp(title)}$`, 'i') }).click();
-  await page.getByRole('button', { name: new RegExp(`^confirm delete ${escapeRegExp(title)}$`, 'i') }).click();
 }
 
 async function expectSyncQueueEmpty(page: Page): Promise<void> {

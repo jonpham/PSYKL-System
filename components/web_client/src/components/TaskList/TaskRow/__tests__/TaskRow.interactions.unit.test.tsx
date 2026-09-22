@@ -1,12 +1,11 @@
 import 'fake-indexeddb/auto';
 
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, render, screen, within } from '@testing-library/react';
 import { deleteDB } from 'idb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Task } from '../../../../api/client';
-import { listSyncQueue, putTask } from '../../../../db/idb';
+import { putTask } from '../../../../db/idb';
 import { resetUseTasksForTest } from '../../../../hooks/useTasks';
 import { TaskRow } from '../TaskRow';
 
@@ -54,55 +53,6 @@ afterEach(async () => {
   mockReplay.mockReset();
   resetUseTasksForTest();
   await deleteDB(databaseName);
-});
-
-describe('TaskRow delete confirmation (Unit)', () => {
-  it('does not enqueue a delete on the first click', async () => {
-    // Given
-    const user = userEvent.setup();
-    renderRow();
-
-    // When
-    await user.click(screen.getByRole('button', { name: /^delete walk the dog/i }));
-
-    // Then
-    expect(screen.getByRole('button', { name: /confirm delete walk the dog/i })).toBeInTheDocument();
-    expect(await listSyncQueue()).toHaveLength(0);
-  });
-
-  it('enqueues a delete op on the second click within the confirm window', async () => {
-    // Given
-    const user = userEvent.setup();
-    renderRow();
-
-    // When
-    await user.click(screen.getByRole('button', { name: /^delete walk the dog/i }));
-    await user.click(screen.getByRole('button', { name: /confirm delete walk the dog/i }));
-
-    // Then
-    const queue = await listSyncQueue();
-    expect(queue).toHaveLength(1);
-    expect(queue[0]).toMatchObject({ op: 'delete', entity_type: 'task', entity_id: baseTask.id });
-    const body = queue[0]?.body as { deleted_at?: string; updated_at?: string };
-    expect(body.deleted_at).toEqual(expect.any(String));
-    expect(body.updated_at).toEqual(expect.any(String));
-  });
-
-  it('disarms the confirmation after the 3-second window elapses', () => {
-    // Given — fireEvent (not userEvent) so the test never awaits under fake timers.
-    vi.useFakeTimers();
-    renderRow();
-    fireEvent.click(screen.getByRole('button', { name: /^delete walk the dog/i }));
-    expect(screen.getByRole('button', { name: /confirm delete walk the dog/i })).toBeInTheDocument();
-
-    // When
-    act(() => {
-      vi.advanceTimersByTime(3000);
-    });
-
-    // Then
-    expect(screen.getByRole('button', { name: /^delete walk the dog/i })).toBeInTheDocument();
-  });
 });
 
 describe('TaskRow pending sync affordance (Unit)', () => {

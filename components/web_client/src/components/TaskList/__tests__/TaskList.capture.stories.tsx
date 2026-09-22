@@ -59,6 +59,35 @@ export const TypingStartsImmediately: Story = {
   },
 };
 
+/** Capture sits between the final open task and the completed group. */
+export const CaptureBelowLastOpenTask: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get('*/tasks', () =>
+          HttpResponse.json([
+            created('Open task'),
+            {
+              ...created('Completed task'),
+              id: '01940000-0000-7000-8000-0000000000c2',
+              completed_at: '2026-05-27T11:00:00Z',
+            },
+          ]),
+        ),
+      ],
+    },
+  },
+  render: () => <TaskList />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('listitem', { name: 'Open task' });
+    await userEvent.click(canvas.getByRole('button', { name: 'New Task' }));
+    const rows = canvas.getAllByRole('listitem');
+    await expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual(['Open task', null, 'Completed task']);
+    await expect(within(rows[1]!).getByRole('textbox', { name: 'New task title' })).toHaveFocus();
+  },
+};
+
 /* A failed save is not reachable through the network here: `createTask` queues
  * the write offline-first rather than throwing, so the row commits and clears.
  * The refusal path is the write ceiling, covered by e2e/offline_pressure, and

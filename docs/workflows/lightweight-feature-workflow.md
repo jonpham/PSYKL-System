@@ -188,7 +188,6 @@ docs/experiments/<experiment-slug>/
     visual-artifact.md
     acceptance-checks.md
     implementation-notes.md
-    screenshots/                  # created after implementation or review
 ```
 
 The experiment folder name matches the route (`/exp/<experiment-slug>`) and the code folder (`src/experiment/<experiment-slug>/`). An experiment that will only ever have one iteration still gets the nesting — the second iteration should not force a reorganization.
@@ -201,7 +200,6 @@ docs/specs/<initiative>/<YYYYMMDD>-<slug>/
   visual-artifact.md
   acceptance-checks.md
   implementation-notes.md
-  screenshots/                    # created after implementation or review
 ```
 
 There is no experiment card and no iteration nesting — production work is not a shell being iterated, it is a change being shipped.
@@ -211,6 +209,8 @@ Use the initiative the surface belongs to. For work that belongs to no initiativ
 **A lightweight production artifact set is a folder; a heavyweight Spec is a file** (`{YYYYMMDD}-Spec{N}-{slug}.md`). That distinction is deliberate: the two can sit side by side in the same initiative directory without competing for Spec numbering. Lightweight work is never assigned a Spec number.
 
 `docs/initiatives/` is reserved for gstack initiative planning (`DESIGN.md`, `MILESTONE.md`). Neither target writes there.
+
+**Screenshots are local review material, not planning artifacts.** Capture them after implementation in a gitignored local directory, use them for developer review, then delete them at close-out. Never commit screenshots or carry them into a feature doc; preserve durable findings as text.
 
 ---
 
@@ -346,16 +346,16 @@ What each promoted artifact feeds:
 | `acceptance-checks.md`    | Spec acceptance criteria, and the E2E test titles the promotion DevTask must write |
 | `visual-artifact.md`      | the initiative's `UX.md` section for that feature                                  |
 | `implementation-notes.md` | DevTask breakdown seed, plus the production modules the real version must touch    |
-| `screenshots/`            | evidence in the resulting `docs/features/` doc                                     |
+| Local screenshots         | review only; summarize findings in text before deleting the captures               |
 
 ### `target = production`
 
 One exit: **shipped**. The change merges and is recorded.
 
 - Add the entry to `CHANGELOG.md` under `## Unreleased`, in the same PR.
-- The artifact folder is the record. A `docs/features/` doc is **not** required — those consolidate a whole Spec, and lightweight work is not a Spec. Write one only when several lightweight changes together amount to a feature worth a single consolidated record.
+- The artifact folder is the record by default. If the operator requests production-style close-out, consolidate its decisions and verification into a `docs/features/` document and delete the artifact folder in the same PR before merge.
 - Update `docs/PROJECT_STATUS.md` if the work changes what is active, blocked, or next.
-- Capture screenshots or equivalent evidence into the artifact folder.
+- Capture screenshots locally for review, then delete them at close-out; never commit the image files.
 
 Abandoned production work is deleted, branch and folder both. There is no "paused" state for a production change — if it is not shipping, it is an idea, and ideas belong in `docs/BACKLOG_IDEAS.md`.
 
@@ -387,10 +387,10 @@ Git Conventions in `AGENTS.md` apply in full under both targets — including th
 8. Create brief `implementation-notes.md` for one thin vertical slice. If its data/API line is not empty under `target = production`, raise it with the operator now.
 9. Implement the smallest slice that proves the outcome — writing the failing test first under `target = production`.
 10. Add or update tests to the floor for that target.
-11. Run the feature locally and capture screenshots for relevant viewports/states.
+11. Run the feature locally and capture screenshots for relevant viewports/states in a gitignored local directory.
 12. Compare the result to the visual artifact and acceptance checks.
 13. Iterate in small steps.
-14. Close out for that target:
+14. Delete local screenshots, then close out for that target:
     - **prototype** — if the operator accepts it for implementation, update the artifacts in preparation for use as inputs to the production development workflow;
     - **production** — add the `CHANGELOG.md` entry, refresh `docs/PROJECT_STATUS.md` if the work changed what is active, and open the PR.
 
@@ -410,7 +410,6 @@ docs/experiments/task-sections/
     visual-artifact.md         # one Mermaid flow, or 3 wireframes
     acceptance-checks.md       # 5 checks
     implementation-notes.md    # ~6 bullets
-    screenshots/
 
 components/web_client/src/experiment/task-sections/
   TaskSectionsExperiment.tsx
@@ -432,14 +431,13 @@ docs/specs/to-do-ui/20260923-rename-list-in-place/
   visual-artifact.md         # before/after state pair
   acceptance-checks.md       # 4 checks
   implementation-notes.md    # ~6 bullets
-  screenshots/
 
 components/web_client/src/components/ListsPage/ListsPage.tsx
 components/web_client/src/components/ListsPage/__tests__/ListsPage.rename.unit.test.tsx
 e2e/lists.e2e.spec.ts        # one new test, titled from an acceptance check
 ```
 
-Plus a `CHANGELOG.md` entry. No Spec number, no DevTask breakdown, no feature doc, no Spec integration branch — but the E2E test is not optional, because a user reaches this the moment it merges.
+Plus a `CHANGELOG.md` entry. No Spec number, no DevTask breakdown, no feature doc by default, no Spec integration branch — but the E2E test is not optional, because a user reaches this the moment it merges. An operator-requested close-out replaces the artifact folder with a feature doc in this same PR.
 
 ---
 
@@ -467,5 +465,5 @@ A thin vertical slice is done when:
 - the most relevant acceptance checks for that slice pass,
 - tests were added or updated to the floor for the declared target,
 - the result was reviewed in a browser,
-- screenshots or equivalent evidence were captured,
+- screenshots or equivalent evidence were reviewed locally and the image files were not committed,
 - and any differences from the original artifact are documented.

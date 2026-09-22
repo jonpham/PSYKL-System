@@ -79,7 +79,7 @@ function AppShell({ children, headerAction, title }: AppShellProps) {
         ) : null}
         <main className="psykl-app-shell__main">
           <div className="psykl-app-shell__content">
-            <div className="psykl-app-shell__content-header">
+            <div className="psykl-app-shell__content-header" data-destination={destination}>
               <h2>{title}</h2>
               {headerAction}
             </div>

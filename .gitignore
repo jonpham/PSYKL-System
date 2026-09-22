@@ -43,6 +43,9 @@ coverage/
 playwright-report/
 test-results/
 
+# Visual review captures stay local and are removed at feature close-out.
+docs/**/screenshots/
+
 # Storybook
 storybook-static/
 **/storybook-static/

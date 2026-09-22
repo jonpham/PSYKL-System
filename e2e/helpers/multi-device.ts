@@ -1,6 +1,7 @@
 import { type Browser, expect, type Page } from '@playwright/test';
 
 import { waitForServiceWorkerControl } from './service-worker';
+import { deleteServerTask } from './task-api';
 
 const apiBaseUrl = process.env['E2E_API_URL'] ?? 'http://localhost:3000';
 
@@ -71,9 +72,9 @@ async function completeTask(device: Device, title: string): Promise<void> {
 }
 
 async function deleteTask(device: Device, title: string): Promise<void> {
-  const row = taskRow(device.page, title);
-  await row.getByRole('button', { name: new RegExp(`^delete ${escapeRegExp(title)}$`, 'i') }).click();
-  await row.getByRole('button', { name: new RegExp(`^confirm delete ${escapeRegExp(title)}$`, 'i') }).click();
+  await expectServerTaskVisible(device.userId, title);
+  await deleteServerTask(device.userId, title);
+  await device.page.reload();
 }
 
 async function expectTaskVisible(device: Device, title: string): Promise<void> {
