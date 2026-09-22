@@ -66,6 +66,10 @@ Copied verbatim from the design docs. Every DevTask's requirements implicitly in
 - **UI Component folder layout:** every component gets its own directory with `<Name>.tsx`, a child
   `__tests__/`, and an `index.ts` re-export. Single-consumer components nest under their parent.
 - **No milestone tokens** in filenames or identifiers.
+- **No workflow identifiers, future-agent notes, or historical framing in code comments**, and no code
+  comment referencing a markdown document. Comments describe current behaviour. Which test a DevTask
+  activates is recorded in this doc's activation table, never in the test file. (`docs/STYLE.md` →
+  Code Comments; established by the PR #99 review.)
 - **≤10 production behaviour source files per DevTask PR.** Tests, config and docs are exempt from
   the count but never from the PR.
 - **Storybook stories must not write persistent state.** Use MSW handlers and `resetStore()`; the
@@ -267,23 +271,47 @@ None — `web_client` has no service-level concerns at this layer.
 
 ### End-to-End tests
 
+> **This table is the only record of which DevTask activates which test.** The test files carry no
+> activation comments — per PR #99 review, comments in code describe current behaviour and never
+> transient workflow items. An executor picking up a DevTask reads its activation set from here.
+
 Written on the Spec branch ahead of DevTask 1 and titled as user stories. Collapsed to their titles,
 these are the plain-language record of what the shell lets a user do.
 
-| File                         | Title                                                                          | Activated in |
-| ---------------------------- | ------------------------------------------------------------------------------ | ------------ |
-| `e2e/navigation.e2e.spec.ts` | a user opens the navigation and sees every place they can go                   | DevTask 2    |
-| `e2e/navigation.e2e.spec.ts` | a user folds their lists away to see the rest of the navigation                | DevTask 2    |
-| `e2e/navigation.e2e.spec.ts` | a user dismisses the navigation with the keyboard and lands back on their list | DevTask 2    |
-| `e2e/navigation.e2e.spec.ts` | a user reaches Recently Deleted and Settings from the navigation               | DevTask 3    |
-| `e2e/navigation.e2e.spec.ts` | a user returns to their list with the browser back button                      | DevTask 3    |
-| `e2e/navigation.e2e.spec.ts` | a user opens a destination directly from a pasted link                         | DevTask 3    |
-| `e2e/navigation.e2e.spec.ts` | a user sees at a glance whether their changes have synced                      | DevTask 3    |
-| `e2e/navigation.e2e.spec.ts` | a user switches between their lists from the navigation                        | DevTask 4    |
-| `e2e/lists.e2e.spec.ts`      | a user creates a list and it appears in the navigation                         | DevTask 4    |
-| `e2e/lists.e2e.spec.ts`      | a user abandons a half-typed list name and no list is created                  | DevTask 4    |
-| `e2e/lists.e2e.spec.ts`      | a user re-orders their lists                                                   | DevTask 4    |
-| `e2e/lists.e2e.spec.ts`      | a user cannot move the first list any higher or the last list any lower        | DevTask 4    |
+**Activation set — every skipped test in the repository that belongs to this Spec.** Titles are exact;
+match on the full string.
+
+| File                               | Title                                                                               | Activated in              |
+| ---------------------------------- | ----------------------------------------------------------------------------------- | ------------------------- |
+| `e2e/navigation.e2e.spec.ts`       | a user opens the navigation and sees every place they can go                        | DevTask 2                 |
+| `e2e/navigation.e2e.spec.ts`       | a user folds their lists away to see the rest of the navigation                     | DevTask 2                 |
+| `e2e/navigation.e2e.spec.ts`       | a user dismisses the navigation with the keyboard and lands back on their list      | DevTask 2                 |
+| `e2e/lists.e2e.spec.ts`            | a user's existing tasks from before lists existed appear in the default list        | DevTask 2                 |
+| `e2e/navigation.e2e.spec.ts`       | a user reaches Recently Deleted and Settings from the navigation                    | DevTask 3                 |
+| `e2e/navigation.e2e.spec.ts`       | a user returns to their list with the browser back button                           | DevTask 3                 |
+| `e2e/navigation.e2e.spec.ts`       | a user opens a destination directly from a pasted link                              | DevTask 3                 |
+| `e2e/navigation.e2e.spec.ts`       | a user sees at a glance whether their changes have synced                           | DevTask 3                 |
+| `e2e/recently_deleted.e2e.spec.ts` | a user sees how many days remain before a deleted task is purged, then restores it  | DevTask 3                 |
+| `e2e/navigation.e2e.spec.ts`       | a user switches between their lists from the navigation                             | DevTask 4                 |
+| `e2e/lists.e2e.spec.ts`            | a user creates a list and it appears in the navigation                              | DevTask 4                 |
+| `e2e/lists.e2e.spec.ts`            | a user abandons a half-typed list name and no list is created                       | DevTask 4                 |
+| `e2e/lists.e2e.spec.ts`            | a user re-orders their lists                                                        | DevTask 4                 |
+| `e2e/lists.e2e.spec.ts`            | a user cannot move the first list any higher or the last list any lower             | DevTask 4                 |
+| `e2e/lists.e2e.spec.ts`            | a user creates a task while a specific list is open and the task lands in that list | DevTask 4                 |
+| `e2e/recently_deleted.e2e.spec.ts` | a user restores a deleted list and its tasks come back                              | **Spec 4**, not this Spec |
+
+**Mechanics.** `navigation`, `lists` and `recently_deleted` each currently carry a `test.describe.skip`.
+
+- **DevTask 2** drops the `describe.skip` on `navigation` and `lists`, and individually `test.skip`s
+  every test in them not in its own activation set.
+- **DevTask 3** drops the `describe.skip` on `recently_deleted` — leaving that file's second test
+  individually skipped — and removes the DevTask 3 marks in `navigation`.
+- **DevTask 4** removes the last marks in `navigation` and `lists`. No `.skip` of any kind remains in
+  those two files.
+
+The single row assigned to Spec 4 keeps its `test.skip` past this Spec's close-out — **the one test
+this Spec knowingly leaves skipped** — because deleting a list has no home on `/` until the options
+menu ships.
 
 **Switching lists is a DevTask 4 story, not DevTask 2.** With only the bootstrap `Tasks` list there is
 nothing to switch _to_; the story needs list creation, which lands with the Lists page.
@@ -306,7 +334,8 @@ carries no UX decision. DevTask 2 changes that line in place.
 **Caveat on `recently_deleted.e2e.spec.ts`.** Its second test — _a user restores a deleted list and its
 tasks come back_ — drives the list options menu, which is Spec 4's work (drafting decision C). It stays
 individually `test.skip`ped when DevTask 3 activates the rest of the file, and **`to-do-ui` Spec 4
-un-skips it.** This is the one test this Spec knowingly leaves skipped past its own close-out.
+un-skips it.** Carried in the activation table above; Spec 4's doc must pick it up, since nothing in
+the code says so.
 
 **Otherwise: a slice that leaves one red or skipped has not landed.** Every other row above is green by
 the end of the DevTask named in it.

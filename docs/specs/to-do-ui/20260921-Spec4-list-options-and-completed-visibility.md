@@ -99,6 +99,18 @@ before implementing.
 `ListSwitcher` to the options menu), `e2e/recently_deleted.e2e.spec.ts` (a deleted list must still
 arrive there).
 
+**INHERITED OBLIGATION from Spec 1 — one skipped test to activate.** Spec 1 rewrote
+`e2e/recently_deleted.e2e.spec.ts` and left exactly one test individually `test.skip`ped, because
+deleting a list has no home on `/` until this Spec's options menu ships:
+
+| File                               | Title                                                  | Action                                     |
+| ---------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| `e2e/recently_deleted.e2e.spec.ts` | a user restores a deleted list and its tasks come back | remove `test.skip` and prove it green here |
+
+It already drives `List options` → `Delete List` → `Delete List?` — the menu this Spec builds.
+**Nothing in the test file says any of this**: per `docs/STYLE.md` → Code Comments, activation lives in
+spec docs, not in code. This Spec does not close out until that test is green.
+
 ### TDD order
 
 1. `sync_meta` preference unit tests, including the never-enqueued assertion → implement → green

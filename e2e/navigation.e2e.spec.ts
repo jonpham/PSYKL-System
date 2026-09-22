@@ -1,15 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-/**
- * The navigation drawer replaces the M1 bootstrap shell's three bordered
- * buttons and the list-switcher sheet. Written ahead of the implementation so
- * the expected end-state UX can be reviewed before any of it is built
- * (`docs/specs/to-do-ui/20260921-Spec1-shell-navigation-and-lists.md`).
- *
- * Each test names the DevTask that activates it. Un-skip there, never earlier.
- */
 test.describe.skip('navigation', () => {
-  // Activated by DevTask 2.
   test('a user opens the navigation and sees every place they can go', async ({ page }) => {
     await page.goto('/');
 
@@ -25,7 +16,6 @@ test.describe.skip('navigation', () => {
     await expect(navigation.getByRole('button', { name: 'Tasks' })).toBeVisible();
   });
 
-  // Activated by DevTask 2.
   test('a user folds their lists away to see the rest of the navigation', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
@@ -38,7 +28,6 @@ test.describe.skip('navigation', () => {
     await expect(page.getByRole('button', { name: 'Tasks' })).toBeVisible();
   });
 
-  // Activated by DevTask 2.
   test('a user dismisses the navigation with the keyboard and lands back on their list', async ({ page }) => {
     await page.goto('/');
     const trigger = page.getByRole('button', { name: 'Open PSYKL navigation' });
@@ -51,7 +40,6 @@ test.describe.skip('navigation', () => {
     await expect(trigger).toBeFocused();
   });
 
-  // Activated by DevTask 3.
   test('a user reaches Recently Deleted and Settings from the navigation', async ({ page }) => {
     await page.goto('/');
 
@@ -64,7 +52,6 @@ test.describe.skip('navigation', () => {
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   });
 
-  // Activated by DevTask 3.
   test('a user returns to their list with the browser back button', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
@@ -76,14 +63,12 @@ test.describe.skip('navigation', () => {
     await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
   });
 
-  // Activated by DevTask 3.
   test('a user opens a destination directly from a pasted link', async ({ page }) => {
     await page.goto('/settings');
 
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   });
 
-  // Activated by DevTask 3.
   test('a user sees at a glance whether their changes have synced', async ({ page }) => {
     await page.goto('/');
 
@@ -91,7 +76,6 @@ test.describe.skip('navigation', () => {
     await expect(page.getByRole('button', { name: /^Sync (clear|needs attention)$/ })).toBeVisible();
   });
 
-  // Activated by DevTask 4.
   test('a user switches between their lists from the navigation', async ({ page }) => {
     await page.goto('/');
 
