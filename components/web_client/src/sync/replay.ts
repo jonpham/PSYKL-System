@@ -119,7 +119,7 @@ async function replayEntry(
     const response = await (options.transport ?? sendEntry)(entry);
     if (response.status >= 200 && response.status < 300 && response.data) {
       if (entry.entity_type === 'task') {
-        emitStaleWriteIfSuperseded(entry, response.data as Task);
+        await emitStaleWriteIfSuperseded(entry, response.data as Task);
       }
       await writeBackResponse(entry, response.data, options.db);
       await deleteSyncOp(entry.id, options.db);

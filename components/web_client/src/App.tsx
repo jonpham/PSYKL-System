@@ -4,13 +4,11 @@ import { AppShell } from './components/AppShell';
 import { PlusGlyph } from './components/AppShell/Glyphs';
 import { ListMenu } from './components/ListMenu';
 import { ListsPage } from './components/ListsPage';
-import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
 import { SettingsView } from './components/SettingsView';
 import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
 import { SyncView } from './components/SyncView';
 import { TaskList } from './components/TaskList';
-import { Toast } from './components/Toast';
 import { VersionFooter } from './components/VersionFooter';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
 import { useCompletedVisibility } from './hooks/useCompletedVisibility';
@@ -90,11 +88,16 @@ export default function App() {
 
   return (
     <AppShell headerAction={headerAction} title={title}>
-      <Toast />
       <RecentlyDeleted open={destination === 'recently-deleted'} />
       {destination === 'settings' ? <SettingsView /> : null}
-      <OutOfSyncBanner />
-      {destination === 'sync' ? <SyncView failed={syncRecords.failed} queued={syncRecords.queued} /> : null}
+      {destination === 'sync' ? (
+        <SyncView
+          failed={syncRecords.failed}
+          onDismissReplacedEdit={syncRecords.dismissReplacedEdit}
+          queued={syncRecords.queued}
+          replacedEdits={syncRecords.replacedEdits}
+        />
+      ) : null}
       {destination === 'lists' ? (
         <ListsPage
           creating={creatingList}

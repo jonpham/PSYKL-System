@@ -1,10 +1,15 @@
 import './sync-view.css';
 
+import { useState } from 'react';
+
 import type { FailedOpEntry, SyncQueueEntry } from '../../db/idb.types';
+import type { StaleWriteRecord } from '../../preferences/staleWrites';
 
 interface SyncViewProps {
   failed: FailedOpEntry[];
+  onDismissReplacedEdit?: (id: string) => void;
   queued: SyncQueueEntry[];
+  replacedEdits: StaleWriteRecord[];
 }
 
 const entityNoun: Record<string, string> = { list: 'list', task: 'task' };
@@ -21,8 +26,8 @@ function describeEntry(entry: SyncQueueEntry): string {
 
 /** What this device has done that the server has not confirmed. Durable, so a
  * user can open it hours later — unlike the transient banner it replaces. */
-export function SyncView({ failed, queued }: SyncViewProps) {
-  if (queued.length === 0 && failed.length === 0) {
+export function SyncView({ failed, onDismissReplacedEdit, queued, replacedEdits }: SyncViewProps) {
+  if (queued.length === 0 && failed.length === 0 && replacedEdits.length === 0) {
     return <p className="psykl-sync-view__clear">Everything is synced.</p>;
   }
 
@@ -56,6 +61,43 @@ export function SyncView({ failed, queued }: SyncViewProps) {
           </ul>
         </section>
       ) : null}
+
+      {replacedEdits.length > 0 ? (
+        <section aria-label="Replaced by another device" className="psykl-sync-view__section">
+          <h3>Replaced by another device ({replacedEdits.length})</h3>
+          <ul>
+            {replacedEdits.map((record) => (
+              <ReplacedEdit key={record.id} onDismiss={onDismissReplacedEdit} record={record} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
+  );
+}
+
+/** Collapsed by default: the fact that an edit was replaced is the headline, and
+ * the two versions are the detail a user opens when they want to retype it. */
+function ReplacedEdit({ onDismiss, record }: { onDismiss?: (id: string) => void; record: StaleWriteRecord }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <li>
+      <button onClick={() => setOpen((current) => !current)} type="button">
+        What happened to this edit?
+      </button>
+      {open ? (
+        <dl className="psykl-sync-view__versions">
+          <dt>You wrote</dt>
+          <dd>{record.wrote.title}</dd>
+          <dt>It now reads</dt>
+          <dd>{record.won.title}</dd>
+        </dl>
+      ) : null}
+      <time dateTime={record.recordedAt}>{new Date(record.recordedAt).toLocaleString()}</time>
+      <button onClick={() => onDismiss?.(record.id)} type="button">
+        Dismiss
+      </button>
+    </li>
   );
 }
