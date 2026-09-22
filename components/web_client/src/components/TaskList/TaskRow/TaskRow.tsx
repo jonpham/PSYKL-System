@@ -1,3 +1,5 @@
+import './task-row.css';
+
 import { useEffect, useRef, useState } from 'react';
 
 import type { Task } from '../../../api/client';
@@ -79,26 +81,29 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
   return (
     <li
       aria-label={showPending ? `${task.title} pending sync` : task.title}
-      style={{
-        alignItems: 'center',
-        borderBottom: '1px solid #eee',
-        display: 'flex',
-        gap: '0.5rem',
-        opacity: showPending ? 0.6 : 1,
-        padding: '0.5rem 0',
-      }}
+      className="psykl-task-row"
+      data-completed={completed}
+      data-pending={showPending}
     >
-      <input
+      <button
+        aria-checked={completed}
         aria-label={completed ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`}
-        checked={completed}
-        onChange={toggleComplete}
-        type="checkbox"
-      />
+        className="psykl-task-row__checkbox"
+        onClick={toggleComplete}
+        role="checkbox"
+        type="button"
+      >
+        <svg aria-hidden="true" className="psykl-task-row__mark" viewBox="0 0 22 22">
+          <circle className="psykl-task-row__circle" cx="11" cy="11" r="10" />
+          <path className="psykl-task-row__tick" d="M6.2 11.4l3.2 3.2 6.4-6.8" />
+        </svg>
+      </button>
 
       {editing ? (
         <input
           aria-label="Edit title"
           autoFocus
+          className="psykl-task-row__input"
           maxLength={200}
           onBlur={handleEditBlur}
           onChange={(event) => setDraft(event.target.value)}
@@ -110,24 +115,15 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
               event.currentTarget.blur();
             }
           }}
-          style={{ flex: 1, padding: '0.25rem' }}
           value={draft}
         />
       ) : (
         <button
           aria-label={`Edit ${task.title}`}
+          className="psykl-task-row__title"
           onClick={() => {
             setDraft(task.title);
             setEditing(true);
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'text',
-            flex: 1,
-            padding: 0,
-            textAlign: 'left',
-            textDecoration: completed ? 'line-through' : 'none',
           }}
           type="button"
         >
@@ -135,23 +131,17 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
         </button>
       )}
 
-      {showPending ? (
-        <span aria-label="Pending sync" style={{ color: '#8a6d00', fontSize: '0.85em' }}>
-          ●
-        </span>
-      ) : null}
-
-      <time dateTime={task.created_at} style={{ color: '#666', fontSize: '0.85em' }}>
-        {new Date(task.created_at).toLocaleString()}
-      </time>
-
       <button
         aria-label={confirmingDelete ? `Confirm delete ${task.title}` : `Delete ${task.title}`}
+        className="psykl-task-row__delete"
+        data-armed={confirmingDelete}
         onClick={handleDeleteClick}
         type="button"
       >
         {confirmingDelete ? 'Confirm?' : 'Delete'}
       </button>
+
+      {showPending ? <span aria-label="Pending sync" className="psykl-task-row__pending" role="img" /> : null}
     </li>
   );
 }

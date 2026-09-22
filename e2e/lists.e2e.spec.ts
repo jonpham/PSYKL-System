@@ -35,6 +35,9 @@ test.describe('lists', () => {
       await page.getByRole('button', { name: 'New List' }).click();
       await page.getByLabel('New list name').fill(title);
       await page.keyboard.press('Enter');
+      // Each list takes its position from the one before it, so let it land
+      // before naming the next — a user cannot type two names in one tick.
+      await expect(page.getByRole('button', { name: title, exact: true })).toBeVisible();
     }
 
     // Tasks, Groceries, Reading — move the last one to the middle.

@@ -1,0 +1,138 @@
+/* The row is a three-column grid so the checkbox, the title and the trailing
+ * controls each own a column: the pending dot then hangs directly under the
+ * header's sync control, and a wrapped title cannot shift either of them. */
+.psykl-task-row {
+  align-items: start;
+  border-bottom: 1px solid var(--separator);
+  column-gap: 0.5rem;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto;
+  min-height: var(--row-min);
+  padding: 0.5rem 0;
+}
+
+/* Inset to the title's leading edge, Reminders-style, rather than spanning the
+ * full width under the checkbox column. */
+.psykl-task-row:not(:last-child) {
+  border-bottom-color: var(--separator);
+}
+
+.psykl-task-row[data-pending='true'] {
+  opacity: 0.6;
+}
+
+.psykl-task-row__checkbox {
+  align-items: center;
+  align-self: start;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  /* 44px hit target without pushing the 36px column into the page gutter. */
+  height: var(--row-min);
+  justify-content: flex-start;
+  margin-top: -0.5rem;
+  padding: 0;
+  width: 36px;
+}
+
+.psykl-task-row__checkbox:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.psykl-task-row__mark {
+  height: 22px;
+  width: 22px;
+}
+
+.psykl-task-row__circle {
+  fill: none;
+  stroke: var(--text-tertiary);
+  stroke-width: 1.5;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease;
+}
+
+.psykl-task-row[data-completed='true'] .psykl-task-row__circle {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.psykl-task-row__tick {
+  fill: none;
+  stroke: var(--text-on-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.psykl-task-row[data-completed='true'] .psykl-task-row__tick {
+  opacity: 1;
+}
+
+.psykl-task-row__title,
+.psykl-task-row__input {
+  background: none;
+  border: 0;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 17px;
+  line-height: 22px;
+  /* Wraps rather than truncates: a task the user can only half-read is worse
+   * than a row two lines tall. */
+  overflow-wrap: anywhere;
+  padding: 0;
+  text-align: left;
+  white-space: normal;
+}
+
+.psykl-task-row__title {
+  cursor: text;
+}
+
+.psykl-task-row[data-completed='true'] .psykl-task-row__title {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+
+.psykl-task-row__input {
+  width: 100%;
+}
+
+.psykl-task-row__delete {
+  align-self: start;
+  background: none;
+  border: 0;
+  color: var(--destructive);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  padding: 0;
+}
+
+.psykl-task-row__delete[data-armed='true'] {
+  font-weight: 600;
+}
+
+/* Mirrors the header's trailing column so it sits under the sync control, and
+ * pins to the first line of a wrapped title rather than the block centre. */
+.psykl-task-row__pending {
+  align-self: start;
+  background: var(--status-warn);
+  border-radius: 50%;
+  display: block;
+  height: 8px;
+  margin-top: 7px;
+  width: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psykl-task-row__circle,
+  .psykl-task-row__tick {
+    transition: none;
+  }
+}
