@@ -1,6 +1,6 @@
 # Implementation Notes — {Feature name}
 
-> Experimental lane — `docs/workflows/experimental-feature-workflow.md`.
+> Lightweight feature workflow — `docs/workflows/lightweight-feature-workflow.md`. Used under both targets (`prototype` and `production`).
 > Copy to `docs/experiments/{slug}/{iteration}/implementation-notes.md`. Keep it to bullets.
 > Scope is the thinnest slice that proves the outcome — not the production design.
 

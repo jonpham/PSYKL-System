@@ -479,7 +479,7 @@ Because the chart source is `@ main` while the image is pinned by semver, the tw
 
 ### ADR-EXP-001: Experiment Sandbox in `web_client` — Hand-Rolled `/exp` Dispatcher, One-Way Import Boundary
 
-The Experimental lane (`docs/workflows/experimental-feature-workflow.md`) needs a place to put a UI/UX prototype that is visible, throwaway, and cannot contaminate production code. `components/web_client/src/experiment/` is that place; `/exp/{slug}` is its route.
+The lightweight workflow's `target = prototype` (`docs/workflows/lightweight-feature-workflow.md`) needs a place to put a UI/UX prototype that is visible, throwaway, and cannot contaminate production code. `components/web_client/src/experiment/` is that place; `/exp/{slug}` is its route.
 
 **Routing is hand-rolled, not `react-router`.** `web_client` had no router at all — `main.tsx` rendered `App.tsx` directly. Adding a routing library to serve a sandbox would settle a production architecture question (how the app shell routes) as a side effect of a prototyping convenience, and would do it without the paradigm/ordering analysis such a decision deserves. Instead, `src/hooks/usePathname.ts` (a `popstate` subscription plus a `navigate()` that dispatches the event `pushState` omits) and `src/Root.tsx` (`isExperimentPath(pathname) ? <ExperimentRouter/> : <App/>`) are ~45 lines and add no dependency. When the production shell genuinely needs routing, that decision is still open and unprejudiced; `Root.tsx` is the one file it replaces. Server-side nothing changed: `nginx.conf`'s existing SPA fallback already serves `index.html` for `/exp/*`.
 

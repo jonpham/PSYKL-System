@@ -1,7 +1,7 @@
 # Experiments
 
 Artifacts for the Experimental lane — see
-[`docs/workflows/experimental-feature-workflow.md`](../workflows/experimental-feature-workflow.md).
+[`docs/workflows/lightweight-feature-workflow.md`](../workflows/lightweight-feature-workflow.md) under `target = prototype`. Lightweight work targeting production lands in `docs/specs/` instead.
 
 One directory per experiment, named for the experiment slug, matching the folder at
 `components/web_client/src/experiment/{slug}/` and the route `/exp/{slug}`. An experiment is a
