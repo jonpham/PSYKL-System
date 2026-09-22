@@ -1,5 +1,7 @@
 import { type Browser, expect, type Page } from '@playwright/test';
 
+import { waitForServiceWorkerControl } from './service-worker';
+
 const apiBaseUrl = process.env['E2E_API_URL'] ?? 'http://localhost:3000';
 
 type Device = Awaited<ReturnType<typeof openDevice>>;
@@ -37,6 +39,13 @@ async function openTwoDevices(browser: Browser, userId = uniqueUserId()) {
 }
 
 async function setOffline(device: Device, offline: boolean): Promise<void> {
+  // Going offline is only safe once the service worker is actually controlling
+  // the page: until then nothing can serve a navigation, and `page.goto` while
+  // offline fails outright with ERR_INTERNET_DISCONNECTED. Registration
+  // finishing is not the same thing as control being taken.
+  if (offline) {
+    await waitForServiceWorkerControl(device.page);
+  }
   await device.context.setOffline(offline);
 }
 
