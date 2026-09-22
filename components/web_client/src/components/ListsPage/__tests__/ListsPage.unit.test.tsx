@@ -5,7 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListsPage } from '../ListsPage';
 
 const createList = vi.fn();
-const moveList = vi.fn();
+// Resolves, because the real `moveList` returns a promise and the page now
+// attaches a rejection handler to it: a double that returns undefined makes
+// the page throw where production would not.
+const moveList = vi.fn().mockResolvedValue(undefined);
 const lists = [
   { id: 'list-1', position: 'a0', title: 'Tasks' },
   { id: 'list-2', position: 'a1', title: 'Groceries' },
@@ -20,6 +23,7 @@ describe('ListsPage', () => {
   beforeEach(() => {
     createList.mockClear();
     moveList.mockClear();
+    moveList.mockResolvedValue(undefined);
   });
 
   it('creates a list when the name is committed with Return', async () => {
