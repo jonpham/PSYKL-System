@@ -1,7 +1,7 @@
 ---
 status: IN-PROGRESS
 issue:
-pr:
+pr: https://github.com/jonpham/PSYKL-System/pull/99
 completed_at:
 created_at: 2026-09-21
 initiative: to-do-ui
