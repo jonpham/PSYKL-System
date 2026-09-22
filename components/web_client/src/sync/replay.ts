@@ -72,10 +72,23 @@ async function replay(options: ReplayOptions = {}): Promise<ReplayResult> {
 
   const stopHeartbeat = startReplayHeartbeat({ ...options, owner });
   try {
-    for (const entry of await dueEntries(options)) {
-      await replayEntry(entry, options, result);
+    // Re-read the queue after every pass. Replay is woken only by a user
+    // action, an `online` event, or the page becoming visible
+    // (page-triggers.ts) — there is no timer. An operation enqueued while this
+    // pass is in flight fires a wake-up that the lock above swallows, so if
+    // this pass does not pick it up, nothing ever will.
+    for (;;) {
+      let drained = false;
+      for (const entry of await dueEntries(options)) {
+        drained ||= (await replayEntry(entry, options, result)) !== 'retried';
+      }
+
+      // Nothing left the queue — it is empty, or everything in it is waiting
+      // on its backoff. Either way a further pass would only spin.
+      if (!drained) {
+        return result;
+      }
     }
-    return result;
   } finally {
     stopHeartbeat();
     await releaseReplayLock({ ...options, owner });

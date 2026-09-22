@@ -58,8 +58,13 @@ describe('useTasks mutations', () => {
     await waitFor(() => {
       expect(result.current.tasks.map((task) => task.title)).toContain('wash the car');
     });
+    // A device with no lists yet bootstraps its default list as part of the
+    // capture, so the task always names a list it can be found in again.
     const queue = await listSyncQueue();
-    expect(queue).toMatchObject([{ entity_type: 'task', op: 'create' }]);
+    expect(queue).toMatchObject([
+      { entity_type: 'list', op: 'create' },
+      { entity_type: 'task', op: 'create' },
+    ]);
   });
 
   it('patchTask() writes the optimistic Task locally and queues a patch op', async () => {
