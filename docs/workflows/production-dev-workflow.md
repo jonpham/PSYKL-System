@@ -1,7 +1,7 @@
 # Production Development Workflow
 
 > The heavyweight lane. Use it when shipping a decided feature into the product.
-> For prototyping an unproven UI/UX idea, use [`experimental-feature-workflow.md`](experimental-feature-workflow.md) instead.
+> For prototyping an unproven UI/UX idea, or for shipping a small decided change to a surface that already exists, use [`lightweight-feature-workflow.md`](lightweight-feature-workflow.md) instead — `target = prototype` and `target = production` respectively.
 > Lane selection is documented in [`AGENTS.md`](../../AGENTS.md) → Workflow Routing.
 
 This document holds the Initiative → Spec → DevTask → Step ceremony: planning, execution

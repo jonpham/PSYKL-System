@@ -1,6 +1,6 @@
 # Visual Artifact — {Feature name}
 
-> Experimental lane — `docs/workflows/experimental-feature-workflow.md`.
+> Lightweight feature workflow — `docs/workflows/lightweight-feature-workflow.md`. Used under both targets (`prototype` and `production`).
 > Copy to `docs/experiments/{slug}/{iteration}/visual-artifact.md`.
 > Pick **exactly one** form below and delete the rest. Text-only planning does not satisfy
 > the Standard Lane. This is the one human checkpoint before code — it exists to be looked at.

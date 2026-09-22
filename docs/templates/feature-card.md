@@ -1,6 +1,6 @@
 # {Feature name}
 
-> Experimental lane — `docs/workflows/experimental-feature-workflow.md`.
+> Lightweight feature workflow — `docs/workflows/lightweight-feature-workflow.md`. Used under both targets (`prototype` and `production`).
 > Copy to `docs/experiments/{slug}/{iteration}/feature-card.md` for an iteration, or `docs/experiments/{slug}/feature-card.md`
 > for the experiment itself (replace Done when with an `## Iterations` table). Keep the filled card to 10–15 lines; delete these quote lines.
 > Lane: Fast / Standard / High-Rigor. Status: exploring / paused / discarded / promoted.
