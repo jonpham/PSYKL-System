@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers/isolated-test';
 
 test.describe('lists', () => {
   test.skip('a user creates a list and it appears in the navigation', async ({ page }) => {

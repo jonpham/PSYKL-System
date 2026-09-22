@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
 import { seedSyncQueue } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 import { openDevice, setOffline, triggerQueuedReplay } from './helpers/multi-device';
 
 test.describe('Offline sync pressure', () => {

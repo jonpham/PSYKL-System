@@ -1,6 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { listLocalSyncQueue } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 
 test.describe('Task list', () => {
   test.use({ viewport: { height: 844, width: 390 } });

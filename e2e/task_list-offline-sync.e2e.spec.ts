@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
 import { listLocalSyncQueue, listLocalTasks, type SyncQueueEntry } from './helpers/idb-storage';
+import { expect, test } from './helpers/isolated-test';
 import {
   createTask,
   deleteTask,

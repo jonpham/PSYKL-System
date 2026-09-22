@@ -6,11 +6,12 @@ import { IdempotencyModule } from './idempotency/idempotency.module.js';
 import { ListModule } from './list/list.module.js';
 import { CLOCK_TOKEN, PurgeService } from './purge/purge.service.js';
 import { TaskModule } from './task/task.module.js';
+import { TestResetController } from './testing/test-reset.controller.js';
 import { VersionModule } from './version/version.module.js';
 
 @Module({
   imports: [TaskModule, ListModule, IdempotencyModule, VersionModule, ScheduleModule.forRoot()],
-  controllers: [DeletedController],
+  controllers: [DeletedController, TestResetController],
   providers: [PurgeService, { provide: CLOCK_TOKEN, useValue: () => new Date() }],
 })
 export class AppModule {}

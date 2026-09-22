@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers/isolated-test';
 
 test.describe('navigation', () => {
   test.use({ viewport: { height: 844, width: 390 } });
