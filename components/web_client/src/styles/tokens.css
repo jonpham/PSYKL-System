@@ -74,10 +74,18 @@
   --focus-ring: #0a84ff;
 }
 
-:root[data-contrast='increased'] {
+:root[data-theme='light'][data-contrast='increased'] {
   --text-secondary: #6d6d72;
   --text-tertiary: #8e8e93;
   --accent: #0069e0;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-contrast='increased']:not([data-theme='dark']) {
+    --text-secondary: #6d6d72;
+    --text-tertiary: #8e8e93;
+    --accent: #0069e0;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

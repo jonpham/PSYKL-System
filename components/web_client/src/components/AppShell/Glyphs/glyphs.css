@@ -25,6 +25,25 @@
   background: var(--text-secondary);
 }
 
+.psykl-header-glyph {
+  fill: none;
+  flex: none;
+  height: 1.5rem;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2;
+  width: 1.5rem;
+}
+
+.psykl-plus-glyph {
+  fill: none;
+  height: var(--icon-glyph);
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2.25;
+  width: var(--icon-glyph);
+}
+
 .psykl-chevron {
   fill: none;
   height: var(--icon-glyph);
