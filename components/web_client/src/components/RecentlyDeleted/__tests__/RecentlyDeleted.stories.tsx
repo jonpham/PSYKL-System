@@ -30,7 +30,7 @@ function RecentlyDeletedHarness() {
       <button onClick={() => setOpen(true)} type="button">
         Recently Deleted
       </button>
-      <RecentlyDeleted onClose={() => setOpen(false)} open={open} />
+      <RecentlyDeleted open={open} />
     </div>
   );
 }

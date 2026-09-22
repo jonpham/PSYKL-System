@@ -6,7 +6,7 @@ import { ListMenu } from './components/ListMenu';
 import { ListsPage } from './components/ListsPage';
 import { OutOfSyncBanner } from './components/OutOfSyncBanner';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
-import { Settings } from './components/Settings';
+import { SettingsView } from './components/SettingsView';
 import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
 import { SyncView } from './components/SyncView';
 import { TaskList } from './components/TaskList';
@@ -91,8 +91,8 @@ export default function App() {
   return (
     <AppShell headerAction={headerAction} title={title}>
       <Toast />
-      <RecentlyDeleted onClose={() => goTo('list')} open={destination === 'recently-deleted'} />
-      <Settings onClose={() => goTo('list')} open={destination === 'settings'} />
+      <RecentlyDeleted open={destination === 'recently-deleted'} />
+      {destination === 'settings' ? <SettingsView /> : null}
       <OutOfSyncBanner />
       {destination === 'sync' ? <SyncView failed={syncRecords.failed} queued={syncRecords.queued} /> : null}
       {destination === 'lists' ? (

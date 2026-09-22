@@ -31,12 +31,12 @@ describe('App shell', () => {
     expect(await screen.findByText(/no tasks yet/i)).toBeInTheDocument();
   });
 
-  it('opens and closes Recently Deleted from navigation', async () => {
+  it('reaches Recently Deleted from navigation', async () => {
     render(<App />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Recently Deleted' }));
-    expect(await screen.findByRole('dialog', { name: 'Recently Deleted' })).toBeVisible();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog', { name: 'Recently Deleted' })).toBeNull();
+    await userEvent.click(await screen.findByRole('button', { name: 'Recently Deleted' }));
+
+    // A destination, not a sheet: leaving it is navigation, not a Close button.
+    expect(await screen.findByRole('region', { name: 'Recently Deleted' })).toBeVisible();
   });
 });

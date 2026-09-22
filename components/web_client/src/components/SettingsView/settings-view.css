@@ -1,0 +1,45 @@
+.psykl-settings__section {
+  margin-bottom: 1.5rem;
+}
+
+.psykl-settings__section h3 {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 25px;
+  margin: 0 0 0.5rem;
+}
+
+.psykl-settings__section p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 20px;
+  margin: 0 0 0.75rem;
+}
+
+.psykl-settings__choices {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.psykl-settings__choice {
+  background: var(--bg-grouped);
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 17px;
+  min-height: var(--row-min);
+  padding: 0 1rem;
+}
+
+.psykl-settings__choice[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.psykl-settings__choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
