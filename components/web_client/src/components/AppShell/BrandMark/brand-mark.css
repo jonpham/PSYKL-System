@@ -1,0 +1,7 @@
+.psykl-brand-mark {
+  /* Matches .psykl-header-glyph so the swap does not move the text beside it. */
+  fill: currentcolor;
+  flex: none;
+  height: var(--brand-mark-size, 1.5rem);
+  width: var(--brand-mark-size, 1.5rem);
+}

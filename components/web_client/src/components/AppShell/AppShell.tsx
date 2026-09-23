@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useDestination } from '../../hooks/useDestination';
 import { useLists } from '../../hooks/useLists';
-import { HeaderGlyph } from './Glyphs';
+import { BrandMark } from './BrandMark';
 import { SidebarNav } from './SidebarNav';
 
 interface AppShellProps {
@@ -49,7 +49,7 @@ function AppShell({ children, headerAction, title }: AppShellProps) {
           ref={triggerRef}
           type="button"
         >
-          <HeaderGlyph name="menu" /> PSYKL
+          <BrandMark /> PSYKL
         </button>
         <aside className="psykl-app-shell__sidebar" data-open={sidebarOpen}>
           <SidebarNav
