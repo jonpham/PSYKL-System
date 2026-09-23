@@ -168,16 +168,22 @@ export const PendingQueuedTask: Story = {
 
     await step('Queued task surfaces the pending affordance after the 2s threshold', async () => {
       const item = await canvas.findByRole('listitem', { name: /queued task/i });
+      // The affordance is driven by the sync queue, so assert both together:
+      // a failure then says whether the queue drained (the row would rightly
+      // not be pending) or the delayed flag never turned on. The 2s delay
+      // leaves little slack on a contended CI runner, hence the wide budget.
       await waitFor(
-        () => {
-          expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
-          expect(item).toHaveStyle({ opacity: '0.6' });
+        async () => {
+          const queued = (await listSyncQueue()).map((entry) => entry.entity_id);
+          expect({ pending: item.getAttribute('data-pending'), queued }).toEqual({
+            pending: 'true',
+            queued: ['01940000-0000-7000-8000-000000000010'],
+          });
         },
-        // The affordance is deliberately delayed 2s after render, so a 3s
-        // budget left only ~1s of slack for loaders, MSW, and hydration —
-        // enough locally, not enough on a contended CI runner.
         { timeout: 8000 },
       );
+      expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
+      expect(item).toHaveStyle({ opacity: '0.6' });
     });
   },
 };
