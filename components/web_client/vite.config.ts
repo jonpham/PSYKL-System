@@ -35,7 +35,13 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
-      includeAssets: ['favicon.ico'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon-16x16.png',
+        'favicon-32x32.png',
+        'apple-touch-icon.png',
+        'safari-pinned-tab.svg',
+      ],
       manifest: {
         name: 'PSYKL-System',
         short_name: 'PSYKL',
@@ -45,9 +51,12 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/',
         icons: [
-          { src: '/pwa-icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/pwa-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          // Separate assets: the maskable pair carries the safe-zone padding a
+          // launcher mask crops into, which the `any` icons deliberately lack.
+          { src: '/maskable-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       injectRegister: false,
