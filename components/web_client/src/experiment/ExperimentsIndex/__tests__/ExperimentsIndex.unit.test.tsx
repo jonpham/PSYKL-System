@@ -9,14 +9,12 @@ const experiments: Experiment[] = [
   {
     Component: () => <p>sections</p>,
     slug: 'task-sections',
-    status: 'exploring',
     summary: 'Group tasks under headings.',
     title: 'Task Sections',
   },
   {
     Component: () => <p>swipe</p>,
     slug: 'swipe-actions',
-    status: 'paused',
     summary: 'Swipe a row to complete it.',
     title: 'Swipe Actions',
   },
@@ -31,17 +29,27 @@ describe('ExperimentsIndex', () => {
     expect(screen.getByText(/no experiments are registered/i)).toBeVisible();
   });
 
-  it('lists every registered experiment with its status', () => {
+  it('gives every registered experiment its own row', () => {
     // Arrange / Act
     render(<ExperimentsIndex experiments={experiments} />);
 
     // Assert
-    expect(screen.getByRole('button', { name: /Task Sections/ })).toBeVisible();
-    expect(screen.getByText('Group tasks under headings.')).toBeVisible();
-    expect(screen.getByText('paused')).toBeVisible();
+    const rows = screen.getAllByRole('button');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveAccessibleName(/Task Sections/);
+    expect(rows[0]).toHaveTextContent('Group tasks under headings.');
+    expect(rows[1]).toHaveAccessibleName(/Swipe Actions/);
   });
 
-  it('opens an experiment when its entry is chosen', async () => {
+  it('follows the theme instead of pinning its own colors', () => {
+    // Given a dark surface, where an inherited user-agent button color is invisible
+    render(<ExperimentsIndex experiments={experiments} />);
+
+    // When / Then
+    expect(screen.getAllByRole('button')[0]).toHaveStyle({ color: 'var(--text-primary, #000)' });
+  });
+
+  it('opens an experiment when its row is chosen', async () => {
     // Arrange
     const user = userEvent.setup();
     window.history.pushState({}, '', '/');

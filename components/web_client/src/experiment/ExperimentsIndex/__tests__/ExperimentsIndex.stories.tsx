@@ -8,14 +8,12 @@ const experiments: Experiment[] = [
   {
     Component: () => <p>sections</p>,
     slug: 'task-sections',
-    status: 'exploring',
     summary: 'Group tasks under headings.',
     title: 'Task Sections',
   },
   {
     Component: () => <p>swipe</p>,
     slug: 'swipe-actions',
-    status: 'paused',
     summary: 'Swipe a row to complete it.',
     title: 'Swipe Actions',
   },
