@@ -1,12 +1,18 @@
+/* eslint-disable simple-import-sort/imports */
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
 import { taskServiceClient } from '../services/task-service-client';
-import { enqueueWithReplay } from '../sync/page-triggers';
-import { replay } from '../sync/replay';
 import { getActiveListId } from './useActiveList';
 import { ensureDefaultList, getDefaultListId } from './useLists.default-list';
+/**
+ * These should not be here, sync behavior should not be coupled to the UI.
+ * But the sync system is still in flux, and this is the simplest way to get the UI to update when tasks change.
+ * Once the sync system is more stable, this should be refactored to be more decoupled.
+ */
+import { enqueueWithReplay } from '../sync/page-triggers';
+import { replay } from '../sync/replay';
 import {
   getSnapshot,
   hydrateTasks,
