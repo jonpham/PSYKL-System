@@ -4,7 +4,7 @@ issue: GH125
 branches:
   - feat/125-psykl-logo
 prs:
-  - https://github.com/jonpham/PSYKL-System/pull/PR_NUMBER
+  - https://github.com/jonpham/PSYKL-System/pull/133
 completed_at: 2026-09-22
 created_at: 2026-09-22
 initiative: to-do-ui
@@ -117,6 +117,6 @@ matches the appearance chosen in step 3 and step 4.
 
 ## Change Log
 
-| Date       | PR                                                                   | Summary                                                                                           |
-| ---------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 2026-09-22 | [#PR_NUMBER](https://github.com/jonpham/PSYKL-System/pull/PR_NUMBER) | Icon set, brand header, desktop close-control removal, and the appearance-linked home-screen tile |
+| Date       | PR                                                       | Summary                                                                                           |
+| ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 2026-09-22 | [#133](https://github.com/jonpham/PSYKL-System/pull/133) | Icon set, brand header, desktop close-control removal, and the appearance-linked home-screen tile |
