@@ -7,6 +7,16 @@
          do not take an SVG icon. -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- The dark tile is offered first, qualified by `media`. Safari has no
+         documented support for a dark apple-touch-icon on an installed web
+         app; a build that ignores the attribute falls through to the
+         unqualified light tile below, which is legible in either appearance. -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/apple-touch-icon-dark.png"
+      media="(prefers-color-scheme: dark)"
+    />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#1a1a2e" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

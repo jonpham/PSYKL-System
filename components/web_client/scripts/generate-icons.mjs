@@ -81,6 +81,10 @@ const PNG_TARGETS = [
   // iOS home screen. iOS rounds the corners itself; 82% keeps the mark clear
   // of the radius while filling far more of the tile than the pack's 54%.
   { file: 'apple-touch-icon.png', size: 180, coverage: 0.82, background: PAPER },
+  // Dark counterpart, offered through a `media` attribute on its link tag.
+  // Whether iOS honours that for an installed web app is a device question —
+  // if it does not, the link is ignored and the light tile above is used.
+  { file: 'apple-touch-icon-dark.png', size: 180, coverage: 0.82, background: INK, fill: PAPER },
   // Android/Chrome `any` icons — no mask applied, so they can run close to the edge.
   { file: 'android-chrome-192x192.png', size: 192, coverage: 0.86, background: PAPER },
   { file: 'android-chrome-512x512.png', size: 512, coverage: 0.86, background: PAPER },
@@ -124,7 +128,11 @@ const page = await browser.newPage();
 const rendered = new Map();
 
 for (const target of PNG_TARGETS) {
-  const svg = markSvg({ coverage: target.coverage, background: target.background ?? 'none' });
+  const svg = markSvg({
+    coverage: target.coverage,
+    background: target.background ?? 'none',
+    fill: target.fill ?? INK,
+  });
   await page.setViewportSize({ width: target.size, height: target.size });
   await page.setContent(
     `<style>html,body{margin:0;padding:0;background:transparent}svg{display:block;width:${target.size}px;height:${target.size}px}</style>${svg}`,

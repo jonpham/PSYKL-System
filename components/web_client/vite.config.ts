@@ -35,7 +35,13 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
-      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'safari-pinned-tab.svg'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon.svg',
+        'apple-touch-icon.png',
+        'apple-touch-icon-dark.png',
+        'safari-pinned-tab.svg',
+      ],
       manifest: {
         name: 'PSYKL-System',
         short_name: 'PSYKL',
