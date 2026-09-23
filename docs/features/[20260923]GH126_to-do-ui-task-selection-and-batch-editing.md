@@ -23,7 +23,7 @@ As a PWA user with a list that has grown past a handful of tasks, I want to sele
 
 1. **Selection mode** — `Select Items` in the list options menu turns the list into a selection surface. The header belongs to the mode: the sync control steps aside and a filled accent checkmark is the one way out, which also empties the pool.
 2. **Pooling rows** — the mark or the title pools a task; a tick in the circle means "selected" and nothing else. Titles are not editable while selecting.
-3. **Batch actions** — a flat action bar, centred on the plane the new-task button occupies, applies **complete**, **move**, or **delete** to the whole pool. The bar arrives with the mode and reads dimmed with its actions disabled until something is pooled.
+3. **Batch actions** — a flat action bar, centred on the plane the new-task button occupies, applies **complete**, **move**, or **delete** to the whole pool. The bar arrives with the mode and reads dimmed with its actions disabled until something is pooled. A batch is issued at once and awaited as a whole: the pool is frozen while it is in flight, one failed write never strands the tasks behind it, and when everything settles the mode hands the user back to the ordinary list with the affected rows already showing their new state.
 4. **Two-press delete** — the first press arms (open-lidded trash, filled destructive pill, accessible name `Confirm deleting N tasks`), the second performs. A changed pool, another batch action, or leaving the mode disarms it. Deletes are soft and recoverable from Recently Deleted.
 5. **Move to another list** — a from-bottom drawer titled `Move to:` lists every list except the one in view; ✕ dismisses, ✓ commits. Each task's `list_id` is patched through the offline queue.
 6. **Hand re-ordering** — open tasks carry a drag handle: pointer drag (works on iOS, where HTML5 drag does not) or ArrowUp/ArrowDown on a focused handle. Completed tasks keep their completion order and carry no handle.
@@ -116,6 +116,7 @@ As a PWA user with a list that has grown past a handful of tasks, I want to sele
 
 - Hand re-ordering applies to **open** tasks only; a drop past the completed group clamps to the end of the open tasks. Dragging is pointer-driven so it works on iOS; ArrowUp/ArrowDown on a focused handle is the keyboard equivalent.
 - Leaving the mode clears the pool and disarms a pending delete. The pool is not remembered across a reload.
+- A completed batch leaves the mode on its own, so the user sees the result on the ordinary list; the header checkmark is for leaving without acting.
 - The completed mark changed list-wide, not just inside the mode, so a tick can only ever mean "selected".
 
 **How this differs from the plan.** The planning wireframes had the action bar appear with the first selection (it now arrives with the mode, dimmed), the new-task button leaving only once something was pooled (it leaves on entry), a single-press delete (now two presses), a solid disc for completion (now a ring with a filled core), a blue filled action bar (now flat), and no editable list name. All six came out of the operator's UX review on the running build.
@@ -154,11 +155,13 @@ No service, schema, or shared-type change.
 ## Design Decisions
 
 1. **Hand order is React state, not persisted (operator decision, 2026-09-22).** `Task` has no `position`, and this change adds none: the UX was judged before the contract was designed. A drag survives re-renders and re-sorts, not a reload, which falls back to `created_at` order. **The persisted slice is outstanding work** — it mirrors List ordering exactly (`tasks.position` as a `COLLATE "C"` fractional index, shared-types + migration + IndexedDB + a task-side twin of `useLists.positions.ts`) and carries its own sync and service-model work.
-2. **Batch actions reuse the single-row client paths**, one task at a time, so each inherits the offline queue and its recovery rather than growing a batch endpoint. `TaskPatchInputSchema` already carried `completed_at` and `list_id`, so complete/move/delete needed no backend work.
-3. **The row is a presentation shell plus two behaviour components.** What differs between modes is what a tap means and what the leading control claims to assistive tech; the chrome does not. The drag handle hangs off the shell's reorder props rather than selection mode, so ordinary rows can become draggable later without a second copy. (Review thread: [#134 r4079867787](https://github.com/jonpham/PSYKL-System/pull/134#discussion_r4079867787).)
-4. **Delete is two presses**, mirroring `Delete List` in the list menu, so the destructive gesture is the same shape across the app.
-5. **Completion is a ring with a filled core; the tick means selection.** A solid disc read as "selected" and collided with the new mode.
-6. **Test floor was reduced to unit tests during iteration** (operator instruction), then restored in full before merge: Storybook play functions and the E2E spec landed in the same PR.
+2. **Batch actions reuse the single-row client paths**, so each inherits the offline queue and its recovery rather than growing a batch endpoint. `TaskPatchInputSchema` already carried `completed_at` and `list_id`, so complete/move/delete needed no backend work. The hook treats those calls as plain async service calls and knows nothing about a queue behind them — whether one exists is the client's business (see [#135](https://github.com/jonpham/PSYKL-System/issues/135)). The batch is awaited with `allSettled`, not `all`: a user who asked for five deletions should not lose four because the first failed.
+3. **A finished batch leaves the mode.** An action the user cannot see the result of reads as nothing having happened; returning them to the list is how the batch reports itself.
+4. **One inline-edit state machine** (`hooks/useInlineEdit.ts`) serves the list name and the task title. `CaptureRow` deliberately does not use it — capture creates rather than edits, keeps its field open after a save, shows a retry on failure, and treats an empty field as discard.
+5. **The row is a presentation shell plus two behaviour components.** What differs between modes is what a tap means and what the leading control claims to assistive tech; the chrome does not. The drag handle hangs off the shell's reorder props rather than selection mode, so ordinary rows can become draggable later without a second copy. (Review thread: [#134 r4079867787](https://github.com/jonpham/PSYKL-System/pull/134#discussion_r4079867787).)
+6. **Delete is two presses**, mirroring `Delete List` in the list menu, so the destructive gesture is the same shape across the app.
+7. **Completion is a ring with a filled core; the tick means selection.** A solid disc read as "selected" and collided with the new mode.
+8. **Test floor was reduced to unit tests during iteration** (operator instruction), then restored in full before merge: Storybook play functions and the E2E spec landed in the same PR.
 
 ## Architecture Decisions (ADR)
 
@@ -167,7 +170,10 @@ None. No new ADR; the change sits inside the offline-first posture already recor
 ## Known Follow-ups
 
 - Persist hand order (`Task.position`) — the deferred vertical slice above.
-- Review findings raised on the PR and not yet acted on: serial unguarded batch writes, per-`pointermove` layout measurement, `applyHandOrder`'s O(n²) shape, a third copy of the inline-edit state machine, and the pooled-batch/visibility interaction. See [#134 review](https://github.com/jonpham/PSYKL-System/pull/134#pullrequestreview-5288431414).
+- **Bulk edits have no contract** — [#137](https://github.com/jonpham/PSYKL-System/issues/137). A batch is N independent writes, so it is atomic nowhere, and a partial failure is survivable but silent: the user is not told which of the N did not apply. The decision has to hold under both client paradigms (direct-service and offline sync).
+- **`applyHandOrder` is O(n²)** (`includes`/`indexOf` inside the comparator) — deferred to [#136](https://github.com/jonpham/PSYKL-System/issues/136), where it lands with the `Task.position` work rather than ahead of it.
+- **A pooled open task can silently leave the batch** if Hide Completed was on before entering the mode and another device completes that task mid-pool. Narrow — the toggle itself is unreachable while selecting, and the freeze closes the window once an action is pressed. Deferred to [#135](https://github.com/jonpham/PSYKL-System/issues/135)/[#136](https://github.com/jonpham/PSYKL-System/issues/136).
+- Addressed in review and no longer outstanding: batch failure handling and in-flight freezing, per-`pointermove` layout measurement, and the duplicated inline-edit state machine. See the [#134 review](https://github.com/jonpham/PSYKL-System/pull/134#pullrequestreview-5288431414).
 
 ## Change Log
 
