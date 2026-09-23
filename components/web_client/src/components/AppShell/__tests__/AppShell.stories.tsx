@@ -50,7 +50,7 @@ export const Opened: Story = {
   },
 };
 
-export const HeaderGlyphDoesNotShift: Story = {
+export const BrandMarkDoesNotShift: Story = {
   decorators: [
     (Story) => (
       <div style={{ width: 390 }}>
@@ -94,9 +94,14 @@ export const Desktop: Story = {
   ],
   parameters: { viewport: { defaultViewport: 'tablet' } },
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
     expect(canvasElement.querySelector('.psykl-app-shell__content')?.getBoundingClientRect().width).toBeLessThanOrEqual(
       680,
     );
+    // The sidebar is permanent here, so its header is a brand heading and the
+    // close control is gone — out of the tab order, not merely invisible.
+    await expect(canvas.getByRole('heading', { name: 'PSYKL' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Close PSYKL navigation' })).not.toBeInTheDocument();
   },
 };
 import '../../../styles/tokens.css';
