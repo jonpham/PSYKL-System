@@ -1,7 +1,8 @@
 .psykl-brand-mark {
-  /* Matches .psykl-header-glyph so the swap does not move the text beside it. */
+  /* Slightly larger than the 1.5rem glyphs it replaced: the mark is a spiral
+   * with no flat edges, so it reads smaller than a stroke glyph at equal size. */
   fill: currentcolor;
   flex: none;
-  height: var(--brand-mark-size, 1.5rem);
-  width: var(--brand-mark-size, 1.5rem);
+  height: var(--brand-mark-size, 1.75rem);
+  width: var(--brand-mark-size, 1.75rem);
 }
