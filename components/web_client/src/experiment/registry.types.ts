@@ -1,17 +1,14 @@
 import type { ComponentType } from 'react';
 
-/** `exploring` is the default; `paused` marks a discovery the operator stopped
- * short of a verdict. Discarded and promoted experiments are deleted from the
- * registry outright rather than carrying a status. */
-type ExperimentStatus = 'exploring' | 'paused';
-
+/** An experiment that is still registered is, by definition, being explored:
+ * discarding, pausing past a verdict, or promoting one all end with its code
+ * and this entry deleted, so no status is carried here. */
 interface Experiment {
   Component: ComponentType;
   layout?: 'centered' | 'full';
   slug: string;
-  status: ExperimentStatus;
   summary: string;
   title: string;
 }
 
-export type { Experiment, ExperimentStatus };
+export type { Experiment };

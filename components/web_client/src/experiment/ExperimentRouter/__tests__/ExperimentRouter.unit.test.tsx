@@ -9,7 +9,6 @@ const experiments: Experiment[] = [
     Component: () => <p>sections body</p>,
     layout: 'full',
     slug: 'task-sections',
-    status: 'exploring',
     summary: 'Group tasks under headings.',
     title: 'Task Sections',
   },

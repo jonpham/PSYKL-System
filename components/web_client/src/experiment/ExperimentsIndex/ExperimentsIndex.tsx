@@ -13,27 +13,38 @@ export function ExperimentsIndex({ experiments = registeredExperiments }: Experi
   }
 
   return (
-    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+    <ul style={{ display: 'grid', gap: '0.5rem', listStyle: 'none', margin: 0, padding: 0 }}>
       {experiments.map((experiment) => (
-        <li key={experiment.slug} style={{ borderBottom: '1px solid #eee', padding: '0.5rem 0' }}>
-          <button
-            onClick={() => navigate(experimentPath(experiment.slug))}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              font: 'inherit',
-              padding: 0,
-              textAlign: 'left',
-            }}
-            type="button"
-          >
+        <li key={experiment.slug}>
+          <button onClick={() => navigate(experimentPath(experiment.slug))} style={rowStyle} type="button">
             <strong>{experiment.title}</strong>
+            <span style={summaryStyle}>{experiment.summary}</span>
           </button>
-          <span style={{ color: '#666', fontSize: '0.85em', marginLeft: '0.5rem' }}>{experiment.status}</span>
-          <p style={{ color: '#666', margin: '0.25rem 0 0' }}>{experiment.summary}</p>
         </li>
       ))}
     </ul>
   );
 }
+
+/** The whole row is the target, and every color comes from the theme tokens —
+ * an inherited user-agent button color renders black on the dark surface this
+ * list sits on in Settings. */
+const rowStyle = {
+  background: 'transparent',
+  border: '1px solid var(--separator, #c6c6c8)',
+  borderRadius: 'var(--radius-control, 10px)',
+  color: 'var(--text-primary, #000)',
+  cursor: 'pointer',
+  display: 'grid',
+  font: 'inherit',
+  gap: '0.15rem',
+  minHeight: 'var(--row-min, 44px)',
+  padding: '0.6rem 0.75rem',
+  textAlign: 'left',
+  width: '100%',
+} as const;
+
+const summaryStyle = {
+  color: 'var(--text-secondary, #8e8e93)',
+  fontSize: '0.85em',
+} as const;

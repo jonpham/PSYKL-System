@@ -8,7 +8,6 @@ const experiments: Experiment[] = [
     Component: AppleRemindersUxExperiment,
     layout: 'full',
     slug: 'apple-reminders-ux',
-    status: 'exploring',
     summary: 'Try Apple Reminders-grade navigation over existing PSYKL features.',
     title: 'Apple Reminders UX',
   },

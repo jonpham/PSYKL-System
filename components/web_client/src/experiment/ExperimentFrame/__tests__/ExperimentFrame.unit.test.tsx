@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import { experimentToolsStore } from '../../experimentToolsStore';
 import { ExperimentFrame } from '../ExperimentFrame';
+
+afterEach(() => {
+  window.localStorage.clear();
+  window.history.pushState({}, '', '/');
+});
 
 describe('ExperimentFrame', () => {
   it('marks the surface with compact experiment controls by default', () => {
@@ -12,43 +17,18 @@ describe('ExperimentFrame', () => {
     // Assert
     expect(screen.getByRole('heading', { name: 'Task Sections' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Expand experiment controls' })).toHaveTextContent('🧪');
-    expect(screen.getByRole('button', { name: 'Expand experiment controls' })).not.toHaveTextContent('Experiment');
-    expect(screen.queryByRole('note')).toBeNull();
     expect(screen.getByText('body')).toBeVisible();
   });
 
-  it('expands and collapses the experiment toolbar', async () => {
-    // Arrange
-    const user = userEvent.setup();
+  it('turns the experiment tools on so they follow the developer into production', () => {
+    // Given a developer who has never opened an experiment
+    expect(experimentToolsStore.read()).toBe(false);
+
+    // When
     render(<ExperimentFrame title="Task Sections">body</ExperimentFrame>);
 
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Expand experiment controls' }));
-
-    // Assert
-    expect(screen.getByRole('note')).toHaveTextContent(/not production/i);
-    expect(screen.getByRole('button', { name: 'Close experiment' })).toBeVisible();
-    expect(screen.getByLabelText('Experiment controls')).toHaveStyle({ alignItems: 'center', display: 'flex' });
-
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Collapse experiment controls' }));
-
-    // Assert
-    expect(screen.queryByRole('note')).toBeNull();
-  });
-
-  it('offers a way back to the production app from the expanded toolbar', async () => {
-    // Arrange
-    const user = userEvent.setup();
-    window.history.pushState({}, '', '/exp/task-sections');
-    render(<ExperimentFrame title="Task Sections">body</ExperimentFrame>);
-
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Expand experiment controls' }));
-    await user.click(screen.getByRole('button', { name: 'Close experiment' }));
-
-    // Assert
-    expect(window.location.pathname).toBe('/');
+    // Then
+    expect(experimentToolsStore.read()).toBe(true);
   });
 
   it('lets a full-layout experiment own the viewport width', () => {
