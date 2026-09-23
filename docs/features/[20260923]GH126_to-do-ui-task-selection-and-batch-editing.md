@@ -134,17 +134,19 @@ _Steps_
 1. Open the list, then ⋯ → **Select Items**.
 2. Tap three rows; confirm the action bar is centred and live, and that the new-task button is gone.
 3. Press delete once, then again to confirm; check Recently Deleted holds the tasks.
-4. Select two more, press complete; select one, move it to another list through the drawer.
-5. Drag a task's handle to a new position, then tab to a handle and use the arrow keys.
-6. Tap the list name, rename it, press Enter.
-7. Press the header checkmark; confirm titles edit inline again and the sync control is back.
+4. Confirm the list returns on its own after the delete, with the deleted rows gone — no second gesture needed.
+5. Re-enter the mode; select two tasks, press complete, and confirm the return to the list with both rows marked and sunk below the open ones. Do the same for a move through the drawer.
+6. Re-enter the mode; drag a task's handle to a new position, then tab to a handle and use the arrow keys.
+7. Tap the list name, rename it, press Enter.
+8. Press the header checkmark without acting; confirm titles edit inline again and the sync control is back.
 
-_Expectation_ — every batch action applies to exactly the pooled tasks, deletes never happen on one press, the moved tasks appear in the destination list, and membership, completion, and the new list name survive a reload.
+_Expectation_ — every batch action applies to exactly the pooled tasks and returns the user to the list showing the result, deletes never happen on one press, the moved tasks appear in the destination list, and membership, completion, and the new list name survive a reload.
 
 ## Affected Components
 
 - `components/web_client/src/App.tsx` — selection mode state; the header handover
-- `components/web_client/src/components/AppShell/AppShell.tsx`, `EditableTitle/` — renameable title
+- `components/web_client/src/components/AppShell/AppShell.tsx`, `EditableTitle/`, `DoneSelectingButton/` — renameable title and the way out of the mode
+- `components/web_client/src/hooks/useInlineEdit.ts` — the one inline-edit state machine, shared with the task row
 - `components/web_client/src/components/ListMenu/ListMenu.tsx` — `Select Items`
 - `components/web_client/src/components/TaskList/TaskList.tsx`, `useTaskSelection.ts`, `useHandOrder.ts`, `reorder.ts`
 - `components/web_client/src/components/TaskList/SelectionBar/`, `MoveToListDrawer/`
