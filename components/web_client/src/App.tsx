@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { AppShell } from './components/AppShell';
+import { DoneSelectingButton } from './components/AppShell/DoneSelectingButton';
 import { PlusGlyph } from './components/AppShell/Glyphs';
 import { ListMenu } from './components/ListMenu';
 import { ListsPage } from './components/ListsPage';
@@ -15,25 +16,6 @@ import { useDestination } from './hooks/useDestination';
 import { useLists } from './hooks/useLists';
 import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
 import { useSyncRecords } from './hooks/useSyncRecords';
-
-/** Leaves selection mode; mirrors Reminders' header checkmark. */
-function DoneGlyph() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      height="20"
-      stroke="currentcolor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-      width="20"
-    >
-      <path d="M5 12.5l4.5 4.5L19 7.5" />
-    </svg>
-  );
-}
 
 export default function App() {
   const { canDelete, deleteList, lists, renameList } = useLists();
@@ -84,15 +66,7 @@ export default function App() {
   // the sync affordance steps aside until the user leaves the mode.
   const headerAction =
     destination === 'list' && selecting ? (
-      <button
-        aria-label="Done selecting"
-        className="psykl-app-shell__header-action"
-        data-prominent="true"
-        onClick={() => setSelecting(false)}
-        type="button"
-      >
-        <DoneGlyph />
-      </button>
+      <DoneSelectingButton onClick={() => setSelecting(false)} />
     ) : destination === 'list' || destination === 'sync' ? (
       <>
         <SyncStatus
@@ -155,7 +129,11 @@ export default function App() {
       ) : null}
       {destination === 'list' ? (
         <section data-testid="task-ui-slot">
-          <TaskList onCompletedCountChange={setCompletedCount} selecting={selecting} />
+          <TaskList
+            onCompletedCountChange={setCompletedCount}
+            onExitSelection={() => setSelecting(false)}
+            selecting={selecting}
+          />
         </section>
       ) : null}
     </AppShell>

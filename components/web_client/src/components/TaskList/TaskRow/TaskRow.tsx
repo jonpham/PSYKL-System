@@ -15,6 +15,8 @@ interface TaskRowProps {
   checked: boolean;
   /** Drives the bordered fill and the struck-through title. */
   completed: boolean;
+  /** The row's controls are inert — a batch it belongs to is in flight. */
+  disabled?: boolean;
   /** The row is under the user's finger in a re-order drag. */
   isDragging?: boolean;
   isPending?: boolean;
@@ -47,6 +49,7 @@ export function TaskRow({
   checkboxLabel,
   checked,
   completed,
+  disabled = false,
   isDragging = false,
   isPending = false,
   onCheckboxClick,
@@ -73,6 +76,7 @@ export function TaskRow({
         aria-checked={checked}
         aria-label={checkboxLabel}
         className="psykl-task-row__checkbox"
+        disabled={disabled}
         onClick={onCheckboxClick}
         role="checkbox"
         type="button"
@@ -96,6 +100,7 @@ export function TaskRow({
         <button
           aria-label={`Reorder ${titleText}`}
           className="psykl-task-row__handle"
+          disabled={disabled}
           onKeyDown={(event) => {
             if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
             event.preventDefault();

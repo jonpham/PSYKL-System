@@ -63,7 +63,9 @@ test.describe('task selection', () => {
     await select(page, first);
     await select(page, second);
     await page.getByRole('button', { name: 'Mark selected tasks complete' }).click();
-    await page.getByRole('button', { name: 'Done selecting' }).click();
+
+    // No second gesture to get back: completing the batch leaves the mode.
+    await expect(page.getByRole('button', { name: 'New Task' })).toBeVisible();
 
     await expect(page.getByRole('checkbox', { name: `Mark ${first} incomplete` })).toBeChecked();
     await expect(page.getByRole('checkbox', { name: `Mark ${second} incomplete` })).toBeChecked();

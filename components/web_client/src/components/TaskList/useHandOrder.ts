@@ -1,7 +1,12 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { moveItem, targetIndexFor } from './reorder';
+
+interface RowMeasurements {
+  ids: string[];
+  midpoints: number[];
+}
 
 interface HandOrder {
   /** The row currently under the user's finger, if any. */
@@ -28,27 +33,37 @@ interface HandOrder {
 function useHandOrder(listRef: RefObject<HTMLUListElement | null>): HandOrder {
   const [handOrder, setHandOrder] = useState<string[]>([]);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  // Row geometry for the drag in progress. Measuring is a forced layout over
+  // every open row, so it happens when the order actually changes — not on
+  // every pointermove, which fires at the pointer's sampling rate.
+  const measured = useRef<RowMeasurements | null>(null);
 
-  const openIds = useCallback((): string[] => {
-    const rows = listRef.current?.querySelectorAll<HTMLElement>('[data-task-id][data-completed="false"]');
-    return [...(rows ?? [])].map((row) => row.dataset.taskId ?? '');
+  const measure = useCallback((): RowMeasurements => {
+    const rows = [...(listRef.current?.querySelectorAll<HTMLElement>('[data-task-id][data-completed="false"]') ?? [])];
+    return {
+      ids: rows.map((row) => row.dataset.taskId ?? ''),
+      midpoints: rows.map((row) => {
+        const rect = row.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      }),
+    };
   }, [listRef]);
 
-  const moveTo = useCallback(
-    (id: string, to: number) => {
-      const ids = openIds();
-      const from = ids.indexOf(id);
-      if (from === -1 || to === from) return;
-      setHandOrder(moveItem(ids, from, to));
-    },
-    [openIds],
-  );
+  const moveTo = useCallback((ids: string[], id: string, to: number): boolean => {
+    const from = ids.indexOf(id);
+    if (from === -1 || to === from) {
+      return false;
+    }
+    setHandOrder(moveItem(ids, from, to));
+    return true;
+  }, []);
 
   const reorder = useCallback(
     (id: string, delta: -1 | 1) => {
-      moveTo(id, openIds().indexOf(id) + delta);
+      const { ids } = measure();
+      moveTo(ids, id, ids.indexOf(id) + delta);
     },
-    [moveTo, openIds],
+    [measure, moveTo],
   );
 
   // Pointer events rather than HTML5 drag-and-drop: this is judged on an
@@ -57,17 +72,22 @@ function useHandOrder(listRef: RefObject<HTMLUListElement | null>): HandOrder {
     (id: string, event: ReactPointerEvent<HTMLButtonElement>) => {
       event.preventDefault();
       setDraggingId(id);
+      measured.current = measure();
 
       const onMove = (moveEvent: PointerEvent) => {
-        const rows = listRef.current?.querySelectorAll<HTMLElement>('[data-task-id][data-completed="false"]');
-        const midpoints = [...(rows ?? [])].map((row) => {
-          const rect = row.getBoundingClientRect();
-          return rect.top + rect.height / 2;
-        });
-        moveTo(id, targetIndexFor(midpoints, moveEvent.clientY));
+        const rows = measured.current ?? measure();
+        // Re-measure only when the rows have actually swapped underneath the
+        // finger; until then the geometry from the last change still holds.
+        if (moveTo(rows.ids, id, targetIndexFor(rows.midpoints, moveEvent.clientY))) {
+          measured.current = null;
+          requestAnimationFrame(() => {
+            measured.current = measure();
+          });
+        }
       };
       const onEnd = () => {
         setDraggingId(null);
+        measured.current = null;
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onEnd);
         window.removeEventListener('pointercancel', onEnd);
@@ -77,7 +97,7 @@ function useHandOrder(listRef: RefObject<HTMLUListElement | null>): HandOrder {
       window.addEventListener('pointerup', onEnd);
       window.addEventListener('pointercancel', onEnd);
     },
-    [listRef, moveTo],
+    [measure, moveTo],
   );
 
   return { draggingId, handOrder, reorder, startDrag };

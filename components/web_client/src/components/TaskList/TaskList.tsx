@@ -22,11 +22,14 @@ interface TaskListProps {
   /** The header's list menu needs this number, but it should not open a second
    * subscription to every task to get it — this list already has them. */
   onCompletedCountChange?: (count: number) => void;
+  /** Called when a batch action has settled, so the shell can leave the mode
+   * and show the user what their action did. */
+  onExitSelection?: () => void;
   /** Selection mode: rows pool into a batch instead of editing one at a time. */
   selecting?: boolean;
 }
 
-export function TaskList({ onCompletedCountChange, selecting = false }: TaskListProps = {}) {
+export function TaskList({ onCompletedCountChange, onExitSelection, selecting = false }: TaskListProps = {}) {
   const { createTask, error, loading, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
   // Past the offline write ceiling the device stops accepting new work rather
@@ -78,8 +81,17 @@ export function TaskList({ onCompletedCountChange, selecting = false }: TaskList
     return [...open, ...completed].filter((entry) => showCompleted || entry.completed_at === null);
   }, [handOrder, showCompleted, tasks]);
 
-  const { completeSelected, deleteSelected, moveSelected, moving, selected, selectedIds, setMoving, toggleSelected } =
-    useTaskSelection(ordered, selecting);
+  const {
+    busy,
+    completeSelected,
+    deleteSelected,
+    moveSelected,
+    moving,
+    selected,
+    selectedIds,
+    setMoving,
+    toggleSelected,
+  } = useTaskSelection(ordered, selecting, onExitSelection);
 
   if (loading) {
     return <TaskListSkeleton />;
@@ -114,6 +126,7 @@ export function TaskList({ onCompletedCountChange, selecting = false }: TaskList
             <Fragment key={task.id}>
               {selecting ? (
                 <SelectableTaskRow
+                  disabled={busy}
                   isDragging={draggingId === task.id}
                   isPending={pendingTaskIds.has(task.id)}
                   onDragStart={(event) => startDrag(task.id, event)}
@@ -135,6 +148,7 @@ export function TaskList({ onCompletedCountChange, selecting = false }: TaskList
       <div className="psykl-task-list__capture-bar" data-mode={selecting ? 'selection' : 'capture'}>
         {selecting ? (
           <SelectionBar
+            busy={busy}
             count={selected.length}
             onComplete={() => void completeSelected()}
             onDelete={() => void deleteSelected()}

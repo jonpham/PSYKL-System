@@ -3,6 +3,8 @@ import './selection-bar.css';
 import { useEffect, useState } from 'react';
 
 interface SelectionBarProps {
+  /** A batch is in flight: every action is inert until it settles. */
+  busy?: boolean;
   count: number;
   onComplete: () => void;
   onDelete: () => void;
@@ -23,8 +25,8 @@ interface SelectionBarProps {
  * the second performs it. Anything that changes what would be destroyed, or
  * moves the user's attention elsewhere in the bar, disarms it.
  */
-export function SelectionBar({ count, onComplete, onDelete, onMove }: SelectionBarProps) {
-  const empty = count === 0;
+export function SelectionBar({ busy = false, count, onComplete, onDelete, onMove }: SelectionBarProps) {
+  const empty = count === 0 || busy;
   const [armed, setArmed] = useState(false);
 
   // What is pooled is what delete would destroy, so a changed pool retires the

@@ -1,6 +1,5 @@
-import { useRef, useState } from 'react';
-
 import type { Task } from '../../../api/client';
+import { useInlineEdit } from '../../../hooks/useInlineEdit';
 import { useTasks } from '../../../hooks/useTasks';
 import { TaskRow } from './TaskRow';
 
@@ -15,28 +14,15 @@ interface EditableTaskRowProps {
  */
 export function EditableTaskRow({ isPending = false, task }: EditableTaskRowProps) {
   const { patchTask } = useTasks();
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(task.title);
-  const cancelEditRef = useRef(false);
+  const completed = task.completed_at !== null;
 
-  function commitTitle(value: string): void {
-    const nextTitle = value.trim();
-    if (!nextTitle || nextTitle === task.title) {
-      return;
-    }
-    const now = new Date().toISOString();
-    void patchTask(task.id, { title: nextTitle, updated_at: now }, { ...task, title: nextTitle, updated_at: now });
-  }
-
-  // Enter/Escape blur the input so `onBlur` is the single commit point; Escape
-  // arms `cancelEditRef` so the ensuing blur discards the draft.
-  function handleEditBlur(): void {
-    if (!cancelEditRef.current) {
-      commitTitle(draft);
-    }
-    cancelEditRef.current = false;
-    setEditing(false);
-  }
+  const { draft, editing, inputProps, start } = useInlineEdit({
+    onCommit: (title) => {
+      const now = new Date().toISOString();
+      void patchTask(task.id, { title, updated_at: now }, { ...task, title, updated_at: now });
+    },
+    value: task.title,
+  });
 
   function toggleComplete(): void {
     const now = new Date().toISOString();
@@ -48,36 +34,10 @@ export function EditableTaskRow({ isPending = false, task }: EditableTaskRowProp
     );
   }
 
-  const completed = task.completed_at !== null;
-
   const title = editing ? (
-    <input
-      aria-label="Edit title"
-      autoFocus
-      className="psykl-task-row__input"
-      maxLength={200}
-      onBlur={handleEditBlur}
-      onChange={(event) => setDraft(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          event.currentTarget.blur();
-        } else if (event.key === 'Escape') {
-          cancelEditRef.current = true;
-          event.currentTarget.blur();
-        }
-      }}
-      value={draft}
-    />
+    <input aria-label="Edit title" className="psykl-task-row__input" maxLength={200} {...inputProps} value={draft} />
   ) : (
-    <button
-      aria-label={`Edit ${task.title}`}
-      className="psykl-task-row__title"
-      onClick={() => {
-        setDraft(task.title);
-        setEditing(true);
-      }}
-      type="button"
-    >
+    <button aria-label={`Edit ${task.title}`} className="psykl-task-row__title" onClick={start} type="button">
       {task.title}
     </button>
   );
