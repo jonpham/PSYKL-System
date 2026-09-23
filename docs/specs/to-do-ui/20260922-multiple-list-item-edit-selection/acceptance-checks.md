@@ -8,7 +8,7 @@
 - [ ] **Batch complete** — ● marks every selected row complete, the rows sink to the completed group, and the completed mark is a filled disc rather than a tick.
 - [ ] **Batch move** — ☰＋ opens a from-bottom drawer titled "Move to:" that omits the current list; picking a destination and confirming with ✓ moves every selected task there, ✕ dismisses with nothing moved.
 - [ ] **Titles are not editable in selection mode** — tapping a row's title selects the row instead of opening the edit input.
-- [ ] **Manual re-order** — dragging an open task's ≡ handle to a new position keeps it there after a reload, and completed tasks stay ordered by completion time.
+- [ ] **Manual re-order (session-local this iteration)** — dragging an open task's ≡ handle moves it, the new order holds while the list view stays open, and completed tasks stay ordered by completion time. A reload deliberately falls back to the existing `created_at` order until the persisted slice lands.
 - [ ] **Offline and recovery** — with the network down, a batch action applies on screen and queues; a failed action surfaces through the existing sync affordances rather than silently dropping.
 - [ ] **Narrow layout and keyboard** — at 390px the action bar stays horizontally centred and clear of the safe area; the ✓, drawer, and handles are reachable by keyboard, Escape closes the drawer, and re-order is achievable without a pointer drag.
 

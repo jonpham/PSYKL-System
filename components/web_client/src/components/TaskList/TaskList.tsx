@@ -1,6 +1,6 @@
 import './task-list.css';
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCompletedVisibility } from '../../hooks/useCompletedVisibility';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
@@ -9,17 +9,24 @@ import { taskServiceClient } from '../../services/task-service-client';
 import { PlusGlyph } from '../AppShell/Glyphs';
 import { CaptureRow } from './CaptureRow';
 import { EmptyState } from './EmptyState';
+import { MoveToListDrawer } from './MoveToListDrawer';
+import { applyHandOrder } from './reorder';
+import { SelectionBar } from './SelectionBar';
 import { sortTasks } from './sortTasks';
 import { TaskListSkeleton } from './TaskListSkeleton';
 import { TaskRow } from './TaskRow';
+import { useHandOrder } from './useHandOrder';
+import { useTaskSelection } from './useTaskSelection';
 
 interface TaskListProps {
   /** The header's list menu needs this number, but it should not open a second
    * subscription to every task to get it — this list already has them. */
   onCompletedCountChange?: (count: number) => void;
+  /** Selection mode: rows pool into a batch instead of editing one at a time. */
+  selecting?: boolean;
 }
 
-export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
+export function TaskList({ onCompletedCountChange, selecting = false }: TaskListProps = {}) {
   const { createTask, error, loading, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
   // Past the offline write ceiling the device stops accepting new work rather
@@ -27,6 +34,8 @@ export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
   const atCeiling = useSyncDiscrepancy().level === 'ceiling';
   const { showCompleted } = useCompletedVisibility();
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
+  const listRef = useRef<HTMLUListElement>(null);
+  const { draggingId, handOrder, reorder, startDrag } = useHandOrder(listRef);
 
   useEffect(() => {
     if (tasks.length === 0) {
@@ -59,10 +68,18 @@ export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
     onCompletedCountChange?.(completedCount);
   }, [completedCount, onCompletedCountChange]);
 
-  const ordered = useMemo(
-    () => sortTasks(tasks).filter((task) => showCompleted || task.completed_at === null),
-    [showCompleted, tasks],
-  );
+  const ordered = useMemo(() => {
+    const sorted = sortTasks(tasks);
+    const open = applyHandOrder(
+      sorted.filter((task) => task.completed_at === null),
+      handOrder,
+    );
+    const completed = sorted.filter((task) => task.completed_at !== null);
+    return [...open, ...completed].filter((entry) => showCompleted || entry.completed_at === null);
+  }, [handOrder, showCompleted, tasks]);
+
+  const { completeSelected, deleteSelected, moveSelected, moving, selected, selectedIds, setMoving, toggleSelected } =
+    useTaskSelection(ordered, selecting);
 
   if (loading) {
     return <TaskListSkeleton />;
@@ -92,10 +109,19 @@ export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
       {tasks.length === 0 && !capturing ? (
         <EmptyState />
       ) : (
-        <ul className="psykl-task-list">
+        <ul className="psykl-task-list" ref={listRef}>
           {ordered.map((task, index) => (
             <Fragment key={task.id}>
-              <TaskRow isPending={pendingTaskIds.has(task.id)} task={task} />
+              <TaskRow
+                isPending={pendingTaskIds.has(task.id)}
+                isDragging={draggingId === task.id}
+                onDragStart={(event) => startDrag(task.id, event)}
+                onReorder={(delta) => reorder(task.id, delta)}
+                onToggleSelect={() => toggleSelected(task.id)}
+                selectable={selecting}
+                selected={selectedIds.has(task.id)}
+                task={task}
+              />
               {capturing && index + 1 === openCount ? captureRow : null}
             </Fragment>
           ))}
@@ -103,17 +129,30 @@ export function TaskList({ onCompletedCountChange }: TaskListProps = {}) {
         </ul>
       )}
 
-      <div className="psykl-task-list__capture-bar">
-        <button
-          aria-label={atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
-          className="psykl-task-list__capture"
-          disabled={atCeiling}
-          onClick={() => setCapturing(true)}
-          type="button"
-        >
-          <PlusGlyph />
-        </button>
+      <div className="psykl-task-list__capture-bar" data-mode={selected.length > 0 ? 'selection' : 'capture'}>
+        {selected.length > 0 ? (
+          <SelectionBar
+            count={selected.length}
+            onComplete={() => void completeSelected()}
+            onDelete={() => void deleteSelected()}
+            onMove={() => setMoving(true)}
+          />
+        ) : (
+          <button
+            aria-label={atCeiling ? 'Reconnect to keep adding.' : 'New Task'}
+            className="psykl-task-list__capture"
+            disabled={atCeiling}
+            onClick={() => setCapturing(true)}
+            type="button"
+          >
+            <PlusGlyph />
+          </button>
+        )}
       </div>
+
+      {moving ? (
+        <MoveToListDrawer onClose={() => setMoving(false)} onMove={(listId) => void moveSelected(listId)} />
+      ) : null}
     </div>
   );
 }

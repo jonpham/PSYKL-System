@@ -70,8 +70,54 @@
   transition: opacity 0.2s ease;
 }
 
-.psykl-task-row[data-completed='true'] .psykl-task-row__tick {
+/* A completed row is a bordered fill with no tick, so the tick can mean one
+ * thing only: this row is in the current selection. */
+.psykl-task-row[data-selected='true'] .psykl-task-row__circle {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.psykl-task-row[data-selected='true'] .psykl-task-row__tick {
   opacity: 1;
+}
+
+.psykl-task-row__title[data-selectable='true'] {
+  cursor: pointer;
+}
+
+/* Sits in the trailing column the sync dot uses, and is a 44px touch target. */
+.psykl-task-row__handle {
+  align-items: center;
+  align-self: start;
+  background: none;
+  border: 0;
+  color: var(--text-tertiary);
+  cursor: grab;
+  display: flex;
+  grid-column: 4;
+  height: var(--row-min);
+  justify-content: center;
+  padding: 0;
+  touch-action: none;
+  width: var(--row-min);
+}
+
+.psykl-task-row__handle svg {
+  height: 20px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 1.75;
+  width: 20px;
+}
+
+.psykl-task-row__handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.psykl-task-row[data-dragging='true'] {
+  background: var(--bg-selected);
+  opacity: 0.9;
 }
 
 .psykl-task-row__title,

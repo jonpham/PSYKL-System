@@ -2,13 +2,13 @@
 
 > Lightweight feature workflow, `target = production`. **Data/API line is NOT empty — see Backend change.**
 
-## Backend change (operator decision required before implementation)
+## Backend change — settled (operator decision, 2026-09-22)
 
-Manual re-ordering has no persistence today: `Task` has no `position`, and `sortTasks.ts` derives order from `created_at`. Batch complete, move, and delete need **no** backend work — `TaskPatchInputSchema` already accepts `completed_at` and `list_id`, and the offline queue already carries `patch`/`delete` per task.
+**This iteration makes no backend change.** Hand ordering is held in **local React state** in the list view so the operator can try the interaction and refine the UX before any contract is written. A reload falls back to today's `created_at` order; that is intended, not a defect.
 
-Recommended: mirror the shipped **List** ordering pattern exactly — `tasks.position` as `text` (fractional index, `COLLATE "C"`), `position` added to `TaskSchema` / `TaskInputSchema` / `TaskPatchInputSchema`, one Drizzle migration, and a task-side twin of `useLists.positions.ts`. Precedent: `packages/shared-types/src/schemas/list.ts`, `components/service-task/src/db/schema/list.ts`, `components/web_client/src/hooks/useLists.positions.ts`. Nullable `position` keeps existing rows valid; a null sorts by `created_at` as today.
+Batch complete, move, and delete are **not** deferred — they need no backend work and go through the real offline-first paths: `TaskPatchInputSchema` already accepts `completed_at` and `list_id`, and the sync queue already carries `patch`/`delete` per task.
 
-Alternative if the operator declines: ship selection + complete/move/delete now and split re-ordering into its own change (escalated to the production workflow for the migration).
+Once the UX is approved, `Task.position` lands as its own vertical slice **using the same pattern as List ordering**: `tasks.position` as `text` (fractional index, `COLLATE "C"`), the field added to `TaskSchema` / `TaskInputSchema` / `TaskPatchInputSchema`, one Drizzle migration, the IndexedDB record, and a task-side twin of `useLists.positions.ts`. Precedent: `packages/shared-types/src/schemas/list.ts`, `components/service-task/src/db/schema/list.ts`, `components/web_client/src/hooks/useLists.positions.ts`. That slice carries the sync and service-model work and the full test pyramid with it.
 
 ## First slice
 
@@ -20,13 +20,13 @@ Selection mode on the list view — enter from the menu, select rows, batch **de
 - `components/web_client/src/components/TaskList/SelectionBar/` — new: centred floating glyph bar (complete / move / delete)
 - `components/web_client/src/components/TaskList/MoveToListDrawer/` — new: from-bottom drawer, destinations from `useLists()` minus the active list
 - `components/web_client/src/components/TaskList/TaskRow/TaskRow.tsx` + `task-row.css` — selection presentation, drag handle, non-tappable title, completed mark as filled disc
-- `components/web_client/src/components/TaskList/sortTasks.ts` — order by `position` when present, fall back to `created_at`
+- `components/web_client/src/components/TaskList/sortTasks.ts` — apply the session's hand order over the `created_at` order; unknown ids keep today's placement
 - `components/web_client/src/components/ListMenu/ListMenu.tsx` — "Select Items" item
 - `components/web_client/src/App.tsx` — header ✓ replaces ⋯ while selection mode is on (shell owns `headerAction`)
-- `components/web_client/src/hooks/useTasks.ts` (+ new `useTasks.positions.ts`) — batch mutation helper, task position keys
-- Backend, only if the operator approves the position field: `packages/shared-types/src/schemas/task.ts`, `components/service-task/src/db/schema/task.ts`, `components/service-task/src/task/task.service.ts`, one generated migration, `components/web_client/src/db/idb.types.ts`
+- No new hook file: batch actions reuse `useTasks()`'s existing `patchTask` / `deleteTask` one task at a time, so every action inherits the offline queue.
+- Deferred to the post-approval slice: `packages/shared-types/src/schemas/task.ts`, `components/service-task/src/db/schema/task.ts` (+ migration), `components/service-task/src/task/task.service.ts`, `components/web_client/src/db/idb.types.ts`.
 
-Production behaviour source-file count stays at or under the ≤10 DevTask limit only if re-ordering is a separate slice; if the full scope lands in one PR it will exceed it and must be split into two PRs.
+Production behaviour source files stay at or under the ≤10 limit for this PR because the persistence files are deferred.
 
 ## Tests
 

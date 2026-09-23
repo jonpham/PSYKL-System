@@ -25,7 +25,7 @@ No section headers, no select-all, no cross-list selection, no undo beyond the e
 
 ## Done when
 
-A user can enter selection mode, tick three tasks, delete or move them in one action, drag an open task to a new place, leave selection mode with the header checkmark, and reload the page with the new order and membership intact.
+A user can enter selection mode, tick three tasks, delete or move them in one action, drag an open task to a new place, and leave selection mode with the header checkmark. Membership and completion survive a reload; **hand order does not yet** — ordering is React state until the UX is approved (operator decision, 2026-09-22), and the persisted fractional-index slice follows approval.
 
 ## Verdict
 

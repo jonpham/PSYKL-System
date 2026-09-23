@@ -16,6 +16,25 @@ import { useLists } from './hooks/useLists';
 import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
 import { useSyncRecords } from './hooks/useSyncRecords';
 
+/** Leaves selection mode; mirrors Reminders' header checkmark. */
+function DoneGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="20"
+      stroke="currentcolor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      width="20"
+    >
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
 export default function App() {
   const { canDelete, deleteList, lists } = useLists();
   const { destination, goTo } = useDestination();
@@ -26,6 +45,14 @@ export default function App() {
   const [completedCount, setCompletedCount] = useState(0);
   const syncRecords = useSyncRecords();
   const [creatingList, setCreatingList] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+
+  // Selection mode belongs to one list; walking away from the list leaves it.
+  useEffect(() => {
+    if (destination !== 'list') {
+      setSelecting(false);
+    }
+  }, [destination]);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
   // first run, per UX.md § 10 decision 1) if no active list has been chosen
@@ -63,15 +90,27 @@ export default function App() {
           queuedCount={queuedCount}
         />
         {destination === 'list' ? (
-          <ListMenu
-            canDelete={canDelete}
-            completedCount={completedCount}
-            onDeleteList={() => {
-              if (activeList) void deleteList(activeList.id);
-            }}
-            onToggleCompleted={setShowCompleted}
-            showCompleted={showCompleted}
-          />
+          selecting ? (
+            <button
+              aria-label="Done selecting"
+              className="psykl-app-shell__header-action"
+              onClick={() => setSelecting(false)}
+              type="button"
+            >
+              <DoneGlyph />
+            </button>
+          ) : (
+            <ListMenu
+              canDelete={canDelete}
+              completedCount={completedCount}
+              onDeleteList={() => {
+                if (activeList) void deleteList(activeList.id);
+              }}
+              onSelectItems={() => setSelecting(true)}
+              onToggleCompleted={setShowCompleted}
+              showCompleted={showCompleted}
+            />
+          )
         ) : null}
       </>
     ) : destination === 'lists' ? (
@@ -109,7 +148,7 @@ export default function App() {
       ) : null}
       {destination === 'list' ? (
         <section data-testid="task-ui-slot">
-          <TaskList onCompletedCountChange={setCompletedCount} />
+          <TaskList onCompletedCountChange={setCompletedCount} selecting={selecting} />
         </section>
       ) : null}
     </AppShell>

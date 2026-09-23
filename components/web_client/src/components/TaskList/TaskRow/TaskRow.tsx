@@ -1,5 +1,6 @@
 import './task-row.css';
 
+import type { PointerEvent } from 'react';
 import { useRef, useState } from 'react';
 
 import type { Task } from '../../../api/client';
@@ -11,11 +12,30 @@ import { useDelayedFlag } from './useDelayedFlag';
 const PENDING_AFFORDANCE_DELAY_MS = 2000;
 
 interface TaskRowProps {
+  /** The row is under the user's finger in a re-order drag. */
+  isDragging?: boolean;
   isPending?: boolean;
+  /** Starts a pointer drag from the handle; absent when the row cannot move. */
+  onDragStart?: (event: PointerEvent<HTMLButtonElement>) => void;
+  /** Keyboard equivalent of dragging the handle one row up or down. */
+  onReorder?: (delta: -1 | 1) => void;
+  onToggleSelect?: () => void;
+  /** Selection mode: the row pools into a batch instead of editing in place. */
+  selectable?: boolean;
+  selected?: boolean;
   task: Task;
 }
 
-export function TaskRow({ isPending = false, task }: TaskRowProps) {
+export function TaskRow({
+  isDragging = false,
+  isPending = false,
+  onDragStart,
+  onReorder,
+  onToggleSelect,
+  selectable = false,
+  selected = false,
+  task,
+}: TaskRowProps) {
   const { patchTask } = useTasks();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(task.title);
@@ -52,19 +72,23 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
   }
 
   const completed = task.completed_at !== null;
+  const selectLabel = selectable ? `${selected ? 'Deselect' : 'Select'} ${task.title}` : null;
 
   return (
     <li
       aria-label={showPending ? `${task.title} pending sync` : task.title}
       className="psykl-task-row"
       data-completed={completed}
+      data-dragging={isDragging}
       data-pending={showPending}
+      data-selected={selected}
+      data-task-id={task.id}
     >
       <button
-        aria-checked={completed}
-        aria-label={completed ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`}
+        aria-checked={selectable ? selected : completed}
+        aria-label={selectLabel ?? (completed ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`)}
         className="psykl-task-row__checkbox"
-        onClick={toggleComplete}
+        onClick={selectable ? onToggleSelect : toggleComplete}
         role="checkbox"
         type="button"
       >
@@ -74,7 +98,17 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
         </svg>
       </button>
 
-      {editing ? (
+      {selectable ? (
+        <button
+          aria-label={selectLabel ?? task.title}
+          className="psykl-task-row__title"
+          data-selectable="true"
+          onClick={onToggleSelect}
+          type="button"
+        >
+          {task.title}
+        </button>
+      ) : editing ? (
         <input
           aria-label="Edit title"
           autoFocus
@@ -107,6 +141,26 @@ export function TaskRow({ isPending = false, task }: TaskRowProps) {
       )}
 
       {showPending ? <span aria-label="Pending sync" className="psykl-task-row__pending" role="img" /> : null}
+
+      {/* Only open tasks carry a handle: completed rows stay ordered by when
+       * they were completed, so there is nothing for a drag to mean there. */}
+      {selectable && onReorder && !completed ? (
+        <button
+          aria-label={`Reorder ${task.title}`}
+          className="psykl-task-row__handle"
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+            event.preventDefault();
+            onReorder(event.key === 'ArrowUp' ? -1 : 1);
+          }}
+          onPointerDown={onDragStart}
+          type="button"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M5 9h14M5 15h14" />
+          </svg>
+        </button>
+      ) : null}
     </li>
   );
 }

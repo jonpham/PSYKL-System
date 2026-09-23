@@ -1,0 +1,42 @@
+.psykl-selection-bar {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 22%);
+  color: var(--text-on-accent);
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.psykl-selection-bar__action {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  height: var(--row-min);
+  justify-content: center;
+  padding: 0;
+  width: var(--row-min);
+}
+
+.psykl-selection-bar__action svg {
+  fill: none;
+  height: 22px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+  width: 22px;
+}
+
+.psykl-selection-bar__action:active {
+  transform: scale(0.92);
+}
+
+.psykl-selection-bar__action:focus-visible {
+  outline: 2px solid var(--text-on-accent);
+  outline-offset: -2px;
+}
