@@ -30,6 +30,96 @@ As a PWA user with a list that has grown past a handful of tasks, I want to sele
 7. **Rename the list in place** — while selecting, the list name is an editable field in the header. Blur commits, Enter commits, Escape discards; a rename arriving from another device flows through. First consumer of `useLists().renameList`.
 8. **Completed rows re-drawn** — a completed task is a ring with a filled core, the way Reminders draws it, never a solid disc; the solid tick is reserved for selection.
 
+## Visual Record
+
+> The shipped surface, at ~390px (iPhone). Chrome that already existed is marked `=`; chrome this
+> change introduced is marked `+`. Carried from the planning `visual-artifact.md` and updated to
+> what was built — see the note at the end for how the two differ.
+
+### 1. Ordinary list view — the way in
+
+```text
+┌──────────────────────────────────────┐
+│ ☰ PSYKL            Groceries  ⟳  ⋯   │ = ⋯ opens the list options menu
+├──────────────────────────────────────┤
+│ ○  Oat milk                          │ = tap circle completes, tap title edits
+│ ○  Sourdough                         │
+│ ◉  Coffee beans          (completed) │ + ring with a FILLED CORE, no tick
+├──────────────────────────────────────┤
+│  ⋯ menu ▾                            │
+│   Hide Completed (1)                 │ =
+│ + Select Items                       │ + new menu item
+│   Delete List                        │ =
+├──────────────────────────────────────┤
+│                 (+)                  │ = new-task button, right of the bar
+└──────────────────────────────────────┘
+```
+
+### 2. Selection mode, nothing pooled yet
+
+```text
+┌──────────────────────────────────────┐
+│ ☰ PSYKL            Groceries     ✓   │ + ✓ (filled accent) replaces ⋯ and is
+│                                      │   the one way out; ⟳ sync steps aside
+├──────────────────────────────────────┤
+│ ○  Groceries                    (✎)  │ + the list NAME is editable here
+│ ○  Oat milk                      ≡   │ + titles pool instead of editing
+│ ○  Sourdough                     ≡   │ + ≡ drag handle on open tasks only
+│ ◉  Coffee beans                      │ + completed rows carry no handle
+├──────────────────────────────────────┤
+│        ┌──────────────────┐          │ + the bar arrives WITH the mode,
+│        │  ◉     ≡+    ⌫   │          │   dimmed and disabled; the (+) button
+│        └──────────────────┘          │   is already gone
+└──────────────────────────────────────┘
+```
+
+### 3. Two rows pooled — the action bar live
+
+```text
+┌──────────────────────────────────────┐
+│ ☰ PSYKL            Groceries     ✓   │
+├──────────────────────────────────────┤
+│ ✓  Oat milk                      ≡   │ + mark or title pools the row
+│ ○  Sourdough                     ≡   │ + a tick means SELECTED, nothing else
+│ ✓  Coffee beans                      │
+├──────────────────────────────────────┤
+│        ┌──────────────────┐          │ + flat bar: accent border and glyphs
+│        │  ◉     ≡+    ⌫   │          │   over the elevated surface
+│        └──────────────────┘          │   ◉ complete · ≡+ move · ⌫ delete
+└──────────────────────────────────────┘
+
+    first press on ⌫              second press
+    ┌──────────────┐              ┌──────────────┐
+    │ ◉   ≡+  (⌫▲) │  ───────▶    │  tasks gone  │
+    └──────────────┘              └──────────────┘
+    + lid open, filled            + soft-deleted, recoverable from
+      destructive pill,             Recently Deleted. A changed pool or
+      "Confirm deleting 2 tasks"    another action disarms it instead.
+```
+
+### 4. Move drawer, opened by the move glyph
+
+```text
+┌──────────────────────────────────────┐
+│ ☰ PSYKL            Groceries     ✓   │
+│ ✓  Oat milk                      ≡   │  (list dimmed behind the drawer)
+├──────────────────────────────────────┤
+│  ✕            Move to:           ✓   │ + ✕ dismisses, ✓ commits the move
+│ ──────────────────────────────────── │
+│  ◯  Errands                          │ + the current list is never offered
+│  ◉  Weekend                          │ + one destination at a time
+│  ◯  Reading                          │
+└──────────────────────────────────────┘
+```
+
+### Notes
+
+- Hand re-ordering applies to **open** tasks only; a drop past the completed group clamps to the end of the open tasks. Dragging is pointer-driven so it works on iOS; ArrowUp/ArrowDown on a focused handle is the keyboard equivalent.
+- Leaving the mode clears the pool and disarms a pending delete. The pool is not remembered across a reload.
+- The completed mark changed list-wide, not just inside the mode, so a tick can only ever mean "selected".
+
+**How this differs from the plan.** The planning wireframes had the action bar appear with the first selection (it now arrives with the mode, dimmed), the new-task button leaving only once something was pooled (it leaves on entry), a single-press delete (now two presses), a solid disc for completion (now a ring with a filled core), a blue filled action bar (now flat), and no editable list name. All six came out of the operator's UX review on the running build.
+
 ## Verification Steps
 
 **Associated E2E test:** [`e2e/task_selection.e2e.spec.ts`](../../e2e/task_selection.e2e.spec.ts) (7 scenarios); shared drivers in [`e2e/helpers/selection.ts`](../../e2e/helpers/selection.ts).
