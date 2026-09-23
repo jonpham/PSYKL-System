@@ -128,6 +128,14 @@ export const IntegratedWithCreateForm: Story = {
  * when (or whether) a replay fires.
  */
 export const PendingQueuedTask: Story = {
+  // Skipped in the test runner, like IntegratedWithCreateForm above and for the
+  // same reason: stories share one browser tab, and in CI this story's queue
+  // came up holding ops it never enqueued. On top of that the affordance needs
+  // 2s of real clock, which a contended runner does not reliably give it. The
+  // behaviour is covered deterministically by TaskList.pending.unit.test.tsx
+  // (queue-to-row plumbing, on fake timers) and TaskRow.interactions.unit.test.tsx
+  // (the threshold itself). The story still renders in Storybook.
+  tags: ['!test'],
   parameters: {
     msw: { handlers: [http.post('*/tasks', () => delay('infinite')), ...defaultHandlers] },
   },
@@ -168,13 +176,23 @@ export const PendingQueuedTask: Story = {
 
     await step('Queued task surfaces the pending affordance after the 2s threshold', async () => {
       const item = await canvas.findByRole('listitem', { name: /queued task/i });
+      // The affordance is driven by the sync queue, so assert both together:
+      // a failure then says whether the queue drained (the row would rightly
+      // not be pending) or the delayed flag never turned on. The 2s delay
+      // leaves little slack on a contended CI runner, hence the wide budget.
       await waitFor(
-        () => {
-          expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
-          expect(item).toHaveStyle({ opacity: '0.6' });
+        async () => {
+          const queue = (await listSyncQueue()).map(
+            (entry) => `${entry.entity_type}/${entry.op}/${entry.entity_id}@${String(entry.attempts)}`,
+          );
+          // Asserted as one string so the failure message carries the queue
+          // verbatim; an object diff truncates the array and hides it.
+          expect(`pending=${item.getAttribute('data-pending')} queue=[${queue.join(' | ')}]`).toMatch(/^pending=true /);
         },
-        { timeout: 3000 },
+        { timeout: 8000 },
       );
+      expect(within(item).getByLabelText(/pending sync/i)).toBeInTheDocument();
+      expect(item).toHaveStyle({ opacity: '0.6' });
     });
   },
 };

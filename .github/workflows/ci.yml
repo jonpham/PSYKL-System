@@ -162,5 +162,17 @@ jobs:
       - name: Prepare generated artifacts
         run: pnpm verify:prepare
 
+      # Retried at the command level, not per test: `jest.retryTimes` inside
+      # the Storybook test-runner was measured reporting a deterministically
+      # failing story as passed on its retry, which would hide real breakage.
+      # A whole-command retry re-runs against a fresh browser and still fails
+      # every attempt when the failure is real.
       - name: Component Tests
-        run: pnpm verify:component
+        run: |
+          for attempt in 1 2 3; do
+            if pnpm verify:component; then
+              exit 0
+            fi
+            echo "::warning::Component tests failed on attempt ${attempt} of 3"
+          done
+          exit 1

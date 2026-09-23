@@ -1,6 +1,6 @@
 import './settings-view.css';
 
-import { VersionFooter } from '../../../components/VersionFooter';
+import { AppVersion } from '../../../components/AppVersion';
 import { ExperimentsIndex } from '../../ExperimentsIndex';
 import { THEME_CHOICES, type ThemeChoice } from '../themeStore';
 
@@ -40,7 +40,7 @@ export function SettingsView({ onThemeChange, theme }: SettingsViewProps) {
       <p className="reminders-settings__note">Prototypes under evaluation. They may disappear without notice.</p>
       <ExperimentsIndex />
       <h3 className="reminders-settings__heading">About</h3>
-      <VersionFooter />
+      <AppVersion />
     </section>
   );
 }

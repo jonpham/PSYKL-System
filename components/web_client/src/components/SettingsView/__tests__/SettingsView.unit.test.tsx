@@ -20,7 +20,8 @@ describe('SettingsView (Unit)', () => {
     expect(screen.getByRole('radiogroup', { name: 'Appearance' })).toHaveClass('psykl-settings__segmented');
     expect(screen.getByRole('radiogroup', { name: 'Contrast' })).toHaveClass('psykl-settings__segmented');
     expect(screen.getByRole('heading', { name: 'About' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Version' })).toBeInTheDocument();
+    // "About" is the only heading the section needs; AppVersion adds none.
+    expect(screen.getByText(/current version:/i)).toBeInTheDocument();
   });
   it('stamps the chosen appearance on the document', async () => {
     // Arrange

@@ -20,7 +20,8 @@ export const SwitchAppearance: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('radiogroup', { name: 'Appearance' })).toHaveClass('psykl-settings__segmented');
     await expect(canvas.getByRole('radiogroup', { name: 'Contrast' })).toHaveClass('psykl-settings__segmented');
-    await expect(canvas.getByRole('heading', { name: 'Version' })).toBeInTheDocument();
+    // "About" is the section's only heading; the version block adds none.
+    await expect(canvas.getByText(/current version:/i)).toBeInTheDocument();
 
     // Act
     await userEvent.click(canvas.getByRole('radio', { name: 'Dark' }));
