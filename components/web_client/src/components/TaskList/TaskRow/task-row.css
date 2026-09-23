@@ -56,8 +56,24 @@
 }
 
 .psykl-task-row[data-completed='true'] .psykl-task-row__circle {
-  fill: var(--accent);
+  fill: none;
   stroke: var(--accent);
+}
+
+/* The filled core only exists for completion; selection uses the tick. */
+.psykl-task-row__core {
+  fill: var(--accent);
+  opacity: 0;
+  stroke: none;
+  transition: opacity 0.2s ease;
+}
+
+.psykl-task-row[data-completed='true'] .psykl-task-row__core {
+  opacity: 1;
+}
+
+.psykl-task-row[data-selected='true'] .psykl-task-row__core {
+  opacity: 0;
 }
 
 .psykl-task-row__tick {
@@ -167,6 +183,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .psykl-task-row__circle,
+  .psykl-task-row__core,
   .psykl-task-row__tick {
     transition: none;
   }

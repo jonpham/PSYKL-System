@@ -104,6 +104,19 @@ body:has(.psykl-app-shell) {
   padding: 0;
   width: var(--icon-tile);
 }
+/* Leaving selection mode is the one way out of the mode, so it is filled
+ * rather than tinted — it has to win against a list full of tappable rows. */
+.psykl-app-shell__header-action[data-prominent='true'] {
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+  color: var(--text-on-accent);
+}
+
+.psykl-app-shell__header-action[data-prominent='true']:active {
+  background: var(--accent);
+  opacity: 0.85;
+}
+
 .psykl-app-shell__header-action:active {
   background: var(--bg-pressed);
 }

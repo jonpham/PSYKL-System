@@ -80,8 +80,20 @@ export default function App() {
             ? 'Lists'
             : 'Sync';
 
+  // Selection mode owns the header: the way out is the only control there, so
+  // the sync affordance steps aside until the user leaves the mode.
   const headerAction =
-    destination === 'list' || destination === 'sync' ? (
+    destination === 'list' && selecting ? (
+      <button
+        aria-label="Done selecting"
+        className="psykl-app-shell__header-action"
+        data-prominent="true"
+        onClick={() => setSelecting(false)}
+        type="button"
+      >
+        <DoneGlyph />
+      </button>
+    ) : destination === 'list' || destination === 'sync' ? (
       <>
         <SyncStatus
           active={destination === 'sync'}
@@ -90,27 +102,16 @@ export default function App() {
           queuedCount={queuedCount}
         />
         {destination === 'list' ? (
-          selecting ? (
-            <button
-              aria-label="Done selecting"
-              className="psykl-app-shell__header-action"
-              onClick={() => setSelecting(false)}
-              type="button"
-            >
-              <DoneGlyph />
-            </button>
-          ) : (
-            <ListMenu
-              canDelete={canDelete}
-              completedCount={completedCount}
-              onDeleteList={() => {
-                if (activeList) void deleteList(activeList.id);
-              }}
-              onSelectItems={() => setSelecting(true)}
-              onToggleCompleted={setShowCompleted}
-              showCompleted={showCompleted}
-            />
-          )
+          <ListMenu
+            canDelete={canDelete}
+            completedCount={completedCount}
+            onDeleteList={() => {
+              if (activeList) void deleteList(activeList.id);
+            }}
+            onSelectItems={() => setSelecting(true)}
+            onToggleCompleted={setShowCompleted}
+            showCompleted={showCompleted}
+          />
         ) : null}
       </>
     ) : destination === 'lists' ? (

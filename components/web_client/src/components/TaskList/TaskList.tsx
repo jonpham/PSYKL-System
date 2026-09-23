@@ -132,8 +132,8 @@ export function TaskList({ onCompletedCountChange, selecting = false }: TaskList
         </ul>
       )}
 
-      <div className="psykl-task-list__capture-bar" data-mode={selected.length > 0 ? 'selection' : 'capture'}>
-        {selected.length > 0 ? (
+      <div className="psykl-task-list__capture-bar" data-mode={selecting ? 'selection' : 'capture'}>
+        {selecting ? (
           <SelectionBar
             count={selected.length}
             onComplete={() => void completeSelected()}

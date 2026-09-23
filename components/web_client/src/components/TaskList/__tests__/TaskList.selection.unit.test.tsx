@@ -69,20 +69,31 @@ describe('TaskList selection mode (Unit)', () => {
     }
   }
 
-  it('replaces the new-task button with the action bar once a row is selected', async () => {
+  it('replaces the new-task button with the action bar the moment selection mode opens', async () => {
     // Arrange
     render(<TaskList selecting />);
 
-    // Assert — an empty pool has nothing to act on
-    expect(screen.queryByRole('button', { name: 'Delete selected tasks' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'New Task' })).toBeInTheDocument();
+    // Assert — the bar is the mode's control surface, but an empty pool has
+    // nothing to act on, so its actions are unavailable rather than absent
+    expect(screen.queryByRole('button', { name: 'New Task' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeDisabled();
+    expect(screen.getByRole('toolbar', { name: 'Nothing selected' })).toBeInTheDocument();
 
     // Act
     await selectRows('Oat milk');
 
     // Assert
-    expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'New Task' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeEnabled();
+    expect(screen.getByRole('toolbar', { name: '1 selected' })).toBeInTheDocument();
+  });
+
+  it('brings the new-task button back when selection mode closes', () => {
+    // Arrange / Act
+    render(<TaskList selecting={false} />);
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'New Task' })).toBeInTheDocument();
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
   });
 
   it('keeps titles out of edit mode while selecting', async () => {
@@ -197,6 +208,6 @@ describe('TaskList selection mode (Unit)', () => {
     rerender(<TaskList selecting />);
 
     // Assert
-    expect(screen.queryByRole('button', { name: 'Delete selected tasks' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeDisabled();
   });
 });

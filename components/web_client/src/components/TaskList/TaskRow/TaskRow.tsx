@@ -79,6 +79,9 @@ export function TaskRow({
       >
         <svg aria-hidden="true" className="psykl-task-row__mark" viewBox="0 0 22 22">
           <circle className="psykl-task-row__circle" cx="11" cy="11" r="10" />
+          {/* Completion is a ring with a filled core, the way Reminders draws
+           * it — never a solid disc, which would read as a selected row. */}
+          <circle className="psykl-task-row__core" cx="11" cy="11" r="5.5" />
           <path className="psykl-task-row__tick" d="M6.2 11.4l3.2 3.2 6.4-6.8" />
         </svg>
       </button>
