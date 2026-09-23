@@ -4,7 +4,8 @@ import type { Ref } from 'react';
 import { useState } from 'react';
 
 import type { Destination } from '../../../hooks/useDestination';
-import { ChevronGlyph, DestinationGlyph, HeaderGlyph } from '../Glyphs';
+import { BrandMark } from '../BrandMark';
+import { ChevronGlyph, DestinationGlyph } from '../Glyphs';
 
 interface SidebarList {
   id: string;
@@ -36,15 +37,22 @@ function SidebarNav({
 
   return (
     <nav aria-label="PSYKL navigation" className="psykl-sidebar-nav">
+      {/* Both brand headers are always rendered; sidebar-nav.css decides which
+       * one `display: none` removes — and with it, the tab order and the
+       * accessibility tree. The close button is meaningless at the wide layout,
+       * where the sidebar is permanent and nothing can dismiss it. */}
       <button
         aria-label="Close PSYKL navigation"
-        className="psykl-app-shell__header-button"
+        className="psykl-app-shell__header-button psykl-sidebar-nav__brand-close"
         onClick={onClose}
         ref={closeButtonRef}
         type="button"
       >
-        <HeaderGlyph name="close" /> PSYKL
+        <BrandMark /> PSYKL
       </button>
+      <h1 className="psykl-sidebar-nav__brand-heading">
+        <BrandMark /> PSYKL
+      </h1>
       <ul className="psykl-sidebar-nav__items">
         <li>
           <div className="psykl-sidebar-nav__row">

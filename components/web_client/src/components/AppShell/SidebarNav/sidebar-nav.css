@@ -101,3 +101,25 @@
   background: var(--status-warn);
   color: #000;
 }
+
+.psykl-sidebar-nav__brand-heading {
+  align-items: center;
+  color: var(--accent);
+  display: none;
+  font-size: 22px;
+  font-weight: 700;
+  gap: 0.5rem;
+  margin: 0;
+  min-height: var(--row-min);
+}
+@container psykl-shell (min-width: 768px) {
+  /* The sidebar is permanent at this width, so the close control has nothing
+   * to close — swap it for the static heading. `display: none` also takes the
+   * hidden one out of the tab order and the accessibility tree. */
+  .psykl-sidebar-nav__brand-close {
+    display: none;
+  }
+  .psykl-sidebar-nav__brand-heading {
+    display: flex;
+  }
+}

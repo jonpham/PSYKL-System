@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type Appearance, readAppearance, writeAppearance } from '../preferences/appearance';
+import { applyPreferences } from '../preferences/apply';
 import { type Contrast, readContrast, writeContrast } from '../preferences/contrast';
 
 interface UseAppearanceResult {
@@ -8,23 +9,6 @@ interface UseAppearanceResult {
   contrast: Contrast;
   setAppearance(choice: Appearance): void;
   setContrast(choice: Contrast): void;
-}
-
-/** Stamps the document root so the token sheet Spec 1 shipped can switch on it:
- * `system` stamps no theme at all and lets `prefers-color-scheme` decide, and
- * contrast composes with whichever appearance is in force. */
-function applyToRoot(appearance: Appearance, contrast: Contrast): void {
-  const root = document.documentElement;
-  if (appearance === 'system') {
-    root.removeAttribute('data-theme');
-  } else {
-    root.setAttribute('data-theme', appearance);
-  }
-  if (contrast === 'increased') {
-    root.setAttribute('data-contrast', 'increased');
-  } else {
-    root.removeAttribute('data-contrast');
-  }
 }
 
 function useAppearance(): UseAppearanceResult {
@@ -40,7 +24,7 @@ function useAppearance(): UseAppearanceResult {
       if (cancelled || chosenRef.current) return;
       setAppearanceState(storedAppearance);
       setContrastState(storedContrast);
-      applyToRoot(storedAppearance, storedContrast);
+      applyPreferences(storedAppearance, storedContrast);
     });
     return () => {
       cancelled = true;
@@ -51,7 +35,7 @@ function useAppearance(): UseAppearanceResult {
     (choice: Appearance) => {
       chosenRef.current = true;
       setAppearanceState(choice);
-      applyToRoot(choice, contrast);
+      applyPreferences(choice, contrast);
       void writeAppearance(choice);
     },
     [contrast],
@@ -61,7 +45,7 @@ function useAppearance(): UseAppearanceResult {
     (choice: Contrast) => {
       chosenRef.current = true;
       setContrastState(choice);
-      applyToRoot(appearance, choice);
+      applyPreferences(appearance, choice);
       void writeContrast(choice);
     },
     [appearance],

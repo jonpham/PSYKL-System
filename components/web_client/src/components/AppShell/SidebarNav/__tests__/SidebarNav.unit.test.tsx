@@ -57,3 +57,26 @@ describe('SidebarNav', () => {
     expect(screen.getByRole('button', { name: 'Groceries' })).toBeInTheDocument();
   });
 });
+
+describe('SidebarNav brand header', () => {
+  it('leads the close control with the PSYKL mark instead of a dismiss glyph', () => {
+    // Arrange
+    render(<SidebarNav {...props} />);
+
+    // Assert
+    const close = screen.getByRole('button', { name: 'Close PSYKL navigation' });
+    expect(close.querySelector('.psykl-brand-mark')).toBeInTheDocument();
+    expect(close.querySelector('.psykl-header-glyph')).not.toBeInTheDocument();
+  });
+
+  it('also renders a static brand heading, which the wide layout shows in place of the close control', () => {
+    // Arrange
+    render(<SidebarNav {...props} />);
+
+    // Assert
+    const heading = screen.getByRole('heading', { name: 'PSYKL' });
+    expect(heading).toHaveClass('psykl-sidebar-nav__brand-heading');
+    expect(heading.querySelector('.psykl-brand-mark')).toBeInTheDocument();
+    expect(heading.closest('button')).toBeNull();
+  });
+});

@@ -3,6 +3,7 @@ import './styles/tokens.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
+import { applyStoredPreferences } from './preferences/bootstrap';
 import { Root } from './Root';
 import { registerPageSyncTriggers } from './sync/page-triggers';
 
@@ -11,6 +12,7 @@ if (!root) {
   throw new Error('Missing #root in index.html');
 }
 
+void applyStoredPreferences();
 registerPageSyncTriggers();
 registerServiceWorker();
 
