@@ -21,6 +21,7 @@ PSYKL is recognizable everywhere it appears: tab favicon, installed iOS/Android 
 - New `BrandMark` UI Component: the icon mark inlined as SVG at `currentColor`.
 - Mobile trigger button and sidebar header both lead with the mark instead of the hamburger / ✕ glyph.
 - Sidebar header is a close **button** only below 768 px; at ≥768 px it renders as a static brand heading.
+- **Added 2026-09-22:** the `apple-touch-icon` link tracks Settings → Appearance, so _Add to Home Screen_ installs the light or dark tile the app is currently set to (System defers to the device). Carries a startup fix: stored appearance now applies on load rather than waiting for Settings to be opened.
 
 ## Not now
 
