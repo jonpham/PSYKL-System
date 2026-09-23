@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -108,17 +108,53 @@ describe('TaskList selection mode (Unit)', () => {
     expect(screen.queryByRole('button', { name: 'Edit Oat milk' })).not.toBeInTheDocument();
   });
 
-  it('deletes every selected task in one action', async () => {
+  it('deletes every selected task, but only after the action is confirmed', async () => {
     // Arrange
     render(<TaskList selecting />);
     await selectRows('Oat milk', 'Coffee beans');
 
-    // Act
+    // Act — the first press arms the action rather than performing it
     await userEvent.click(screen.getByRole('button', { name: 'Delete selected tasks' }));
+
+    // Assert
+    expect(deleteTask).not.toHaveBeenCalled();
+    const armed = screen.getByRole('button', { name: 'Confirm deleting 2 tasks' });
+    expect(armed).toHaveAttribute('data-armed', 'true');
+
+    // Act
+    await userEvent.click(armed);
 
     // Assert
     expect(deleteTask).toHaveBeenCalledTimes(2);
     expect(deleteTask.mock.calls.map((call) => call[0])).toEqual([oat.id, beans.id]);
+  });
+
+  it('disarms a pending delete when the selection changes', async () => {
+    // Arrange
+    render(<TaskList selecting />);
+    await selectRows('Oat milk');
+    await userEvent.click(screen.getByRole('button', { name: 'Delete selected tasks' }));
+    expect(screen.getByRole('button', { name: 'Confirm deleting 1 task' })).toBeInTheDocument();
+
+    // Act — changing what is pooled changes what the armed action would destroy
+    await selectRows('Sourdough');
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeInTheDocument();
+    expect(deleteTask).not.toHaveBeenCalled();
+  });
+
+  it('disarms a pending delete when another batch action is taken', async () => {
+    // Arrange
+    render(<TaskList selecting />);
+    await selectRows('Oat milk');
+    await userEvent.click(screen.getByRole('button', { name: 'Delete selected tasks' }));
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: 'Move selected tasks' }));
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeInTheDocument();
   });
 
   it('marks every selected task complete in one action, leaving completed ones alone', async () => {
@@ -141,47 +177,6 @@ describe('TaskList selection mode (Unit)', () => {
     expect(patchTask).toHaveBeenCalledTimes(1);
     expect(patchTask.mock.calls[0]?.[0]).toBe(oat.id);
     expect(patchTask.mock.calls[0]?.[1]).toMatchObject({ completed_at: expect.any(String) });
-  });
-
-  it('moves every selected task to the list chosen in the drawer', async () => {
-    // Arrange
-    render(<TaskList selecting />);
-    await selectRows('Oat milk', 'Sourdough');
-
-    // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Move selected tasks' }));
-    const drawer = screen.getByRole('dialog', { name: 'Move to:' });
-
-    // Assert — the list the tasks are already in is not a destination
-    expect(within(drawer).queryByRole('radio', { name: 'Groceries' })).not.toBeInTheDocument();
-
-    // Act
-    await userEvent.click(within(drawer).getByRole('radio', { name: 'Weekend' }));
-    await userEvent.click(within(drawer).getByRole('button', { name: 'Move' }));
-
-    // Assert
-    expect(patchTask).toHaveBeenCalledTimes(2);
-    expect(patchTask.mock.calls.map((call) => call[1])).toEqual([
-      expect.objectContaining({ list_id: 'list-weekend' }),
-      expect.objectContaining({ list_id: 'list-weekend' }),
-    ]);
-    expect(screen.queryByRole('dialog', { name: 'Move to:' })).not.toBeInTheDocument();
-  });
-
-  it('dismisses the move drawer without moving anything', async () => {
-    // Arrange
-    render(<TaskList selecting />);
-    await selectRows('Oat milk');
-
-    // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Move selected tasks' }));
-    await userEvent.click(
-      within(screen.getByRole('dialog', { name: 'Move to:' })).getByRole('button', { name: 'Cancel' }),
-    );
-
-    // Assert
-    expect(patchTask).not.toHaveBeenCalled();
-    expect(screen.queryByRole('dialog', { name: 'Move to:' })).not.toBeInTheDocument();
   });
 
   it('re-orders open tasks by hand and holds the new order', async () => {

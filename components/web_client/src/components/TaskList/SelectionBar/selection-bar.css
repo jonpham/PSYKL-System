@@ -49,6 +49,18 @@
   color: var(--destructive);
 }
 
+/* Armed: the destructive action fills, so the second press is plainly not the
+ * same press as the first. */
+.psykl-selection-bar__action[data-armed='true'] {
+  background: var(--destructive);
+  border-radius: 999px;
+  color: var(--text-on-accent);
+}
+
+.psykl-selection-bar__action[data-armed='true'] svg {
+  stroke-width: 2;
+}
+
 .psykl-selection-bar__action:disabled {
   cursor: not-allowed;
 }

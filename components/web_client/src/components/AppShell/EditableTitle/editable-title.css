@@ -1,0 +1,37 @@
+/* The trigger and the input inherit the header's h2 type, so opening the field
+ * changes what the name can do, not how big it looks. */
+.psykl-editable-title__trigger,
+.psykl-editable-title__input {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  margin: 0;
+  max-width: 100%;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.psykl-editable-title__trigger {
+  cursor: text;
+  /* Wraps rather than truncating: a half-readable list name is worse than a
+   * two-line header. */
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.psykl-editable-title__trigger:focus-visible,
+.psykl-editable-title__input:focus-visible {
+  border-radius: var(--radius-field);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.psykl-editable-title__input {
+  /* A visible field while editing, so the header reads as an open control. */
+  background: var(--bg-grouped);
+  border-radius: var(--radius-field);
+  padding: 0 0.25rem;
+}

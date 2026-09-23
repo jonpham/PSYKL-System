@@ -7,15 +7,19 @@ import { setActiveListId, useActiveListId } from '../../hooks/useActiveList';
 import { useDestination } from '../../hooks/useDestination';
 import { useLists } from '../../hooks/useLists';
 import { BrandMark } from './BrandMark';
+import { EditableTitle } from './EditableTitle';
 import { SidebarNav } from './SidebarNav';
 
 interface AppShellProps {
   children: ReactNode;
   headerAction?: ReactNode;
+  /** Present only where the title is the user's to change, which today means
+   * a list in selection mode; otherwise the title is a plain heading. */
+  onRenameTitle?: (title: string) => void;
   title: string;
 }
 
-function AppShell({ children, headerAction, title }: AppShellProps) {
+function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProps) {
   const { destination, goTo } = useDestination();
   const { lists } = useLists();
   const activeListId = useActiveListId();
@@ -80,7 +84,7 @@ function AppShell({ children, headerAction, title }: AppShellProps) {
         <main className="psykl-app-shell__main">
           <div className="psykl-app-shell__content">
             <div className="psykl-app-shell__content-header" data-destination={destination}>
-              <h2>{title}</h2>
+              {onRenameTitle ? <EditableTitle onRename={onRenameTitle} title={title} /> : <h2>{title}</h2>}
               {headerAction}
             </div>
             {children}

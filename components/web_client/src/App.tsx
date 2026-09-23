@@ -36,7 +36,7 @@ function DoneGlyph() {
 }
 
 export default function App() {
-  const { canDelete, deleteList, lists } = useLists();
+  const { canDelete, deleteList, lists, renameList } = useLists();
   const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
@@ -126,7 +126,13 @@ export default function App() {
     ) : undefined;
 
   return (
-    <AppShell headerAction={headerAction} title={title}>
+    <AppShell
+      headerAction={headerAction}
+      onRenameTitle={
+        destination === 'list' && selecting && activeList ? (next) => void renameList(activeList.id, next) : undefined
+      }
+      title={title}
+    >
       <RecentlyDeleted open={destination === 'recently-deleted'} />
       {destination === 'settings' ? <SettingsView /> : null}
       {destination === 'sync' ? (

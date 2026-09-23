@@ -38,6 +38,29 @@ describe('App header in selection mode (Unit)', () => {
     expect(screen.queryByRole('button', { name: 'List options' })).not.toBeInTheDocument();
   });
 
+  it('opens the list name for renaming only while selecting', async () => {
+    // Arrange
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Tasks' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rename Tasks' })).not.toBeInTheDocument();
+
+    // Act
+    await enterSelectionMode();
+    await userEvent.click(await screen.findByRole('button', { name: 'Rename Tasks' }));
+    await userEvent.clear(screen.getByRole('textbox', { name: 'List name' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'List name' }), 'Errands{Enter}');
+
+    // Assert
+    expect(await screen.findByRole('button', { name: 'Rename Errands' })).toBeInTheDocument();
+
+    // Act — the name settles back into a plain heading on the way out
+    await userEvent.click(screen.getByRole('button', { name: 'Done selecting' }));
+
+    // Assert
+    expect(await screen.findByRole('heading', { name: 'Errands' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rename Errands' })).not.toBeInTheDocument();
+  });
+
   it('restores the ordinary header on the way out', async () => {
     // Arrange
     render(<App />);
