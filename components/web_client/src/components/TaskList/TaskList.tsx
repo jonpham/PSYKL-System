@@ -14,7 +14,7 @@ import { applyHandOrder } from './reorder';
 import { SelectionBar } from './SelectionBar';
 import { sortTasks } from './sortTasks';
 import { TaskListSkeleton } from './TaskListSkeleton';
-import { TaskRow } from './TaskRow';
+import { EditableTaskRow, SelectableTaskRow } from './TaskRow';
 import { useHandOrder } from './useHandOrder';
 import { useTaskSelection } from './useTaskSelection';
 
@@ -112,16 +112,19 @@ export function TaskList({ onCompletedCountChange, selecting = false }: TaskList
         <ul className="psykl-task-list" ref={listRef}>
           {ordered.map((task, index) => (
             <Fragment key={task.id}>
-              <TaskRow
-                isPending={pendingTaskIds.has(task.id)}
-                isDragging={draggingId === task.id}
-                onDragStart={(event) => startDrag(task.id, event)}
-                onReorder={(delta) => reorder(task.id, delta)}
-                onToggleSelect={() => toggleSelected(task.id)}
-                selectable={selecting}
-                selected={selectedIds.has(task.id)}
-                task={task}
-              />
+              {selecting ? (
+                <SelectableTaskRow
+                  isDragging={draggingId === task.id}
+                  isPending={pendingTaskIds.has(task.id)}
+                  onDragStart={(event) => startDrag(task.id, event)}
+                  onReorder={(delta) => reorder(task.id, delta)}
+                  onToggleSelect={() => toggleSelected(task.id)}
+                  selected={selectedIds.has(task.id)}
+                  task={task}
+                />
+              ) : (
+                <EditableTaskRow isPending={pendingTaskIds.has(task.id)} task={task} />
+              )}
               {capturing && index + 1 === openCount ? captureRow : null}
             </Fragment>
           ))}

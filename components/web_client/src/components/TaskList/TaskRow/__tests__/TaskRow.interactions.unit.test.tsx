@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Task } from '../../../../api/client';
 import { putTask } from '../../../../db/idb';
 import { resetUseTasksForTest } from '../../../../hooks/useTasks';
-import { TaskRow } from '../TaskRow';
+import { EditableTaskRow } from '../EditableTaskRow';
 
 // Replay is mocked to a no-op so the enqueued sync op stays in the queue for
 // assertion; the real enqueue path still writes through IndexedDB.
@@ -38,7 +38,7 @@ const baseTask: Task = {
 function renderRow(isPending = false) {
   return render(
     <ul>
-      <TaskRow isPending={isPending} task={baseTask} />
+      <EditableTaskRow isPending={isPending} task={baseTask} />
     </ul>,
   );
 }
@@ -86,7 +86,7 @@ describe('TaskRow pending sync affordance (Unit)', () => {
     });
     view.rerender(
       <ul>
-        <TaskRow isPending={false} task={baseTask} />
+        <EditableTaskRow isPending={false} task={baseTask} />
       </ul>,
     );
     act(() => {

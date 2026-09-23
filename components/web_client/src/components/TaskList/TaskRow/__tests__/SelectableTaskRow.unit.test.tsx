@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Task } from '../../../../api/client';
-import { TaskRow } from '../TaskRow';
+import { SelectableTaskRow } from '../SelectableTaskRow';
 
 vi.mock('../../../../hooks/useTasks', () => ({
   useTasks: () => ({ patchTask: vi.fn() }),
@@ -24,11 +24,11 @@ function task(overrides: Partial<Task> = {}): Task {
   };
 }
 
-describe('TaskRow in selection mode (Unit)', () => {
+describe('SelectableTaskRow (Unit)', () => {
   it('pools the row into the batch from either the circle or the title', async () => {
     // Arrange
     const onToggleSelect = vi.fn();
-    render(<TaskRow onToggleSelect={onToggleSelect} selectable task={task()} />);
+    render(<SelectableTaskRow onToggleSelect={onToggleSelect} selected={false} task={task()} />);
 
     // Act
     await userEvent.click(screen.getByRole('button', { name: 'Select Oat milk' }));
@@ -40,7 +40,7 @@ describe('TaskRow in selection mode (Unit)', () => {
 
   it('marks a selected row so the tick means selection, not completion', () => {
     // Arrange / Act
-    render(<TaskRow onToggleSelect={() => {}} selectable selected task={task()} />);
+    render(<SelectableTaskRow onToggleSelect={() => {}} selected task={task()} />);
 
     // Assert
     const checkbox = screen.getByRole('checkbox', { name: 'Deselect Oat milk' });
@@ -50,26 +50,24 @@ describe('TaskRow in selection mode (Unit)', () => {
 
   it('offers a reorder handle on open rows only', () => {
     // Arrange / Act
-    const { rerender } = render(<TaskRow onReorder={() => {}} selectable task={task()} />);
+    const { rerender } = render(
+      <SelectableTaskRow onReorder={() => {}} onToggleSelect={() => {}} selected={false} task={task()} />,
+    );
 
     // Assert
     expect(screen.getByRole('button', { name: 'Reorder Oat milk' })).toBeInTheDocument();
 
     // Act — a completed row keeps its completion order, so it has no handle
-    rerender(<TaskRow onReorder={() => {}} selectable task={task({ completed_at: '2026-05-20T13:00:00.000Z' })} />);
+    rerender(
+      <SelectableTaskRow
+        onReorder={() => {}}
+        onToggleSelect={() => {}}
+        selected={false}
+        task={task({ completed_at: '2026-05-20T13:00:00.000Z' })}
+      />,
+    );
 
     // Assert
     expect(screen.queryByRole('button', { name: 'Reorder Oat milk' })).not.toBeInTheDocument();
-  });
-
-  it('leaves titles editable when selection mode is off', async () => {
-    // Arrange
-    render(<TaskRow task={task()} />);
-
-    // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Edit Oat milk' }));
-
-    // Assert
-    expect(screen.getByRole('textbox', { name: 'Edit title' })).toBeInTheDocument();
   });
 });
