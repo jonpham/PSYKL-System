@@ -45,6 +45,8 @@ export const OperatorOpensAnExperimentFromTheList: Story = {
     const canvas = within(canvasElement);
     window.history.pushState({}, '', '/');
     await expect(canvas.getByText('Swipe a row to complete it.')).toBeVisible();
+    // Each experiment is its own bordered row, so the list scans as a set of targets.
+    await expect(canvas.getAllByRole('button')).toHaveLength(2);
 
     // Act
     await userEvent.click(canvas.getByRole('button', { name: /Task Sections/ }));
