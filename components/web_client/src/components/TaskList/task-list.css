@@ -20,6 +20,12 @@
   z-index: 1;
 }
 
+/* The selection bar takes the capture button's plane but centres, the way
+ * Reminders does, so the batch actions read as a mode rather than a control. */
+.psykl-task-list__capture-bar[data-mode='selection'] {
+  justify-content: center;
+}
+
 .psykl-task-list__capture-bar > * {
   pointer-events: auto;
 }

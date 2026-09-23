@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Task } from '../../../../api/client';
 import { putTask } from '../../../../db/idb';
 import { resetUseTasksForTest } from '../../../../hooks/useTasks';
-import { TaskRow } from '../TaskRow';
+import { EditableTaskRow } from '../EditableTaskRow';
 
 const mockReplay = vi.hoisted(() => vi.fn<() => Promise<unknown>>());
 
@@ -31,7 +31,7 @@ const baseTask: Task = {
 function renderRow(task: Task = baseTask) {
   return render(
     <ul>
-      <TaskRow task={task} />
+      <EditableTaskRow task={task} />
     </ul>,
   );
 }

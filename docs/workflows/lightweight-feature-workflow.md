@@ -262,6 +262,8 @@ Use exactly one of:
 
 Text-only planning is not sufficient for Standard Lane work. For a `target = production` bug fix where the visual outcome is "it does what it already claims to do", a before/after state pair is enough.
 
+**Keep it in a text-based form** — ASCII wireframes, Mermaid, or a state table — because this artifact does not end at close-out: it is carried into the durable record (`docs/features/` → `## Visual Record`, or the initiative's `UX.md` on promotion). Screenshots cannot be carried, which is the other reason they stay local.
+
 ### 3. Acceptance Checks
 
 Purpose: define what must be observably true.
@@ -341,12 +343,12 @@ Exits apply per iteration and, once every iteration has exited, to the experimen
 
 What each promoted artifact feeds:
 
-| Artifact                  | Feeds                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| `acceptance-checks.md`    | Spec acceptance criteria, and the E2E test titles the promotion DevTask must write |
-| `visual-artifact.md`      | the initiative's `UX.md` section for that feature                                  |
-| `implementation-notes.md` | DevTask breakdown seed, plus the production modules the real version must touch    |
-| Local screenshots         | review only; summarize findings in text before deleting the captures               |
+| Artifact                  | Feeds                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `acceptance-checks.md`    | Spec acceptance criteria, and the E2E test titles the promotion DevTask must write                     |
+| `visual-artifact.md`      | the initiative's `UX.md` section for that feature, and later the Spec's feature doc `## Visual Record` |
+| `implementation-notes.md` | DevTask breakdown seed, plus the production modules the real version must touch                        |
+| Local screenshots         | review only; summarize findings in text before deleting the captures                                   |
 
 ### `target = production`
 
@@ -354,6 +356,7 @@ One exit: **shipped**. The change merges and is recorded.
 
 - Add the entry to `CHANGELOG.md` under `## Unreleased`, in the same PR.
 - The artifact folder is the record by default. If the operator requests production-style close-out, consolidate its decisions and verification into a `docs/features/` document and delete the artifact folder in the same PR before merge.
+- **A close-out that deletes the artifact folder carries `visual-artifact.md` into the feature doc's `## Visual Record` first.** The picture is the part of the planning set that stays useful after the change ships — it is how the next reader sees the surface without running it. Update it to what was actually built if the two diverged, and note the difference in a line beneath it. Deleting the folder without carrying the picture loses it.
 - Update `docs/PROJECT_STATUS.md` if the work changes what is active, blocked, or next.
 - Capture screenshots locally for review, then delete them at close-out; never commit the image files.
 
@@ -392,7 +395,7 @@ Git Conventions in `AGENTS.md` apply in full under both targets — including th
 13. Iterate in small steps.
 14. Delete local screenshots, then close out for that target:
     - **prototype** — if the operator accepts it for implementation, update the artifacts in preparation for use as inputs to the production development workflow;
-    - **production** — add the `CHANGELOG.md` entry, refresh `docs/PROJECT_STATUS.md` if the work changed what is active, and open the PR.
+    - **production** — add the `CHANGELOG.md` entry, refresh `docs/PROJECT_STATUS.md` if the work changed what is active, carry `visual-artifact.md` into the feature doc's `## Visual Record` if the operator asked for a production-style close-out, and open the PR.
 
 ---
 

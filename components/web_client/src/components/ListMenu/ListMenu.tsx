@@ -6,6 +6,8 @@ interface ListMenuProps {
   canDelete?: boolean;
   completedCount: number;
   onDeleteList?: () => void;
+  /** Absent on surfaces that cannot enter selection mode. */
+  onSelectItems?: () => void;
   onToggleCompleted: (showCompleted: boolean) => void;
   showCompleted: boolean;
 }
@@ -16,6 +18,7 @@ export function ListMenu({
   canDelete = false,
   completedCount,
   onDeleteList,
+  onSelectItems,
   onToggleCompleted,
   showCompleted,
 }: ListMenuProps) {
@@ -79,6 +82,20 @@ export function ListMenu({
           >
             {showCompleted ? 'Hide Completed' : `Show Completed (${completedCount})`}
           </button>
+
+          {onSelectItems ? (
+            <button
+              className="psykl-list-menu__item"
+              onClick={() => {
+                setOpen(false);
+                onSelectItems();
+              }}
+              role="menuitem"
+              type="button"
+            >
+              Select Items
+            </button>
+          ) : null}
 
           {/* Deleting a list is soft and recoverable from Recently Deleted, but
            * it still takes a second tap rather than a dialog. */}

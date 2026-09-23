@@ -69,6 +69,18 @@ If the Spec is client-only (no API changes), say: "No API surface."
 
 ---
 
+## Visual Artifact
+
+Required when this Spec introduces or changes a user-facing surface: write
+`{YYYYMMDD}-Spec{N}-{spec-slug}-visual-artifact.md` beside this file from
+[`docs/templates/visual-artifact.md`](visual-artifact.md), and link it here. Text-based forms only
+(ASCII wireframes, Mermaid, state storyboard, Storybook state set) — it is carried into the feature
+doc's `## Visual Record` at close-out, where screenshots cannot follow.
+
+State _none — no user-facing surface changed_ for schema-, CI-, or infrastructure-only Specs.
+
+---
+
 ## Implementation Components
 
 Break down what's added or modified, grouped by component (`service-task`, `web_client`, `packages/shared-types`, etc.):

@@ -16,7 +16,7 @@
     "test:component": "pnpm test:component:stories && pnpm test:component:sw",
     "test:component:stories": "storybook build --quiet --output-dir storybook-static && concurrently -k -s first -n SB,TEST \"http-server storybook-static --port 6006 --silent\" \"wait-on tcp:6006 && test-storybook --url http://127.0.0.1:6006\"",
     "test:component:sw": "pnpm build && playwright test -c playwright.component.config.ts",
-    "storybook": "storybook dev -p 6006 --no-open",
+    "storybook": "storybook dev -p 6007 --no-open",
     "build-storybook": "storybook build --output-dir storybook-static",
     "codegen": "openapi-typescript ../service-task/openapi.json --output src/api/types.ts"
   },
