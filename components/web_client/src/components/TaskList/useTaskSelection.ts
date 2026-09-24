@@ -6,13 +6,13 @@ import { useTasks } from '../../hooks/useTasks';
 interface TaskSelection {
   /** A batch is in flight: the pool is frozen until every call settles. */
   busy: boolean;
-  completeSelected: () => Promise<void>;
   deleteSelected: () => Promise<void>;
   moveSelected: (listId: string) => Promise<void>;
   moving: boolean;
   /** The pooled tasks, in the order they appear on screen. */
   selected: Task[];
   selectedIds: Set<string>;
+  toggleSelectedCompletion: () => Promise<void>;
   setMoving: (moving: boolean) => void;
   toggleSelected: (id: string) => void;
 }
@@ -67,14 +67,19 @@ function useTaskSelection(ordered: Task[], selecting: boolean, onFinished?: () =
     }
   }
 
-  async function completeSelected(): Promise<void> {
+  /**
+   * Flips each pooled task to its other completion state, independently of the
+   * rest of the pool. A mixed pool therefore inverts: the complete rows reopen
+   * and the open ones close. Nothing is silently skipped, which is what the
+   * earlier complete-only version did to a pooled task that was already done.
+   */
+  async function toggleSelectedCompletion(): Promise<void> {
     const now = new Date().toISOString();
     await runBatch(
-      selected
-        .filter((task) => task.completed_at === null)
-        .map((task) =>
-          patchTask(task.id, { completed_at: now, updated_at: now }, { ...task, completed_at: now, updated_at: now }),
-        ),
+      selected.map((task) => {
+        const completed_at = task.completed_at === null ? now : null;
+        return patchTask(task.id, { completed_at, updated_at: now }, { ...task, completed_at, updated_at: now });
+      }),
     );
   }
 
@@ -109,7 +114,6 @@ function useTaskSelection(ordered: Task[], selecting: boolean, onFinished?: () =
 
   return {
     busy,
-    completeSelected,
     deleteSelected,
     moveSelected,
     moving,
@@ -117,6 +121,7 @@ function useTaskSelection(ordered: Task[], selecting: boolean, onFinished?: () =
     selectedIds,
     setMoving,
     toggleSelected,
+    toggleSelectedCompletion,
   };
 }
 

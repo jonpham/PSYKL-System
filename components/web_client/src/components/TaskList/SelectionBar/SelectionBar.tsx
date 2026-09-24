@@ -6,9 +6,9 @@ interface SelectionBarProps {
   /** A batch is in flight: every action is inert until it settles. */
   busy?: boolean;
   count: number;
-  onComplete: () => void;
   onDelete: () => void;
   onMove: () => void;
+  onToggleCompletion: () => void;
 }
 
 /**
@@ -20,12 +20,18 @@ interface SelectionBarProps {
  * mode always has a visible control surface. With nothing pooled it reads as
  * dimmed and its actions are disabled: unavailable, not absent.
  *
- * Delete takes two presses, the way deleting a list does in the list menu: the
- * first arms the action — the trash opens its lid and the button fills — and
- * the second performs it. Anything that changes what would be destroyed, or
- * moves the user's attention elsewhere in the bar, disarms it.
+ * The completion action is a toggle, not a one-way mark: it flips each pooled
+ * task to its other state, so a pool of finished tasks reopens and a mixed pool
+ * inverts. The glyph stays the row's own completion mark; the label carries the
+ * direction, because a mixed pool has no single direction to draw.
+ *
+ * Delete takes two presses: the first arms the action — the trash opens its lid
+ * and gains a red ring — and the second performs it. A ring rather than a fill,
+ * so the armed state reads as the same control waiting rather than a different,
+ * louder one. Anything that changes what would be destroyed, or moves the
+ * user's attention elsewhere in the bar, disarms it.
  */
-export function SelectionBar({ busy = false, count, onComplete, onDelete, onMove }: SelectionBarProps) {
+export function SelectionBar({ busy = false, count, onDelete, onMove, onToggleCompletion }: SelectionBarProps) {
   const empty = count === 0 || busy;
   const [armed, setArmed] = useState(false);
 
@@ -43,12 +49,12 @@ export function SelectionBar({ busy = false, count, onComplete, onDelete, onMove
       role="toolbar"
     >
       <button
-        aria-label="Mark selected tasks complete"
+        aria-label="Toggle completion of selected tasks"
         className="psykl-selection-bar__action"
         disabled={empty}
         onClick={() => {
           setArmed(false);
-          onComplete();
+          onToggleCompletion();
         }}
         type="button"
       >

@@ -131,8 +131,13 @@ export const ConfirmedDeleteEnqueuesOps: Story = {
 
     // Act — the first press only arms the action
     await userEvent.click(canvas.getByRole('button', { name: 'Delete selected tasks' }));
-    await expect(canvas.getByRole('button', { name: 'Confirm deleting 1 task' })).toHaveAttribute('data-armed', 'true');
-    await userEvent.click(canvas.getByRole('button', { name: 'Confirm deleting 1 task' }));
+    const armed = canvas.getByRole('button', { name: 'Confirm deleting 1 task' });
+    await expect(armed).toHaveAttribute('data-armed', 'true');
+    // A ring, not a fill: the armed state must not paint the button's ground.
+    const armedStyle = getComputedStyle(armed);
+    await expect(armedStyle.boxShadow).toContain('inset');
+    await expect(['transparent', 'rgba(0, 0, 0, 0)', 'none']).toContain(armedStyle.backgroundColor);
+    await userEvent.click(armed);
 
     // Assert — `attempts > 0` proves the op went through the queue's replay
     // rather than a direct fetch, and that the background retry has settled
