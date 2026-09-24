@@ -28,4 +28,7 @@ The main Task view has no sync banner, status remains visible at mobile and desk
 
 ## Verdict
 
-_Open._
+**Promoted** — 2026-09-24, in `to-do-ui` Spec 5 (sync, Recently Deleted, and Settings). The banner is
+gone; the circular status glyph in the content header, the status-coloured sidebar row, and the
+read-only Sync destination carrying queued and failed counts all shipped as prototyped. Record:
+[`docs/features/[20260922]P5_to-do-ui-sync-recently-deleted-and-settings.md`](../../../../features/%5B20260922%5DP5_to-do-ui-sync-recently-deleted-and-settings.md).

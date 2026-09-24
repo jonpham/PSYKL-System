@@ -29,4 +29,7 @@ On an iPhone PWA at `/exp/apple-reminders-ux`, all three destinations are reacha
 
 ## Verdict
 
-_Open._
+**Promoted** — 2026-09-24, in `to-do-ui` Spec 1 (shell navigation and lists). The sidebar, the
+`☰ PSYKL` open control, the auto-close on selection, the persistent desktop rail, and Settings as a
+main-area view all shipped to the production surface; version and provenance info moved into that
+Settings view as proposed. Record: [`docs/features/[20260921]P1_to-do-ui-shell-navigation-and-lists.md`](../../../../features/%5B20260921%5DP1_to-do-ui-shell-navigation-and-lists.md).

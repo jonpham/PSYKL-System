@@ -28,4 +28,13 @@ On an iPhone at `/exp/apple-reminders-ux`, (+) opens an inline row that commits 
 
 ## Verdict
 
-_Open._
+**Promoted** — 2026-09-24, across `to-do-ui` Specs 2-4: the task row and list
+([P2](../../../../features/%5B20260922%5DP2_to-do-ui-task-list-and-row.md)), inline capture
+([P3](../../../../features/%5B20260922%5DP3_to-do-ui-inline-capture.md)), and list options with
+per-list completed visibility
+([P4](../../../../features/%5B20260922%5DP4_to-do-ui-list-options-and-completed-visibility.md)).
+The token set became `src/styles/tokens.css` and the baseline of `docs/DESIGN.md`; the glyph set,
+the collapsible Lists section, and the Lists page all shipped. The deferred reconciliation named in
+`## Not now` was done before implementation, not after: `docs/DESIGN.md` and
+`docs/initiatives/todo-experience/UX.md` were rewritten to this prototype's built values on
+2026-09-21.

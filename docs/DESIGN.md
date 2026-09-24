@@ -4,7 +4,7 @@ Rewritten on 2026-09-21 from the accepted `apple-reminders-ux` experiment, which
 
 **Status:** APPROVED — the visual baseline for the [`to-do-ui`](initiatives/to-do-ui/DESIGN.md) initiative and everything after it. No open decisions.
 **Scope:** Durable. This document outlives any one initiative and is refreshed, not deleted, at close-out.
-**Source of truth for pixels:** `docs/experiments/apple-reminders-ux/apple-reminders-ui/visual-artifact.md` and its `screenshots/`. This file is the durable statement of what those screenshots mean; the screenshots are the evidence.
+**Source of truth for pixels:** `docs/experiments/archive/apple-reminders-ux/apple-reminders-ui/visual-artifact.md` and its `screenshots/`. This file is the durable statement of what those screenshots mean; the screenshots are the evidence.
 **Companion:** [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) covers screens, behavior, and gestures for the paused `todo-experience` initiative, and has been reconciled with this baseline.
 
 > **Glossary** (each doc carries its own, per [`AGENTS.md`](../AGENTS.md) → Design Doc Discipline):
@@ -314,7 +314,7 @@ Five metrics decisions, each settled by building and measuring rather than by ar
 - Tab order runs sync control → checkbox → title → next row. Space or Return toggles a focused checkbox; Escape leaves an in-progress capture row.
 - Completion, pending sync, and failure each carry a non-color signal in addition to color — strike-through and fill for completion, a dot for pending, a count for failure.
 - **Drag-to-reorder, when it lands, requires a keyboard equivalent** — a focused row moves with a modifier plus arrow keys, announced via an ARIA live region. Pointer-only reorder is inaccessible.
-- The contrast exception above is unresolved and is the one known gap.
+- The contrast exception above is **resolved**: Standard ships as designed and Increased raises every failing token to WCAG AA, as a device-local Settings choice. See Contrast — Standard and Increased.
 
 ---
 
