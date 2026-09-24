@@ -11,6 +11,11 @@ const AXIS_THRESHOLD_PX = 10;
  * long slow drag that ends in a flick should read as a flick. */
 const VELOCITY_WINDOW_MS = 100;
 
+/** Below roughly one frame, the samples are too close together to divide by:
+ * two moves a fraction of a millisecond apart would report a speed no hand can
+ * produce, and a flick that never happened would decide the gesture. */
+const MIN_VELOCITY_WINDOW_MS = 8;
+
 interface SwipeRelease {
   /** Signed pixels travelled along the horizontal axis. */
   delta: number;
@@ -79,9 +84,10 @@ function useSwipeTrack({ enabled = true, onRelease }: UseSwipeTrackOptions): Swi
     const last = samples[samples.length - 1];
     const first = samples.find((sample) => last !== undefined && last.t - sample.t <= VELOCITY_WINDOW_MS);
     const elapsed = last && first ? last.t - first.t : 0;
+    const measurable = elapsed >= MIN_VELOCITY_WINDOW_MS && last !== undefined && first !== undefined;
     releaseRef.current({
       delta: last ? last.x - current.startX : 0,
-      velocity: elapsed > 0 && last && first ? (last.x - first.x) / elapsed : 0,
+      velocity: measurable ? (last.x - first.x) / elapsed : 0,
     });
   }, []);
 

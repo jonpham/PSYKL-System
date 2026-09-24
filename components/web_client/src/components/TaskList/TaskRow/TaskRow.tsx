@@ -1,12 +1,23 @@
 import './task-row.css';
 
 import type { PointerEvent, ReactNode } from 'react';
+import { useRef } from 'react';
 
+import { SwipeRail } from './SwipeRail';
 import { useDelayedFlag } from './useDelayedFlag';
+import type { RowSwipe as RowSwipeActions } from './useRowSwipe';
+import { useRowSwipe } from './useRowSwipe';
 
 // Only surface the pending-sync affordance once a row has been unsynced for this
 // long, so fast online syncs don't flash a distracting dimmed row + dot.
 const PENDING_AFFORDANCE_DELAY_MS = 2000;
+
+interface RowSwipe extends RowSwipeActions {
+  /** Accessible name of the cover that takes a tap while the rail is open. */
+  dismissLabel: string;
+  onDelete: () => void;
+  onDetails: () => void;
+}
 
 interface TaskRowProps {
   /** The trailing slot's other occupant: a control for this row alone, shown
@@ -36,6 +47,10 @@ interface TaskRowProps {
   onReorder?: (delta: -1 | 1) => void;
   /** Drives the tick, which means "in the current selection" and nothing else. */
   selected?: boolean;
+  /** Present only on rows that reveal actions behind them. A selection-mode
+   * row passes nothing: that column is the drag handle's, and a row that both
+   * swipes and drags would make a horizontal gesture ambiguous. */
+  swipe?: RowSwipe;
   taskId: string;
   /** The title area: a button, an input, whatever the behaviour needs. */
   title: ReactNode;
@@ -54,6 +69,11 @@ interface TaskRowProps {
  * into a batch — belongs to `EditableTaskRow` and `SelectableTaskRow`, because
  * that is the only thing the two modes genuinely disagree about (including what
  * the leading control claims to assistive tech).
+ *
+ * When a caller supplies `swipe`, the row's contents sit on a surface that
+ * slides left over a rail painted behind it. The rail is revealed, never
+ * pushed, and both of its actions stay reachable without a pointer through the
+ * details drawer — the gesture is a shortcut, not the only route to anything.
  */
 export function TaskRow({
   action,
@@ -68,66 +88,109 @@ export function TaskRow({
   onDragStart,
   onReorder,
   selected = false,
+  swipe,
   taskId,
   title,
   titleText,
 }: TaskRowProps) {
   const showPending = useDelayedFlag(isPending, PENDING_AFFORDANCE_DELAY_MS);
+  const rowRef = useRef<HTMLLIElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+
+  const { committing, offset, onPointerDown, tracking } = useRowSwipe({
+    enabled: swipe !== undefined && !disabled,
+    railRef,
+    rowRef,
+    swipe,
+  });
 
   return (
     <li
       aria-label={showPending ? `${titleText} pending sync` : titleText}
       className="psykl-task-row"
+      data-committing={swipe ? committing : undefined}
       data-completed={completed}
       data-dragging={isDragging}
       data-pending={showPending}
       data-selected={selected}
+      data-swipe-open={swipe ? swipe.open : undefined}
+      data-swiping={swipe ? tracking : undefined}
       data-task-id={taskId}
+      ref={rowRef}
+      style={
+        swipe
+          ? ({ '--swipe-offset': offset === undefined ? undefined : `${offset}px` } as React.CSSProperties)
+          : undefined
+      }
     >
-      <button
-        aria-checked={checked}
-        aria-label={checkboxLabel}
-        className="psykl-task-row__checkbox"
-        disabled={disabled}
-        onClick={onCheckboxClick}
-        role="checkbox"
-        type="button"
-      >
-        <svg aria-hidden="true" className="psykl-task-row__mark" viewBox="0 0 22 22">
-          <circle className="psykl-task-row__circle" cx="11" cy="11" r="10" />
-          {/* Completion is a ring with a filled core, the way Reminders draws
-           * it — never a solid disc, which would read as a selected row. */}
-          <circle className="psykl-task-row__core" cx="11" cy="11" r="5.5" />
-          <path className="psykl-task-row__tick" d="M6.2 11.4l3.2 3.2 6.4-6.8" />
-        </svg>
-      </button>
+      {swipe ? (
+        <SwipeRail
+          mounted={swipe.open || tracking}
+          onDelete={swipe.onDelete}
+          onDetails={swipe.onDetails}
+          open={swipe.open}
+          ref={railRef}
+          titleText={titleText}
+        />
+      ) : null}
 
-      {title}
-
-      {showPending ? <span aria-label="Pending sync" className="psykl-task-row__pending" role="img" /> : null}
-
-      {/* Completed rows stay ordered by when they were completed, so a drag
-       * there would have nothing to mean. */}
-      {action && !onReorder ? <span className="psykl-task-row__action">{action}</span> : null}
-
-      {onReorder && !completed ? (
+      <div className="psykl-task-row__surface" onPointerDown={swipe ? onPointerDown : undefined}>
         <button
-          aria-label={`Reorder ${titleText}`}
-          className="psykl-task-row__handle"
+          aria-checked={checked}
+          aria-label={checkboxLabel}
+          className="psykl-task-row__checkbox"
           disabled={disabled}
-          onKeyDown={(event) => {
-            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-            event.preventDefault();
-            onReorder(event.key === 'ArrowUp' ? -1 : 1);
-          }}
-          onPointerDown={onDragStart}
+          onClick={onCheckboxClick}
+          role="checkbox"
           type="button"
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M5 9h14M5 15h14" />
+          <svg aria-hidden="true" className="psykl-task-row__mark" viewBox="0 0 22 22">
+            <circle className="psykl-task-row__circle" cx="11" cy="11" r="10" />
+            {/* Completion is a ring with a filled core, the way Reminders draws
+             * it — never a solid disc, which would read as a selected row. */}
+            <circle className="psykl-task-row__core" cx="11" cy="11" r="5.5" />
+            <path className="psykl-task-row__tick" d="M6.2 11.4l3.2 3.2 6.4-6.8" />
           </svg>
         </button>
-      ) : null}
+
+        {title}
+
+        {showPending ? <span aria-label="Pending sync" className="psykl-task-row__pending" role="img" /> : null}
+
+        {/* Completed rows stay ordered by when they were completed, so a drag
+         * there would have nothing to mean. */}
+        {action && !onReorder ? <span className="psykl-task-row__action">{action}</span> : null}
+
+        {onReorder && !completed ? (
+          <button
+            aria-label={`Reorder ${titleText}`}
+            className="psykl-task-row__handle"
+            disabled={disabled}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+              event.preventDefault();
+              onReorder(event.key === 'ArrowUp' ? -1 : 1);
+            }}
+            onPointerDown={onDragStart}
+            type="button"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 9h14M5 15h14" />
+            </svg>
+          </button>
+        ) : null}
+
+        {/* An open row has slid its own controls half off the screen, where a
+         * tap on what is left would mean something the user did not aim at. */}
+        {swipe?.open ? (
+          <button
+            aria-label={swipe.dismissLabel}
+            className="psykl-task-row__dismiss"
+            onClick={() => swipe.onOpenChange(false)}
+            type="button"
+          />
+        ) : null}
+      </div>
 
       {children}
     </li>

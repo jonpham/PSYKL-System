@@ -8,6 +8,11 @@ import { TaskRow } from './TaskRow';
 
 interface EditableTaskRowProps {
   isPending?: boolean;
+  /** Set by a list that keeps one rail open at a time. Left out, the row
+   * governs its own rail, which is what a story or a test rendering one row
+   * wants. */
+  railOpen?: boolean;
+  onRailOpenChange?: (open: boolean) => void;
   task: Task;
 }
 
@@ -15,10 +20,22 @@ interface EditableTaskRowProps {
  * The ordinary list row: the mark toggles completion, and the title edits in
  * place. This is what a user sees whenever the list is not in selection mode.
  */
-export function EditableTaskRow({ isPending = false, task }: EditableTaskRowProps) {
+export function EditableTaskRow({
+  isPending = false,
+  onRailOpenChange,
+  railOpen: controlledRailOpen,
+  task,
+}: EditableTaskRowProps) {
   const { deleteTask, patchTask } = useTasks();
   const [showingDetails, setShowingDetails] = useState(false);
+  const [ownRailOpen, setOwnRailOpen] = useState(false);
+  const railOpen = controlledRailOpen ?? ownRailOpen;
   const completed = task.completed_at !== null;
+
+  function setRailOpen(open: boolean): void {
+    setOwnRailOpen(open);
+    onRailOpenChange?.(open);
+  }
 
   function rename(title: string): void {
     const now = new Date().toISOString();
@@ -58,7 +75,7 @@ export function EditableTaskRow({ isPending = false, task }: EditableTaskRowProp
   return (
     <TaskRow
       action={
-        editing && !showingDetails ? (
+        editing && !showingDetails && !railOpen ? (
           <button
             aria-label={`Details for ${task.title}`}
             className="psykl-task-row__details"
@@ -84,6 +101,17 @@ export function EditableTaskRow({ isPending = false, task }: EditableTaskRowProp
       isPending={isPending}
       onCheckboxClick={toggleComplete}
       selected={false}
+      swipe={{
+        dismissLabel: `Close actions for ${task.title}`,
+        onCommit: remove,
+        onDelete: remove,
+        onDetails: () => {
+          setRailOpen(false);
+          setShowingDetails(true);
+        },
+        onOpenChange: setRailOpen,
+        open: railOpen,
+      }}
       taskId={task.id}
       title={title}
       titleText={task.title}

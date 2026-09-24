@@ -70,4 +70,13 @@ describe('SelectableTaskRow (Unit)', () => {
     // Assert
     expect(screen.queryByRole('button', { name: 'Reorder Oat milk' })).not.toBeInTheDocument();
   });
+
+  it('carries no swipe rail, because that column is the drag handle', () => {
+    // Arrange
+    render(<SelectableTaskRow onReorder={() => {}} onToggleSelect={() => {}} selected={false} task={task()} />);
+
+    // Assert
+    expect(document.querySelector('.psykl-task-row__rail')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Reorder Oat milk' })).toBeInTheDocument();
+  });
 });

@@ -145,6 +145,21 @@ describe('useSwipeTrack (Unit)', () => {
     expect(onRelease).not.toHaveBeenCalled();
   });
 
+  it('reports no velocity at all when the samples are too close together to divide by', () => {
+    // Arrange — every event in one tick, which no hand can produce
+    const onRelease = vi.fn();
+    render(<Harness onRelease={onRelease} />);
+
+    // Act
+    press(390);
+    moveTo(360);
+    moveTo(330);
+    release();
+
+    // Assert — a measured flick here would decide a gesture that never flicked
+    expect((onRelease.mock.calls[0]?.[0] as SwipeRelease).velocity).toBe(0);
+  });
+
   it('reports a velocity signed the same way as the travel', () => {
     // Arrange — a fake clock, so the gesture has a measurable duration
     const onRelease = vi.fn();

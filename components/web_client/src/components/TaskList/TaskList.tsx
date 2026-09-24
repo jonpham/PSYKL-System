@@ -5,7 +5,6 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useCompletedVisibility } from '../../hooks/useCompletedVisibility';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { useTasks } from '../../hooks/useTasks';
-import { taskServiceClient } from '../../services/task-service-client';
 import { PlusGlyph } from '../AppShell/Glyphs';
 import { CaptureRow } from './CaptureRow';
 import { EmptyState } from './EmptyState';
@@ -16,6 +15,8 @@ import { sortTasks } from './sortTasks';
 import { TaskListSkeleton } from './TaskListSkeleton';
 import { EditableTaskRow, SelectableTaskRow } from './TaskRow';
 import { useHandOrder } from './useHandOrder';
+import { useOpenRail } from './useOpenRail';
+import { usePendingTaskIds } from './usePendingTaskIds';
 import { useTaskSelection } from './useTaskSelection';
 
 interface TaskListProps {
@@ -36,35 +37,10 @@ export function TaskList({ onCompletedCountChange, onExitSelection, selecting = 
   // than piling up changes it may never be able to send.
   const atCeiling = useSyncDiscrepancy().level === 'ceiling';
   const { showCompleted } = useCompletedVisibility();
-  const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
   const listRef = useRef<HTMLUListElement>(null);
   const { draggingId, handOrder, reorder, startDrag } = useHandOrder(listRef);
-
-  useEffect(() => {
-    if (tasks.length === 0) {
-      setPendingTaskIds((current) => (current.size === 0 ? current : new Set()));
-      return;
-    }
-
-    if (typeof indexedDB === 'undefined') {
-      return;
-    }
-
-    let cancelled = false;
-    void taskServiceClient.listPending().then((ids) => {
-      if (!cancelled) {
-        setPendingTaskIds((current) => {
-          if (ids.length === 0 && current.size === 0) {
-            return current;
-          }
-          return new Set(ids);
-        });
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tasks]);
+  const { openRailId, setOpenRailId } = useOpenRail(selecting);
+  const pendingTaskIds = usePendingTaskIds(tasks);
 
   const completedCount = tasks.filter((task) => task.completed_at !== null).length;
   useEffect(() => {
@@ -136,7 +112,12 @@ export function TaskList({ onCompletedCountChange, onExitSelection, selecting = 
                   task={task}
                 />
               ) : (
-                <EditableTaskRow isPending={pendingTaskIds.has(task.id)} task={task} />
+                <EditableTaskRow
+                  isPending={pendingTaskIds.has(task.id)}
+                  onRailOpenChange={(open) => setOpenRailId(open ? task.id : null)}
+                  railOpen={openRailId === task.id}
+                  task={task}
+                />
               )}
               {capturing && index + 1 === openCount ? captureRow : null}
             </Fragment>
