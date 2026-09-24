@@ -4,7 +4,7 @@ Rewritten on 2026-09-21 from the accepted `apple-reminders-ux` experiment, which
 
 **Status:** APPROVED — the visual baseline for the [`to-do-ui`](initiatives/to-do-ui/DESIGN.md) initiative and everything after it. No open decisions.
 **Scope:** Durable. This document outlives any one initiative and is refreshed, not deleted, at close-out.
-**Source of truth for pixels:** `docs/experiments/archive/apple-reminders-ux/apple-reminders-ui/visual-artifact.md` and its `screenshots/`. This file is the durable statement of what those screenshots mean; the screenshots are the evidence.
+**Source of truth for pixels:** this file. It was written from the accepted prototype's visual artifact and screenshots, which were reviewed against a running build at 390px and 1024px in light and dark; those planning artifacts were deleted when the experiment was retired (`to-do-ui` Spec 6), and are recoverable from git history if the evidence is ever needed. The shape those values compose into is drawn in [`docs/features/[20260924]P6_to-do-ui-retire-experiment-and-close-out.md`](features/%5B20260924%5DP6_to-do-ui-retire-experiment-and-close-out.md) → Visual Record.
 **Companion:** [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) covers screens, behavior, and gestures for the paused `todo-experience` initiative, and has been reconciled with this baseline.
 
 > **Glossary** (each doc carries its own, per [`AGENTS.md`](../AGENTS.md) → Design Doc Discipline):

@@ -25,9 +25,12 @@ app plus a prototype of the same app plus three docs describing a design nobody 
 2. The registry is **empty and valid**. The `/exp` infrastructure — `registry.ts`,
    `ExperimentRouter`, `ExperimentsIndex`, `ExperimentFrame`, `ExperimentTools` — stays for the next
    experiment, and its tests no longer name a deleted tree.
-3. The experiment's artifacts moved to `docs/experiments/archive/apple-reminders-ux/` with a
-   recorded verdict on the root card and on each of the three iterations. All three were
-   **promoted**; the screenshots moved with them.
+3. The experiment's planning artifacts are **deleted**, not archived — the operator's call at
+   close-out: all three iterations were promoted, so their record is this initiative's six feature
+   docs, and git history holds the artifacts themselves. Their two load-bearing pieces are carried
+   into this doc rather than lost: the picture of the surface (`## Visual Record`) and the
+   acceptance gate (`## Verification Steps`). Deleting them also retires ten committed screenshots,
+   which [`AGENTS.md`](../../AGENTS.md) had never permitted in the first place.
 4. `docs/DESIGN.md` reconciled against what shipped: the pixel source-of-truth path follows the
    archive, and the Accessibility section's "contrast exception is unresolved" line is corrected —
    that decision was made on 2026-09-21 and shipped in Spec 5.
@@ -37,25 +40,92 @@ app plus a prototype of the same app plus three docs describing a design nobody 
 
 ## Visual Record
 
-_none — no user-facing surface changed._ One user-reachable route was **removed**
-(`/exp/apple-reminders-ux`), and the `/exp` index now states its empty condition:
+The `to-do-ui` initiative shipped this surface across Specs 1-5; none of those feature docs carried
+a `## Visual Record`, and the planning `visual-artifact.md` was deleted with the experiment's
+artifacts. It is carried here — **updated to what was built** — so the picture survives its source,
+per [`AGENTS.md`](../../AGENTS.md) → Git Conventions. `docs/DESIGN.md` remains the normative
+statement of metrics, tokens, and motion; this is the shape they compose into.
+
+### Loaded list @ 390px
 
 ```text
-/exp  ─────────────────────────────────────────
-  Experiments
-  No experiments are registered right now.
-
-/exp/{any-slug}  ─────────────────────────────
-  Experiments
-  No experiment is registered at /exp/{any-slug}.
-  No experiments are registered right now.
+┌──────────────────────────────┐
+│ ☰ PSYKL                      │  44px chrome · Open PSYKL navigation
+│                              │
+│ Tasks                    ◍ ⋯ │  large title · sync control · list menu
+│ ──────────────────────────── │  separator, full bleed
+│  ◯  Book dentist             │  row ≥44px · title 17/22 · 22px circle
+│     ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ │  separator inset to the title edge
+│  ◯  Draft the offline sync   │
+│     notes for Thursday       │  wraps, never truncates
+│     ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ │
+│  ✔  ̶R̶e̶n̶e̶w̶ ̶p̶a̶s̶s̶p̶o̶r̶t̶         │  completed sink below the open tasks
+│                              │
+│                          (+) │  floating capture · New Task
+└──────────────────────────────┘
 ```
 
-Settings still carries its **Experiments** section; it renders the same empty line. The experiment
-tools (🧪) are **still reachable**, and deliberately so: `ExperimentFrame` mounts them and arms the
-device on any `/exp` path, the index included, so a developer who lands on `/exp` or on a dead
-experiment URL can still switch back to Production. They remain invisible to anyone who has never
-opened an `/exp` path, which is the property that keeps production free of developer chrome.
+### Capture, keyboard up @ 390px
+
+```text
+┌──────────────────────────────┐
+│  ◯  Book dentist             │
+│     ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ │
+│  ◯  ▏                        │  empty row appended after the last
+│                              │  OPEN task, never below completed
+├──────────────────────────────┤
+│  q w e r t y u i o p         │  Return commits and opens the next
+│   a s d f g h j k l          │  empty row; Escape leaves; an empty
+│    z x c v b n m  ⌫          │  row is discarded on blur
+│  ─────── space ───── return  │
+└──────────────────────────────┘
+```
+
+### Selection mode @ 390px
+
+```text
+┌──────────────────────────────┐
+│ Tasks                      ✓ │  header hands over; ✓ is the way out
+│ ──────────────────────────── │
+│  ◉  Book dentist          ⠿ │  rows pool instead of editing · handle
+│  ○  Draft the offline sync ⠿ │
+│ ──────────────────────────── │
+│   ◐        ↪        🗑        │  complete · move · delete (two-press)
+└──────────────────────────────┘
+```
+
+### Desktop @ 1024px
+
+```text
+┌───────────────┬──────────────────────────────────────────┐
+│ PSYKL         │  Tasks                               ◍ ⋯ │
+│  ▸ Tasks   ✓  │  ────────────────────────────────────────│
+│  ▸ Sync       │   ◯  Book dentist                        │
+│  ▸ Recently…  │      ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ │
+│  ▸ Settings   │   ✔  ̶R̶e̶n̶e̶w̶ ̶p̶a̶s̶s̶p̶o̶r̶t̶                    │
+│               │                                      (+) │
+└───────────────┴──────────────────────────────────────────┘
+       sidebar permanent past 768px · content column max 680px
+```
+
+**How the built surface diverges from the planned picture.** Recorded at the prototype's own
+acceptance review and carried forward, plus what Specs 2-5 and the lightweight changes altered:
+
+| Divergence                                                                            | Why                                                                                                                                     |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Capture is a floating **(+)** at the trailing edge, not a bottom `⊕ New Reminder` bar | Changed in Spec 3 / [#122](https://github.com/jonpham/PSYKL-System/issues/122); the bar spent a row of chrome                           |
+| No hairline under the large title                                                     | Reminders has none until the title collapses on scroll, and that collapse was never in scope                                            |
+| Checkbox column is 36px, not 44px                                                     | Matches the title inset; a 44px column reaches back into the page gutter. The hit target is still 44px                                  |
+| A failed task load is silent while the device still has tasks                         | Offline-first: the local list is the truth, and the header's sync control already carries the signal                                    |
+| Empty list reads `No tasks yet. Create your first one.`, left-aligned                 | Built that way in Spec 2 rather than the planned centred `No Reminders` — see the note below                                            |
+| Rows carry a details **(i)** affordance the prototype never had                       | [#127](https://github.com/jonpham/PSYKL-System/issues/127) added the task drawer; the prototype had neither                             |
+| Selection mode, drag handles, and the list-delete dialog are absent from the plan     | All later work ([#126](https://github.com/jonpham/PSYKL-System/issues/126), [#138](https://github.com/jonpham/PSYKL-System/issues/138)) |
+
+> **One divergence is a defect, not a decision.** `TaskList/EmptyState/EmptyState.tsx` renders its
+> copy with `style={{ color: '#666' }}` — an inline style carrying a raw hex literal, which
+> [`docs/STYLE.md`](../STYLE.md) → Styling and [`docs/DESIGN.md`](../DESIGN.md) → Anti-patterns both
+> ban outright, and which ignores theme and contrast entirely. Out of scope for a close-out PR that
+> changes no production module; recorded here and in the retrospective so it is not lost.
 
 ## Verification Steps
 
@@ -75,10 +145,36 @@ _Steps_
 2. Open `/exp/apple-reminders-ux` — it reports no experiment at that path rather than erroring.
 3. Open `/settings` — the Experiments section renders, empty, and no 🧪 control appears anywhere.
 4. Run `grep -r "apple-reminders-ux" components/` — no matches.
-5. Walk the eight checks in
-   `docs/experiments/archive/apple-reminders-ux/apple-reminders-ui/acceptance-checks.md` against `/`
-   at 390px and 1024px, light and dark. Confirm completed-visibility and appearance each survive a
-   reload and each stay device-local.
+5. Walk the initiative's acceptance gate below against `/` at 390px and 1024px, light and dark.
+   Confirm completed-visibility and appearance each survive a reload and each stay device-local.
+
+_The initiative's acceptance gate_ — the eight checks the prototype was accepted against, carried
+here from the deleted `acceptance-checks.md` and re-pointed at `/`, the production surface that
+absorbed them. All eight passed against the prototype on 2026-09-21; they are the gate the shipped
+app must still clear.
+
+- [ ] **Capture** — the capture affordance appends an empty focused row in place (no modal, no top
+      form); typing and pressing Return saves the task and opens the next empty row; blurring an
+      empty row discards it.
+- [ ] **Complete** — tapping a checkbox fills it with the tint, strikes and dims the title within
+      ~200ms, and the row settles below the last open task; tapping again reverses it.
+- [ ] **Row craft** — every row is ≥44px with a 22px circle checkbox, titles at 17px wrapping
+      rather than truncating, and hairline separators inset to the title's leading edge.
+- [ ] **Empty + failure** — an empty list shows its empty copy and the capture affordance; a save
+      that fails surfaces the error without losing the typed title.
+- [ ] **Dark mode** — switching the OS to dark renders a designed dark surface (black ground,
+      `#0A84FF` tint), not an inversion; text and the checkbox stay legible in both.
+- [ ] **Persistence** — created and completed tasks survive a refresh, and completed ones return
+      below the open tasks in the same order.
+- [ ] **Keyboard & focus** — Tab reaches the capture affordance and every checkbox with a visible
+      focus ring; Space/Return toggles completion; Escape leaves an in-progress capture row.
+- [ ] **Desktop** — at 1024px the list sits in a ≤680px content column beside the persistent
+      sidebar, with the same row metrics and no stretched full-width rows.
+
+> The prototype's review also surfaced and fixed one real bug worth keeping: `autoFocus` on the
+> capture input focused _after_ paint, so characters typed immediately after tapping the capture
+> control were swallowed — `Book dentist` arrived as `k dentist`. Focus is taken synchronously in a
+> layout effect, in both the task capture row and the new-list input.
 
 _Expectation_ — the production app is unchanged in every respect, and the prototype is gone.
 
