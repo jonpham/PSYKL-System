@@ -43,30 +43,14 @@ body:has(.psykl-app-shell) {
   min-height: 100dvh;
   position: absolute;
   top: 0;
-  /* `--sidebar-shift` is how far it is drawn out of its shut position: 0 when
-   * closed, 100% when open, and the live drag distance while a finger is on
-   * it. One property serves all three, so opening by gesture and opening by
-   * button land in exactly the same place. */
-  transform: translateX(calc(-100% + var(--sidebar-shift, 0px)));
-  transition: transform 0.22s ease;
-  /* Vertical panning stays the browser's; only the horizontal axis is ours. */
-  touch-action: pan-y;
+  transform: translateX(-100%);
   visibility: hidden;
   width: min(82vw, 20rem);
   z-index: 3;
 }
-.psykl-app-shell__sidebar[data-open='true'],
-.psykl-app-shell__sidebar[data-sliding='true'] {
+.psykl-app-shell__sidebar[data-open='true'] {
+  transform: translateX(0);
   visibility: visible;
-}
-/* Under the finger it is placed, not animated. */
-.psykl-app-shell__sidebar[data-sliding='true'] {
-  transition: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .psykl-app-shell__sidebar {
-    transition: none;
-  }
 }
 .psykl-app-shell__backdrop {
   background: rgb(0 0 0 / 35%);
@@ -153,7 +137,6 @@ body:has(.psykl-app-shell) {
     border-right: 1px solid var(--separator);
     position: static;
     transform: none;
-    transition: none;
     visibility: visible;
     width: auto;
   }
