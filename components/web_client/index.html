@@ -12,7 +12,12 @@
          (`src/preferences/apply.ts`). Light is the pre-JS default. -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#1a1a2e" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- `viewport-fit=cover` plus a translucent status bar lets an installed web
+         app paint under the clock, so the bar shows the sidebar or the page
+         instead of iOS's solid white `default`. The shell pads its own content
+         clear of the clock with `env(safe-area-inset-*)`. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!-- The light app background, for the moment before JS runs; after that
          `applyThemeColor` keeps it on whatever `--bg-app` the theme resolves. -->
     <meta name="theme-color" content="#ffffff" />
