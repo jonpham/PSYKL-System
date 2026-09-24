@@ -1,7 +1,7 @@
-# Task Row and Sidebar Touch Gestures
+# Task Row Gestures and Touch Polish
 
 > Lightweight feature workflow — `docs/workflows/lightweight-feature-workflow.md`. Target: **production**. Lane: **Standard**.
-> Issue: [#128](https://github.com/jonpham/PSYKL-System/issues/128). Follows [#127](https://github.com/jonpham/PSYKL-System/issues/127) (task item details drawer).
+> Issue: [#128](https://github.com/jonpham/PSYKL-System/issues/128). Follows [#127](https://github.com/jonpham/PSYKL-System/issues/127) (task item details drawer). Revised after device feedback on [PR #141](https://github.com/jonpham/PSYKL-System/pull/141#issuecomment-5822771416).
 
 ## User
 
@@ -9,23 +9,23 @@ A mobile PWA user on a touch screen, working through a list of tasks quickly wit
 
 ## Problem
 
-Deleting one task takes three or four sequential taps today — tap the title, tap **(i)**, tap delete, tap delete again — or a trip through selection mode. Opening the sidebar is a single target at the top-left of the screen, reachable only by shifting grip.
+Deleting one task takes three or four sequential taps — tap the title, tap **(i)**, tap delete, tap delete again — or a trip through selection mode. Starting a task means reaching for one small (+) at the bottom of the screen.
 
 ## Outcome
 
-Swipe a task row left to reveal **Details** and **Delete** behind it; swipe it all the way to delete outright. Swipe in from the left edge of the viewport to open the sidebar, and swipe the sidebar left to close it.
+Swipe a task row left to reveal **Details** and **Delete** behind it; swipe it all the way to delete outright. The row being acted on is framed so its edges stay legible. Tapping the empty space below a list starts a task. With the sidebar open, Safari's chrome keeps the app's background colour.
 
 ## Scope
 
-Ordinary (non-selection) task rows, and the narrow-layout sidebar. Pointer-driven so it works on iPhone. Existing taps, the **(i)** drawer, and the backdrop dismiss are all unchanged.
+Ordinary (non-selection) task rows, the empty list area, and the browser tint. Pointer-driven so it works on iPhone. Existing taps, the **(i)** drawer, the sidebar's button and backdrop, and the (+) are all unchanged.
 
 ## Not now
 
-No swipe on selection-mode rows (the trailing column is the drag handle's), no swipe-right-to-complete, no undo toast (deletes already land in Recently Deleted), no gestures on list rows in the sidebar.
+**No sidebar swipe** — dropped after device testing: Safari's own back-swipe owns the left edge. No swipe on selection-mode rows, no swipe-right-to-complete, no undo toast (deletes land in Recently Deleted).
 
 ## Done when
 
-On an iPhone, a half swipe on a task row holds open a Details + Delete rail, a full swipe deletes the task, and the sidebar opens and closes by swipe.
+On an iPhone, a half swipe on a framed task row holds open boxed Details + Delete actions, a full swipe deletes the task, and tapping below the list starts one.
 
 ## Verdict
 

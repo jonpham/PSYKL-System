@@ -1,59 +1,62 @@
-# Visual Artifact — Task Row and Sidebar Touch Gestures
+# Visual Artifact — Task Row Gestures and Touch Polish
 
 > Lightweight feature workflow, `target = production`. Form B — low-fidelity wireframes.
-> Four frames: row at rest, row with its rail open, row past the full-swipe threshold, sidebar mid-drag.
+> Four frames: row at rest, a focused row with its rail open, past the full-swipe threshold, and tapping the empty list space.
+> Revised after device feedback on PR #141: the sidebar-drag frame is gone, and the focus frame is new.
 
 ## 1 — Row at rest (today, unchanged)
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ ( )  Buy milk                             ⋮⋮ │   ← 44px row, tap title = edit
+│ ( )  Buy milk                                │   ← 44px rows, tap title = edit
 │ ( )  Call the plumber                        │
 │ (●)  Water the plants                        │
 └──────────────────────────────────────────────┘
 ```
 
-## 2 — Rail open (released between 25% and 60% of row width)
+## 2 — Focused row, rail open (released between 25% and 60% of row width)
 
-Row surface translates left by the rail width; the rail is painted behind it, revealed not pushed.
+The row the user is acting on — editing its title, swiping it, or holding its rail open — is **framed**: a grey boundary (`--bg-selected`) with the task as a rounded white box (`--bg-app`) inside it. The frame grows outward into the page gutter, so no text moves. The rail's actions are their own rounded boxes inside the same frame. Every other row is untouched.
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ ( )  Buy milk                             ⋮⋮ │
-│ ( )  plumber        │   (i)      │    🗑      │   ← 88px + 88px rail
-│                     │  Details   │  Delete   │
+│ ( )  Buy milk                                │
+╭──────────────────────────────────────────────╮  ← grey frame, 4px
+│╭──────────────────────╮╭────────╮╭─────────╮│
+││ ( )  Call the plumbe ││  (i)   ││   🗑    ││  ← white task box, then two
+││                      ││Details ││ Delete  ││    boxed actions (88px each)
+│╰──────────────────────╯╰────────╯╰─────────╯│
+╰──────────────────────────────────────────────╯
 │ (●)  Water the plants                        │
 └──────────────────────────────────────────────┘
-      ↑ row surface, translateX(-176px)
 ```
 
 `Details` opens the same `TaskItemDrawer` the **(i)** button opens. `Delete` performs the ordinary soft delete — one press, because the swipe itself was the deliberate act.
 
 ## 3 — Past the full-swipe threshold (> 60% of row width)
 
-The Delete pane takes the whole row behind the surface, so the commit is visible before the finger lifts. Release here deletes; drag back under the threshold and it returns to frame 2's rail.
+The Delete pane fills the task's own rounded box inside the frame, so the commit is visible before the finger lifts. Release here deletes; drag back under the threshold and it returns to frame 2's rail.
+
+```text
+╭──────────────────────────────────────────────╮
+│╭─────╮╭────────────────────────────────────╮│
+││ mbe ││                         🗑  Delete  ││  ← red, rounded, inside the frame
+│╰─────╯╰────────────────────────────────────╯│
+╰──────────────────────────────────────────────╯
+```
+
+## 4 — Tapping the empty space
+
+Everything between the last row (or the empty-state copy) and the (+) starts a task, exactly as the (+) does.
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ ( )  Buy milk                             ⋮⋮ │
-│ mber │            🗑  Delete                  │   ← rail floods the row
-│ (●)  Water the plants                        │
+│ Nothing to do yet.                           │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│ ┆            tap anywhere here             ┆ │  ← opens capture, like (+)
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│                                         (+)  │
 └──────────────────────────────────────────────┘
-```
-
-## 4 — Sidebar mid-drag (narrow layout only, < 768px container)
-
-Touch starts in the leftmost 24px gutter and drags right; the sidebar tracks the finger 1:1 from `translateX(-100%)`, with the backdrop fading in proportionally. Release past 40% of the sidebar's width settles it open, otherwise it settles shut. On the open sidebar the same drag, leftwards, closes it.
-
-```text
-      ┆ 24px edge zone
-┌─────┆────────────────────────────────────────┐
-│░░░░░│▒▒▒▒▒                                   │
-│ PSY │  Lists  ▒▒▒  My Tasks                  │   ← sidebar at translateX(-42%)
-│ Sid │  ▒▒▒▒▒  ▒▒▒  Shopping                  │      backdrop at 0.58 × full
-│ ebar│  ▒▒▒▒▒                                 │
-└─────┆────────────────────────────────────────┘
-      └──→ finger
 ```
 
 ---
@@ -61,7 +64,9 @@ Touch starts in the leftmost 24px gutter and drags right; the sidebar tracks the
 ## Notes
 
 - **Axis lock.** A gesture claims the horizontal axis only once `|dx| > 10px` and `|dx| > |dy|`; until then vertical scrolling wins and the row never moves. The swipe surface carries `touch-action: pan-y`.
-- **Thresholds.** Rail opens/stays open past 25% of row width; full-swipe arms past 60%. Sidebar settles open/closed past 40% of its own width, or on a flick faster than 0.5 px/ms in either direction.
+- **Thresholds.** The rail opens and stays open past 25% of the row's width; full-swipe arms past 60%. A flick faster than 0.5 px/ms decides on its own.
 - **Snap motion** is a 220ms ease transform, applied only when the finger is up; suppressed under `prefers-reduced-motion`.
-- **One row open at a time** — opening a rail, scrolling the list, entering selection mode, or tapping anywhere else closes it.
-- **Nothing here is the only route to anything.** Details and Delete both remain reachable by tap through the **(i)** drawer, and the sidebar by its header button, so keyboard and pointer users lose nothing.
+- **One row open at a time.** Opening another rail, scrolling, entering selection mode, tapping the covered row, or tapping the empty space closes it.
+- **Empty space is inert** in selection mode and past the offline write ceiling, where the (+) is replaced or disabled.
+- **Safari tint.** With the sidebar open, the notch and toolbar keep `--bg-app` rather than the scrim's shade.
+- **Nothing here is the only route to anything.** Details and Delete remain reachable through the **(i)** drawer, and starting a task through the (+).
