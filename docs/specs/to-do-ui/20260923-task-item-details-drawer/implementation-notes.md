@@ -28,6 +28,7 @@ Seven production source files — inside the ≤10 per-PR limit.
 
 - Desktop is the shell's existing `@container psykl-shell (min-width: 768px)` breakpoint — no new breakpoint token.
 - Delete is a soft delete and flows into Recently Deleted unchanged; no cascade logic, unlike list deletion (#138).
+- The two-press arm/confirm is local `armed` state in the drawer mirroring `SelectionBar`'s, not a shared abstraction — two call sites is not yet a pattern; the third is when to extract one.
 - `useInlineEdit` is shared with the list-title editor (`AppShell/EditableTitle`); the hook is widened to accept either element, and the list title keeps its `<input>` — a list name is one line by design.
 - Selection mode is untouched: the (i) slot and the ≡ handle are mutually exclusive by construction.
 
@@ -40,7 +41,7 @@ Unit tests for this pass:
 - `TaskRow.presentation.unit.test.tsx` — the trailing slot renders the action when given, the handle when given, never both
 - `EditableTaskRow` — (i) appears only while editing; opening/closing the drawer; delete calls `deleteTask` with a soft-delete body
 - `TaskRow.interactions.unit.test.tsx` — the edit field is a textarea, seeded with the stored title, Enter commits rather than inserting a newline
-- `TaskItemDrawer.unit.test.tsx` — timestamp formatting incl. the `—` Completed empty state; ✓ disabled until the title changes; Escape closes
+- `TaskItemDrawer.unit.test.tsx` — delete arms on the first press and calls `deleteTask` only on the second; a title edit and a reopen each disarm it; timestamp formatting incl. the `—` Completed empty state; ✓ disabled until the title changes; Escape closes
 
 ## Evidence
 

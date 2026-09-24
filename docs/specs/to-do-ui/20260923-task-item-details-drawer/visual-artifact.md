@@ -43,7 +43,14 @@ selection mode, pinned to the row's first line like the pending-sync dot.
 │  Last updated     23 Sep 2026, 14:02 │
 │  Created          21 Sep 2026, 09:47 │
 ├──────────────────────────────────────┤
-│              Delete                  │  ← centred, destructive colour
+│            Delete                    │  ← resting: destructive colour
+│                                      │
+│   ── first press ──▶                 │
+│                                      │
+│        ┏━━━━━━━━━━━━━━━━┓            │
+│        ┃  Delete Task?  ┃            │  ← armed: red ring on the
+│        ┗━━━━━━━━━━━━━━━━┛            │     same control; a second
+│                                      │     press deletes
 └──────────────────────────────────────┘
 ```
 
@@ -70,4 +77,5 @@ selection mode, pinned to the row's first line like the pending-sync dot.
 - **Timestamp empty state:** a task that is not complete shows `—` for Completed, never a blank row.
 - **Close vs confirm semantics match `MoveToListDrawer`:** ✕ discards and closes; ✓ commits and closes; Escape behaves as ✕.
 - **`MoveToListDrawer` changes too** — wireframe 4 applies to it unchanged, so both drawers share one desktop presentation.
-- Delete closes the drawer immediately and soft-deletes optimistically; the task lands in Recently Deleted like any other deletion.
+- **Delete takes two presses**, the same grammar as `SelectionBar` (`SelectionBar.tsx:26-32`): the first arms — a red ring around the same control, not a louder second control — and the second performs it. Editing the title or closing the drawer disarms it, because anything that changes what would be destroyed retires the confirmation.
+- The second press closes the drawer immediately and soft-deletes optimistically; the task lands in Recently Deleted like any other deletion.

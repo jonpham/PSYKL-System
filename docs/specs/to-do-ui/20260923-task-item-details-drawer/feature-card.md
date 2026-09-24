@@ -19,7 +19,7 @@ Tapping a task title still focuses it for inline editing, and now also reveals a
 
 - Trailing **(i)** affordance on the focused row, non-selection mode only.
 - Inline title editing that keeps the row's shape: the edit field wraps and grows exactly as the rendered title does.
-- Task Item Drawer: close (✕) + confirm (✓) header matching `MoveToListDrawer`, editable title, three read-only timestamps, centred Delete at the bottom.
+- Task Item Drawer: close (✕) + confirm (✓) header matching `MoveToListDrawer`, editable title, three read-only timestamps, centred Delete at the bottom that **arms on the first press and deletes on the second**, exactly as the selection bar's batch delete does.
 - Both this drawer and `MoveToListDrawer` become viewport-centred modals at the shell's `768px` desktop breakpoint.
 
 ## Not now
