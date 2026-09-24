@@ -1,6 +1,6 @@
 # Sync Status Without a Banner
 
-Iteration 2 of [`apple-reminders-ux`](../feature-card.md). Lane: Standard. Status: exploring. Source: [issue #91](https://github.com/jonpham/PSYKL-System/issues/91).
+Iteration 2 of [`apple-reminders-ux`](../feature-card.md). Lane: Standard. Status: **promoted** (see Verdict). Source: [issue #91](https://github.com/jonpham/PSYKL-System/issues/91).
 
 ## User
 

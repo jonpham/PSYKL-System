@@ -2,6 +2,10 @@
 
 Verified by hand at `/exp/apple-reminders-ux`, iPhone (or 390px) first, then 1024px.
 
+> **2026-09-24.** This route no longer exists — the experiment was promoted and deleted in
+> `to-do-ui` Spec 6. These checks are the initiative's acceptance gate and are now walked
+> against `/`, the production surface that absorbed them.
+
 - [x] **Capture** — Tapping `⊕ New Reminder` appends an empty focused row in place (no modal, no top form); typing and pressing Return saves the task and opens the next empty row; blurring an empty row discards it.
 - [x] **Complete** — Tapping a checkbox fills it with the tint, strikes and dims the title within ~200ms, and the row settles below the last open task; tapping again reverses it and returns the row to the open group.
 - [x] **Row craft** — Every row is ≥44px with a 22px circle checkbox, titles at 17px wrapping rather than truncating, and hairline separators inset to the title's leading edge.

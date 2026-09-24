@@ -1,6 +1,6 @@
 # Reminders-Grade List Skin
 
-Iteration 3 of [`apple-reminders-ux`](../feature-card.md). Lane: Standard. Status: exploring. Source: [issue #86](https://github.com/jonpham/PSYKL-System/issues/86).
+Iteration 3 of [`apple-reminders-ux`](../feature-card.md). Lane: Standard. Status: **promoted** (see Verdict). Source: [issue #86](https://github.com/jonpham/PSYKL-System/issues/86).
 
 ## User
 

@@ -1,7 +1,7 @@
 # Sidebar Navigation on Desktop and Mobile
 
-Iteration 1 of the [`apple-reminders-ux`](../feature-card.md) experiment — route `/exp/apple-reminders-ux`.
-Lane: Standard. Status: exploring. Source: [issue #87](https://github.com/jonpham/PSYKL-System/issues/87).
+Iteration 1 of the [`apple-reminders-ux`](../feature-card.md) experiment — formerly route `/exp/apple-reminders-ux`.
+Lane: Standard. Status: **promoted** (see Verdict). Source: [issue #87](https://github.com/jonpham/PSYKL-System/issues/87).
 
 ## User
 

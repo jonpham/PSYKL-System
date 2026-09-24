@@ -39,9 +39,9 @@ No schema, API, or shared-model changes. No production-module edits — the shel
 | 2   | [`sync-status/`](sync-status/feature-card.md)               | promoted | Shipped by `to-do-ui` Spec 5    |
 | 3   | [`apple-reminders-ui/`](apple-reminders-ui/feature-card.md) | promoted | Shipped by `to-do-ui` Specs 2-4 |
 
-Add a row per iteration. On promotion, move that subfolder to
-`docs/experiments/archive/apple-reminders-ux/{iteration}/` and record the verdict here; the shell
-and its remaining iterations stay live.
+All three iterations were promoted, so the whole experiment moved here rather than one subfolder at
+a time. The live process this card used to describe is in
+[`docs/experiments/README.md`](../../README.md).
 
 ## Verdict
 
