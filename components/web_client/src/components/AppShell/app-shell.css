@@ -1,3 +1,10 @@
+/* The document behind the shell paints the app's own background, so anything
+ * that samples the page rather than the shell — Safari's toolbar tint, the
+ * overscroll bounce — gets the theme colour instead of the user agent's white. */
+html:has(.psykl-app-shell),
+body:has(.psykl-app-shell) {
+  background: var(--bg-app);
+}
 body:has(.psykl-app-shell) {
   margin: 0;
 }
@@ -52,12 +59,17 @@ body:has(.psykl-app-shell) {
   transform: translateX(0);
   visibility: visible;
 }
+/* Absolute over the layout rather than fixed to the viewport. Safari 26 tints
+ * the notch and toolbar from fixed elements touching the screen's edges, so a
+ * fixed scrim turned the whole browser chrome the colour of the shade. The
+ * layout is at least a screen tall and grows with the page, so this covers
+ * everything the fixed version did. */
 .psykl-app-shell__backdrop {
   background: rgb(0 0 0 / 35%);
   border: 0;
   inset: 0;
   padding: 0;
-  position: fixed;
+  position: absolute;
   z-index: 2;
 }
 .psykl-app-shell__main {
