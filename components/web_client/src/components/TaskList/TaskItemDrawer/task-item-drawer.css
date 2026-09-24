@@ -42,8 +42,10 @@
   cursor: not-allowed;
 }
 
+/* The field sits centred in the gap between the header and the details: equal
+ * space above and below, with the details block contributing none of its own. */
 .psykl-task-drawer__field {
-  padding: 0.875rem 1rem 0;
+  padding: 1.125rem 1rem;
 }
 
 .psykl-task-drawer__input {
@@ -68,7 +70,7 @@
 
 .psykl-task-drawer__details {
   margin: 0;
-  padding: 1rem 1rem 0;
+  padding: 0 1rem;
 }
 
 .psykl-task-drawer__detail {
