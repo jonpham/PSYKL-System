@@ -29,4 +29,4 @@ A pool of mixed tasks flips each row's state on one press; both armed destructiv
 
 ## Verdict
 
-{Filled at close-out.}
+Shipped. All three defects fixed plus cascade-aware Recently Deleted; no schema or API change was needed. Built in two slices (selection bar, then list deletion) on one branch.
