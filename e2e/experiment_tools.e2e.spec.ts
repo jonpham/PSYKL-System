@@ -18,8 +18,20 @@ test.describe('experiment tools', () => {
 
     // A retired experiment's URL says so rather than erroring.
     await page.goto('/exp/apple-reminders-ux');
-    await expect(page.getByText('No experiment is registered at')).toBeVisible();
-    await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
+    await expect(page.getByRole('code')).toHaveText('/exp/apple-reminders-ux');
+    await expect(page.getByText('No experiments are registered right now.')).toBeVisible();
+
+    // Reaching any /exp path still arms the tools, so a developer who lands on
+    // a dead experiment URL is never stranded there.
+    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+    await page.getByRole('button', { name: /switch experience/i }).click();
+    const picker = page.getByRole('dialog', { name: 'Switch experience' });
+    // Production is a synthetic row, so it is the only choice offered when the
+    // registry is empty.
+    await expect(picker.getByRole('listitem')).toHaveCount(1);
+
+    await picker.getByRole('button', { name: /Production/ }).click();
+    await expect(page).toHaveURL(/\/$/);
   });
 
   /**
