@@ -83,7 +83,7 @@ export function TaskList({ onCompletedCountChange, onExitSelection, selecting = 
 
   const {
     busy,
-    completeSelected,
+    toggleSelectedCompletion,
     deleteSelected,
     moveSelected,
     moving,
@@ -150,7 +150,7 @@ export function TaskList({ onCompletedCountChange, onExitSelection, selecting = 
           <SelectionBar
             busy={busy}
             count={selected.length}
-            onComplete={() => void completeSelected()}
+            onToggleCompletion={() => void toggleSelectedCompletion()}
             onDelete={() => void deleteSelected()}
             onMove={() => setMoving(true)}
           />

@@ -51,28 +51,6 @@ test.describe('task selection', () => {
     await expect(page.getByRole('listitem', { name: title })).toBeVisible();
   });
 
-  test('a user marks several tasks complete in one action', async ({ page }) => {
-    await page.goto('/');
-    const stamp = Date.now();
-    const [first, second] = [`rake ${stamp}`, `mow ${stamp}`];
-    for (const title of [first, second]) {
-      await createTask(page, title);
-    }
-
-    await enterSelectionMode(page);
-    await select(page, first);
-    await select(page, second);
-    await page.getByRole('button', { name: 'Mark selected tasks complete' }).click();
-
-    // No second gesture to get back: completing the batch leaves the mode.
-    await expect(page.getByRole('button', { name: 'New Task' })).toBeVisible();
-
-    await expect(page.getByRole('checkbox', { name: `Mark ${first} incomplete` })).toBeChecked();
-    await expect(page.getByRole('checkbox', { name: `Mark ${second} incomplete` })).toBeChecked();
-    await page.reload();
-    await expect(page.getByRole('checkbox', { name: `Mark ${first} incomplete` })).toBeChecked();
-  });
-
   test('a user moves several tasks to another list', async ({ page }) => {
     const destination = `Weekend ${Date.now()}`;
     await createList(page, destination);

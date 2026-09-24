@@ -49,12 +49,12 @@
   color: var(--destructive);
 }
 
-/* Armed: the destructive action fills, so the second press is plainly not the
- * same press as the first. */
+/* Armed: a ring around the glyph, inset so nothing reflows and the 44px hit
+ * target is untouched. The second press is plainly not the same press as the
+ * first, without flooding the button with colour. */
 .psykl-selection-bar__action[data-armed='true'] {
-  background: var(--destructive);
   border-radius: 999px;
-  color: var(--text-on-accent);
+  box-shadow: inset 0 0 0 2px var(--destructive);
 }
 
 .psykl-selection-bar__action[data-armed='true'] svg {

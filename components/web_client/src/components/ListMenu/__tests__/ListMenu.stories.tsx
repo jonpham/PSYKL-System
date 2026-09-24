@@ -23,7 +23,7 @@ export const HideThenShowCompleted: Story = {
         <ListMenu
           canDelete
           completedCount={2}
-          onDeleteList={fn()}
+          onRequestDeleteList={fn()}
           onToggleCompleted={setShowCompleted}
           showCompleted={showCompleted}
         />

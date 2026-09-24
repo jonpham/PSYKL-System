@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 interface ListMenuProps {
   canDelete?: boolean;
   completedCount: number;
-  onDeleteList?: () => void;
+  /** Opens the delete question; the menu never deletes anything itself. */
+  onRequestDeleteList?: () => void;
   /** Absent on surfaces that cannot enter selection mode. */
   onSelectItems?: () => void;
   onToggleCompleted: (showCompleted: boolean) => void;
@@ -17,13 +18,12 @@ interface ListMenuProps {
 export function ListMenu({
   canDelete = false,
   completedCount,
-  onDeleteList,
+  onRequestDeleteList,
   onSelectItems,
   onToggleCompleted,
   showCompleted,
 }: ListMenuProps) {
   const [open, setOpen] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -54,10 +54,7 @@ export function ListMenu({
         aria-haspopup="menu"
         aria-label="List options"
         className="psykl-list-menu__trigger"
-        onClick={() => {
-          setOpen((current) => !current);
-          setConfirmingDelete(false);
-        }}
+        onClick={() => setOpen((current) => !current)}
         ref={triggerRef}
         type="button"
       >
@@ -97,25 +94,21 @@ export function ListMenu({
             </button>
           ) : null}
 
-          {/* Deleting a list is soft and recoverable from Recently Deleted, but
-           * it still takes a second tap rather than a dialog. */}
+          {/* Deleting a list can take its tasks with it, which is a question a
+           * menu item cannot ask. One press closes the sheet and hands the
+           * decision to the dialog. */}
           {canDelete ? (
             <button
               className="psykl-list-menu__item"
               data-destructive="true"
               onClick={() => {
-                if (!confirmingDelete) {
-                  setConfirmingDelete(true);
-                  return;
-                }
-                setConfirmingDelete(false);
                 setOpen(false);
-                onDeleteList?.();
+                onRequestDeleteList?.();
               }}
               role="menuitem"
               type="button"
             >
-              {confirmingDelete ? 'Delete List?' : 'Delete List'}
+              Delete List
             </button>
           ) : null}
         </div>

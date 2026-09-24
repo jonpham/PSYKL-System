@@ -76,7 +76,7 @@ describe('TaskList batch actions in flight (Unit)', () => {
     await selectRows('Oat milk');
 
     // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Mark selected tasks complete' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle completion of selected tasks' }));
 
     // Assert — the user is returned to the list, seeing the result of what they did
     expect(onExitSelection).toHaveBeenCalledTimes(1);
@@ -97,12 +97,12 @@ describe('TaskList batch actions in flight (Unit)', () => {
     await selectRows('Oat milk', 'Sourdough');
 
     // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Mark selected tasks complete' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle completion of selected tasks' }));
 
     // Assert — nothing about the pool can be changed mid-flight
     expect(screen.getByRole('button', { name: 'Deselect Oat milk' })).toBeDisabled();
     expect(screen.getByRole('checkbox', { name: 'Deselect Oat milk' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Mark selected tasks complete' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Toggle completion of selected tasks' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reorder Oat milk' })).toBeDisabled();
 
     // Act
@@ -119,7 +119,7 @@ describe('TaskList batch actions in flight (Unit)', () => {
     await selectRows('Oat milk', 'Sourdough');
 
     // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Mark selected tasks complete' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle completion of selected tasks' }));
 
     // Assert — one failure does not strand the tasks behind it
     await waitFor(() => expect(patchTask).toHaveBeenCalledTimes(2));

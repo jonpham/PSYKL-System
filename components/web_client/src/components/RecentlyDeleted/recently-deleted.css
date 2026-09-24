@@ -15,9 +15,33 @@
   border-bottom: 1px solid var(--separator);
   display: grid;
   gap: 0.5rem;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   min-height: var(--row-min);
   padding: 0.5rem 0;
+}
+
+/* A list and a task are restored differently — a list brings its items back —
+ * so a row says which it was rather than leaving the two indistinguishable. */
+.psykl-recently-deleted__glyph {
+  color: var(--text-secondary);
+  fill: none;
+  height: 20px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+  width: 20px;
+}
+
+.psykl-recently-deleted__label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.psykl-recently-deleted__kind {
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .psykl-recently-deleted__row:last-child {

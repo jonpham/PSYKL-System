@@ -57,7 +57,12 @@ test.describe('list options', () => {
 
     await page.getByRole('button', { name: 'List options' }).click();
     await page.getByRole('menuitem', { name: 'Delete List' }).click();
-    await page.getByRole('menuitem', { name: 'Delete List?' }).click();
+
+    // An empty list is offered one deletion: with nothing inside, keeping the
+    // items and taking them along are the same outcome.
+    const dialog = page.getByRole('dialog', { name: 'Delete "Errands"?' });
+    await expect(dialog.getByRole('button', { name: 'Delete With Items' })).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Delete List' }).click();
 
     // Wait for the queued delete to reach the service before a new page load
     // hydrates its list snapshot from the server.

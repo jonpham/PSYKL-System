@@ -157,28 +157,6 @@ describe('TaskList selection mode (Unit)', () => {
     expect(screen.getByRole('button', { name: 'Delete selected tasks' })).toBeInTheDocument();
   });
 
-  it('marks every selected task complete in one action, leaving completed ones alone', async () => {
-    // Arrange
-    mockUseTasks.mockReturnValue({
-      createTask: vi.fn(),
-      deleteTask,
-      error: null,
-      loading: false,
-      patchTask,
-      tasks: [oat, { ...bread, completed_at: '2026-05-20T13:00:00.000Z' }],
-    });
-    render(<TaskList selecting />);
-    await selectRows('Oat milk', 'Sourdough');
-
-    // Act
-    await userEvent.click(screen.getByRole('button', { name: 'Mark selected tasks complete' }));
-
-    // Assert
-    expect(patchTask).toHaveBeenCalledTimes(1);
-    expect(patchTask.mock.calls[0]?.[0]).toBe(oat.id);
-    expect(patchTask.mock.calls[0]?.[1]).toMatchObject({ completed_at: expect.any(String) });
-  });
-
   it('re-orders open tasks by hand and holds the new order', async () => {
     // Arrange
     render(<TaskList selecting />);

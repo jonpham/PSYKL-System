@@ -1,0 +1,73 @@
+/* The scrim is what makes this a decision rather than a menu: nothing behind it
+ * is reachable until the user has answered. */
+.psykl-delete-list-dialog__scrim {
+  align-items: flex-end;
+  background: rgb(0 0 0 / 32%);
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 4;
+}
+
+.psykl-delete-list-dialog {
+  background: var(--bg-elevated);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -2px 16px rgb(0 0 0 / 22%);
+  max-width: 28rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  width: 100%;
+}
+
+.psykl-delete-list-dialog__header {
+  border-bottom: 1px solid var(--separator);
+  padding: 1rem;
+  text-align: center;
+}
+
+.psykl-delete-list-dialog__header h3 {
+  font-size: 17px;
+  margin: 0;
+}
+
+.psykl-delete-list-dialog__detail {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0.25rem 0 0;
+}
+
+.psykl-delete-list-dialog__choice {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--separator);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  font-size: 17px;
+  min-height: var(--row-min);
+  text-align: center;
+  width: 100%;
+}
+
+/* Red at rest, the way the list menu's own delete is: the option says what it
+ * does before it is pressed. */
+.psykl-delete-list-dialog__choice[data-destructive='true'] {
+  color: var(--destructive);
+}
+
+.psykl-delete-list-dialog__choice:last-child {
+  border-bottom: 0;
+}
+
+.psykl-delete-list-dialog__choice:active {
+  background: var(--bg-pressed);
+}
+
+.psykl-delete-list-dialog__choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

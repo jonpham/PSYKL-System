@@ -21,6 +21,8 @@ interface DeletedItem {
   daysRemaining: number;
   deletedAt: string;
   id: string;
+  /** Lists only: tasks tombstoned in the same action, which restore with it. */
+  itemCount?: number;
   title: string;
   type: 'list' | 'task';
 }
@@ -114,6 +116,15 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
           notify: notifyListSubscribers,
           replay,
         });
+        // The list and its items left together, so they come back together.
+        // Their own rows stay restorable on their own, for a user who wants one
+        // task back out of a list they meant to delete.
+        for (const task of cascadedWith(existing, tasks)) {
+          await enqueueWithReplay({
+            enqueue: () => taskServiceClient.restore(task.id, { updated_at: now }, { ...task, deleted_at: null }),
+            replay,
+          });
+        }
       }
       await reload();
     },
@@ -140,8 +151,22 @@ function toDeletedItems(tasks: Task[], lists: ListRecord[]): DeletedItem[] {
     .map((task) => toItem(task.id, 'task', task.title, task.deleted_at as string, now));
   const listItems = lists
     .filter((list) => list.deleted_at !== null && withinWindow(list.deleted_at, now))
-    .map((list) => toItem(list.id, 'list', list.title, list.deleted_at as string, now));
+    .map((list) => ({
+      ...toItem(list.id, 'list', list.title, list.deleted_at as string, now),
+      itemCount: cascadedWith(list, tasks).length,
+    }));
   return [...taskItems, ...listItems].sort((left, right) => right.deletedAt.localeCompare(left.deletedAt));
+}
+
+/**
+ * The tasks a list was deleted with: same list, same `deleted_at`.
+ *
+ * `useListDeletion` issues one timestamp for the whole cascade, so the pair is
+ * derivable without a column of its own. A task deleted on its own at another
+ * moment keeps its own deletion, even when its list is gone too.
+ */
+function cascadedWith(list: ListRecord, tasks: Task[]): Task[] {
+  return tasks.filter((task) => task.list_id === list.id && task.deleted_at === list.deleted_at);
 }
 
 function withinWindow(deletedAt: string, now: number): boolean {

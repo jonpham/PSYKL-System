@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from './components/AppShell';
 import { DoneSelectingButton } from './components/AppShell/DoneSelectingButton';
 import { PlusGlyph } from './components/AppShell/Glyphs';
+import { DeleteListDialog } from './components/DeleteListDialog';
 import { ListMenu } from './components/ListMenu';
 import { ListsPage } from './components/ListsPage';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
@@ -13,12 +14,14 @@ import { TaskList } from './components/TaskList';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
 import { useCompletedVisibility } from './hooks/useCompletedVisibility';
 import { useDestination } from './hooks/useDestination';
+import { useListDeletion } from './hooks/useListDeletion';
 import { useLists } from './hooks/useLists';
 import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
 import { useSyncRecords } from './hooks/useSyncRecords';
 
 export default function App() {
-  const { canDelete, deleteList, lists, renameList } = useLists();
+  const { canDelete, lists, renameList } = useLists();
+  const { activeListItemCount, deleteActiveList } = useListDeletion();
   const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
   const { count: queuedCount } = useSyncDiscrepancy();
@@ -28,11 +31,14 @@ export default function App() {
   const syncRecords = useSyncRecords();
   const [creatingList, setCreatingList] = useState(false);
   const [selecting, setSelecting] = useState(false);
+  const [deletingList, setDeletingList] = useState(false);
 
   // Selection mode belongs to one list; walking away from the list leaves it.
+  // The delete question belongs to one list too, and is retired the same way.
   useEffect(() => {
     if (destination !== 'list') {
       setSelecting(false);
+      setDeletingList(false);
     }
   }, [destination]);
 
@@ -79,9 +85,7 @@ export default function App() {
           <ListMenu
             canDelete={canDelete}
             completedCount={completedCount}
-            onDeleteList={() => {
-              if (activeList) void deleteList(activeList.id);
-            }}
+            onRequestDeleteList={() => setDeletingList(true)}
             onSelectItems={() => setSelecting(true)}
             onToggleCompleted={setShowCompleted}
             showCompleted={showCompleted}
@@ -135,6 +139,17 @@ export default function App() {
             selecting={selecting}
           />
         </section>
+      ) : null}
+      {deletingList && activeList ? (
+        <DeleteListDialog
+          itemCount={activeListItemCount}
+          listTitle={activeList.title}
+          onCancel={() => setDeletingList(false)}
+          onDelete={(mode) => {
+            setDeletingList(false);
+            void deleteActiveList(mode);
+          }}
+        />
       ) : null}
     </AppShell>
   );
