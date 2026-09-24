@@ -34,4 +34,32 @@ describe('applyStoredPreferences', () => {
       '/apple-touch-icon-dark.png',
     );
   });
+
+  it('re-tints the browser chrome when the system appearance flips under System', async () => {
+    // Given — a device that will flip, and a sheet that follows it
+    let onFlip: () => void = () => {};
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation(() => ({
+        addEventListener: (_: string, listener: () => void) => {
+          onFlip = listener;
+        },
+        matches: false,
+        removeEventListener: vi.fn(),
+      })),
+    );
+    document.head.insertAdjacentHTML('beforeend', '<meta name="theme-color" content="#fff" />');
+    await applyStoredPreferences();
+
+    // When
+    document.documentElement.style.setProperty('--bg-app', '#000');
+    onFlip();
+
+    // Then
+    await vi.waitFor(() => {
+      expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute('content', '#000');
+    });
+    vi.unstubAllGlobals();
+    document.documentElement.style.removeProperty('--bg-app');
+  });
 });

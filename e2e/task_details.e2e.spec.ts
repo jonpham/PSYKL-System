@@ -108,15 +108,19 @@ test.describe('Task details', () => {
     const title = `${'call the vet about the booster shot on Friday '.repeat(2)}${Date.now()}`;
     await createTask(page, title);
 
-    const row = page.getByRole('listitem', { name: title });
-    const resting = await row.boundingBox();
+    // Measured on the title itself: an edited row is framed, and the frame
+    // grows outward around it by design, so the row's own box is not the thing
+    // that must hold still.
+    const titleBox = page.getByRole('listitem', { name: title }).locator('.psykl-task-row__title');
+    const resting = await titleBox.boundingBox();
     expect(resting?.height ?? 0).toBeGreaterThan(44);
 
     await page.getByRole('button', { name: `Edit ${title}` }).click();
 
     // The field wraps the way the rendered title did, so the row does not jump.
-    const editing = await row.boundingBox();
+    const editing = await titleBox.boundingBox();
     expect(Math.abs((editing?.height ?? 0) - (resting?.height ?? 0))).toBeLessThanOrEqual(2);
+    expect(Math.abs((editing?.y ?? 0) - (resting?.y ?? 0))).toBeLessThanOrEqual(2);
   });
 
   test('a user cannot reach the list behind an open details drawer', async ({ page }) => {

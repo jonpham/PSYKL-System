@@ -35,6 +35,28 @@ function applyAppIcon(appearance: Appearance): void {
   link?.setAttribute('href', APP_ICON_HREF[resolveIconTheme(appearance)]);
 }
 
+/**
+ * Tints the browser chrome — the notch, the status bar, Safari's toolbar —
+ * with the page's own background, read from the token sheet rather than
+ * repeated here so the two cannot drift. It must be called after the theme
+ * attributes are stamped, because those are what resolve `--bg-app`.
+ *
+ * It used to be a fixed brand navy, which matched no theme at all. Safari 26
+ * mostly samples the page instead of reading this tag; it still governs older
+ * Safari, installed web apps, and Chromium, so it has to be right for them.
+ */
+function applyThemeColor(): void {
+  const background = getComputedStyle(document.documentElement).getPropertyValue('--bg-app').trim();
+  if (!background) return;
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.append(meta);
+  }
+  meta.setAttribute('content', background);
+}
+
 /** Reflects the stored preferences onto the document: the token sheet switches
  * on these attributes, and contrast composes with whichever appearance is in
  * force. */
@@ -51,6 +73,7 @@ function applyPreferences(appearance: Appearance, contrast: Contrast): void {
     root.removeAttribute('data-contrast');
   }
   applyAppIcon(appearance);
+  applyThemeColor();
 }
 
 /**
@@ -65,5 +88,5 @@ function watchSystemAppearance(onChange: () => void): () => void {
   return () => query.removeEventListener('change', onChange);
 }
 
-export { APP_ICON_HREF, applyAppIcon, applyPreferences, resolveIconTheme, watchSystemAppearance };
+export { APP_ICON_HREF, applyAppIcon, applyPreferences, applyThemeColor, resolveIconTheme, watchSystemAppearance };
 export type { IconTheme };

@@ -23,13 +23,13 @@ test.describe('Task list', () => {
     await page.goto('/');
 
     await expect(page.getByRole('button', { name: 'Open PSYKL navigation' })).toBeVisible();
-    await expect(page.getByText(/no tasks yet/i)).toBeVisible();
+    await expect(page.getByText(/nothing to do yet/i)).toBeVisible();
 
     const title = `buy milk ${Date.now()}`;
     await createTask(page, title);
 
     await expect(page.getByText(title)).toBeVisible();
-    await expect(page.getByText(/no tasks yet/i)).not.toBeVisible();
+    await expect(page.getByText(/nothing to do yet/i)).not.toBeVisible();
   });
 
   test('a user sees their tasks in the order they captured them', async ({ page }) => {

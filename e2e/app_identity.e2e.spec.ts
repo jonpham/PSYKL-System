@@ -116,4 +116,18 @@ test.describe('app identity', () => {
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     });
   });
+
+  test.describe('browser chrome', () => {
+    const tint = 'meta[name="theme-color"]';
+
+    test("a user's browser chrome takes the app's own background, light or dark", async ({ page }) => {
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.goto('/');
+      await expect(page.locator(tint)).toHaveAttribute('content', '#fff');
+
+      await page.emulateMedia({ colorScheme: 'dark' });
+      // Follows the device's flip under System, without a reload.
+      await expect(page.locator(tint)).toHaveAttribute('content', '#000');
+    });
+  });
 });

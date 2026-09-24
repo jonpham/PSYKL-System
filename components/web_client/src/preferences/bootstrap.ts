@@ -1,5 +1,5 @@
 import { readAppearance } from './appearance';
-import { applyAppIcon, applyPreferences, watchSystemAppearance } from './apply';
+import { applyAppIcon, applyPreferences, applyThemeColor, watchSystemAppearance } from './apply';
 import { readContrast } from './contrast';
 
 /**
@@ -16,8 +16,12 @@ async function applyStoredPreferences(): Promise<() => void> {
   const [appearance, contrast] = await Promise.all([readAppearance(), readContrast()]);
   applyPreferences(appearance, contrast);
   // Re-read on each system flip rather than closing over the value above,
-  // which Settings may since have replaced.
-  return watchSystemAppearance(() => void readAppearance().then(applyAppIcon));
+  // which Settings may since have replaced. The tint needs no re-read: under
+  // System the sheet has already re-resolved `--bg-app` by the time this runs.
+  return watchSystemAppearance(() => {
+    applyThemeColor();
+    void readAppearance().then(applyAppIcon);
+  });
 }
 
 export { applyStoredPreferences };

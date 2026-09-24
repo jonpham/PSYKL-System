@@ -96,7 +96,7 @@ export const IntegratedWithCreateForm: Story = {
     const canvas = within(canvasElement);
 
     await step('GET /tasks resolves to empty state', async () => {
-      expect(await canvas.findByText(/no tasks yet/i)).toBeInTheDocument();
+      expect(await canvas.findByText(/nothing to do yet/i)).toBeInTheDocument();
     });
 
     await step('Create the first task', async () => {
@@ -104,7 +104,7 @@ export const IntegratedWithCreateForm: Story = {
       await userEvent.click(canvas.getByRole('button', { name: /create/i }));
 
       expect(await canvas.findByText('first')).toBeInTheDocument();
-      await waitFor(() => expect(canvas.queryByText(/no tasks yet/i)).not.toBeInTheDocument());
+      await waitFor(() => expect(canvas.queryByText(/nothing to do yet/i)).not.toBeInTheDocument());
     });
 
     await step('Create the second task; both render', async () => {
