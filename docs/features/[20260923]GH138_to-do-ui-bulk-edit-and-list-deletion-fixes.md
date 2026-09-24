@@ -162,9 +162,9 @@ None. No new ADR; no existing ADR is amended.
 
 ## Change Log
 
-| Date       | PR        | Summary                                                                                        |
-| ---------- | --------- | ---------------------------------------------------------------------------------------------- |
-| 2026-09-23 | _pending_ | Batch completion toggle, armed delete ring, Delete List dialog, cascade-aware Recently Deleted |
+| Date       | PR                                                       | Summary                                                                                        |
+| ---------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 2026-09-23 | [#139](https://github.com/jonpham/PSYKL-System/pull/139) | Batch completion toggle, armed delete ring, Delete List dialog, cascade-aware Recently Deleted |
 
 ## Notes on the test harness
 
