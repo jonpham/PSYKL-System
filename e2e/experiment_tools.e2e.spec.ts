@@ -12,68 +12,88 @@ test.describe('experiment tools', () => {
     await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
   });
 
-  test('a developer switches from a prototype to production and back without leaving the page', async ({ page }) => {
+  test('a developer finds no experiments while the registry is empty', async ({ page }) => {
+    await page.goto('/exp');
+    await expect(page.getByText('No experiments are registered right now.')).toBeVisible();
+
+    // A retired experiment's URL says so rather than erroring.
     await page.goto('/exp/apple-reminders-ux');
-    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
-    await expect(page.getByRole('button', { name: /switch experience/i })).toContainText('Apple Reminders UX');
-
-    // Into production.
-    await page.getByRole('button', { name: /switch experience/i }).click();
-    await page
-      .getByRole('dialog', { name: 'Switch experience' })
-      .getByRole('button', { name: /Production/ })
-      .click();
-    await expect(page).toHaveURL(/\/$/);
-
-    // The tools came along, and now name the production experience.
-    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
-    await expect(page.getByRole('button', { name: /switch experience/i })).toContainText('Production');
-
-    // Back into the prototype.
-    await page.getByRole('button', { name: /switch experience/i }).click();
-    await page
-      .getByRole('dialog', { name: 'Switch experience' })
-      .getByRole('button', { name: /Apple Reminders UX/ })
-      .click();
-    await expect(page).toHaveURL(/\/exp\/apple-reminders-ux$/);
-  });
-
-  test('a developer puts the experiment tools away for good', async ({ page }) => {
-    await page.goto('/exp/apple-reminders-ux');
-    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
-
-    await page.getByRole('button', { name: 'Close experiment tools' }).click();
-
-    await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
-
-    // Closing is a decision, not a dismissal: it survives a reload.
-    await page.reload();
+    await expect(page.getByText('No experiment is registered at')).toBeVisible();
     await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
   });
 
-  test('a developer dismisses the experience picker with Escape', async ({ page }) => {
-    await page.goto('/exp/apple-reminders-ux');
-    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
-    await page.getByRole('button', { name: /switch experience/i }).click();
-    await expect(page.getByRole('dialog', { name: 'Switch experience' })).toBeVisible();
+  /**
+   * Skipped while no experiment is registered: `apple-reminders-ux` was
+   * promoted into the production surface and deleted in `to-do-ui` Spec 6, and
+   * every check below needs a live `/exp/{slug}` to open. Re-activate these —
+   * substituting the new slug and title — with the next experiment. The tools
+   * themselves are still covered at the Unit and Component layers under
+   * `components/web_client/src/experiment/ExperimentTools/`.
+   */
+  test.describe.skip('once an experiment is registered again', () => {
+    test('a developer switches from a prototype to production and back without leaving the page', async ({ page }) => {
+      await page.goto('/exp/sample-experiment');
+      await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+      await expect(page.getByRole('button', { name: /switch experience/i })).toContainText('Sample Experiment');
 
-    await page.keyboard.press('Escape');
+      // Into production.
+      await page.getByRole('button', { name: /switch experience/i }).click();
+      await page
+        .getByRole('dialog', { name: 'Switch experience' })
+        .getByRole('button', { name: /Production/ })
+        .click();
+      await expect(page).toHaveURL(/\/$/);
 
-    await expect(page.getByRole('dialog', { name: 'Switch experience' })).toHaveCount(0);
-    await expect(page).toHaveURL(/\/exp\/apple-reminders-ux$/);
-  });
+      // The tools came along, and now name the production experience.
+      await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+      await expect(page.getByRole('button', { name: /switch experience/i })).toContainText('Production');
 
-  test('a developer reads the experiment list in dark mode', async ({ page }) => {
-    await page.goto('/settings');
-    await page.getByRole('radio', { name: 'Dark' }).click();
+      // Back into the prototype.
+      await page.getByRole('button', { name: /switch experience/i }).click();
+      await page
+        .getByRole('dialog', { name: 'Switch experience' })
+        .getByRole('button', { name: /Sample Experiment/ })
+        .click();
+      await expect(page).toHaveURL(/\/exp\/sample-experiment$/);
+    });
 
-    const row = page.getByRole('button', { name: /Apple Reminders UX/ });
-    await expect(row).toBeVisible();
-    // The title used to inherit the user-agent button color and disappear here.
-    await expect(row).toHaveCSS('color', 'rgb(255, 255, 255)');
-    // One bordered row per experiment, not a run of text.
-    await expect(row).toHaveCSS('border-style', 'solid');
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    test('a developer puts the experiment tools away for good', async ({ page }) => {
+      await page.goto('/exp/sample-experiment');
+      await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+
+      await page.getByRole('button', { name: 'Close experiment tools' }).click();
+
+      await expect(page).toHaveURL(/\/$/);
+      await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
+
+      // Closing is a decision, not a dismissal: it survives a reload.
+      await page.reload();
+      await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
+    });
+
+    test('a developer dismisses the experience picker with Escape', async ({ page }) => {
+      await page.goto('/exp/sample-experiment');
+      await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+      await page.getByRole('button', { name: /switch experience/i }).click();
+      await expect(page.getByRole('dialog', { name: 'Switch experience' })).toBeVisible();
+
+      await page.keyboard.press('Escape');
+
+      await expect(page.getByRole('dialog', { name: 'Switch experience' })).toHaveCount(0);
+      await expect(page).toHaveURL(/\/exp\/sample-experiment$/);
+    });
+
+    test('a developer reads the experiment list in dark mode', async ({ page }) => {
+      await page.goto('/settings');
+      await page.getByRole('radio', { name: 'Dark' }).click();
+
+      const row = page.getByRole('button', { name: /Sample Experiment/ });
+      await expect(row).toBeVisible();
+      // The title used to inherit the user-agent button color and disappear here.
+      await expect(row).toHaveCSS('color', 'rgb(255, 255, 255)');
+      // One bordered row per experiment, not a run of text.
+      await expect(row).toHaveCSS('border-style', 'solid');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    });
   });
 });

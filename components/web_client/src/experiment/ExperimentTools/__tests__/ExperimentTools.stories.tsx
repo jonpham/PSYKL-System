@@ -6,10 +6,10 @@ import { ExperimentTools } from '../ExperimentTools';
 
 const experiments: Experiment[] = [
   {
-    Component: () => <p>reminders</p>,
-    slug: 'apple-reminders-ux',
-    summary: 'Apple Reminders-grade navigation over existing PSYKL features.',
-    title: 'Apple Reminders UX',
+    Component: () => <p>sample</p>,
+    slug: 'sample-experiment',
+    summary: 'A registered experiment.',
+    title: 'Sample Experiment',
   },
 ];
 
@@ -49,10 +49,10 @@ export const DeveloperSwitchesFromProductionToAPrototype: Story = {
 
     // Act
     await userEvent.click(experienceButton);
-    await userEvent.click(await canvas.findByRole('button', { name: /Apple Reminders UX/ }));
+    await userEvent.click(await canvas.findByRole('button', { name: /Sample Experiment/ }));
 
     // Assert
-    await expect(window.location.pathname).toBe('/exp/apple-reminders-ux');
+    await expect(window.location.pathname).toBe('/exp/sample-experiment');
     await expect(canvas.queryByRole('dialog')).toBeNull();
   },
 };
@@ -62,7 +62,7 @@ export const PickerAlwaysOffersProduction: Story = {
   play: async ({ canvasElement }) => {
     // Arrange
     const canvas = within(canvasElement);
-    window.history.pushState({}, '', '/exp/apple-reminders-ux');
+    window.history.pushState({}, '', '/exp/sample-experiment');
 
     // Act
     await userEvent.click(canvas.getByRole('button', { name: 'Expand experiment controls' }));
@@ -71,13 +71,13 @@ export const PickerAlwaysOffersProduction: Story = {
     // Assert
     const dialog = within(await canvas.findByRole('dialog', { name: 'Switch experience' }));
     await expect(dialog.getByRole('button', { name: /Production/ })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: /Apple Reminders UX/ })).toHaveAttribute('aria-current', 'true');
+    await expect(dialog.getByRole('button', { name: /Sample Experiment/ })).toHaveAttribute('aria-current', 'true');
 
     // Act — Escape leaves the developer where they were
     await userEvent.keyboard('{Escape}');
 
     // Assert
     await expect(canvas.queryByRole('dialog')).toBeNull();
-    await expect(window.location.pathname).toBe('/exp/apple-reminders-ux');
+    await expect(window.location.pathname).toBe('/exp/sample-experiment');
   },
 };

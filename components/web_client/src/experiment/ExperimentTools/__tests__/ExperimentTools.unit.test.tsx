@@ -8,10 +8,10 @@ import { ExperimentTools } from '../ExperimentTools';
 
 const experiments: Experiment[] = [
   {
-    Component: () => <p>reminders</p>,
-    slug: 'apple-reminders-ux',
-    summary: 'Apple Reminders-grade navigation.',
-    title: 'Apple Reminders UX',
+    Component: () => <p>sample</p>,
+    slug: 'sample-experiment',
+    summary: 'A registered experiment.',
+    title: 'Sample Experiment',
   },
 ];
 
@@ -50,14 +50,14 @@ describe('ExperimentTools', () => {
 
   it('names the experiment the developer is currently inside', async () => {
     // Arrange
-    window.history.pushState({}, '', '/exp/apple-reminders-ux');
+    window.history.pushState({}, '', '/exp/sample-experiment');
     render(<ExperimentTools experiments={experiments} />);
 
     // Act
     await expand();
 
     // Assert
-    expect(screen.getByRole('button', { name: /switch experience/i })).toHaveTextContent('Apple Reminders UX');
+    expect(screen.getByRole('button', { name: /switch experience/i })).toHaveTextContent('Sample Experiment');
   });
 
   it('switches to an experiment chosen from the picker', async () => {
@@ -68,17 +68,17 @@ describe('ExperimentTools', () => {
 
     // Act
     await user.click(screen.getByRole('button', { name: /switch experience/i }));
-    await user.click(screen.getByRole('button', { name: /Apple Reminders UX/ }));
+    await user.click(screen.getByRole('button', { name: /Sample Experiment/ }));
 
     // Assert
-    expect(window.location.pathname).toBe('/exp/apple-reminders-ux');
+    expect(window.location.pathname).toBe('/exp/sample-experiment');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('turns the tools off and returns to production when closed', async () => {
     // Arrange
     experimentToolsStore.write(true);
-    window.history.pushState({}, '', '/exp/apple-reminders-ux');
+    window.history.pushState({}, '', '/exp/sample-experiment');
     render(<ExperimentTools experiments={experiments} />);
     const user = await expand();
 
