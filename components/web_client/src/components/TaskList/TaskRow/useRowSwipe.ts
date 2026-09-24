@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { useRef } from 'react';
 
 import { settleVerdict } from '../../../hooks/swipeTrack';
 import { useSwipeTrack } from '../../../hooks/useSwipeTrack';
@@ -11,10 +12,16 @@ const RAIL_OPEN_FRACTION = 0.25;
 const RAIL_COMMIT_FRACTION = 0.6;
 
 interface RowSwipe {
-  /** Performed when the finger lifts past the commit threshold. */
-  onCommit: () => void;
+  /** Performed when the finger lifts past the commit threshold — the same
+   * delete the rail's button performs. */
+  onDelete: () => void;
   onOpenChange: (open: boolean) => void;
   open: boolean;
+}
+
+interface Widths {
+  rail: number;
+  row: number;
 }
 
 interface UseRowSwipeOptions {
@@ -37,16 +44,21 @@ interface RowSwipeState {
  * The row half of the swipe: measuring, placing the surface, and turning a
  * release into open, closed, or deleted.
  *
- * Widths are measured at the two moments a gesture reads them rather than held
- * in state, because a resize between them would make a stored value a lie.
+ * Widths are measured once per swipe and forgotten when it ends, so every
+ * swipe starts from the row's current size without paying a layout per move.
  * Travel is counted from the row's closed position and is positive leftwards,
  * which is why both the delta and the velocity arrive negated.
  */
 function useRowSwipe({ enabled, railRef, rowRef, swipe }: UseRowSwipeOptions): RowSwipeState {
-  const widths = () => ({
-    rail: railRef.current?.offsetWidth ?? 0,
-    row: rowRef.current?.offsetWidth ?? 0,
-  });
+  // Measured once when a swipe is claimed and held until it ends. Reading a
+  // width after the surface has moved forces the browser to lay the page out
+  // again, so reading on every move would cost a layout per frame.
+  const measured = useRef<Widths | null>(null);
+  const widths = (): Widths =>
+    (measured.current ??= {
+      rail: railRef.current?.offsetWidth ?? 0,
+      row: rowRef.current?.offsetWidth ?? 0,
+    });
 
   const { delta, onPointerDown, tracking } = useSwipeTrack({
     enabled,
@@ -61,13 +73,16 @@ function useRowSwipe({ enabled, railRef, rowRef, swipe }: UseRowSwipeOptions): R
       });
       if (verdict === 'commit') {
         swipe.onOpenChange(false);
-        swipe.onCommit();
+        swipe.onDelete();
         return;
       }
       swipe.onOpenChange(verdict === 'open');
     },
   });
 
+  // Released before the verdict re-renders the row, so the next swipe measures
+  // afresh — a rotation between swipes changes both widths.
+  if (!tracking) measured.current = null;
   const { rail: railWidth, row: rowWidth } = swipe && tracking ? widths() : { rail: 0, row: 0 };
   const travelled = (swipe?.open ? -railWidth : 0) + delta;
 

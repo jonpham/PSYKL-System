@@ -71,15 +71,23 @@ function useSwipeTrack({ enabled = true, onRelease }: UseSwipeTrackOptions): Swi
   // the current handler without rebinding on every render.
   const releaseRef = useRef(onRelease);
   releaseRef.current = onRelease;
+  // Unbinds the window listeners of the gesture in progress. The window is
+  // only listened to between a pointer-down and its release: a list renders
+  // one of these per row, and an idle row must not run on every pointer move
+  // the page sees.
+  const unbind = useRef<(() => void) | null>(null);
 
   const end = useCallback((report: boolean) => {
     const current = gesture.current;
     gesture.current = null;
+    unbind.current?.();
+    unbind.current = null;
     setDelta(0);
     setTracking(false);
     if (!report || !current?.claimed) {
       return;
     }
+    swallowNextClick();
     const samples = current.samples;
     const last = samples[samples.length - 1];
     const first = samples.find((sample) => last !== undefined && last.t - sample.t <= VELOCITY_WINDOW_MS);
@@ -91,10 +99,8 @@ function useSwipeTrack({ enabled = true, onRelease }: UseSwipeTrackOptions): Swi
     });
   }, []);
 
-  useEffect(() => {
-    if (!enabled) return;
-
-    const onMove = (event: PointerEvent) => {
+  const onMove = useCallback(
+    (event: PointerEvent) => {
       const current = gesture.current;
       if (!current) return;
       const dx = event.clientX - current.startX;
@@ -114,33 +120,54 @@ function useSwipeTrack({ enabled = true, onRelease }: UseSwipeTrackOptions): Swi
 
       current.samples.push({ t: performance.now(), x: event.clientX });
       setDelta(dx);
-    };
-    const onUp = () => end(true);
-    const onCancel = () => end(false);
+    },
+    [end],
+  );
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onCancel);
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onCancel);
-    };
-  }, [enabled, end]);
+  // A row that unmounts mid-gesture — deleted by another device's sync, say —
+  // must not leave its listeners on the window.
+  useEffect(() => () => unbind.current?.(), []);
 
   return {
     delta,
     onPointerDown: (event) => {
       if (!enabled) return;
+      unbind.current?.();
       gesture.current = {
         claimed: false,
         samples: [{ t: performance.now(), x: event.clientX }],
         startX: event.clientX,
         startY: event.clientY,
       };
+      const onUp = () => end(true);
+      const onCancel = () => end(false);
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onCancel);
+      unbind.current = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onCancel);
+      };
     },
     tracking,
   };
+}
+
+/**
+ * Eats the click a mouse sends when it lets go after a swipe. The surface
+ * carries whatever the pointer went down on along with it, so that click would
+ * otherwise land on the title and open an edit the user never asked for. A
+ * finger sends no click after a drag, so on touch this expires unused at the
+ * end of the task.
+ */
+function swallowNextClick(): void {
+  const swallow = (event: MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+  };
+  window.addEventListener('click', swallow, { capture: true, once: true });
+  setTimeout(() => window.removeEventListener('click', swallow, { capture: true }), 0);
 }
 
 export { type SwipeRelease, useSwipeTrack };

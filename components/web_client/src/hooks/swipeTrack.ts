@@ -53,4 +53,4 @@ function settleVerdict({ commitAt, openAt, travel, velocity }: SettleInput): Swi
   return travel >= openAt ? 'open' : 'closed';
 }
 
-export { claimsHorizontal, FLICK_VELOCITY, settleVerdict, type SwipeVerdict };
+export { claimsHorizontal, settleVerdict };

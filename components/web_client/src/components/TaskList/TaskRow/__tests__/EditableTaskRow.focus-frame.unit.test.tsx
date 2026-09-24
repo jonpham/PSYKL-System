@@ -108,6 +108,27 @@ describe('EditableTaskRow focus frame (Unit)', () => {
     expect(row).toHaveAttribute('data-focused', 'true');
   });
 
+  it('measures the row once per swipe, not on every move', () => {
+    // Arrange — a width read after the surface moves forces the browser to lay
+    // the page out again, so a read per move is a layout per frame
+    const reads = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        reads();
+        return this.classList.contains('psykl-task-row__rail') ? RAIL_WIDTH : ROW_WIDTH;
+      },
+    });
+    renderRow();
+
+    // Act — twelve moves
+    pointer('pointerdown', surface(), ROW_WIDTH);
+    for (let step = 1; step <= 12; step += 1) pointer('pointermove', window, ROW_WIDTH - step * 5);
+
+    // Assert — the rail and the row, once each
+    expect(reads.mock.calls.length).toBeLessThanOrEqual(2);
+  });
+
   it('keeps the frame while the rail is held open, and drops it once it closes', async () => {
     // Arrange
     const user = userEvent.setup();

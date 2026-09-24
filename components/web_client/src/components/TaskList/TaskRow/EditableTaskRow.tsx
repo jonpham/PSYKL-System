@@ -104,7 +104,6 @@ export function EditableTaskRow({
       selected={false}
       swipe={{
         dismissLabel: `Close actions for ${task.title}`,
-        onCommit: remove,
         onDelete: remove,
         onDetails: () => {
           setRailOpen(false);

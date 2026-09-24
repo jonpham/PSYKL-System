@@ -15,7 +15,6 @@ const PENDING_AFFORDANCE_DELAY_MS = 2000;
 interface RowSwipe extends RowSwipeActions {
   /** Accessible name of the cover that takes a tap while the rail is open. */
   dismissLabel: string;
-  onDelete: () => void;
   onDetails: () => void;
 }
 
