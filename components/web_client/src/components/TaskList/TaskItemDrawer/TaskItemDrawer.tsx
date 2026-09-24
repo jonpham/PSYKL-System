@@ -42,78 +42,80 @@ export function TaskItemDrawer({ onClose, onDelete, onRename, task }: TaskItemDr
   const renamed = trimmed.length > 0 && trimmed !== task.title;
 
   return (
-    <div aria-label="Task" aria-modal="true" className="psykl-drawer-sheet psykl-task-drawer" role="dialog">
-      <header className="psykl-task-drawer__header">
-        <button
-          aria-label="Cancel"
-          className="psykl-task-drawer__control"
-          onClick={onClose}
-          ref={closeRef}
-          type="button"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
-        <h3>Task</h3>
-        <button
-          aria-label="Save"
-          className="psykl-task-drawer__control"
-          data-confirm="true"
-          disabled={!renamed}
-          onClick={() => {
-            onRename(trimmed);
-            onClose();
-          }}
-          type="button"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M5 12.5l4.5 4.5L19 7.5" />
-          </svg>
-        </button>
-      </header>
+    <div className="psykl-drawer-scrim">
+      <div aria-label="Task" aria-modal="true" className="psykl-drawer-sheet psykl-task-drawer" role="dialog">
+        <header className="psykl-task-drawer__header">
+          <button
+            aria-label="Cancel"
+            className="psykl-task-drawer__control"
+            onClick={onClose}
+            ref={closeRef}
+            type="button"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+          <h3>Task</h3>
+          <button
+            aria-label="Save"
+            className="psykl-task-drawer__control"
+            data-confirm="true"
+            disabled={!renamed}
+            onClick={() => {
+              onRename(trimmed);
+              onClose();
+            }}
+            type="button"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          </button>
+        </header>
 
-      {/* No visible label: a single large field under a header reading "Task" is
-       * already the title, and a caption over it only repeats the obvious. */}
-      <div className="psykl-task-drawer__field">
-        <input
-          aria-label="Title"
-          className="psykl-task-drawer__input"
-          maxLength={200}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            // The title is part of what a delete would destroy, so changing it
-            // retires a confirmation the user gave about the older task.
-            setArmed(false);
-          }}
-          type="text"
-          value={draft}
-        />
-      </div>
+        {/* No visible label: a single large field under a header reading "Task" is
+         * already the title, and a caption over it only repeats the obvious. */}
+        <div className="psykl-task-drawer__field">
+          <input
+            aria-label="Title"
+            className="psykl-task-drawer__input"
+            maxLength={200}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              // The title is part of what a delete would destroy, so changing it
+              // retires a confirmation the user gave about the older task.
+              setArmed(false);
+            }}
+            type="text"
+            value={draft}
+          />
+        </div>
 
-      <dl className="psykl-task-drawer__details">
-        <Detail label="Completed" value={task.completed_at} />
-        <Detail label="Last updated" value={task.updated_at} />
-        <Detail label="Created" value={task.created_at} />
-      </dl>
+        <dl className="psykl-task-drawer__details">
+          <Detail label="Completed" value={task.completed_at} />
+          <Detail label="Last updated" value={task.updated_at} />
+          <Detail label="Created" value={task.created_at} />
+        </dl>
 
-      <div className="psykl-task-drawer__footer">
-        <button
-          aria-label={armed ? `Confirm deleting ${task.title}` : 'Delete task'}
-          className="psykl-task-drawer__delete"
-          data-armed={armed}
-          onClick={() => {
-            if (!armed) {
-              setArmed(true);
-              return;
-            }
-            onDelete();
-            onClose();
-          }}
-          type="button"
-        >
-          {armed ? 'Delete Task?' : 'Delete Task'}
-        </button>
+        <div className="psykl-task-drawer__footer">
+          <button
+            aria-label={armed ? `Confirm deleting ${task.title}` : 'Delete task'}
+            className="psykl-task-drawer__delete"
+            data-armed={armed}
+            onClick={() => {
+              if (!armed) {
+                setArmed(true);
+                return;
+              }
+              onDelete();
+              onClose();
+            }}
+            type="button"
+          >
+            {armed ? 'Delete Task?' : 'Delete Task'}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -5,33 +5,44 @@
  * Carried by `.psykl-move-drawer` and `.psykl-task-drawer`. Their own files
  * keep what differs — contents, header, controls — and nothing about placement.
  */
+
+/* The scrim is what makes these drawers modal in fact and not just in ARIA: it
+ * covers the list and the capture button, so nothing behind an open drawer can
+ * be read as still available. Same plane as the delete-list dialog's scrim. */
+.psykl-drawer-scrim {
+  align-items: flex-end;
+  background: rgb(0 0 0 / 32%);
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 4;
+}
+
 .psykl-drawer-sheet {
   background: var(--bg-elevated);
   border-radius: 14px 14px 0 0;
-  bottom: 0;
   box-shadow: 0 -2px 16px rgb(0 0 0 / 22%);
-  left: 0;
   max-height: 70dvh;
   overflow-y: auto;
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  position: fixed;
-  right: 0;
-  z-index: 3;
+  width: 100%;
 }
 
 /* The same breakpoint the shell uses to become a two-column layout. */
 @container psykl-shell (min-width: 768px) {
+  .psykl-drawer-scrim {
+    align-items: center;
+  }
+
   .psykl-drawer-sheet {
     border-radius: 14px;
-    bottom: auto;
     box-shadow: 0 8px 40px rgb(0 0 0 / 28%);
-    left: 50%;
     max-height: 80dvh;
     max-width: 28rem;
     padding-bottom: 1rem;
-    right: auto;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
   }
 }

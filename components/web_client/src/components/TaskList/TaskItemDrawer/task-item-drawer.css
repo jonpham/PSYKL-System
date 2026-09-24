@@ -1,5 +1,5 @@
-/* Placement is `.psykl-drawer-sheet` (src/styles/drawer.css); this file is the
- * drawer's own contents only. */
+/* Placement is `.psykl-drawer-scrim` / `.psykl-drawer-sheet` (src/styles/drawer.css);
+ * this file is the drawer's own contents only. */
 .psykl-task-drawer__header {
   align-items: center;
   border-bottom: 1px solid var(--separator);
