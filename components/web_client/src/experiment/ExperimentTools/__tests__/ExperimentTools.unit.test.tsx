@@ -90,6 +90,64 @@ describe('ExperimentTools', () => {
     expect(experimentToolsStore.read()).toBe(false);
   });
 
+  // The empty registry is the configuration that actually ships: the last
+  // experiment was promoted and deleted, and nothing has replaced it.
+  describe('with an empty registry', () => {
+    it('still offers Production, so a developer on /exp is never stranded', async () => {
+      // Arrange
+      window.history.pushState({}, '', '/exp');
+      render(<ExperimentTools experiments={[]} />);
+      const user = await expand();
+
+      // Act
+      await user.click(screen.getByRole('button', { name: /switch experience/i }));
+
+      // Assert
+      expect(screen.getByRole('dialog', { name: 'Switch experience' })).toBeVisible();
+      expect(screen.getAllByRole('listitem')).toHaveLength(1);
+      expect(screen.getByRole('button', { name: /Production/ })).toBeVisible();
+    });
+
+    it('names the index experience rather than failing on a missing entry', async () => {
+      // Arrange
+      window.history.pushState({}, '', '/exp');
+      render(<ExperimentTools experiments={[]} />);
+
+      // Act
+      await expand();
+
+      // Assert
+      expect(screen.getByRole('button', { name: /switch experience/i })).toHaveTextContent('Experiments');
+    });
+
+    it('falls back to the slug for a path no registry entry matches', async () => {
+      // Arrange
+      window.history.pushState({}, '', '/exp/apple-reminders-ux');
+      render(<ExperimentTools experiments={[]} />);
+
+      // Act
+      await expand();
+
+      // Assert
+      expect(screen.getByRole('button', { name: /switch experience/i })).toHaveTextContent('apple-reminders-ux');
+    });
+
+    it('turns the tools off from an experiment path with nothing registered', async () => {
+      // Arrange
+      experimentToolsStore.write(true);
+      window.history.pushState({}, '', '/exp');
+      render(<ExperimentTools experiments={[]} />);
+      const user = await expand();
+
+      // Act
+      await user.click(screen.getByRole('button', { name: 'Close experiment tools' }));
+
+      // Assert
+      expect(window.location.pathname).toBe('/');
+      expect(experimentToolsStore.read()).toBe(false);
+    });
+  });
+
   it('collapses back to the single button', async () => {
     // Arrange
     render(<ExperimentTools experiments={experiments} />);

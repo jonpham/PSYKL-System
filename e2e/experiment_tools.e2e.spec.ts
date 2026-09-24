@@ -34,13 +34,39 @@ test.describe('experiment tools', () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
+  // Mounting any `/exp` surface arms the tools, the index included, so the two
+  // checks below need no registered experiment to run.
+  test('a developer puts the experiment tools away for good', async ({ page }) => {
+    await page.goto('/exp');
+    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+
+    await page.getByRole('button', { name: 'Close experiment tools' }).click();
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
+
+    // Closing is a decision, not a dismissal: it survives a reload.
+    await page.reload();
+    await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
+  });
+
+  test('a developer dismisses the experience picker with Escape', async ({ page }) => {
+    await page.goto('/exp');
+    await page.getByRole('button', { name: 'Expand experiment controls' }).click();
+    await page.getByRole('button', { name: /switch experience/i }).click();
+    await expect(page.getByRole('dialog', { name: 'Switch experience' })).toBeVisible();
+
+    await page.keyboard.press('Escape');
+
+    await expect(page.getByRole('dialog', { name: 'Switch experience' })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/exp$/);
+  });
+
   /**
-   * Skipped while no experiment is registered: `apple-reminders-ux` was
-   * promoted into the production surface and deleted in `to-do-ui` Spec 6, and
-   * every check below needs a live `/exp/{slug}` to open. Re-activate these —
-   * substituting the new slug and title — with the next experiment. The tools
-   * themselves are still covered at the Unit and Component layers under
-   * `components/web_client/src/experiment/ExperimentTools/`.
+   * Skipped while no experiment is registered: both checks below need a live
+   * `/exp/{slug}` — one switches into a named prototype and back, the other
+   * reads a registered experiment's row in the Settings list. Re-activate them,
+   * substituting the new slug and title, with the next experiment.
    */
   test.describe.skip('once an experiment is registered again', () => {
     test('a developer switches from a prototype to production and back without leaving the page', async ({ page }) => {
@@ -66,32 +92,6 @@ test.describe('experiment tools', () => {
         .getByRole('dialog', { name: 'Switch experience' })
         .getByRole('button', { name: /Sample Experiment/ })
         .click();
-      await expect(page).toHaveURL(/\/exp\/sample-experiment$/);
-    });
-
-    test('a developer puts the experiment tools away for good', async ({ page }) => {
-      await page.goto('/exp/sample-experiment');
-      await page.getByRole('button', { name: 'Expand experiment controls' }).click();
-
-      await page.getByRole('button', { name: 'Close experiment tools' }).click();
-
-      await expect(page).toHaveURL(/\/$/);
-      await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
-
-      // Closing is a decision, not a dismissal: it survives a reload.
-      await page.reload();
-      await expect(page.getByLabel('Experiment controls')).toHaveCount(0);
-    });
-
-    test('a developer dismisses the experience picker with Escape', async ({ page }) => {
-      await page.goto('/exp/sample-experiment');
-      await page.getByRole('button', { name: 'Expand experiment controls' }).click();
-      await page.getByRole('button', { name: /switch experience/i }).click();
-      await expect(page.getByRole('dialog', { name: 'Switch experience' })).toBeVisible();
-
-      await page.keyboard.press('Escape');
-
-      await expect(page.getByRole('dialog', { name: 'Switch experience' })).toHaveCount(0);
       await expect(page).toHaveURL(/\/exp\/sample-experiment$/);
     });
 

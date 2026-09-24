@@ -1,10 +1,10 @@
 ---
-status: IN-PROGRESS
+status: IN-PROGRESS # → DONE, with completed_at, when PR #142 merges
 issue: P6
 branches:
   - chore/experiment-cleanup-reminders-ux
 prs:
-  -
+  - https://github.com/jonpham/PSYKL-System/pull/142
 completed_at:
 created_at: 2026-09-24
 initiative: to-do-ui
@@ -52,14 +52,18 @@ _none — no user-facing surface changed._ One user-reachable route was **remove
 ```
 
 Settings still carries its **Experiments** section; it renders the same empty line. The experiment
-tools (🧪) were already invisible until a developer opened an experiment, so with none registered
-they are unreachable — which is correct, not a regression.
+tools (🧪) are **still reachable**, and deliberately so: `ExperimentFrame` mounts them and arms the
+device on any `/exp` path, the index included, so a developer who lands on `/exp` or on a dead
+experiment URL can still switch back to Production. They remain invisible to anyone who has never
+opened an `/exp` path, which is the property that keeps production free of developer chrome.
 
 ## Verification Steps
 
-**Associated E2E test:** `e2e/experiment_tools.e2e.spec.ts` — the empty-registry behaviour is
-active; the four checks that need a live `/exp/{slug}` are `test.describe.skip`, to be re-activated
-against the next experiment's slug.
+**Associated E2E test:** `e2e/experiment_tools.e2e.spec.ts` — four checks active, two skipped.
+Mounting `/exp` itself arms the tools, so closing them for good and dismissing the picker with
+Escape both still run without a registered experiment. Only the two that need a _named_ prototype —
+switching into one and back, and reading its row in the Settings list — are `test.describe.skip`,
+to be re-activated against the next experiment's slug.
 
 **Manual verification**
 
@@ -95,10 +99,13 @@ production, never a fork of it.
 - **The registry's empty state is the resting state, not a defect.** Removing the last experiment
   does not remove `/exp`; `registry.types.ts` deliberately carries no status field, because an
   experiment that is still registered is by definition still being explored.
-- **The experiment's E2E coverage is skipped, not deleted.** Four of the five experiment-tools
-  checks need a live `/exp/{slug}` to open. Per AGENTS.md → Test Discipline, a flow that is not yet
-  exercisable ships skipped rather than omitted; the tools themselves stay covered at the Unit and
-  Component layers. The fifth check, plus a new one for the empty registry, stay active.
+- **The experiment's E2E coverage is skipped, not deleted — and skipped as narrowly as possible.**
+  Only two checks genuinely need a named prototype; per AGENTS.md → Test Discipline they ship
+  skipped rather than omitted. The other two were retargeted at `/exp`, which arms the tools just as
+  an experiment does — `close()` is the only path that disarms them, so leaving it unexercised would
+  have let a regression pin the 🧪 chrome over production for every developer who ever opened `/exp`,
+  with nothing in CI failing. `ExperimentTools` also gained four unit tests over the empty registry,
+  the configuration that now actually ships.
 - **Test fixtures were re-named, not left pointing at a deleted tree.** `sample-experiment` /
   `Sample Experiment` also satisfies the Spec's `grep -r "apple-reminders-ux" components/` gate.
 - **Archived artifacts stay in the repo.** Per `docs/experiments/README.md`, the record of what was
@@ -115,6 +122,6 @@ production, never a fork of it.
 
 ## Change Log
 
-| Date       | PR    | Summary                                                                                              |
-| ---------- | ----- | ---------------------------------------------------------------------------------------------------- |
-| 2026-09-24 | _tbd_ | Deleted the promoted `apple-reminders-ux` experiment, archived its artifacts, closed out `to-do-ui`. |
+| Date       | PR                                                       | Summary                                                                                              |
+| ---------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 2026-09-24 | [#142](https://github.com/jonpham/PSYKL-System/pull/142) | Deleted the promoted `apple-reminders-ux` experiment, archived its artifacts, closed out `to-do-ui`. |
