@@ -204,7 +204,7 @@ docs/specs/<initiative>/<YYYYMMDD>-<slug>/
 
 There is no experiment card and no iteration nesting — production work is not a shell being iterated, it is a change being shipped.
 
-Use the initiative the surface belongs to. For work that belongs to no initiative — standalone fixes, stabilization passes — use `docs/specs/maintenance/`.
+Use the initiative the surface belongs to. For work that belongs to no initiative — standalone fixes, small feature additions, stabilization passes — use `docs/specs/fast-feature/`.
 
 **A lightweight production artifact set is a folder; a heavyweight Spec is a file** (`{YYYYMMDD}-Spec{N}-{slug}.md`). That distinction is deliberate: the two can sit side by side in the same initiative directory without competing for Spec numbering. Lightweight work is never assigned a Spec number.
 
