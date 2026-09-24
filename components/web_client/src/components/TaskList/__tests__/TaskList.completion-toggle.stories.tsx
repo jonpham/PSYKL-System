@@ -60,10 +60,9 @@ export const BatchToggleReopensCompletedTasks: Story = {
   render: () => <App />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Arrange — a completed task is only poolable once completed rows are shown
+    // Arrange — completed rows are shown by default, so the finished task is
+    // already on screen and poolable
     await canvas.findByRole('button', { name: `Edit ${open.title}` });
-    await userEvent.click(canvas.getByRole('button', { name: 'List options' }));
-    await userEvent.click(await canvas.findByRole('menuitem', { name: /^Show Completed/ }));
     await userEvent.click(canvas.getByRole('button', { name: 'List options' }));
     await userEvent.click(await canvas.findByRole('menuitem', { name: 'Select Items' }));
     await userEvent.click(await canvas.findByRole('button', { name: `Select ${done.title}` }));
@@ -80,3 +79,5 @@ export const BatchToggleReopensCompletedTasks: Story = {
     });
   },
 };
+
+import '../../../styles/tokens.css';

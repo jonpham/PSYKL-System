@@ -38,8 +38,6 @@ test.describe('batch completion', () => {
     for (const title of [rake, mow]) {
       await page.getByRole('checkbox', { name: `Mark ${title} complete` }).click();
     }
-    await page.getByRole('button', { name: 'List options' }).click();
-    await page.getByRole('menuitem', { name: /^Show Completed/ }).click();
 
     await enterSelectionMode(page);
     await select(page, rake);
@@ -60,8 +58,6 @@ test.describe('batch completion', () => {
       await createTask(page, title);
     }
     await page.getByRole('checkbox', { name: `Mark ${done} complete` }).click();
-    await page.getByRole('button', { name: 'List options' }).click();
-    await page.getByRole('menuitem', { name: /^Show Completed/ }).click();
 
     await enterSelectionMode(page);
     await select(page, done);

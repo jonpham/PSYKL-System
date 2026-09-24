@@ -8,7 +8,7 @@ function renderMenu(overrides: Partial<Parameters<typeof ListMenu>[0]> = {}) {
   const props = {
     canDelete: true,
     completedCount: 3,
-    onDeleteList: vi.fn(),
+    onRequestDeleteList: vi.fn(),
     onToggleCompleted: vi.fn(),
     showCompleted: true,
     ...overrides,
@@ -43,7 +43,7 @@ describe('ListMenu (Unit)', () => {
     expect(screen.getByRole('menuitem', { name: 'Show Completed (3)' })).toBeInTheDocument();
   });
 
-  it('asks before deleting a list', async () => {
+  it('hands a delete request to the dialog rather than deleting from the menu', async () => {
     // Arrange
     const user = userEvent.setup();
     const props = renderMenu();
@@ -52,10 +52,10 @@ describe('ListMenu (Unit)', () => {
     await user.click(screen.getByRole('button', { name: 'List options' }));
     await user.click(screen.getByRole('menuitem', { name: 'Delete List' }));
 
-    // Assert — the first press arms, it does not act
-    expect(props.onDeleteList).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('menuitem', { name: 'Delete List?' }));
-    expect(props.onDeleteList).toHaveBeenCalledTimes(1);
+    // Assert — one press: the sheet closes and the question is asked elsewhere,
+    // because a menu item cannot express "and the items too"
+    expect(props.onRequestDeleteList).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('does not offer to delete the only list a user has', async () => {

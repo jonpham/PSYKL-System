@@ -16,6 +16,28 @@ function idempotencyKey(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+/**
+ * Waits for a list's deletion to reach the service.
+ *
+ * Deleting a list with its items is a cascade of independent writes, and the
+ * local sync queue empties briefly between the last task and the list itself —
+ * so "queue is empty" is not proof the list has gone. The service's own view of
+ * the tombstone is.
+ */
+export async function expectListDeletedOnServer(userId: string, title: string): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const response = await fetch(new URL('/deleted', apiBaseUrl), { headers: { 'X-User-Id': userId } });
+        expect(response.ok).toBe(true);
+        const deleted = (await response.json()) as { lists: Array<{ title: string }> };
+        return deleted.lists.some((list) => list.title === title);
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(true);
+}
+
 export async function deleteServerTask(userId: string, title: string): Promise<void> {
   const listResponse = await fetch(new URL('/tasks', apiBaseUrl), { headers: { 'X-User-Id': userId } });
   expect(listResponse.ok).toBe(true);

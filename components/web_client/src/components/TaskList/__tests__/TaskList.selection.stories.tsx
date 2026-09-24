@@ -210,3 +210,5 @@ export const SelectionBarVisual: Story = {
     await userEvent.click(canvas.getByRole('button', { name: `Select ${visual.second.title}` }));
   },
 };
+
+import '../../../styles/tokens.css';

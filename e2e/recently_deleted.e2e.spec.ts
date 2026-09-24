@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 
 import { listLocalSyncQueue } from './helpers/idb-storage';
 import { expect, test } from './helpers/isolated-test';
-import { deleteServerTask } from './helpers/task-api';
+import { deleteServerTask, expectListDeletedOnServer } from './helpers/task-api';
 
 test.describe('recently deleted', () => {
   test.use({ viewport: { height: 844, width: 390 } });
@@ -33,7 +33,7 @@ test.describe('recently deleted', () => {
     await expect(page.getByText('Milk')).toBeVisible();
   });
 
-  test.skip('a user restores a deleted list and its tasks come back', async ({ page }) => {
+  test('a user restores a deleted list and its tasks come back', async ({ page }) => {
     await page.goto('/lists');
     await page.getByRole('button', { name: 'New List' }).click();
     await page.getByLabel('New list name').fill('Groceries');
@@ -46,18 +46,19 @@ test.describe('recently deleted', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByText('Milk')).toBeVisible();
 
-    // Deleting a list takes a second tap rather than a dialog: the delete is
-    // soft and recoverable from this very screen.
+    // Taking the items along is what makes the list one undoable unit here.
     await page.getByRole('button', { name: 'List options' }).click();
     await page.getByRole('menuitem', { name: 'Delete List' }).click();
-    await page.getByRole('menuitem', { name: 'Delete List?' }).click();
+    await page.getByRole('button', { name: 'Delete With Items' }).click();
 
     // Recently Deleted is served by the back end, so the delete has to have
     // reached it before a full page load can show the list there.
-    await expectSyncQueueEmpty(page);
+    await expectListDeletedOnServer('local', 'Groceries');
 
     await page.goto('/recently-deleted');
     await expect(page.getByRole('listitem', { name: 'Groceries' })).toBeVisible();
+    // The row says what it was and what pressing Restore brings back with it.
+    await expect(page.getByText('list · 1 item')).toBeVisible();
     await page.getByRole('button', { name: 'Restore Groceries' }).click();
 
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();

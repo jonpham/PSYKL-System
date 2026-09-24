@@ -24,7 +24,7 @@ import {
 interface UseListsResult {
   canDelete: boolean;
   createList(title: string): Promise<ListRecord>;
-  deleteList(id: string): Promise<void>;
+  deleteList(id: string, deletedAt?: string): Promise<void>;
   lists: ListRecord[];
   moveList(id: string, before: ListRecord | null, after: ListRecord | null): Promise<void>;
   renameList(id: string, title: string): Promise<void>;
@@ -67,7 +67,7 @@ function useLists(): UseListsResult {
   );
 
   const deleteList = useCallback(
-    async (id: string): Promise<void> => {
+    async (id: string, deletedAt?: string): Promise<void> => {
       // The last remaining list can never be deleted (UX.md § 10 decision 1).
       if (lists.length <= 1) {
         return;
@@ -76,7 +76,9 @@ function useLists(): UseListsResult {
       if (!existing) {
         return;
       }
-      const deleted_at = new Date().toISOString();
+      // A caller deleting the list's tasks alongside it passes their shared
+      // timestamp, which is what pairs them in Recently Deleted (useListDeletion).
+      const deleted_at = deletedAt ?? new Date().toISOString();
       const optimistic: ListRecord = { ...existing, deleted_at, updated_at: deleted_at };
       await mutateList(() => listServiceClient.delete(id, { deleted_at }, optimistic));
     },
