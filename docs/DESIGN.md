@@ -2,9 +2,9 @@
 
 Rewritten on 2026-09-21 from the accepted `apple-reminders-ux` experiment, which shipped in `v0.4.1` after four operator review rounds. That prototype — not this document's previous revision — is the baseline the production app is built to. The 2026-08-14 revision was written before any of it was built; where the two disagree, the built and reviewed surface wins.
 
-**Status:** APPROVED — the visual baseline for the [`to-do-ui`](initiatives/to-do-ui/DESIGN.md) initiative and everything after it. No open decisions.
+**Status:** APPROVED — the visual baseline established by the `to-do-ui` initiative and binding on everything after it. No open decisions.
 **Scope:** Durable. This document outlives any one initiative and is refreshed, not deleted, at close-out.
-**Source of truth for pixels:** `docs/experiments/apple-reminders-ux/apple-reminders-ui/visual-artifact.md` and its `screenshots/`. This file is the durable statement of what those screenshots mean; the screenshots are the evidence.
+**Source of truth for pixels:** this file. It was written from the accepted `apple-reminders-ux` prototype's built values, reviewed against a running build at 390px and 1024px in light and dark — see [`docs/experiments/apple-reminders-ux.md`](experiments/apple-reminders-ux.md) for what that prototype was and which features it became. The shape these values compose into is drawn in [the Spec 6 feature doc](features/%5B20260924%5DP6_to-do-ui-retire-experiment-and-close-out.md) → Visual Record.
 **Companion:** [`docs/initiatives/todo-experience/UX.md`](initiatives/todo-experience/UX.md) covers screens, behavior, and gestures for the paused `todo-experience` initiative, and has been reconciled with this baseline.
 
 > **Glossary** (each doc carries its own, per [`AGENTS.md`](../AGENTS.md) → Design Doc Discipline):
@@ -314,7 +314,7 @@ Five metrics decisions, each settled by building and measuring rather than by ar
 - Tab order runs sync control → checkbox → title → next row. Space or Return toggles a focused checkbox; Escape leaves an in-progress capture row.
 - Completion, pending sync, and failure each carry a non-color signal in addition to color — strike-through and fill for completion, a dot for pending, a count for failure.
 - **Drag-to-reorder, when it lands, requires a keyboard equivalent** — a focused row moves with a modifier plus arrow keys, announced via an ARIA live region. Pointer-only reorder is inaccessible.
-- The contrast exception above is unresolved and is the one known gap.
+- The contrast exception above is **resolved**: Standard ships as designed and Increased raises every failing token to WCAG AA, as a device-local Settings choice. See Contrast — Standard and Increased.
 
 ---
 

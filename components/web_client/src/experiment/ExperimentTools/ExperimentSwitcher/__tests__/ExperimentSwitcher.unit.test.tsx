@@ -7,10 +7,10 @@ import { ExperimentSwitcher } from '../ExperimentSwitcher';
 
 const experiments: Experiment[] = [
   {
-    Component: () => <p>reminders</p>,
-    slug: 'apple-reminders-ux',
-    summary: 'Apple Reminders-grade navigation.',
-    title: 'Apple Reminders UX',
+    Component: () => <p>sample</p>,
+    slug: 'sample-experiment',
+    summary: 'A registered experiment.',
+    title: 'Sample Experiment',
   },
 ];
 
@@ -36,15 +36,15 @@ describe('ExperimentSwitcher', () => {
     // Assert
     expect(screen.getByRole('dialog', { name: 'Switch experience' })).toBeVisible();
     expect(screen.getByRole('button', { name: /Production/ })).toBeVisible();
-    expect(screen.getByRole('button', { name: /Apple Reminders UX/ })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Sample Experiment/ })).toBeVisible();
   });
 
   it('marks the experience the developer is already on', () => {
     // Arrange / Act
-    renderSwitcher({ currentSlug: 'apple-reminders-ux' });
+    renderSwitcher({ currentSlug: 'sample-experiment' });
 
     // Assert
-    expect(screen.getByRole('button', { name: /Apple Reminders UX/ })).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByRole('button', { name: /Sample Experiment/ })).toHaveAttribute('aria-current', 'true');
     expect(screen.getByRole('button', { name: /Production/ })).not.toHaveAttribute('aria-current', 'true');
   });
 
@@ -53,15 +53,15 @@ describe('ExperimentSwitcher', () => {
     const { onSelect, user } = renderSwitcher();
 
     // Act
-    await user.click(screen.getByRole('button', { name: /Apple Reminders UX/ }));
+    await user.click(screen.getByRole('button', { name: /Sample Experiment/ }));
 
     // Assert
-    expect(onSelect).toHaveBeenCalledWith('apple-reminders-ux');
+    expect(onSelect).toHaveBeenCalledWith('sample-experiment');
   });
 
   it('reports production as a null slug', async () => {
     // Arrange
-    const { onSelect, user } = renderSwitcher({ currentSlug: 'apple-reminders-ux' });
+    const { onSelect, user } = renderSwitcher({ currentSlug: 'sample-experiment' });
 
     // Act
     await user.click(screen.getByRole('button', { name: /Production/ }));

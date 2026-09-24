@@ -53,7 +53,7 @@ in Recently Deleted.
 
 ## Design Decisions
 
-- **The preference lives in `sync_meta` and is never enqueued** (DESIGN.md Decision 4). A unit test
+- **The preference lives in `sync_meta` and is never enqueued** ([`docs/DESIGN.md`](../DESIGN.md) → Appearance, contrast, and theme; originally `to-do-ui` DESIGN.md Decision 4, deleted at initiative close-out). A unit test
   asserts the sync queue stays empty after a write. The prototype's `localStorage` store was rewritten,
   not ported.
 - **The preference is a module-level store, not per-hook state.** The header's menu and the list both

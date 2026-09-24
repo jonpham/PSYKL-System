@@ -335,11 +335,20 @@ Every experiment ends in one of three ways. None of them is "leave it there".
 
 Exits apply per iteration and, once every iteration has exited, to the experiment as a whole.
 
-| Exit        | Code                                                                                                                 | Docs                                                                                                                                                                        |
-| ----------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Discard** | Remove the iteration's components; delete `src/experiment/{slug}/` and its `registry.ts` entry once nothing is left. | Move `docs/experiments/{slug}/{iteration}/` to `docs/experiments/archive/{slug}/{iteration}/` with a one-line verdict in both cards.                                        |
-| **Pause**   | Leave in place; set the registry entry's `status` to `paused` when the whole experiment is parked.                   | Leave in place; note what would unblock it in the iteration card.                                                                                                           |
-| **Promote** | Leave in place until the production implementation merges, then remove the promoted iteration's code from the shell. | **One iteration maps to one production Spec.** Its four artifacts are the Spec's inputs. Archive that iteration's folder once the feature doc exists; the shell stays live. |
+| Exit        | Code                                                                                                                 | Docs                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Discard** | Remove the iteration's components; delete `src/experiment/{slug}/` and its `registry.ts` entry once nothing is left. | Record the verdict and what it ruled out in the iteration card. When the last iteration exits, collapse the whole folder into `docs/experiments/{slug}.md` (see below). |
+| **Pause**   | Leave in place; set the registry entry's `status` to `paused` when the whole experiment is parked.                   | Leave in place; note what would unblock it in the iteration card.                                                                                                       |
+| **Promote** | Leave in place until the production implementation merges, then remove the promoted iteration's code from the shell. | **One iteration maps to one production Spec.** Its four artifacts are the Spec's inputs, and that Spec's feature doc becomes the durable record of what shipped.        |
+
+**When the last iteration exits, the experiment collapses to one file.** Delete
+`docs/experiments/{slug}/` — every iteration subfolder, artifacts and screenshots — and replace it
+with a single `docs/experiments/{slug}.md` summarising what was tried, what it proved, and its
+verdict, linking each promoted iteration to the `docs/features/` doc it became. Git history holds
+the artifacts if the detail is ever wanted; the summary is what stays readable. Do not keep an
+`archive/` tree: a promoted experiment's record is its feature docs, and a discarded one needs a
+paragraph, not a folder. Worked example:
+[`docs/experiments/apple-reminders-ux.md`](../experiments/apple-reminders-ux.md).
 
 What each promoted artifact feeds:
 

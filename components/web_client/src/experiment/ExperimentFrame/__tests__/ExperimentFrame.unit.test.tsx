@@ -34,7 +34,7 @@ describe('ExperimentFrame', () => {
   it('lets a full-layout experiment own the viewport width', () => {
     // Arrange / Act
     render(
-      <ExperimentFrame layout="full" title="Apple Reminders UX">
+      <ExperimentFrame layout="full" title="Sample Experiment">
         body
       </ExperimentFrame>,
     );
