@@ -191,3 +191,37 @@ textarea.psykl-task-row__title {
     transition: none;
   }
 }
+
+/* Shares the handle's trailing column and its 44px target, so the details
+ * button and the drag handle occupy exactly the same place on the row. */
+.psykl-task-row__action {
+  align-self: start;
+  grid-column: 4;
+}
+
+.psykl-task-row__details {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  height: var(--row-min);
+  justify-content: center;
+  padding: 0;
+  width: var(--row-min);
+}
+
+.psykl-task-row__details svg {
+  fill: none;
+  height: 22px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 1.7;
+  width: 22px;
+}
+
+.psykl-task-row__details:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

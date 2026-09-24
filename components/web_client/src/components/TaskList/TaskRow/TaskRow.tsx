@@ -9,6 +9,10 @@ import { useDelayedFlag } from './useDelayedFlag';
 const PENDING_AFFORDANCE_DELAY_MS = 2000;
 
 interface TaskRowProps {
+  /** The trailing slot's other occupant: a control for this row alone, shown
+   * when the row carries no re-order handle. The two are mutually exclusive by
+   * construction, so a tap in that column means one thing at a time. */
+  action?: ReactNode;
   /** Accessible name of the leading control — what a tap on it will do. */
   checkboxLabel: string;
   /** Drives the control's `aria-checked`; what "checked" means is the caller's. */
@@ -40,12 +44,16 @@ interface TaskRowProps {
  * The presentation shell every task row shares: the row box, the leading mark,
  * a title slot, the pending affordance, and the re-order handle.
  *
+ * The trailing column is shared: it holds the re-order handle in selection
+ * mode and a per-row control (the details button) outside it.
+ *
  * It holds no mutation. What a tap means — toggle completion, or pool the row
  * into a batch — belongs to `EditableTaskRow` and `SelectableTaskRow`, because
  * that is the only thing the two modes genuinely disagree about (including what
  * the leading control claims to assistive tech).
  */
 export function TaskRow({
+  action,
   checkboxLabel,
   checked,
   completed,
@@ -96,6 +104,8 @@ export function TaskRow({
 
       {/* Completed rows stay ordered by when they were completed, so a drag
        * there would have nothing to mean. */}
+      {action && !onReorder ? <span className="psykl-task-row__action">{action}</span> : null}
+
       {onReorder && !completed ? (
         <button
           aria-label={`Reorder ${titleText}`}

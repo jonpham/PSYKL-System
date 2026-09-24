@@ -46,6 +46,26 @@ export function EditableTaskRow({ isPending = false, task }: EditableTaskRowProp
 
   return (
     <TaskRow
+      action={
+        editing ? (
+          <button
+            aria-label={`Details for ${task.title}`}
+            className="psykl-task-row__details"
+            // Pointer-down, not click: the title field's blur would unmount this
+            // button before a click ever landed on it.
+            onPointerDown={(event) => {
+              event.preventDefault();
+            }}
+            type="button"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5" />
+              <path d="M12 7.6v0.1" />
+            </svg>
+          </button>
+        ) : null
+      }
       checkboxLabel={completed ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`}
       checked={completed}
       completed={completed}
