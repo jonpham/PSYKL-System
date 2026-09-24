@@ -126,6 +126,19 @@ export function TaskList({ onCompletedCountChange, onExitSelection, selecting = 
         </ul>
       )}
 
+      {/* The stretch between the last row and the (+) starts a task, the way
+       * tapping below the last reminder does in Reminders. Hidden from assistive
+       * tech: the (+) is the one control for this, and a second invisible one
+       * would only be a surprise. An open rail takes the tap to close instead. */}
+      <div
+        aria-hidden="true"
+        className="psykl-task-list__empty-space"
+        onClick={() => {
+          if (openRailId !== null) setOpenRailId(null);
+          else if (!selecting && !atCeiling) setCapturing(true);
+        }}
+      />
+
       <div className="psykl-task-list__capture-bar" data-mode={selecting ? 'selection' : 'capture'}>
         {selecting ? (
           <SelectionBar

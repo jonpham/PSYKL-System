@@ -68,7 +68,7 @@ describe('TaskList (Unit)', () => {
 
     render(<TaskList />);
 
-    expect(screen.getByText(/no tasks yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/nothing to do yet/i)).toBeInTheDocument();
   });
 
   it('renders a loading state when loading is true', () => {
@@ -120,6 +120,6 @@ describe('TaskList (Unit)', () => {
 
     render(<TaskList />);
 
-    expect(screen.getByText('No tasks yet. Create your first one.')).toBeInTheDocument();
+    expect(screen.getByText('Nothing to do yet.')).toBeInTheDocument();
   });
 });

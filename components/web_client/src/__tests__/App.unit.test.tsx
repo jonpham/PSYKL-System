@@ -22,13 +22,13 @@ describe('App shell', () => {
   it('renders the production navigation header', async () => {
     render(<App />);
     expect(screen.getByRole('button', { name: 'Open PSYKL navigation' })).toBeInTheDocument();
-    expect(await screen.findByText(/no tasks yet/i)).toBeInTheDocument();
+    expect(await screen.findByText(/nothing to do yet/i)).toBeInTheDocument();
   });
 
   it('renders a placeholder section for the Task UI', async () => {
     render(<App />);
     expect(screen.getByTestId('task-ui-slot')).toBeInTheDocument();
-    expect(await screen.findByText(/no tasks yet/i)).toBeInTheDocument();
+    expect(await screen.findByText(/nothing to do yet/i)).toBeInTheDocument();
   });
 
   it('reaches Recently Deleted from navigation', async () => {

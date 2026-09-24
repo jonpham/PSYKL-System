@@ -10,6 +10,13 @@
   padding: 0;
 }
 
+/* Takes whatever height the rows leave, down to the capture bar. */
+.psykl-task-list__empty-space {
+  cursor: text;
+  flex: 1;
+  min-height: var(--row-min);
+}
+
 .psykl-task-list__capture-bar {
   bottom: max(1.75rem, calc(env(safe-area-inset-bottom) + 1.25rem));
   display: flex;
