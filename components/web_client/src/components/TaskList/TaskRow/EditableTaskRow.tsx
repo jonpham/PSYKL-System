@@ -98,6 +98,7 @@ export function EditableTaskRow({
       checkboxLabel={completed ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`}
       checked={completed}
       completed={completed}
+      focused={editing && !showingDetails}
       isPending={isPending}
       onCheckboxClick={toggleComplete}
       selected={false}

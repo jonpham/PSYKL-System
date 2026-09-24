@@ -21,6 +21,33 @@
   transition: transform 0.22s ease;
 }
 
+/* The focus frame: a grey boundary with the task as a rounded box inside it,
+ * on the one row the user is editing or swiping, so its edges stay legible as
+ * it moves. The frame grows outward — negative margin cancels the padding —
+ * so the title, the checkbox and every row below stay exactly where they were.
+ * `--frame` is the grey border's thickness; `--frame-out` is how far into the
+ * page gutter the frame reaches, so the box's own padding can keep the
+ * content's left edge in place. */
+.psykl-task-row[data-focused='true'] {
+  --frame: 4px;
+  --frame-out: 10px;
+  background: var(--bg-selected);
+  border-radius: 14px;
+  margin: calc(-1 * var(--frame)) calc(-1 * var(--frame-out));
+  padding: var(--frame);
+  /* Over the neighbours' separators, which the negative margin overlaps. */
+  z-index: 1;
+}
+
+.psykl-task-row[data-focused='true']::before {
+  display: none;
+}
+
+.psykl-task-row[data-focused='true'] .psykl-task-row__surface {
+  border-radius: 10px;
+  padding-inline: calc(var(--frame-out) - var(--frame));
+}
+
 .psykl-task-row[data-swipe-open='true'] .psykl-task-row__surface {
   transform: translateX(calc(-1 * var(--rail-width)));
 }
@@ -32,20 +59,26 @@
   transition: none;
 }
 
-/* Painted behind the surface and revealed by it, never pushed by it. */
+/* Painted behind the surface and revealed by it, never pushed by it. It only
+ * ever has controls in it while the row is framed, so it sits inside the frame:
+ * each action is its own rounded box, spaced like the frame's border. */
 .psykl-task-row__rail {
-  bottom: 0;
+  bottom: var(--frame, 0);
+  box-sizing: border-box;
   display: flex;
+  gap: var(--frame, 0);
+  padding-left: var(--frame, 0);
   position: absolute;
-  right: 0;
-  top: 0;
+  right: var(--frame, 0);
+  top: var(--frame, 0);
   width: var(--rail-width);
 }
 
 .psykl-task-row__rail-action {
   align-items: center;
-  background: var(--bg-grouped);
+  background: var(--bg-app);
   border: 0;
+  border-radius: 10px;
   color: var(--text-primary);
   cursor: pointer;
   display: flex;
@@ -82,21 +115,19 @@
 .psykl-task-row__commit {
   align-items: center;
   background: var(--destructive);
+  border-radius: 10px;
   color: var(--text-on-accent);
   display: flex;
   font-size: 15px;
   font-weight: 600;
   gap: 0.5rem;
-  inset: 0;
+  /* The task's own box, inside the frame — the row the surface has left. */
+  inset: var(--frame, 0);
   justify-content: flex-end;
   opacity: 0;
   padding-right: 1.25rem;
   pointer-events: none;
   position: absolute;
-  /* Wider than the rail: it has to cover the row the surface has left. */
-  width: 100vw;
-  right: 0;
-  left: auto;
 }
 
 .psykl-task-row[data-committing='true'] .psykl-task-row__commit {

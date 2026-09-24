@@ -1,1 +1,1 @@
-export { SwipeRail } from './SwipeRail';
+export { DeletePane, SwipeRail } from './SwipeRail';

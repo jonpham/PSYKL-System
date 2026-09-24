@@ -3,7 +3,7 @@ import './task-row.css';
 import type { PointerEvent, ReactNode } from 'react';
 import { useRef } from 'react';
 
-import { SwipeRail } from './SwipeRail';
+import { DeletePane, SwipeRail } from './SwipeRail';
 import { useDelayedFlag } from './useDelayedFlag';
 import type { RowSwipe as RowSwipeActions } from './useRowSwipe';
 import { useRowSwipe } from './useRowSwipe';
@@ -35,6 +35,9 @@ interface TaskRowProps {
   completed: boolean;
   /** The row's controls are inert — a batch it belongs to is in flight. */
   disabled?: boolean;
+  /** The user is working on this row — its title is open for editing. A row
+   * under a swipe or with its rail open is framed without being told. */
+  focused?: boolean;
   /** The row is under the user's finger in a re-order drag. */
   isDragging?: boolean;
   isPending?: boolean;
@@ -82,6 +85,7 @@ export function TaskRow({
   checked,
   completed,
   disabled = false,
+  focused = false,
   isDragging = false,
   isPending = false,
   onCheckboxClick,
@@ -111,6 +115,8 @@ export function TaskRow({
       data-committing={swipe ? committing : undefined}
       data-completed={completed}
       data-dragging={isDragging}
+      // Framed while the user acts on it, so its edges stay legible as it moves.
+      data-focused={focused || tracking || swipe?.open === true}
       data-pending={showPending}
       data-selected={selected}
       data-swipe-open={swipe ? swipe.open : undefined}
@@ -133,6 +139,10 @@ export function TaskRow({
           titleText={titleText}
         />
       ) : null}
+
+      {/* The delete wearing the whole row, behind the surface: it shows once
+       * the swipe is past the threshold, so letting go is never a surprise. */}
+      {swipe && tracking ? <DeletePane /> : null}
 
       <div className="psykl-task-row__surface" onPointerDown={swipe ? onPointerDown : undefined}>
         <button

@@ -20,10 +20,6 @@ interface SwipeRailProps {
  * Delete takes one press here, unlike the drawer's two: arriving at this rail
  * already took a deliberate gesture across a quarter of the row, and the task
  * lands in Recently Deleted either way.
- *
- * The commit pane is the same delete wearing the whole row. It only shows once
- * the swipe is past the threshold, so the outcome of letting go is visible
- * before the finger lifts.
  */
 function SwipeRail({ mounted, onDelete, onDetails, open, ref, titleText }: SwipeRailProps) {
   return (
@@ -54,13 +50,23 @@ function SwipeRail({ mounted, onDelete, onDetails, open, ref, titleText }: Swipe
             <TrashGlyph />
             Delete
           </button>
-          <span aria-hidden="true" className="psykl-task-row__commit">
-            <TrashGlyph />
-            Delete
-          </span>
         </>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The same delete wearing the whole row, shown once a swipe is past the commit
+ * threshold. It is a sibling of the rail rather than part of it so it can fill
+ * the row's own box — the rail only spans the width the surface uncovers.
+ */
+function DeletePane() {
+  return (
+    <span aria-hidden="true" className="psykl-task-row__commit">
+      <TrashGlyph />
+      Delete
+    </span>
   );
 }
 
@@ -72,4 +78,4 @@ function TrashGlyph() {
   );
 }
 
-export { SwipeRail };
+export { DeletePane, SwipeRail };
