@@ -10,17 +10,31 @@
 
 ## Files
 
-Production behaviour source files — **7**, under the ≤10 per-PR limit in `AGENTS.md`.
+Production behaviour source files — **14**, where the plan said 7. Four of the extra files exist because the repo's 150-line-per-file ESLint cap rejected the first shape, and two of those (`useOpenRail`, `usePendingTaskIds`) are pure moves out of `TaskList.tsx` with no behaviour change. The ≤10 limit in `AGENTS.md` is scoped to DevTask PRs, which this is not — flagged rather than worked around, because it is a real deviation from what was approved.
 
-- `components/web_client/src/hooks/useSwipeTrack.ts` — new; the shared gesture primitive.
-- `components/web_client/src/components/TaskList/TaskRow/TaskRow.tsx` — the grid moves from the `<li>` onto a `__surface` child that translates, with a `__rail` painted behind it. New optional `swipeActions` prop; absent, the row renders exactly as it does today.
-- `components/web_client/src/components/TaskList/TaskRow/task-row.css` — rail, surface transform, `touch-action: pan-y`, full-swipe flood state.
-- `components/web_client/src/components/TaskList/TaskRow/EditableTaskRow.tsx` — supplies Details and Delete to the rail; both call the handlers the (i) drawer already calls.
-- `components/web_client/src/components/TaskList/TaskList.tsx` — holds the id of the one open rail, so opening one closes another.
-- `components/web_client/src/components/AppShell/AppShell.tsx` — edge-zone open, drag-to-close, backdrop opacity driven from the live offset.
-- `components/web_client/src/components/AppShell/app-shell.css` — sidebar transition and drag-offset custom property.
+The gesture primitive:
 
-Read-only / reused: `TaskItemDrawer`, `useTasks().deleteTask`, `useHandOrder` (untouched — selection-mode rows get no swipe, so the drag handle's `touch-action: none` never competes with the rail).
+- `src/hooks/swipeTrack.ts` — new; the two pure decisions (is it horizontal, where does it land).
+- `src/hooks/useSwipeTrack.ts` — new; pointer plumbing, window-bound, `pointercancel` abandons.
+
+The row rail:
+
+- `TaskList/TaskRow/TaskRow.tsx` — the grid moved from the `<li>` onto a `__surface` child that slides; the `<li>` is now the clipping box.
+- `TaskList/TaskRow/task-row.css` — rail, surface transform, `touch-action: pan-y`, commit flood, dismiss cover.
+- `TaskList/TaskRow/useRowSwipe.ts` — new; measuring, placing the surface, and the release verdict.
+- `TaskList/TaskRow/SwipeRail/SwipeRail.tsx` + `index.ts` — new; the two revealed controls and the commit pane.
+- `TaskList/TaskRow/EditableTaskRow.tsx` — supplies delete and details; both call what the (i) drawer already calls.
+- `TaskList/TaskList.tsx` — passes the one open rail id down.
+- `TaskList/useOpenRail.ts` — new; which row is open, closed by a scroll or by selection mode.
+- `TaskList/usePendingTaskIds.ts` — new; **a pure move**, extracted only to get `TaskList.tsx` back under the line cap.
+
+The sidebar:
+
+- `AppShell/AppShell.tsx` — edge-zone open, drag-to-close, backdrop opacity from the live offset.
+- `AppShell/app-shell.css` — `--sidebar-shift` drives shut, open and mid-drag from one property.
+- `AppShell/useSidebarSwipe.ts` — new; the edge gate, the narrow-layout check, and the settle.
+
+Read-only / reused: `TaskItemDrawer`, `useTasks().deleteTask`, `useHandOrder` (untouched — selection-mode rows get no rail, so the drag handle's `touch-action: none` never competes).
 
 ## Data / API
 
@@ -42,4 +56,6 @@ Local, gitignored screenshots at 390px: row at rest, rail open, past the full-sw
 ## Open questions
 
 - Does the Delete pane flooding the row (frame 3) read as commit on device, or does it need a glyph change too? Judged on the phone, not decided here.
-- Whether the rail should also appear on completed rows. Assumed yes — the same two actions apply — but worth a look once it runs.
+- Whether the rail should also appear on completed rows. It does, as assumed — the same two actions apply.
+- **iOS Safari's own back-swipe lives on the same left edge.** In a browser tab the two compete; an installed home-screen PWA has no back gesture, which is the target. Worth checking both on device.
+- The 14-file count above. If the operator wants it inside 10, the split to undo is the two pure moves out of `TaskList.tsx`, which means finding the lines elsewhere.
