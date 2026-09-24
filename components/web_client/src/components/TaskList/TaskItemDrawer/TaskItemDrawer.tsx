@@ -73,9 +73,11 @@ export function TaskItemDrawer({ onClose, onDelete, onRename, task }: TaskItemDr
         </button>
       </header>
 
-      <label className="psykl-task-drawer__field">
-        <span className="psykl-task-drawer__label">Title</span>
+      {/* No visible label: a single large field under a header reading "Task" is
+       * already the title, and a caption over it only repeats the obvious. */}
+      <div className="psykl-task-drawer__field">
         <input
+          aria-label="Title"
           className="psykl-task-drawer__input"
           maxLength={200}
           onChange={(event) => {
@@ -87,7 +89,7 @@ export function TaskItemDrawer({ onClose, onDelete, onRename, task }: TaskItemDr
           type="text"
           value={draft}
         />
-      </label>
+      </div>
 
       <dl className="psykl-task-drawer__details">
         <Detail label="Completed" value={task.completed_at} />
