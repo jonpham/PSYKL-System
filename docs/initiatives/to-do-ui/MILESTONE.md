@@ -56,7 +56,7 @@ likely place this surfaces. See [`DESIGN.md`](DESIGN.md) → On schema and API s
 ## Success Criteria
 
 - **Production at `/` behaves exactly as the prototype does today**, judged by walking
-  the acceptance gate carried into `docs/features/[20260924]P6_to-do-ui-retire-experiment-and-close-out.md` against `/` rather
+  the acceptance record in `docs/experiments/apple-reminders-ux.md` against `/` rather
   than `/exp/*` — at 390px and 1024px, in light and dark, compared against the recorded
   `screenshots/`.
 - Both device-local preferences (completed visibility, appearance) survive a reload **without**
