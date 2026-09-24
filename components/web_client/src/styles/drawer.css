@@ -1,0 +1,37 @@
+/* The shape both task drawers share: a sheet from the bottom of a phone, and a
+ * centred modal once the shell is wide enough that a bottom-anchored sheet
+ * would sit far from where the user is looking.
+ *
+ * Carried by `.psykl-move-drawer` and `.psykl-task-drawer`. Their own files
+ * keep what differs — contents, header, controls — and nothing about placement.
+ */
+.psykl-drawer-sheet {
+  background: var(--bg-elevated);
+  border-radius: 14px 14px 0 0;
+  bottom: 0;
+  box-shadow: 0 -2px 16px rgb(0 0 0 / 22%);
+  left: 0;
+  max-height: 70dvh;
+  overflow-y: auto;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  position: fixed;
+  right: 0;
+  z-index: 3;
+}
+
+/* The same breakpoint the shell uses to become a two-column layout. */
+@container psykl-shell (min-width: 768px) {
+  .psykl-drawer-sheet {
+    border-radius: 14px;
+    bottom: auto;
+    box-shadow: 0 8px 40px rgb(0 0 0 / 28%);
+    left: 50%;
+    max-height: 80dvh;
+    max-width: 28rem;
+    padding-bottom: 1rem;
+    right: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+  }
+}

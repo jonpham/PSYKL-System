@@ -1,17 +1,5 @@
-.psykl-move-drawer {
-  background: var(--bg-elevated);
-  border-radius: 14px 14px 0 0;
-  bottom: 0;
-  box-shadow: 0 -2px 16px rgb(0 0 0 / 22%);
-  left: 0;
-  max-height: 70dvh;
-  overflow-y: auto;
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  position: fixed;
-  right: 0;
-  z-index: 3;
-}
-
+/* Placement is `.psykl-drawer-sheet` (src/styles/drawer.css), shared with the
+ * task item drawer; this file is the drawer's own contents only. */
 .psykl-move-drawer__header {
   align-items: center;
   border-bottom: 1px solid var(--separator);

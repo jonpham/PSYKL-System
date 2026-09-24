@@ -1,12 +1,12 @@
 import 'fake-indexeddb/auto';
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { deleteDB } from 'idb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Task } from '../../../../api/client';
-import { putTask } from '../../../../db/idb';
+import { listSyncQueue, listTasks, putTask } from '../../../../db/idb';
 import { resetUseTasksForTest } from '../../../../hooks/useTasks';
 import { EditableTaskRow } from '../EditableTaskRow';
 import { SelectableTaskRow } from '../SelectableTaskRow';
@@ -86,5 +86,48 @@ describe('EditableTaskRow details affordance (Unit)', () => {
     // Assert
     expect(screen.getByRole('button', { name: /reorder walk the dog/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /details/i })).not.toBeInTheDocument();
+  });
+
+  it('opens the task drawer from the details button', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    render(
+      <ul>
+        <EditableTaskRow task={baseTask} />
+      </ul>,
+    );
+    await user.click(screen.getByRole('button', { name: /^edit walk the dog$/i }));
+
+    // Act
+    await user.click(screen.getByRole('button', { name: /details for walk the dog/i }));
+
+    // Assert
+    const drawer = screen.getByRole('dialog', { name: /task/i });
+    expect(drawer).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /created/i })).toBeInTheDocument();
+  });
+
+  it('soft-deletes the task from the drawer, on the second press', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    render(
+      <ul>
+        <EditableTaskRow task={baseTask} />
+      </ul>,
+    );
+    await user.click(screen.getByRole('button', { name: /^edit walk the dog$/i }));
+    await user.click(screen.getByRole('button', { name: /details for walk the dog/i }));
+
+    // Act
+    await user.click(screen.getByRole('button', { name: /^delete task$/i }));
+    await user.click(screen.getByRole('button', { name: /confirm deleting walk the dog/i }));
+
+    // Assert — stamped deleted on the device, and a delete queued for the server
+    await waitFor(async () => {
+      expect(await listTasks()).toEqual([expect.objectContaining({ deleted_at: expect.any(String) })]);
+    });
+    const queue = await listSyncQueue();
+    expect(queue).toHaveLength(1);
+    expect(queue[0]).toMatchObject({ op: 'delete', entity_type: 'task', entity_id: baseTask.id });
   });
 });

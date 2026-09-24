@@ -13,6 +13,9 @@ interface TaskRowProps {
    * when the row carries no re-order handle. The two are mutually exclusive by
    * construction, so a tap in that column means one thing at a time. */
   action?: ReactNode;
+  /** Anything that belongs to this row but not to its box — the details
+   * drawer. Rendered last so it paints over the list. */
+  children?: ReactNode;
   /** Accessible name of the leading control — what a tap on it will do. */
   checkboxLabel: string;
   /** Drives the control's `aria-checked`; what "checked" means is the caller's. */
@@ -55,6 +58,7 @@ interface TaskRowProps {
 export function TaskRow({
   action,
   checkboxLabel,
+  children,
   checked,
   completed,
   disabled = false,
@@ -124,6 +128,8 @@ export function TaskRow({
           </svg>
         </button>
       ) : null}
+
+      {children}
     </li>
   );
 }

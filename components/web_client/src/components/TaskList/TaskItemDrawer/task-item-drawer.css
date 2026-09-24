@@ -1,0 +1,142 @@
+/* Placement is `.psykl-drawer-sheet` (src/styles/drawer.css); this file is the
+ * drawer's own contents only. */
+.psykl-task-drawer__header {
+  align-items: center;
+  border-bottom: 1px solid var(--separator);
+  display: grid;
+  grid-template-columns: var(--icon-tile) 1fr var(--icon-tile);
+  padding: 0.25rem 0.75rem;
+}
+
+.psykl-task-drawer__header h3 {
+  font-size: 17px;
+  margin: 0;
+  text-align: center;
+}
+
+.psykl-task-drawer__control {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  height: var(--row-min);
+  justify-content: center;
+  padding: 0;
+  width: var(--row-min);
+}
+
+.psykl-task-drawer__control svg {
+  fill: none;
+  height: 20px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 20px;
+}
+
+.psykl-task-drawer__control:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.psykl-task-drawer__field {
+  display: block;
+  padding: 0.75rem 1rem 0;
+}
+
+.psykl-task-drawer__label {
+  color: var(--text-secondary);
+  display: block;
+  font-size: 13px;
+  padding-bottom: 0.25rem;
+}
+
+.psykl-task-drawer__input {
+  background: var(--bg-app);
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 17px;
+  min-height: var(--row-min);
+  padding: 0 0.75rem;
+  width: 100%;
+}
+
+.psykl-task-drawer__input:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.psykl-task-drawer__details {
+  margin: 0;
+  padding: 1rem 1rem 0;
+}
+
+.psykl-task-drawer__detail {
+  align-items: baseline;
+  border-bottom: 1px solid var(--separator);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  min-height: 2.5rem;
+}
+
+.psykl-task-drawer__detail:last-child {
+  border-bottom: 0;
+}
+
+.psykl-task-drawer__detail dt {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.psykl-task-drawer__detail dd {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+  text-align: right;
+}
+
+.psykl-task-drawer__footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+/* Armed is a ring around the same control, not a louder second one — the same
+ * grammar the selection bar's batch delete uses. */
+.psykl-task-drawer__delete {
+  background: none;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  color: var(--destructive);
+  cursor: pointer;
+  font: inherit;
+  font-size: 17px;
+  min-height: var(--row-min);
+  padding: 0 1.5rem;
+  transition: border-color 0.15s ease;
+}
+
+.psykl-task-drawer__delete[data-armed='true'] {
+  border-color: var(--destructive);
+  font-weight: 600;
+}
+
+.psykl-task-drawer__delete:focus-visible {
+  outline: 2px solid var(--destructive);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psykl-task-drawer__delete {
+    transition: none;
+  }
+}

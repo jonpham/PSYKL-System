@@ -1,3 +1,4 @@
+import '../../../styles/drawer.css';
 import './move-to-list-drawer.css';
 
 import { useEffect, useRef, useState } from 'react';
@@ -32,7 +33,7 @@ export function MoveToListDrawer({ onClose, onMove }: MoveToListDrawerProps) {
   const destinations = lists.filter((list) => list.id !== activeListId);
 
   return (
-    <div aria-label="Move to:" aria-modal="true" className="psykl-move-drawer" role="dialog">
+    <div aria-label="Move to:" aria-modal="true" className="psykl-drawer-sheet psykl-move-drawer" role="dialog">
       <header className="psykl-move-drawer__header">
         <button
           aria-label="Cancel"
