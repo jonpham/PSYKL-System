@@ -12,7 +12,7 @@ initiative: to-do-ui
 
 **Promoted and retired.** Ran at `/exp/apple-reminders-ux` from 2026-08-29 to 2026-09-24 as three
 iterations over one long-lived shell. All three were absorbed into production by the
-[`to-do-ui`](../initiatives/to-do-ui/) initiative, which then deleted the experiment's code, its
+`to-do-ui` initiative, which then deleted the experiment's code, its
 registry entry, and its planning artifacts. This file is the durable record; the artifacts
 themselves are in git history up to commit `a2eac2c`.
 

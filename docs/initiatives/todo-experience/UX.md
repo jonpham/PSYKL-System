@@ -3,7 +3,7 @@
 Rewritten during `/plan-design-review` (gstack) on 2026-08-14, replacing the version written by `/design-consultation` on 2026-08-13.
 **Reconciled 2026-09-21** against the accepted `apple-reminders-ux` prototype, which shipped in `v0.4.1` and is now the visual and chrome baseline.
 Branch: `feat/plan-psykl-loop`
-Status: **PROPOSED — initiative paused.** `todo-experience` Specs 1-2 shipped; Specs 3-7 wait on the [`to-do-ui`](../to-do-ui/DESIGN.md) migration and are rebased onto the new surface afterwards.
+Status: **PROPOSED — Specs 3-7 ready to resume.** `todo-experience` Specs 1-2 shipped; the `to-do-ui` migration is complete, so Specs 3-7 are rebased onto the new surface. That surface is described by [`docs/DESIGN.md`](../../DESIGN.md) and the `to-do-ui` feature docs in [`docs/features/`](../../features/).
 Initiative: [`DESIGN.md`](DESIGN.md) · [`MILESTONE.md`](MILESTONE.md)
 Visual system: [`docs/DESIGN.md`](../../DESIGN.md) — durable, not deleted at initiative close-out. **It outranks this file on anything visual.**
 
