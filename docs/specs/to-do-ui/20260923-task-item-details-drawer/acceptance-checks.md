@@ -4,6 +4,7 @@
 
 - [ ] **Primary path** — a user taps a task title, taps the (i) that appears, reads Created / Last updated / Completed, edits the title, confirms with ✓, and sees the renamed task in the list.
 - [ ] **Affordance scoping** — (i) appears only on the row being edited, only outside selection mode; selection mode still shows the ≡ drag handle in that slot and no (i).
+- [ ] **Edit in place is not a jump** — tapping a title leaves the row visually where it was: same font, same position, same height, and a title that wrapped to two lines is still two wrapped lines while being edited (Apple Reminders behaviour). Typing past the line grows the row rather than scrolling a single line.
 - [ ] **Delete one** — Delete in the drawer removes that task from the list without selection mode, and the task appears in Recently Deleted.
 - [ ] **Recovery** — ✕ or Escape closes the drawer leaving the title unchanged; ✓ is inert until the title actually differs.
 - [ ] **Timestamps** — an incomplete task shows `—` for Completed; completing a task and reopening the drawer shows a Completed time.

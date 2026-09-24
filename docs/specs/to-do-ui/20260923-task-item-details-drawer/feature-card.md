@@ -9,7 +9,7 @@ Every PWA user, on a phone, looking at one task in a list and wanting to know wh
 
 ## Problem
 
-Today a task's timestamps are invisible, a single task can only be deleted by entering selection mode for a batch of one, and tapping a title swaps the row for an input that resizes the row and can push the list under the keyboard.
+Today a task's timestamps are invisible, a single task can only be deleted by entering selection mode for a batch of one, and tapping a title swaps the row for a single-line `<input>` — a wrapped two-line title snaps to one line and the row jumps height under the user's finger.
 
 ## Outcome
 
@@ -18,6 +18,7 @@ Tapping a task title still focuses it for inline editing, and now also reveals a
 ## Scope
 
 - Trailing **(i)** affordance on the focused row, non-selection mode only.
+- Inline title editing that keeps the row's shape: the edit field wraps and grows exactly as the rendered title does.
 - Task Item Drawer: close (✕) + confirm (✓) header matching `MoveToListDrawer`, editable title, three read-only timestamps, centred Delete at the bottom.
 - Both this drawer and `MoveToListDrawer` become viewport-centred modals at the shell's `768px` desktop breakpoint.
 
