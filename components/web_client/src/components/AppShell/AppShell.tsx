@@ -9,6 +9,7 @@ import { useLists } from '../../hooks/useLists';
 import { BrandMark } from './BrandMark';
 import { EditableTitle } from './EditableTitle';
 import { SidebarNav } from './SidebarNav';
+import { useSidebarSwipe } from './useSidebarSwipe';
 
 interface AppShellProps {
   children: ReactNode;
@@ -26,11 +27,19 @@ function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProp
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
 
   const closeSidebar = useCallback(() => {
     setSidebarOpen(false);
     triggerRef.current?.focus();
   }, []);
+
+  const { onLayoutPointerDown, onSidebarPointerDown, progress, shift, sliding } = useSidebarSwipe({
+    asideRef,
+    open: sidebarOpen,
+    setOpen: (next) => (next ? setSidebarOpen(true) : closeSidebar()),
+    triggerRef,
+  });
 
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -44,7 +53,7 @@ function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProp
 
   return (
     <div className="psykl-app-shell">
-      <div className="psykl-app-shell__layout">
+      <div className="psykl-app-shell__layout" onPointerDown={onLayoutPointerDown}>
         <button
           aria-expanded={sidebarOpen}
           aria-label="Open PSYKL navigation"
@@ -55,7 +64,14 @@ function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProp
         >
           <BrandMark /> PSYKL
         </button>
-        <aside className="psykl-app-shell__sidebar" data-open={sidebarOpen}>
+        <aside
+          className="psykl-app-shell__sidebar"
+          data-open={sidebarOpen}
+          data-sliding={sliding}
+          onPointerDown={onSidebarPointerDown}
+          ref={asideRef}
+          style={{ '--sidebar-shift': shift } as React.CSSProperties}
+        >
           <SidebarNav
             activeListId={activeListId}
             closeButtonRef={closeButtonRef}
@@ -73,10 +89,13 @@ function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProp
             }}
           />
         </aside>
-        {sidebarOpen ? (
+        {sidebarOpen || sliding ? (
           <button
             aria-label="Dismiss PSYKL navigation"
             className="psykl-app-shell__backdrop"
+            // Fades with the drag, so the sidebar is never a panel floating
+            // over a page that has not acknowledged it.
+            style={{ opacity: progress }}
             onClick={closeSidebar}
             type="button"
           />
