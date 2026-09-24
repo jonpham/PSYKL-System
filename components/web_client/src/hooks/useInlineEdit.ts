@@ -1,6 +1,11 @@
 import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+/** Either element an inline field can be. A single-line name stays an `input`;
+ * a task title is a `textarea`, because it has to wrap the way the rendered
+ * title does. The hook does not care which — only that Enter ends the edit. */
+type InlineField = HTMLInputElement | HTMLTextAreaElement;
+
 interface UseInlineEditOptions {
   /** Called with the trimmed value, only when it actually changed. */
   onCommit: (value: string) => void;
@@ -14,9 +19,9 @@ interface InlineEdit {
   /** Spread onto the input; the caller still owns `value` and its label. */
   inputProps: {
     autoFocus: true;
-    onBlur: (event: FocusEvent<HTMLInputElement>) => void;
-    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-    onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+    onBlur: (event: FocusEvent<InlineField>) => void;
+    onChange: (event: ChangeEvent<InlineField>) => void;
+    onKeyDown: (event: KeyboardEvent<InlineField>) => void;
   };
   /** Opens the field, seeded from the current stored value. */
   start: () => void;
@@ -31,6 +36,10 @@ interface InlineEdit {
  * field commits nothing, and a value that changes elsewhere (another tab, a
  * sync from another device) flows into the draft rather than leaving a stale
  * one behind.
+ *
+ * The field may be an `input` or a `textarea`. Enter always ends the edit — in
+ * a textarea that means it commits rather than inserting a newline, since a
+ * task title is one paragraph that wraps, not a multi-line document.
  *
  * Deliberately NOT used by `CaptureRow`: capture creates rather than edits, so
  * it keeps the field open after a successful save, shows a retry message on

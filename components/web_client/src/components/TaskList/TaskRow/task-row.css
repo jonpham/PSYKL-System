@@ -136,11 +136,12 @@
   opacity: 0.9;
 }
 
-.psykl-task-row__title,
-.psykl-task-row__input {
+.psykl-task-row__title {
   background: none;
   border: 0;
+  box-sizing: border-box;
   color: var(--text-primary);
+  cursor: text;
   font: inherit;
   font-size: 17px;
   line-height: 22px;
@@ -154,17 +155,19 @@
   width: 100%;
 }
 
-.psykl-task-row__title {
-  cursor: text;
+/* The editing field is a textarea wearing the title's own class, so it keeps
+ * the rendered title's font, padding, wrapping and box: tapping a title must
+ * not move it. It grows by measured height (see `AutoGrowingTitleField`), so it
+ * never scrolls inside itself and never shows a resize grip. */
+textarea.psykl-task-row__title {
+  appearance: none;
+  overflow: hidden;
+  resize: none;
 }
 
 .psykl-task-row[data-completed='true'] .psykl-task-row__title {
   color: var(--text-secondary);
   text-decoration: line-through;
-}
-
-.psykl-task-row__input {
-  width: 100%;
 }
 
 /* Mirrors the header's trailing column so it sits under the sync control, and
