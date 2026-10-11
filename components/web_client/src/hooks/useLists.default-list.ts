@@ -6,9 +6,10 @@ import type { ListRecord, SyncQueueEntry } from '../db/idb.types';
 
 // Known smell — sync path only. The default list is bootstrapped on-device in
 // one IndexedDB transaction that also writes the sync queue, bypassing the
-// Service Client. The online-only path (Offline Mode off) has no equivalent
-// yet: server-side default-list creation is not implemented. Until it is, this
-// stays as-is (online-offline-modes DESIGN.md Decision 7).
+// Service Client. Spec 2 makes the server ensure the default list for the
+// online-only path (Decision 10); Spec 5 moves this offline bootstrap behind
+// the Sync Client so no hook reads IDB (online-offline-modes DESIGN.md
+// Decision 7). Until then this stays as-is.
 
 // Guards the default-list creation below against two tabs racing to create it
 // twice: the check-and-create happens inside one IndexedDB transaction across

@@ -5,7 +5,7 @@ const NO_TASKS: UseTasksResult['tasks'] = [];
 
 /**
  * The online-only path for Tasks (Offline Mode off). Stubbed: online-offline-modes
- * Spec 2 implements it over TanStack Query against a direct (`offlineCapable:
+ * Spec 3 implements it over TanStack Query against a direct (`offlineCapable:
  * false`) task Service Client (DESIGN.md Decision 6). Until then it shows an
  * empty, loaded list and every write rejects.
  */

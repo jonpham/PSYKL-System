@@ -2,7 +2,7 @@
 
 **Status:** Planning — design DRAFT awaiting operator review
 **Design doc:** [`DESIGN.md`](DESIGN.md)
-**Effort:** M (four Specs, client-only)
+**Effort:** M (five Specs; one server Spec, four client)
 **Opened:** 2026-10-11
 **Issues:** [#144](https://github.com/jonpham/PSYKL-System/issues/144), [#135](https://github.com/jonpham/PSYKL-System/issues/135)
 
@@ -20,8 +20,9 @@ Give the PWA a second, online-only data path so the server's canonical data can 
 
 1. A Settings-level **Offline Mode** toggle, default on.
 2. A seam in each `use{Entity}()` hook choosing the sync or API implementation.
-3. An online-only implementation over TanStack Query.
-4. Sync code moved behind `services/` (#135).
+3. Server-assigned list positions and a server-ensured default list, so the online path needs neither on the client.
+4. An online-only implementation over TanStack Query.
+5. Sync code moved behind `services/` and reading IDB as an observable through Dexie (#135).
 
 ## Success Criteria
 

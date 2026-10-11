@@ -5,9 +5,10 @@ import type { ListRecord } from '../db/idb.types';
 
 // Known smell — sync path only. These helpers read IndexedDB directly instead
 // of going through a Service Client, so the online-only path (Offline Mode
-// off) cannot use them. Server-side position assignment for that path is not
-// implemented yet; until it is, this stays as-is (online-offline-modes
-// DESIGN.md Decision 7).
+// off) cannot use them. Spec 2 makes the server assign positions for that
+// path (Decision 10); Spec 5 moves the sync path's provisional offline
+// position behind the Sync Client so no hook reads IDB (online-offline-modes
+// DESIGN.md Decision 7). Until then this stays as-is.
 
 /**
  * Ordering positions are derived from storage, never from a render snapshot.
