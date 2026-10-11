@@ -4,6 +4,12 @@ import { v7 as uuidv7 } from 'uuid';
 import { openPsyklDb } from '../db/idb';
 import type { ListRecord, SyncQueueEntry } from '../db/idb.types';
 
+// Known smell — sync path only. The default list is bootstrapped on-device in
+// one IndexedDB transaction that also writes the sync queue, bypassing the
+// Service Client. The online-only path (Offline Mode off) has no equivalent
+// yet: server-side default-list creation is not implemented. Until it is, this
+// stays as-is (online-offline-modes DESIGN.md Decision 7).
+
 // Guards the default-list creation below against two tabs racing to create it
 // twice: the check-and-create happens inside one IndexedDB transaction across
 // `sync_meta` + `lists` + `sync_queue`, so a second tab's transaction always

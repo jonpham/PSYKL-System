@@ -3,6 +3,12 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { listLists } from '../db/idb';
 import type { ListRecord } from '../db/idb.types';
 
+// Known smell — sync path only. These helpers read IndexedDB directly instead
+// of going through a Service Client, so the online-only path (Offline Mode
+// off) cannot use them. Server-side position assignment for that path is not
+// implemented yet; until it is, this stays as-is (online-offline-modes
+// DESIGN.md Decision 7).
+
 /**
  * Ordering positions are derived from storage, never from a render snapshot.
  *
