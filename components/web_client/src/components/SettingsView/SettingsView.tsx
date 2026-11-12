@@ -1,5 +1,7 @@
 import './settings-view.css';
 
+import { useEffect, useRef } from 'react';
+
 import { ExperimentsIndex } from '../../experiment';
 import { ONLINE_PATH_AVAILABLE } from '../../hooks/online-path.stub';
 import { useAppearance } from '../../hooks/useAppearance';
@@ -11,9 +13,23 @@ import { AppVersion } from '../AppVersion';
 const appearanceLabels: Record<Appearance, string> = { dark: 'Dark', light: 'Light', system: 'System' };
 const contrastLabels: Record<Contrast, string> = { increased: 'Increased', standard: 'Standard' };
 
+// Changing Offline Mode remounts the whole tree (DESIGN.md Decision 3), so the
+// switch the user just pressed is replaced by a new node. This one-shot flag
+// survives the remount and hands focus to the new switch, so a keyboard or
+// screen-reader user is not dropped back to the top of the page.
+let refocusOfflineModeSwitch = false;
+
 export function SettingsView() {
   const { appearance, contrast, setAppearance, setContrast } = useAppearance();
   const { offlineMode, setOfflineMode } = useUserSettings();
+  const offlineModeSwitch = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (refocusOfflineModeSwitch) {
+      refocusOfflineModeSwitch = false;
+      offlineModeSwitch.current?.focus();
+    }
+  }, []);
 
   return (
     <div className="psykl-settings">
@@ -62,7 +78,11 @@ export function SettingsView() {
             aria-labelledby="psykl-settings-offline-mode"
             className="psykl-settings__switch"
             data-available={String(ONLINE_PATH_AVAILABLE)}
-            onClick={() => setOfflineMode(!offlineMode)}
+            onClick={() => {
+              refocusOfflineModeSwitch = true;
+              setOfflineMode(!offlineMode);
+            }}
+            ref={offlineModeSwitch}
             role="switch"
             type="button"
           />

@@ -52,4 +52,19 @@ describe('SettingsView — Offline Mode', () => {
     expect(screen.getByRole('switch', { name: 'Offline Mode' })).toHaveAttribute('aria-checked', 'false');
     expect(readOfflineMode()).toBe(false);
   });
+
+  it('keeps keyboard focus on the switch after the remount', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderSettings();
+    screen.getByRole('switch', { name: 'Offline Mode' }).focus();
+
+    // Act
+    await user.keyboard(' ');
+
+    // Assert
+    const offlineMode = screen.getByRole('switch', { name: 'Offline Mode' });
+    expect(offlineMode).toHaveAttribute('aria-checked', 'false');
+    expect(offlineMode).toHaveFocus();
+  });
 });
