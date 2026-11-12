@@ -1,6 +1,6 @@
 # Milestone `online-offline-modes` — Online-only and Offline data paths in the PWA
 
-**Status:** Planning — design DRAFT awaiting operator review
+**Status:** Planning — design APPROVED 2026-11-11; Spec 1 plan next
 **Design doc:** [`DESIGN.md`](DESIGN.md)
 **Effort:** M (five Specs; one server Spec, four client)
 **Opened:** 2026-10-11

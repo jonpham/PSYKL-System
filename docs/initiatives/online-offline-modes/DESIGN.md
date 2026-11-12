@@ -4,7 +4,7 @@ Drafted directly in the gstack initiative-design shape (operator chose a draft o
 Review: lightweight operator review in place of a full `/plan-eng-review` (operator decision, 2026-10-11)
 Branch: `feat/144-web-app-api-store`
 Repo: [jonpham/PSYKL-System](https://github.com/jonpham/PSYKL-System)
-Status: DRAFT — awaiting operator review
+Status: APPROVED (operator, 2026-11-11)
 Milestone tag: `online-offline-modes`
 Sources: [#144](https://github.com/jonpham/PSYKL-System/issues/144) (online-only mode), [#135](https://github.com/jonpham/PSYKL-System/issues/135) (isolate sync behind services), operator direction commit `d537d44`
 
