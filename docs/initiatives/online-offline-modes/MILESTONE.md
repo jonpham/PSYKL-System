@@ -22,7 +22,7 @@ Give the PWA a second, online-only data path so the server's canonical data can 
 2. A seam in each `use{Entity}()` hook choosing the sync or API implementation.
 3. Server-assigned list positions and a server-ensured default list, so the online path needs neither on the client.
 4. An online-only implementation over TanStack Query.
-5. Sync code moved behind `services/` and reading IDB as an observable through Dexie (#135).
+5. Sync code moved behind `services/` and reading IDB as an observable through RxDB on a Dexie storage engine (#135).
 
 ## Success Criteria
 
