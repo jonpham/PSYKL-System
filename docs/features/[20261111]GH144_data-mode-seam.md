@@ -9,6 +9,7 @@ branches:
 prs:
   - https://github.com/jonpham/PSYKL-System/pull/145
   - https://github.com/jonpham/PSYKL-System/pull/146
+  - https://github.com/jonpham/PSYKL-System/pull/147
 completed_at: # set when the Spec integration PR merges to main
 created_at: 2026-11-11
 initiative: online-offline-modes
@@ -150,4 +151,4 @@ All changes are in `components/web_client`; there are no server or schema change
 | 2026-11-11 | — (Spec branch)                                          | DevTask 1: seam, `SettingsProvider`, online stubs                    |
 | 2026-11-11 | [#145](https://github.com/jonpham/PSYKL-System/pull/145) | DevTask 2: per-mode Service Client shims injected through context    |
 | 2026-11-11 | [#146](https://github.com/jonpham/PSYKL-System/pull/146) | DevTask 3: Offline Mode switch in Settings, marked not yet available |
-| 2026-11-11 | DevTask 4 PR                                             | DevTask 4: Storybook story, two E2E tests, Spec close-out            |
+| 2026-11-11 | [#147](https://github.com/jonpham/PSYKL-System/pull/147) | DevTask 4: Storybook story, two E2E tests, Spec close-out            |
