@@ -80,40 +80,44 @@ Each path has exactly one observable source. On the API path it is the TanStack 
 | 8   | Sync-store change notifications (`subscribeToListChanges`, `notifyListSubscribers`, `subscribeToTaskChanges`) are **interim** machinery for today's hand-rolled sync observable. They live in `use{Entity}.sync.ts`, and the seam re-exports them so existing consumers stay untouched. They are retired, not relocated, when Decision 9 lands.                                                                                                                                                                                                                                   | Operator, 2026-10-11 |
 | 9   | **Lands in Spec 5:** the sync path reads IDB **as** the observable. A DexieJS wrapper's `liveQuery()` (re-fires on any write to the tables it read, across tabs) replaces the snapshot, subscribers, BroadcastChannel, and reload-generation guards. RxJS is optional glue for composing streams, not a second store. Neither Dexie nor RxJS types may appear in `Use{Entity}Result`.                                                                                                                                                                                             | Operator, 2026-10-11 |
 | 10  | **Server owns positions and the default list (Spec 2, before any online write).** `position` becomes optional on list create; when omitted, the server appends the list after the current last one. The server ensures the default list exists under the fixed `DEFAULT_LIST_ID`. The online path never computes a position or bootstraps a list. The sync path keeps sending a provisional position for offline creates. Contract settled per AGENTS.md → API Decision Discipline, inheriting the existing REST + OpenAPI choices.                                               | Operator, 2026-10-11 |
+| 11  | **Flush on switch-off (Spec 3).** Turning Offline Mode off first attempts a sync-queue replay, then remounts. Assumed failure behaviour (to confirm in the Spec): if the flush fails (no network, server error), the switch still proceeds; unsent writes stay queued in IDB and replay the next time Offline Mode is on. While off, the API path does not show those unsent writes.                                                                                                                                                                                              | Operator, 2026-11-11 |
+| 12  | **Toggle visible from Spec 1.** The Offline Mode toggle ships with the seam, before the API path works. A color change marks it non-functional while the API path is stubbed; Spec 3 restores the functional color. Spec 1 therefore changes a user-facing surface: it needs a `visual-artifact.md` and, after UX approval, an E2E test.                                                                                                                                                                                                                                          | Operator, 2026-11-11 |
+| 13  | **Preferences fall back to `localStorage` (Spec 4).** Appearance and contrast read and write `localStorage`, the same store as Offline Mode (Decision 5), when IDB is unavailable.                                                                                                                                                                                                                                                                                                                                                                                                | Operator, 2026-11-11 |
+| 14  | **Same contract under both paths.** Decision 1's shared result type holds for each underlying store as well: swapping today's hand-rolled sync store for Dexie (Decision 9), or TanStack Query internals, needs no component change. How the Dexie observable is exposed is left to Spec 5; the boundary rule is the constraint, not the mechanism.                                                                                                                                                                                                                               | Operator, 2026-11-11 |
+| 15  | **Default list seeded at database initialization (Spec 2).** No users exist yet, so `service-task` creates the default list (`DEFAULT_LIST_ID`) when the database is initialized. It moves to user creation when `multi-tenant-auth` introduces users (#117). Anything that resets server state, such as the E2E suite between tests, must re-seed it.                                                                                                                                                                                                                            | Operator, 2026-11-11 |
 
 ## Spec Breakdown (UI-first per production workflow)
 
-| Spec | Slug                            | Delivers                                                                                                                                                                                                                                                                                                                              |
-| ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | `data-mode-seam`                | `SettingsProvider` + `useUserSettings`, seam in `useLists`/`useTasks`, `.sync.ts` holds today's code, `.api.ts` stubs. Service Client shims injected via `useServiceClients()`. Static singleton shims removed from `useLists.sync`, `useTasks.sync`, `useRecentlyDeleted`, `usePendingTaskIds` (Decision 6). No user-visible change. |
-| 2    | `server-positions-default-list` | `service-task`: optional `position` on list create (server appends), server-ensured default list under `DEFAULT_LIST_ID`; OpenAPI + `shared-types` regenerated (Decision 10). Sync path unchanged. The only Spec that is backend-first: it is a contract that Spec 3's UI depends on (production workflow → UI/UX-First exception).   |
-| 3    | `online-only-lists-tasks`       | Settings toggle (UI first, against stubs), then TanStack Query implementations of `useListsApiClient`/`useTasksApiClient` on the Spec 2 contract. Closes #144.                                                                                                                                                                        |
-| 4    | `online-only-surfaces`          | `useRecentlyDeleted` on both paths; sync-only UI hidden in the API path; page sync triggers idle in the API path.                                                                                                                                                                                                                     |
-| 5    | `sync-behind-services`          | Move `sync/` to `services/sync/`; no `hooks/` or `components/` file imports it. Dexie `liveQuery` replaces the hand-rolled sync store (Decision 9), retiring the interim notifications (Decision 8). Offline position + default-list bootstrap move behind the Sync Client (Decision 7). Closes #135.                                 |
+| Spec | Slug                            | Delivers                                                                                                                                                                                                                                                                                                                                                                                |
+| ---- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `data-mode-seam`                | `SettingsProvider` + `useUserSettings`, seam in `useLists`/`useTasks`, `.sync.ts` holds today's code, `.api.ts` stubs. Service Client shims injected via `useServiceClients()`. Static singleton shims removed from `useLists.sync`, `useTasks.sync`, `useRecentlyDeleted`, `usePendingTaskIds` (Decision 6). Offline Mode toggle in Settings, colored as non-functional (Decision 12). |
+| 2    | `server-positions-default-list` | `service-task`: optional `position` on list create (server appends), default list seeded at database initialization under `DEFAULT_LIST_ID` (Decision 15); OpenAPI + `shared-types` regenerated (Decision 10). Sync path unchanged. The only Spec that is backend-first: it is a contract that Spec 3's UI depends on (production workflow → UI/UX-First exception).                    |
+| 3    | `online-only-lists-tasks`       | TanStack Query implementations of `useListsApiClient`/`useTasksApiClient` on the Spec 2 contract; flush-on-switch-off (Decision 11); toggle switches to its functional color. Closes #144.                                                                                                                                                                                              |
+| 4    | `online-only-surfaces`          | `useRecentlyDeleted` on both paths; sync-only UI hidden in the API path; page sync triggers idle in the API path; preferences fall back to `localStorage` without IDB (Decision 13).                                                                                                                                                                                                    |
+| 5    | `sync-behind-services`          | Move `sync/` to `services/sync/`; no `hooks/` or `components/` file imports it. Dexie `liveQuery` replaces the hand-rolled sync store (Decision 9), retiring the interim notifications (Decision 8). Offline position + default-list bootstrap move behind the Sync Client (Decision 7). Closes #135.                                                                                   |
 
-## Settings surface (Spec 3 — low fidelity)
+## Settings surface (low fidelity)
 
 ```
-┌ Settings ─────────────────────────────┐
-│ Appearance   [System][Light][Dark]    │
-│ Contrast     [Standard][Increased]    │
-│ Data                                  │
-│   Offline Mode            [ ●── On ]  │
-│   Keep a copy on this device and      │
-│   sync when online.                   │
-│ Experiments …                         │
-└───────────────────────────────────────┘
-Off → app remounts and reads straight from the server.
+Spec 1-2 — API path stubbed               Spec 3 onward — API path works
+┌ Settings ─────────────────────────┐     ┌ Settings ─────────────────────────┐
+│ Appearance [System][Light][Dark]  │     │ Appearance [System][Light][Dark]  │
+│ Contrast   [Standard][Increased]  │     │ Contrast   [Standard][Increased]  │
+│ Data                              │     │ Data                              │
+│   Offline Mode      [ ●── On ]    │     │   Offline Mode      [ ●── On ]    │
+│   ░ non-functional color ░        │     │   functional (accent) color       │
+│   Keep a copy on this device and  │     │   Keep a copy on this device and  │
+│   sync when online.               │     │   sync when online.               │
+└───────────────────────────────────┘     └───────────────────────────────────┘
+Off → attempt sync flush (Spec 3+) → app remounts on the chosen path.
 ```
 
 ## Open Questions
 
-1. **Pending sync queue on switch to Offline Mode off.** Keep queued writes and replay them on return, warn before switching, or block the switch until the queue drains? (Spec 3.)
-2. **Toggle visibility before Spec 3 completes.** Hide the toggle until the API path works, or show it only when experiment tools are on?
-3. **Appearance/contrast prefs read IDB at startup** (`preferences/bootstrap.ts`). In a browser with no IDB they fail. Fall back to defaults silently, or move them to `localStorage` too? (Spec 4.)
-4. ~~**Default list on the API path.**~~ Resolved by Decision 10: the server ensures it (Spec 2).
-5. **Where the Dexie observable is exposed (Decision 9, Spec 5).** Through the Sync Client (e.g. `observe(): Observable<TEntity[]>`, keeping hooks free of `db/` and `sync/` imports per #135 and ADR-TE-004), or read by `use{Entity}SyncClient` directly via `useLiveQuery`?
-6. **Default-list trigger on the server (Spec 2).** Ensure it lazily on the first `GET /lists` that finds none, or on any list/task write? This interacts with the existing `onConflictDoNothing` create (ADR on the fixed default-list id) and with #117 (`DEFAULT_LIST_ID` is a global primary key, so it is single-account only).
+All design-level questions are resolved (Decisions 11-15). Details left to the Spec docs:
+
+- Decision 11's flush-failure behaviour (assumed above) is confirmed in Spec 3.
+- Decision 14's Dexie exposure mechanism (through the Sync Client vs `useLiveQuery` in the hook) is chosen in Spec 5.
 
 ## Out of Scope
 
