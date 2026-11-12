@@ -4,7 +4,7 @@
 
 - Settings has an **Offline Mode** switch, the first step towards letting the app work straight against the server ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #145](https://github.com/jonpham/PSYKL-System/pull/145), [PR #146](https://github.com/jonpham/PSYKL-System/pull/146); [feature doc](docs/features/%5B20261111%5DGH144_data-mode-seam.md)). Completes `online-offline-modes` Spec 1.
   - **The switch.** It sits in a new **Data** section and is on by default, which keeps today's behaviour: a copy on this device, synced when online. The choice is stored on the device and survives a reload.
-  - **Not working yet.** The online-only path is a stub until Spec 3, so the switch is drawn in a muted grey rather than the accent color. Turning it off shows empty lists and refuses every write with a named error, rather than dropping it silently.
+  - **Not working yet.** The online-only path is a stub until Spec 3, so the switch is drawn in a muted grey rather than the accent color. Turning it off shows empty lists and refuses writes with a named error, rather than dropping them silently.
   - **Under the hood.** `useLists()` and `useTasks()` now pick their data path at one point in each hook. Changing the mode remounts the app. The Service Clients are now stateless shims, built for each mode and injected through React context instead of fixed module-level instances ([ADR-OOM-001, ADR-OOM-002](docs/ARCHITECTURE.md)).
   - **No server change.** With Offline Mode on, nothing changes.
 

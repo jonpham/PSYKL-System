@@ -90,7 +90,7 @@ _Steps_
 
 1. Open `/settings`. The **Data** section shows **Offline Mode** on, with a muted track.
 2. Add a task on the home screen. It behaves exactly as before (sync path).
-3. Turn Offline Mode off. The app remounts with empty lists and tasks. Adding a task is refused, and the error appears in the console. The switch stays muted.
+3. Turn Offline Mode off. The app remounts with empty lists and tasks. Adding a task is refused with the inline "could not be saved" message. The switch stays muted and keeps keyboard focus.
 4. Reload. The switch is still off. Turn it back on, and the earlier tasks reappear.
 
 _Expectation_ — with Offline Mode on, nothing about the app changes. With it off, the app runs on the stubbed online path without crashing, and the choice persists.
@@ -130,8 +130,12 @@ All changes are in `components/web_client`; there are no server or schema change
   - DevTask 1 landed directly on the Spec branch with 12 production files, as the operator-requested architecture sandbox.
   - The Spec branch is named `feat/144-web-app-api-store` (operator choice), not `spec/…`.
 - **Known gaps:**
-  - Recently Deleted is half online with Offline Mode off: reads go through the API shim, while restores still use `enqueueWithReplay`. Spec 4 owns this.
+  - Recently Deleted is half online with Offline Mode off: reads go through the API shim, and restore is refused through `notImplementedOnline('restore')` (it would otherwise have written to the server and left IndexedDB stale). Spec 4 owns moving it online.
+  - Creating a list on the Lists page with Offline Mode off is rejected, but `ListsPage` does not catch it, so the title disappears with no message.
+  - IndexedDB is still written with Offline Mode off: the active-list hydration and the page sync triggers run the sync stores, which pull from the server. Spec 4 owns the sync-only surfaces.
+  - Offline Mode is not shared between open tabs; there is no `storage` event listener.
   - Color is the only signal that the switch is not yet functional, which fails WCAG 1.4.1 (Use of Color). The operator accepted this (Decision 12).
+- **Final review fixes:** restore is refused with Offline Mode off, and the switch keeps keyboard focus across the remount, which otherwise drops focus to `<body>`.
 - **Test note:** in this jsdom setup, `rejects.toThrow('<message>')` fails even for a bare rejected `Error`. Assert rejections with `rejects.toMatchObject({ message })`.
 
 ## Architecture Decisions (ADR)
