@@ -164,7 +164,7 @@ The Spec integration branch is **`feat/144-web-app-api-store`** (operator decisi
 
 **Files:** 9 production behavior source files
 **Branch:** `feat/online-offline-modes-s1-dt2-service-client-injection`
-**PR:** _filled once opened_
+**PR:** [#145](https://github.com/jonpham/PSYKL-System/pull/145)
 **Affected:**
 
 - Modify: `src/services/service-client.ts`, `src/services/list-service-client.ts`, `src/services/task-service-client.ts`, `src/hooks/useLists.sync.ts`, `src/hooks/useTasks.sync.ts`, `src/hooks/useRecentlyDeleted.ts`, `src/components/TaskList/usePendingTaskIds.ts`, `src/components/SettingsProvider/SettingsProvider.tsx`
@@ -601,7 +601,7 @@ Then update this doc's DevTask 2 checkboxes, rebase onto `origin/feat/144-web-ap
 - Consumes: `useUserSettings(): { offlineMode: boolean; setOfflineMode(next: boolean): void }`; `readOfflineMode()`, `writeOfflineMode()`; `SettingsProvider`.
 - Produces: `ONLINE_PATH_AVAILABLE: boolean` exported from `src/hooks/online-path.stub.ts` (Spec 3 sets it to `true`, then deletes the file); a `role="switch"` element named "Offline Mode" with `data-available="true" | "false"`.
 
-- [ ] **Step 1: Write the `offlineMode` edge-case tests (Review Focus 1-3)**
+- [x] **Step 1: Write the `offlineMode` edge-case tests (Review Focus 1-3)**
 
 Create `src/preferences/__tests__/offlineMode.unit.test.ts`:
 
@@ -654,12 +654,12 @@ describe('offlineMode preference', () => {
 });
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 Run: `cd components/web_client && pnpm exec vitest run offlineMode.unit`
 Expected: PASS (pins DevTask 1 behaviour; no implementation change needed). If any case fails, fix `src/preferences/offlineMode.ts` before continuing.
 
-- [ ] **Step 3: Write the failing switch tests**
+- [x] **Step 3: Write the failing switch tests**
 
 Create `src/components/SettingsView/__tests__/SettingsView.offline-mode.unit.test.tsx`:
 
@@ -721,12 +721,12 @@ describe('SettingsView — Offline Mode', () => {
 });
 ```
 
-- [ ] **Step 4: Run it — expect failure**
+- [x] **Step 4: Run it — expect failure**
 
 Run: `cd components/web_client && pnpm exec vitest run SettingsView.offline-mode`
 Expected: FAIL — "Unable to find an accessible element with the role "switch" and name "Offline Mode"".
 
-- [ ] **Step 5: Add the availability flag**
+- [x] **Step 5: Add the availability flag**
 
 Append to `src/hooks/online-path.stub.ts`, before the export:
 
@@ -739,7 +739,7 @@ const ONLINE_PATH_AVAILABLE = false;
 
 and change the export to `export { notImplementedOnline, ONLINE_PATH_AVAILABLE };`.
 
-- [ ] **Step 6: Add the switch**
+- [x] **Step 6: Add the switch**
 
 `src/components/SettingsView/SettingsView.tsx` — add imports:
 
@@ -775,7 +775,7 @@ and insert this section between the Contrast and Experiments sections:
 </section>
 ```
 
-- [ ] **Step 7: Style the switch**
+- [x] **Step 7: Style the switch**
 
 Append to `src/components/SettingsView/settings-view.css`:
 
@@ -838,12 +838,12 @@ Append to `src/components/SettingsView/settings-view.css`:
 }
 ```
 
-- [ ] **Step 8: Run everything — expect green**
+- [x] **Step 8: Run everything — expect green**
 
 Run: `cd components/web_client && pnpm lint && pnpm typecheck && pnpm format:check && pnpm test:unit && pnpm test:integration`
 Expected: all PASS, including the existing `SettingsView.unit.test.tsx` (it renders without a provider and does not touch the switch).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add components/web_client/src

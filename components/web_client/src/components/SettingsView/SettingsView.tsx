@@ -1,7 +1,9 @@
 import './settings-view.css';
 
 import { ExperimentsIndex } from '../../experiment';
+import { ONLINE_PATH_AVAILABLE } from '../../hooks/online-path.stub';
 import { useAppearance } from '../../hooks/useAppearance';
+import { useUserSettings } from '../../hooks/useUserSettings';
 import { type Appearance, APPEARANCE_CHOICES } from '../../preferences/appearance';
 import { type Contrast, CONTRAST_CHOICES } from '../../preferences/contrast';
 import { AppVersion } from '../AppVersion';
@@ -11,6 +13,7 @@ const contrastLabels: Record<Contrast, string> = { increased: 'Increased', stand
 
 export function SettingsView() {
   const { appearance, contrast, setAppearance, setContrast } = useAppearance();
+  const { offlineMode, setOfflineMode } = useUserSettings();
 
   return (
     <div className="psykl-settings">
@@ -48,6 +51,23 @@ export function SettingsView() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section aria-label="Data" className="psykl-settings__section">
+        <h3>Data</h3>
+        <div className="psykl-settings__row">
+          <span id="psykl-settings-offline-mode">Offline Mode</span>
+          <button
+            aria-checked={offlineMode}
+            aria-labelledby="psykl-settings-offline-mode"
+            className="psykl-settings__switch"
+            data-available={String(ONLINE_PATH_AVAILABLE)}
+            onClick={() => setOfflineMode(!offlineMode)}
+            role="switch"
+            type="button"
+          />
+        </div>
+        <p>Keep a copy on this device and sync when online.</p>
       </section>
 
       <section aria-label="Experiments" className="psykl-settings__section">
