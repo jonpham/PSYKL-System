@@ -5,9 +5,11 @@ import { listDeletedRemote } from '../api/deleted.api-client';
 import type { ListRecord } from '../db/idb.types';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
+import { notImplementedOnline } from './online-path.stub';
 import { notifyListSubscribers, subscribeToListChanges } from './useLists';
 import { useServiceClients } from './useServiceClients';
 import { subscribeToTaskChanges } from './useTasks';
+import { useUserSettings } from './useUserSettings';
 
 // 30-day Recently Deleted retention window — mirrors service-task's
 // RECENTLY_DELETED_WINDOW_MS (duplicated per-file there too, across
@@ -33,6 +35,7 @@ interface UseRecentlyDeletedResult {
 
 function useRecentlyDeleted(): UseRecentlyDeletedResult {
   const { lists: listServiceClient, tasks: taskServiceClient } = useServiceClients();
+  const { offlineMode } = useUserSettings();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [lists, setLists] = useState<ListRecord[]>([]);
   // Guards against out-of-order concurrent reload() calls: restore()'s own
@@ -90,6 +93,11 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
 
   const restore = useCallback(
     async (item: DeletedItem): Promise<void> => {
+      // Restore still goes through the sync queue, so with Offline Mode off it
+      // is refused like every other stubbed write until Spec 4 moves it online.
+      if (!offlineMode) {
+        return notImplementedOnline('restore');
+      }
       const now = new Date().toISOString();
       if (item.type === 'task') {
         const existing = tasks.find((task) => task.id === item.id);
@@ -128,7 +136,7 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
       }
       await reload();
     },
-    [tasks, lists, reload, listServiceClient, taskServiceClient],
+    [tasks, lists, reload, listServiceClient, taskServiceClient, offlineMode],
   );
 
   return { items: toDeletedItems(tasks, lists), restore };
