@@ -11,16 +11,17 @@ interface EntityApiClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   restore(id: string, idempotencyKey: string): Promise<EntityApiResult<TEntity>>;
 }
 
-type ServiceClientConfig<TEntity, TInput, TPatchInput, TDeleteInput> =
-  | {
-      apiClient: EntityApiClient<TEntity, TInput, TPatchInput, TDeleteInput>;
-      offlineCapable: true;
-      syncClient: SyncClient<TEntity, TInput, TPatchInput, TDeleteInput>;
-    }
-  | {
-      apiClient: EntityApiClient<TEntity, TInput, TPatchInput, TDeleteInput>;
-      offlineCapable: false;
-    };
+/**
+ * Both inner clients always exist; `offlineCapable` picks which one a call
+ * goes to. The shim built from this is stateless — all state lives in the
+ * inner clients — so it is rebuilt freely when Offline Mode changes
+ * (online-offline-modes DESIGN.md Decision 6).
+ */
+interface ServiceClientConfig<TEntity, TInput, TPatchInput, TDeleteInput> {
+  apiClient: EntityApiClient<TEntity, TInput, TPatchInput, TDeleteInput>;
+  offlineCapable: boolean;
+  syncClient: SyncClient<TEntity, TInput, TPatchInput, TDeleteInput>;
+}
 
 interface ServiceClient<TEntity, TInput, TPatchInput, TDeleteInput> {
   create(entityId: string, body: TInput, optimistic: TEntity): Promise<TEntity>;

@@ -68,7 +68,8 @@ describe('createServiceClient — offlineCapable: false', () => {
   it('routes create/patch/delete/list directly to the api client and unwraps {data}', async () => {
     // Given
     const apiClient = fakeApiClient();
-    const client = createServiceClient({ apiClient, offlineCapable: false });
+    const syncClient = fakeSyncClient();
+    const client = createServiceClient({ apiClient, offlineCapable: false, syncClient });
 
     // When
     const created = await client.create('w1', {}, widget);
@@ -87,12 +88,17 @@ describe('createServiceClient — offlineCapable: false', () => {
     expect(apiClient.delete).toHaveBeenCalledWith('w1', {}, expect.any(String));
     expect(apiClient.restore).toHaveBeenCalledWith('w1', expect.any(String));
     expect(apiClient.list).toHaveBeenCalled();
+    expect(syncClient.create).not.toHaveBeenCalled();
+    expect(syncClient.patch).not.toHaveBeenCalled();
+    expect(syncClient.delete).not.toHaveBeenCalled();
+    expect(syncClient.list).not.toHaveBeenCalled();
   });
 
   it('listPending() is empty — direct-mode entities are never locally queued', async () => {
     // Given
     const apiClient = fakeApiClient();
-    const client = createServiceClient({ apiClient, offlineCapable: false });
+    const syncClient = fakeSyncClient();
+    const client = createServiceClient({ apiClient, offlineCapable: false, syncClient });
 
     // When / Then
     await expect(client.listPending()).resolves.toEqual([]);
@@ -103,7 +109,8 @@ describe('createServiceClient — offlineCapable: false', () => {
     const apiClient = fakeApiClient({
       create: vi.fn(() => Promise.resolve<EntityApiResult<Widget>>({ error: 'boom', status: 400 })),
     });
-    const client = createServiceClient({ apiClient, offlineCapable: false });
+    const syncClient = fakeSyncClient();
+    const client = createServiceClient({ apiClient, offlineCapable: false, syncClient });
 
     // When / Then
     await expect(client.create('w1', {}, widget)).rejects.toThrow();

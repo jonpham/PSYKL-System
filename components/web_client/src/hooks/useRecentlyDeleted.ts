@@ -3,11 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Task } from '../api/client';
 import { listDeletedRemote } from '../api/deleted.api-client';
 import type { ListRecord } from '../db/idb.types';
-import { listServiceClient } from '../services/list-service-client';
-import { taskServiceClient } from '../services/task-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
 import { notifyListSubscribers, subscribeToListChanges } from './useLists';
+import { useServiceClients } from './useServiceClients';
 import { subscribeToTaskChanges } from './useTasks';
 
 // 30-day Recently Deleted retention window — mirrors service-task's
@@ -33,6 +32,7 @@ interface UseRecentlyDeletedResult {
 }
 
 function useRecentlyDeleted(): UseRecentlyDeletedResult {
+  const { lists: listServiceClient, tasks: taskServiceClient } = useServiceClients();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [lists, setLists] = useState<ListRecord[]>([]);
   // Guards against out-of-order concurrent reload() calls: restore()'s own
@@ -68,7 +68,7 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
     }
     setTasks(mergeById(localTasks, remoteDeleted?.tasks ?? []));
     setLists(mergeById(localLists, remoteDeleted?.lists ?? []));
-  }, []);
+  }, [listServiceClient, taskServiceClient]);
 
   useEffect(() => {
     void reload();
@@ -128,7 +128,7 @@ function useRecentlyDeleted(): UseRecentlyDeletedResult {
       }
       await reload();
     },
-    [tasks, lists, reload],
+    [tasks, lists, reload, listServiceClient, taskServiceClient],
   );
 
   return { items: toDeletedItems(tasks, lists), restore };

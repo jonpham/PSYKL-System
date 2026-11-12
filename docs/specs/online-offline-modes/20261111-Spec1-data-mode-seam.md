@@ -160,7 +160,7 @@ The Spec integration branch is **`feat/144-web-app-api-store`** (operator decisi
 - [x] Step 2: Seam, `SettingsProvider`, `useUserSettings`, `offlineMode`, stubs; unit + integration green
 - [x] Step 3: Decision 7 smell comments in `useLists.positions.ts` / `useLists.default-list.ts`
 
-### DevTask 2: Inject Service Client shims
+### DevTask 2: Inject Service Client shims ✅
 
 **Files:** 9 production behavior source files
 **Branch:** `feat/online-offline-modes-s1-dt2-service-client-injection`
@@ -181,7 +181,7 @@ The Spec integration branch is **`feat/144-web-app-api-store`** (operator decisi
   - `interface ServiceClients { lists: ListServiceClient; tasks: TaskServiceClient }`, `createServiceClients(offlineMode: boolean): ServiceClients`, `ServiceClientsContext`, `useServiceClients(): ServiceClients`
 - Removed: `listServiceClient`, `taskServiceClient` exports.
 
-- [ ] **Step 1: Make the `offlineCapable: false` tests pass a sync client and prove it is never called**
+- [x] **Step 1: Make the `offlineCapable: false` tests pass a sync client and prove it is never called**
 
 In `src/services/__tests__/service-client.unit.test.ts`, every `createServiceClient({ apiClient, offlineCapable: false })` becomes:
 
@@ -199,7 +199,7 @@ expect(syncClient.delete).not.toHaveBeenCalled();
 expect(syncClient.list).not.toHaveBeenCalled();
 ```
 
-- [ ] **Step 2: Rewrite the list wiring tests against the factory**
+- [x] **Step 2: Rewrite the list wiring tests against the factory**
 
 Replace `src/services/__tests__/list-service-client.unit.test.ts` lines 8 and 19-57 with:
 
@@ -262,12 +262,12 @@ describe('createListServiceClient — production wiring', () => {
 
 Apply the same three tests to `src/services/__tests__/task-service-client.unit.test.ts` using `createTaskServiceClient`, `createTaskRemote`, `getTask`, and that file's existing constants and Task fixture. The third test asserts `getTask(taskId)` resolves `undefined` and the queue is empty.
 
-- [ ] **Step 3: Run the service tests — expect failures**
+- [x] **Step 3: Run the service tests — expect failures**
 
 Run: `cd components/web_client && pnpm exec vitest run service-client`
 Expected: FAIL — `createListServiceClient` / `createTaskServiceClient` are not exported, and `syncClient` is not part of the `offlineCapable: false` config type.
 
-- [ ] **Step 4: Flatten `ServiceClientConfig`**
+- [x] **Step 4: Flatten `ServiceClientConfig`**
 
 In `src/services/service-client.ts`, replace the `ServiceClientConfig` union with:
 
@@ -287,7 +287,7 @@ interface ServiceClientConfig<TEntity, TInput, TPatchInput, TDeleteInput> {
 
 `createServiceClient`'s body is unchanged.
 
-- [ ] **Step 5: Turn the list and task singletons into factories**
+- [x] **Step 5: Turn the list and task singletons into factories**
 
 `src/services/list-service-client.ts` — replace lines 28-38 with:
 
@@ -331,7 +331,7 @@ export type { TaskServiceClient };
 
 with the same `ServiceClient` type import.
 
-- [ ] **Step 6: Give the sync path's module store its private sync shim (S1-1)**
+- [x] **Step 6: Give the sync path's module store its private sync shim (S1-1)**
 
 `src/hooks/useLists.sync.ts` — change the service-client import to `import { createListServiceClient, resetListServiceClientForTest } from '../services/list-service-client';` and add below the imports:
 
@@ -346,21 +346,21 @@ const listServiceClient = createListServiceClient(true);
 
 `src/hooks/useTasks.sync.ts` — the same, with `createTaskServiceClient` / `taskServiceClient`.
 
-- [ ] **Step 7: Run the service tests — expect green**
+- [x] **Step 7: Run the service tests — expect green**
 
 Run: `cd components/web_client && pnpm exec vitest run service-client && pnpm typecheck`
 Expected: service tests PASS. `typecheck` FAILS only in `useRecentlyDeleted.ts` and `usePendingTaskIds.ts` (removed exports) — fixed in Step 11.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add components/web_client/src/services components/web_client/src/hooks/useLists.sync.ts components/web_client/src/hooks/useTasks.sync.ts
 git commit -m "feat: build Service Client shims from a per-mode factory"
 ```
 
-(`pnpm typecheck` runs in the pre-commit hook; if it blocks on the two consumers, fold this commit into Step 12's.)
+(`pnpm typecheck` runs in the pre-commit hook; if it blocks on the two consumers, fold this commit into Step 13's. It did: one commit.)
 
-- [ ] **Step 9: Write the failing context + stub tests**
+- [x] **Step 9: Write the failing context + stub tests**
 
 Create `src/hooks/__tests__/useServiceClients.unit.test.tsx`:
 
@@ -437,21 +437,21 @@ import { useTasksApiClient } from '../useTasks.api';
 describe('online path stubs', () => {
   it('refuses a task capture with a named error instead of dropping it silently', async () => {
     // When / Then
-    await expect(useTasksApiClient().createTask('Buy milk')).rejects.toThrow(
-      'createTask is not available with Offline Mode off yet',
-    );
+    await expect(useTasksApiClient().createTask('Buy milk')).rejects.toMatchObject({
+      message: 'createTask is not available with Offline Mode off yet',
+    });
   });
 
   it('refuses a list rename with a named error', async () => {
     // When / Then
-    await expect(useListsApiClient().renameList('any-id', 'Groceries')).rejects.toThrow(
-      'renameList is not available with Offline Mode off yet',
-    );
+    await expect(useListsApiClient().renameList('any-id', 'Groceries')).rejects.toMatchObject({
+      message: 'renameList is not available with Offline Mode off yet',
+    });
   });
 });
 ```
 
-(The stubs call no React hooks, so calling them directly is safe.)
+(The stubs call no React hooks, so calling them directly is safe. `rejects.toThrow('<message>')` fails in this jsdom setup even for a bare `Promise.reject(new Error())`, so these use the repo's `rejects.toMatchObject({ message })` form, as `src/api/__tests__/version.unit.test.ts` does.)
 
 Create `src/__tests__/App.offline-mode.unit.test.tsx` — the whole app must still render on the stubbed path, with no lists at all (verified to pass against DevTask 1 while drafting this plan; it pins that behaviour):
 
@@ -495,12 +495,12 @@ describe('App with Offline Mode off', () => {
 });
 ```
 
-- [ ] **Step 10: Run them — expect failure**
+- [x] **Step 10: Run them — expect failure**
 
 Run: `cd components/web_client && pnpm exec vitest run useServiceClients online-path.stub App.offline-mode`
 Expected: `useServiceClients` FAILS ("Failed to resolve import ../useServiceClients"); the stub and `App.offline-mode` tests PASS already (they pin existing behaviour).
 
-- [ ] **Step 11: Add the context and migrate the consumers**
+- [x] **Step 11: Add the context and migrate the consumers**
 
 Create `src/hooks/useServiceClients.ts`:
 
@@ -572,12 +572,12 @@ vi.mock('../../../hooks/useServiceClients', () => ({
 
 and delete the old `const mockListPending = vi.hoisted(() => vi.fn());` line.
 
-- [ ] **Step 12: Run everything — expect green**
+- [x] **Step 12: Run everything — expect green**
 
 Run: `cd components/web_client && pnpm lint && pnpm typecheck && pnpm format:check && pnpm test:unit && pnpm test:integration`
 Expected: all PASS; unit count = previous + 8 (list +1, task +1, useServiceClients +3, stubs +2, App +1).
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
 ```bash
 git add components/web_client/src

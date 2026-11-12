@@ -3,7 +3,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { ListRecord } from '../db/idb.types';
-import { listServiceClient, resetListServiceClientForTest } from '../services/list-service-client';
+import { createListServiceClient, resetListServiceClientForTest } from '../services/list-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
 import { HydrationExhaustedError } from '../sync/sync-client';
@@ -12,6 +12,13 @@ import { createChannelNotifier } from './broadcast-notify';
 import type { UseListsResult } from './useLists';
 import { ensureDefaultList, resetDefaultListForTest } from './useLists.default-list';
 import { nextListPosition, positionBetween } from './useLists.positions';
+
+// Decision 6 exception (Spec 1 decision S1-1): this module's snapshot store
+// runs outside React — page sync triggers and the BroadcastChannel reload it —
+// so it cannot read the injected shim. It is sync-path only, so it builds the
+// offline-capable shim itself and can never reach the API path by mistake.
+// Retired with the store in Spec 5 (Decisions 8-9).
+const listServiceClient = createListServiceClient(true);
 
 // This file owns the hydrate/reload/subscribe machinery — pulling
 // server state into the local snapshot and notifying subscribers when it

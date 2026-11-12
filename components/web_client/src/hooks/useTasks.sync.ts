@@ -3,7 +3,7 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
-import { resetTaskServiceClientForTest, taskServiceClient } from '../services/task-service-client';
+import { createTaskServiceClient, resetTaskServiceClientForTest } from '../services/task-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
 import { HydrationExhaustedError } from '../sync/sync-client';
@@ -12,6 +12,13 @@ import { createChannelNotifier } from './broadcast-notify';
 import { getActiveListId, registerActiveListChangeListener, resetActiveListForTest } from './useActiveList';
 import { ensureDefaultList, getDefaultListId } from './useLists.default-list';
 import type { UseTasksResult } from './useTasks';
+
+// Decision 6 exception (Spec 1 decision S1-1): this module's snapshot store
+// runs outside React — page sync triggers and the BroadcastChannel reload it —
+// so it cannot read the injected shim. It is sync-path only, so it builds the
+// offline-capable shim itself and can never reach the API path by mistake.
+// Retired with the store in Spec 5 (Decisions 8-9).
+const taskServiceClient = createTaskServiceClient(true);
 
 // The sync path for Tasks (Offline Mode on): the hook API plus the
 // hydrate/reload/subscribe machinery that pulls server state into the local

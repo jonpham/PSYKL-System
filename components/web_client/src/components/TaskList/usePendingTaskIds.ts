@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { Task } from '../../api/client';
-import { taskServiceClient } from '../../services/task-service-client';
+import { useServiceClients } from '../../hooks/useServiceClients';
 
 /**
  * The ids of the tasks with writes still queued for the server.
@@ -11,6 +11,7 @@ import { taskServiceClient } from '../../services/task-service-client';
  * unchanged, so an idle list does not re-render on every sync tick.
  */
 function usePendingTaskIds(tasks: Task[]): Set<string> {
+  const { tasks: taskServiceClient } = useServiceClients();
   const [pendingTaskIds, setPendingTaskIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -37,7 +38,7 @@ function usePendingTaskIds(tasks: Task[]): Set<string> {
     return () => {
       cancelled = true;
     };
-  }, [tasks]);
+  }, [tasks, taskServiceClient]);
 
   return pendingTaskIds;
 }

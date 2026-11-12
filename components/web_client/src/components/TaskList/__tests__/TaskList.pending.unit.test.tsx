@@ -9,11 +9,14 @@ import type { Task } from '../../../api/client';
 import { TaskList } from '../TaskList';
 
 const mockUseTasks = vi.hoisted(() => vi.fn());
-const mockListPending = vi.hoisted(() => vi.fn());
+// Stable across renders: usePendingTaskIds' effect depends on the shim's
+// identity, so a fresh object per render would re-run it on every render.
+const mockServiceClients = vi.hoisted(() => ({ tasks: { listPending: vi.fn() } }));
+const mockListPending = mockServiceClients.tasks.listPending;
 
 vi.mock('../../../hooks/useTasks', () => ({ useTasks: mockUseTasks }));
-vi.mock('../../../services/task-service-client', () => ({
-  taskServiceClient: { listPending: mockListPending },
+vi.mock('../../../hooks/useServiceClients', () => ({
+  useServiceClients: () => mockServiceClients,
 }));
 vi.mock('../../../hooks/useCompletedVisibility', () => ({
   useCompletedVisibility: () => ({ setShowCompleted: () => {}, showCompleted: true }),

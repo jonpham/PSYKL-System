@@ -8,7 +8,7 @@ import {
 } from '../api/lists.api-client';
 import { listLists, putList } from '../db/idb';
 import { createSyncClient, resetSyncClientHydrationForTest } from '../sync/sync-client';
-import { createServiceClient, type EntityApiClient } from './service-client';
+import { createServiceClient, type EntityApiClient, type ServiceClient } from './service-client';
 
 const listApiClient: EntityApiClient<List, ListInput, ListPatchInput, ListDeleteInput> = {
   create: createListRemote,
@@ -25,14 +25,17 @@ const listSyncClient = createSyncClient<List, ListInput, ListPatchInput, ListDel
   put: putList,
 });
 
-const listServiceClient = createServiceClient<List, ListInput, ListPatchInput, ListDeleteInput>({
-  apiClient: listApiClient,
-  offlineCapable: true,
-  syncClient: listSyncClient,
-});
+type ListServiceClient = ServiceClient<List, ListInput, ListPatchInput, ListDeleteInput>;
+
+/** The inner clients above are the singletons; this shim is rebuilt per
+ * Offline Mode (DESIGN.md Decision 6). */
+function createListServiceClient(offlineCapable: boolean): ListServiceClient {
+  return createServiceClient({ apiClient: listApiClient, offlineCapable, syncClient: listSyncClient });
+}
 
 function resetListServiceClientForTest(): void {
   resetSyncClientHydrationForTest(listSyncClient);
 }
 
-export { listServiceClient, resetListServiceClientForTest };
+export { createListServiceClient, resetListServiceClientForTest };
+export type { ListServiceClient };
