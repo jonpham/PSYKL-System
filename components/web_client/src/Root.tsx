@@ -1,4 +1,5 @@
 import App from './App';
+import { SettingsProvider } from './components/SettingsProvider';
 import { ExperimentRouter, ExperimentTools, isExperimentPath, useExperimentTools } from './experiment';
 import { usePathname } from './hooks/usePathname';
 
@@ -16,7 +17,9 @@ export function Root() {
 
   return (
     <>
-      <App />
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
       {toolsOn ? <ExperimentTools /> : null}
     </>
   );

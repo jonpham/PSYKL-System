@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { createTaskRemote } from '../../api/tasks.api-client';
 import { getTask, listSyncQueue } from '../../db/idb';
-import { taskServiceClient } from '../task-service-client';
+import { createTaskServiceClient } from '../task-service-client';
 
 const databaseName = 'psykl';
 const taskId = '0196f0a4-8b5a-7000-8000-000000000001';
@@ -16,10 +16,10 @@ afterEach(async () => {
   await deleteDB(databaseName);
 });
 
-describe('taskServiceClient — production wiring', () => {
-  it('create() is offline-capable: writes to IDB + queues, without touching the network', async () => {
+describe('createTaskServiceClient — production wiring', () => {
+  it('offlineCapable true: create() writes to IDB + queues, without touching the network', async () => {
     // When
-    const result = await taskServiceClient.create(
+    const result = await createTaskServiceClient(true).create(
       taskId,
       { id: taskId, title: 'wash the car', updated_at: nowIso },
       {
@@ -42,15 +42,28 @@ describe('taskServiceClient — production wiring', () => {
     expect(queue).toMatchObject([{ entity_id: taskId, entity_type: 'task', op: 'create' }]);
   });
 
-  it('list() pulls tasks that already exist server-side into IDB', async () => {
-    // Given — a task created directly on the server, bypassing the client entirely
+  it('offlineCapable true: list() pulls server-side tasks into IDB', async () => {
+    // Given
     await createTaskRemote({ id: taskId, title: 'wash the car', updated_at: nowIso }, idempotencyKey);
 
     // When
-    const result = await taskServiceClient.list();
+    const result = await createTaskServiceClient(true).list();
 
     // Then
     expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ id: taskId, title: 'wash the car' })]));
     await expect(getTask(taskId)).resolves.toMatchObject({ id: taskId, title: 'wash the car' });
+  });
+
+  it('offlineCapable false: list() returns server tasks and writes nothing to IDB', async () => {
+    // Given
+    await createTaskRemote({ id: taskId, title: 'wash the car', updated_at: nowIso }, idempotencyKey);
+
+    // When
+    const result = await createTaskServiceClient(false).list();
+
+    // Then
+    expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ id: taskId, title: 'wash the car' })]));
+    await expect(getTask(taskId)).resolves.toBeUndefined();
+    await expect(listSyncQueue()).resolves.toEqual([]);
   });
 });
