@@ -49,3 +49,60 @@
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
+
+.psykl-settings__row {
+  align-items: center;
+  color: var(--text-primary);
+  display: flex;
+  font-size: 17px;
+  justify-content: space-between;
+  min-height: var(--row-min);
+}
+
+.psykl-settings__switch {
+  background: var(--bg-pressed);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  flex: none;
+  height: 31px;
+  padding: 2px;
+  width: 51px;
+}
+
+.psykl-settings__switch::after {
+  background: var(--bg-elevated);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
+  content: '';
+  display: block;
+  height: 27px;
+  transition: transform 150ms ease;
+  width: 27px;
+}
+
+.psykl-settings__switch[aria-checked='true'] {
+  background: var(--accent);
+}
+
+.psykl-settings__switch[aria-checked='true']::after {
+  transform: translateX(20px);
+}
+
+/* Not yet functional: the online path is stubbed until Spec 3, and color is
+   the only signal (online-offline-modes DESIGN.md Decision 12). */
+.psykl-settings__switch[data-available='false'],
+.psykl-settings__switch[data-available='false'][aria-checked='true'] {
+  background: var(--text-tertiary);
+}
+
+.psykl-settings__switch:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psykl-settings__switch::after {
+    transition: none;
+  }
+}

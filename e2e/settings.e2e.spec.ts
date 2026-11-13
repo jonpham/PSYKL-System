@@ -6,6 +6,24 @@ import { expect, test } from './helpers/isolated-test';
 test.describe('settings', () => {
   test.use({ viewport: { height: 844, width: 390 } });
 
+  test('a user sees Offline Mode on by default and marked not yet available', async ({ page }) => {
+    await page.goto('/settings');
+    const offlineMode = page.getByRole('switch', { name: 'Offline Mode' });
+    await expect(offlineMode).toHaveAttribute('aria-checked', 'true');
+    await expect(offlineMode).toHaveAttribute('data-available', 'false');
+    await expect(page.getByText('Keep a copy on this device and sync when online.')).toBeVisible();
+  });
+
+  test('a user who turns Offline Mode off keeps that choice after reloading', async ({ page }) => {
+    await page.goto('/settings');
+    await page.getByRole('switch', { name: 'Offline Mode' }).click();
+    await expect(page.getByRole('switch', { name: 'Offline Mode' })).toHaveAttribute('aria-checked', 'false');
+
+    await page.reload();
+
+    await expect(page.getByRole('switch', { name: 'Offline Mode' })).toHaveAttribute('aria-checked', 'false');
+  });
+
   test('a user finds version information only in Settings', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByLabel('current web version')).toHaveCount(0);

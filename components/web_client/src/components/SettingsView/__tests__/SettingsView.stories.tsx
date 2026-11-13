@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
 
+import { SettingsProvider } from '../../SettingsProvider';
 import { SettingsView } from '../SettingsView';
 
 const meta: Meta<typeof SettingsView> = {
@@ -67,5 +68,37 @@ export const EveryContrastCombination: Story = {
     // Leave the page as it was found.
     await userEvent.click(canvas.getByRole('radio', { name: 'Standard' }));
     await userEvent.click(canvas.getByRole('radio', { name: 'System' }));
+  },
+};
+
+/** Offline Mode is on by default and visibly not yet functional (Decision 12). */
+export const OfflineModeNotYetAvailable: Story = {
+  decorators: [
+    (StoryComponent) => {
+      localStorage.removeItem('psykl:offline-mode');
+      return (
+        <SettingsProvider>
+          <StoryComponent />
+        </SettingsProvider>
+      );
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    // Arrange
+    const canvas = within(canvasElement);
+    const offlineMode = canvas.getByRole('switch', { name: 'Offline Mode' });
+    await expect(offlineMode).toHaveAttribute('aria-checked', 'true');
+    await expect(offlineMode).toHaveAttribute('data-available', 'false');
+
+    // Act
+    await userEvent.click(offlineMode);
+
+    // Assert — the provider remounts the view, so query again
+    await waitFor(() =>
+      expect(canvas.getByRole('switch', { name: 'Offline Mode' })).toHaveAttribute('aria-checked', 'false'),
+    );
+
+    // Leave the page as it was found.
+    localStorage.removeItem('psykl:offline-mode');
   },
 };
