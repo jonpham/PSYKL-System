@@ -8,7 +8,7 @@ import {
 } from '../api/tasks.api-client';
 import { listTasks, putTask } from '../db/idb';
 import { createSyncClient, resetSyncClientHydrationForTest } from '../sync/sync-client';
-import { createServiceClient, type EntityApiClient } from './service-client';
+import { createServiceClient, type EntityApiClient, type ServiceClient } from './service-client';
 
 const taskApiClient: EntityApiClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput> = {
   create: createTaskRemote,
@@ -25,14 +25,17 @@ const taskSyncClient = createSyncClient<Task, TaskInput, TaskPatchInput, TaskDel
   put: putTask,
 });
 
-const taskServiceClient = createServiceClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput>({
-  apiClient: taskApiClient,
-  offlineCapable: true,
-  syncClient: taskSyncClient,
-});
+type TaskServiceClient = ServiceClient<Task, TaskInput, TaskPatchInput, TaskDeleteInput>;
+
+/** The inner clients above are the singletons; this shim is rebuilt per
+ * Offline Mode (DESIGN.md Decision 6). */
+function createTaskServiceClient(offlineCapable: boolean): TaskServiceClient {
+  return createServiceClient({ apiClient: taskApiClient, offlineCapable, syncClient: taskSyncClient });
+}
 
 function resetTaskServiceClientForTest(): void {
   resetSyncClientHydrationForTest(taskSyncClient);
 }
 
-export { resetTaskServiceClientForTest, taskServiceClient };
+export { createTaskServiceClient, resetTaskServiceClientForTest };
+export type { TaskServiceClient };
