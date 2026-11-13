@@ -465,6 +465,31 @@ Explicitly out of scope: `useLists.default-list.ts`'s `ensureDefaultList()` (nee
 
 Landed as part of `todo-experience` Spec 2 DevTask 11 (narrow-scope re-open per AGENTS.md → Design Doc Discipline, `service-client-read-parity` in that spec doc's `honors_decisions:`), bundled with DevTask 11's own Recently Deleted screen rather than split into a separate DevTask — an explicit operator override of AGENTS.md's ≤10-production-file DevTask ceiling (12 files landed in one PR); see that spec doc's Decisions section for the full rationale.
 
+### ADR-OOM-001: Data-Mode Seam in the `use{Entity}()` Hooks, Remounted on Change
+
+`useLists()` and `useTasks()` each choose between a sync implementation (`use{Entity}SyncClient`, in `*.sync.ts`) and an online-only implementation (`use{Entity}ApiClient`, in `*.api.ts`), based on the Offline Mode user setting. Both return the same `Use{Entity}Result`, so no component knows which path it is on.
+
+The two branches call different hooks. That is safe only because `SettingsProvider` keys its children on the mode: changing Offline Mode unmounts and remounts the tree, so a hook never changes identity within a mounted component.
+
+Offline Mode is stored in `localStorage` as `psykl:offline-mode`. It defaults to on, and only the exact string `false` turns it off.
+
+ADR-M2-005 (IDB is the PWA's read source of truth) now holds only with Offline Mode on. With it off, the server is canonical.
+
+Source: `online-offline-modes` DESIGN.md Decisions 1, 3, 5 and 14; Spec 1 ([feature doc](features/%5B20261111%5DGH144_data-mode-seam.md)).
+
+### ADR-OOM-002: Stateless Service Client Shims Built per Offline Mode and Injected Through Context (narrows ADR-TE-003)
+
+ADR-TE-003 made `offlineCapable` a constructor-time discriminated union, fixed for each entity's lifetime. That assumption ended with Offline Mode. Now:
+
+- `ServiceClientConfig` always carries both inner clients, and `offlineCapable: boolean` picks between them.
+- The inner `{entity}ApiClient` and `{entity}SyncClient` are the module singletons, and they hold all the state.
+- `create{Entity}ServiceClient(offlineCapable)` builds a stateless shim over them, so rebuilding a shim is free.
+- `SettingsProvider` builds one shim per entity for the current mode and provides them through `ServiceClientsContext`. Hooks read them with `useServiceClients()`. The context default is the sync path, for trees with no provider, such as unit tests and stories.
+
+Exception (Spec 1 decision S1-1): the module-level sync snapshot stores in `useLists.sync.ts` and `useTasks.sync.ts` run outside React, so each builds its own private `create{Entity}ServiceClient(true)`. They are sync-path only, so they cannot reach the API path by mistake. Spec 5 retires them, when RxDB on a Dexie storage engine replaces the hand-rolled store.
+
+Source: `online-offline-modes` DESIGN.md Decision 6; Spec 1 ([feature doc](features/%5B20261111%5DGH144_data-mode-seam.md)).
+
 ### ADR-M1-030: Helm Templates Excluded from Prettier
 
 `deploy/helm/templates/` is added to `.prettierignore` because Helm Go-template syntax (`{{- ... -}}` actions embedded in YAML keys, values, and structural positions, plus conditional blocks that produce non-YAML output when surrounding context is conditional) is unparseable by prettier's YAML parser. `helm lint` and `helm template` provide the same correctness signal — both locally (developer-side) and in `cd-release.yml` (CI-side). Non-template chart files (`Chart.yaml`, `values.yaml`) remain prettier-formatted because they are pure YAML.

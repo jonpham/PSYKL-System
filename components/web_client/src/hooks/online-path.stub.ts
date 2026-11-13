@@ -5,4 +5,9 @@ function notImplementedOnline(operation: string): Promise<never> {
   return Promise.reject(new Error(`${operation} is not available with Offline Mode off yet`));
 }
 
-export { notImplementedOnline };
+/** Whether the online-only path works yet. Settings colors the Offline Mode
+ * switch from this (DESIGN.md Decision 12); Spec 3 sets it to `true` when the
+ * API client hooks are real, then deletes this file. */
+const ONLINE_PATH_AVAILABLE = false;
+
+export { notImplementedOnline, ONLINE_PATH_AVAILABLE };
