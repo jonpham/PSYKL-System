@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Task } from '../../api/client';
+import { DEFAULT_LIST_ID } from '../../services/default-list';
 import { useListDeletion } from '../useListDeletion';
 
 const deleteList = vi.hoisted(() => vi.fn());
@@ -87,6 +88,25 @@ describe('useListDeletion (Unit)', () => {
     ]);
     expect(deleteTask).not.toHaveBeenCalled();
     expect(deleteList).toHaveBeenCalledTimes(1);
+  });
+
+  it('moves the items to the Tasks list even when another list sits above it', async () => {
+    // Arrange
+    mockUseLists.mockReturnValue({
+      deleteList,
+      lists: [
+        { id: 'list-errands', title: 'Errands' },
+        { id: DEFAULT_LIST_ID, title: 'Tasks' },
+        { id: 'list-groceries', title: 'Groceries' },
+      ],
+    });
+    const { result } = renderHook(() => useListDeletion());
+
+    // Act
+    await result.current.deleteActiveList('just-list');
+
+    // Assert — the default list follows its fixed id, not the top position
+    expect(patchTask.mock.calls.map((call) => call[1].list_id)).toEqual([DEFAULT_LIST_ID, DEFAULT_LIST_ID]);
   });
 
   it('empties the list before the list itself goes, so nothing is re-homed mid-flight', async () => {

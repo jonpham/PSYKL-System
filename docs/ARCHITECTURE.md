@@ -490,6 +490,19 @@ Exception (Spec 1 decision S1-1): the module-level sync snapshot stores in `useL
 
 Source: `online-offline-modes` DESIGN.md Decision 6; Spec 1 ([feature doc](features/%5B20261111%5DGH144_data-mode-seam.md)).
 
+### ADR-OOM-003: The Server Assigns List Positions and Keeps an Undeletable Default List
+
+ADR-TE-002 gave the default list a fixed id, `DEFAULT_LIST_ID`, so every device agrees on it without a round trip. Until now the server only stored whatever a device created. Now:
+
+- `DELETE /lists/{DEFAULT_LIST_ID}` answers `409` while its owner exists (Decision 16). The PWA never offers the delete, and `canDeleteList(id)` follows the id, not the title.
+- `ListInput.position` is optional. Without it, `ListService.createList` appends the list after the caller's highest position, deleted lists included, so a restore cannot collide with a list created meanwhile (Decision 10, S2-4). Each create runs in one transaction, and PGlite runs transactions exclusively, so two creates at once get distinct keys.
+- `service-task` keeps the default list in place (Decision 15). `prepareApp`, which `main.ts` runs before it listens, and the test reset both call `seedDefaultList`. It creates the list ahead of the user's first list if it's missing, with an epoch `updated_at` so any device edit wins, and restores it with `now()` if a device deleted it before Decision 16 (S2-1 to S2-3).
+- The PWA's `getDefaultListId` returns the list with `DEFAULT_LIST_ID`, falling back to the earliest list only when that list isn't on the device yet (S2-5).
+
+The seed is single-user: it seeds the `local` user only, and `lists.id` is still a global primary key (#117). Decision 15 moves the seed to user creation in `multi-tenant-auth`.
+
+Source: `online-offline-modes` DESIGN.md Decisions 10, 15, 16; Spec 2 ([feature doc](features/%5B20261113%5DGH144_server-positions-default-list.md)).
+
 ### ADR-M1-030: Helm Templates Excluded from Prettier
 
 `deploy/helm/templates/` is added to `.prettierignore` because Helm Go-template syntax (`{{- ... -}}` actions embedded in YAML keys, values, and structural positions, plus conditional blocks that produce non-YAML output when surrounding context is conditional) is unparseable by prettier's YAML parser. `helm lint` and `helm template` provide the same correctness signal — both locally (developer-side) and in `cd-release.yml` (CI-side). Non-template chart files (`Chart.yaml`, `values.yaml`) remain prettier-formatted because they are pure YAML.
