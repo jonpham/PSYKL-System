@@ -6,9 +6,9 @@ completed_at:
 created_at: 2026-11-13
 initiative: online-offline-modes
 spec_number: 2
-devtasks_total: 2
+devtasks_total: 3
 devtasks_complete: 0
-honors_decisions: [7, 10, 15]
+honors_decisions: [7, 10, 15, 16]
 ---
 
 # Server Positions and Default List — Implementation Spec
@@ -18,37 +18,40 @@ honors_decisions: [7, 10, 15]
 **Date:** 2026-11-13
 **Initiative:** `online-offline-modes`
 **Spec:** 2/5
-**Spec User Story:** _As a PWA developer, I can create a list without picking its position, and find the default list already on the server, so that the online-only path (Spec 3) never has to compute a position or bootstrap a list._
-**Reads from:** [`docs/initiatives/online-offline-modes/DESIGN.md`](../../initiatives/online-offline-modes/DESIGN.md) Decisions 7, 10, 15 (LOCKED).
+**Spec User Story:** _As a PSYKL user, my "Tasks" list is always there: I cannot delete it, and the server keeps it. As a PWA developer, I can create a list without picking its position, so the online-only path (Spec 3) never computes a position or bootstraps a list._
+**Reads from:** [`docs/initiatives/online-offline-modes/DESIGN.md`](../../initiatives/online-offline-modes/DESIGN.md) Decisions 7, 10, 15, 16 (LOCKED).
+**Visual artifact:** [`20261113-Spec2-server-positions-default-list-visual-artifact.md`](20261113-Spec2-server-positions-default-list-visual-artifact.md)
 
-**Goal:** `POST /lists` appends the list after the user's last one when `position` is omitted, and `service-task` seeds the default list (`DEFAULT_LIST_ID`, "Tasks") at start-up and after `/test/reset`.
+**Goal:** The default list can't be deleted from the PWA or the API. `POST /lists` appends a list after the user's last one when no `position` is sent. `service-task` creates the default list, or restores it, at start-up and after `/test/reset`.
 
 **Architecture:**
 
+- **UI first.** `useLists()` replaces its single `canDelete` flag with `canDeleteList(id)`, which is false for `DEFAULT_LIST_ID`.
+- **Server refuses the delete.** `DELETE /lists/{DEFAULT_LIST_ID}` answers `409`. The PWA's sync queue already moves a refused (4xx) write to Failed (`sync/replay.ts:129`), so the client needs no new code.
 - **Position.** `ListService.createList` computes a missing position inside one PGlite transaction, so two creates at once cannot take the same key.
-- **Seed.** `seedDefaultList(db)` inserts the default list only when the single user `local` owns no list rows at all. Start-up (`prepareApp`) and the test reset both call it.
-- **Not touched.** Nothing changes in `createDb()` or in the Nest testing modules, so no existing test sees a new row.
+- **Seed.** `seedDefaultList(db)` creates the default list if it is missing, or clears its `deleted_at` if a device deleted it before Decision 16. Start-up (`prepareApp`) and the test reset call it. `createDb()` and the Nest testing modules do not, so no existing test sees a new row.
 
-**Tech Stack:** NestJS 11, Drizzle on PGlite, Zod + `zod-to-openapi` in `packages/shared-types`, `fractional-indexing` (the client already uses it; Spec 2 adds it to `service-task`).
+**Tech Stack:** React 18 + Vitest + Playwright (`web_client`), NestJS 11, Drizzle on PGlite, Zod + `zod-to-openapi` (`packages/shared-types`), `fractional-indexing`. The client already uses `fractional-indexing`; Spec 2 adds it to `service-task`.
 
 > Vocabulary: `DevTask` = workflow unit (one PR). `Task` = the PSYKL data entity. "Tasks" in quotes is the default list's title.
 
 ## Global Constraints
 
-- Server changes are limited to Decision 10's contract (DESIGN.md → Constraints). No schema migration.
-- The sync path is unchanged (Decision 10): the PWA keeps sending a provisional `position` on every create, and the server stores it verbatim.
-- `position` is a fractional-index key, compared byte-wise (`COLLATE "C"`); the server must generate keys with the same library the client uses (`fractional-indexing`).
-- `DEFAULT_LIST_ID` is `00000000-0000-7000-8000-000000000001`, the value in `components/web_client/src/hooks/useLists.default-list.ts:28`. The two must never drift.
-- No user-visible change, so no visual artifact and no new End-to-End test. The existing suite must still pass, and it is the drift guard for `DEFAULT_LIST_ID` (see Review Focus 5).
-- ≤10 production behavior source files per DevTask PR; commit headers describe feature work only.
+- Server changes are limited to Decisions 10, 15 and 16 (DESIGN.md → Constraints). No schema migration.
+- The sync path is unchanged, except that it no longer offers to delete the default list. It keeps sending a provisional `position` on every create, and the server stores it verbatim (Decision 10).
+- `position` is a fractional-index key, compared byte-wise (`COLLATE "C"`). The server generates keys with the same library as the client (`fractional-indexing`).
+- `DEFAULT_LIST_ID` is `00000000-0000-7000-8000-000000000001`. The client's copy moves to `components/web_client/src/services/default-list.ts`. The PWA does not import `@psykl/shared-types` at runtime, because that would bundle Zod. The server's copy is in `packages/shared-types/src/schemas/list.ts`, and the two must never drift.
+- The rule follows the list's **id**, not its title. A renamed default list is still protected.
+- ≤10 production behavior source files per DevTask PR. Commit headers describe feature work only. Every new user-visible behavior ships with an End-to-End test in the same PR.
+- Each DevTask branches off `spec/online-offline-modes-s2-server-positions-default-list` after the previous one merged. Nothing is stacked.
 
 ## Review Focus
 
-1. **Two creates without a position arrive together.** Each must get a distinct key, both after the previous last list. A shared key can never be re-ordered (`useLists.positions.ts:17-19`). → DevTask 5, `list-server-position.integration.test.ts` "gives two simultaneous creates distinct positions".
-2. **The user's last list is in Recently Deleted.** The new list must go after the tombstone too, so restoring it cannot collide. → DevTask 5, "appends after a deleted list too".
-3. **A device re-sends a create it already made, without a position.** The stored row must come back unchanged, with no new key generated. → DevTask 5, "returns the stored list when the same id is created again".
-4. **The user deleted the default list, or it was purged after 30 days.** A restart must not bring it back while the user still has any list row. → DevTask 6, `default-list-seed.integration.test.ts` "leaves a deleted default list deleted" and "does not seed a user who already has lists".
-5. **The client's `DEFAULT_LIST_ID` and the server's drift apart.** A device would then show two "Tasks" lists. → DevTask 6 adds a cross-reference comment at both definitions. `e2e/lists.e2e.spec.ts:58` (`['Tasks', 'Reading', 'Groceries']`) fails on a second "Tasks", so the full End-to-End run in DevTask 6 Step 6 is the guard.
+1. **The user renames "Tasks", then opens List options.** Delete List must still be absent, because the rule follows the id. → DevTask 5, `useLists.default-list.unit.test.ts` "still protects the default list after it is renamed".
+2. **A device queued a delete of the default list before Decision 16, then syncs.** The server answers `409`, the entry lands in Failed, and nothing retries forever. Start-up restores the list (Review Focus 5). → DevTask 6 contract test "refuses to delete the default list", plus the existing 4xx replay tests in `sync/__tests__/`.
+3. **Two creates without a position arrive together.** Each must get a distinct key, both after the previous last list. A shared key can never be re-ordered (`useLists.positions.ts:17-19`). → DevTask 6, `list-server-position.integration.test.ts` "gives two simultaneous creates distinct positions".
+4. **The user's last list is in Recently Deleted.** A new list must go after the tombstone, so restoring it cannot collide. → DevTask 6, "appends after a deleted list too".
+5. **A database from before Decision 16 holds a deleted or purged default list.** Start-up must restore the deleted one, and recreate the purged one before the user's first list. → DevTask 7, `default-list-seed.integration.test.ts` "restores a default list deleted before Decision 16" and "recreates a purged default list ahead of the user's lists".
 
 ---
 
@@ -56,49 +59,229 @@ honors_decisions: [7, 10, 15]
 
 No schema changes. The default list is an ordinary `lists` row:
 
-| Column                            | Seeded value                                                                                                                                       |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                              | `DEFAULT_LIST_ID`                                                                                                                                  |
-| `user_id`                         | `local`. It is the only user until `multi-tenant-auth` (#117), and the PWA sends `X-User-Id: local` (`components/web_client/src/api/client.ts:8`). |
-| `title`                           | `Tasks`                                                                                                                                            |
-| `position`                        | `generateKeyBetween(null, null)` = `a0`, the same key the client's bootstrap uses                                                                  |
-| `updated_at`                      | `1970-01-01T00:00:00.000Z`. Any edit a device makes wins Last-Write-Wins.                                                                          |
-| `created_at`, `server_updated_at` | `now()` defaults, so the next pull sees the row                                                                                                    |
+| Column                            | Seeded value                                                                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                              | `DEFAULT_LIST_ID`                                                                                                                                            |
+| `user_id`                         | `local`. It is the only user until `multi-tenant-auth` (#117), and the PWA sends `X-User-Id: local` (`components/web_client/src/api/client.ts:8`).           |
+| `title`                           | `Tasks`                                                                                                                                                      |
+| `position`                        | `generateKeyBetween(null, <user's first position> ?? null)`. That is `a0` on a fresh database, the same key the client's bootstrap uses.                     |
+| `updated_at`                      | `1970-01-01T00:00:00.000Z` when created, so any edit a device makes wins Last-Write-Wins. `now()` when restored, so the restore wins over the old tombstone. |
+| `created_at`, `server_updated_at` | `now()`, so the next pull sees the row                                                                                                                       |
 
 ## API
 
 ```
 POST /lists
 Body:     { id, title, position?, updated_at }     ← position now optional
-Auth:     X-User-Id, enforced by the global guard (unchanged)
 Response: 201 List. When position is omitted, List.position is generated:
           after the highest position among ALL the caller's lists, deleted ones included.
 Errors:   400 when position is present but empty or longer than 64 characters (unchanged), 401 / 403 (unchanged)
+
+DELETE /lists/{id}
+Errors:   409 when id is DEFAULT_LIST_ID: { message: "The default list cannot be deleted" }   ← new
+          404 when the caller does not own the list (checked first, unchanged)
 ```
 
-OpenAPI: `zod-to-openapi` drops `position` from `ListInput.required` and carries the new `.describe()` text. `openapi.json` and `web_client/src/api/types.ts` are gitignored and regenerate at build (Decisions #12, #25 of M1). The client's `ListInput.position` becomes optional. That is safe, because the client only produces `ListInput`, never reads it.
+OpenAPI: `zod-to-openapi` drops `position` from `ListInput.required`, and `list-paths.ts` documents the new `409` on `DELETE /lists/{id}`. `openapi.json` and `web_client/src/api/types.ts` are gitignored and regenerate at build.
 
 ## Visual Artifact
 
-_None. No user-facing surface changes._
+[`20261113-Spec2-server-positions-default-list-visual-artifact.md`](20261113-Spec2-server-positions-default-list-visual-artifact.md): List options without Delete List on "Tasks", and unchanged on every other list.
 
 ---
 
 ## DevTasks
 
-The two DevTasks are independent, so they are **siblings**. Each branches off `spec/online-offline-modes-s2-server-positions-default-list` and opens its PR against it. DevTask 6 is the last one and carries the close-out. Both touch `packages/shared-types/src/schemas/list.ts`, in different places. Rebase whichever merges second.
+### DevTask 5: The PWA never offers to delete the default list
 
-### DevTask 5: Server appends a list when no position is sent
+**Files:** 6 production files:
 
-**Files:** 2 production files: `packages/shared-types/src/schemas/list.ts` and `components/service-task/src/list/list.service.ts`. `components/service-task/package.json` also changes; it is config and not counted.
-**Branch:** `feat/online-offline-modes-s2-dt5-server-appended-position`
+- `components/web_client/src/services/default-list.ts` (new)
+- `components/web_client/src/hooks/useLists.default-list.ts`
+- `components/web_client/src/hooks/useLists.ts`
+- `components/web_client/src/hooks/useLists.sync.ts`
+- `components/web_client/src/hooks/useLists.api.ts`
+- `components/web_client/src/App.tsx`
+
+**Branch:** `feat/online-offline-modes-s2-dt5-default-list-undeletable-ui`
 **PR:** _tbd_
 
 **Interfaces:**
 
-- Produces: `ListInput.position?: string`. With it omitted, `ListService.createList(userId, input)` returns a `List` whose `position` is `generateKeyBetween(<caller's max position, deleted included> ?? null, null)`.
+- Produces: `DEFAULT_LIST_ID` and `isDefaultList(id: string): boolean` from `src/services/default-list.ts`. `UseListsResult.canDeleteList(id: string): boolean` replaces `canDelete: boolean`.
+- `useLists.default-list.ts` keeps re-exporting `DEFAULT_LIST_ID`, so its existing importers are untouched.
 
-- [ ] **Step 1: Failing schema test.** Append to `packages/shared-types/src/schemas/list.unit.test.ts`, inside `describe('ListInputSchema')`:
+- [ ] **Step 1: Skipped End-to-End test first.** Append to `e2e/list_deletion.e2e.spec.ts`, inside `test.describe('list deletion')`:
+
+```ts
+test.skip('a user is never offered to delete their Tasks list, even after renaming it', async ({ page }) => {
+  await createList(page, `Errands ${Date.now()}`);
+  await openList(page, 'Tasks');
+
+  await page.getByRole('button', { name: 'List options' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Select Items' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Delete List' })).toHaveCount(0);
+});
+```
+
+Commit: `git commit -am "test: describe the Tasks list as undeletable end to end"`. The pre-commit typecheck passes, because the test is skipped and adds no types.
+
+- [ ] **Step 2: Failing unit tests.** In `components/web_client/src/hooks/__tests__/useLists.default-list.unit.test.ts`, replace the test `'does not offer to delete the only remaining (default) list'` with the tests below. Then add the same `canDeleteList` checks to the test that creates "Groceries": `expect(result.current.canDeleteList(groceriesId)).toBe(true)`, placed before `// Act`.
+
+```ts
+it('does not offer to delete the default list', async () => {
+  // Arrange
+  const { result } = renderHook(() => useLists());
+  await waitFor(() => {
+    expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+  });
+
+  // Act
+  await act(async () => {
+    await result.current.createList('Groceries');
+  });
+
+  // Assert — another list exists, and the default list is still protected
+  await waitFor(() => {
+    expect(result.current.lists).toHaveLength(2);
+  });
+  expect(result.current.canDeleteList(DEFAULT_LIST_ID)).toBe(false);
+});
+
+it('still protects the default list after it is renamed', async () => {
+  // Arrange
+  const { result } = renderHook(() => useLists());
+  await waitFor(() => {
+    expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+  });
+  await act(async () => {
+    await result.current.createList('Groceries');
+    await result.current.renameList(DEFAULT_LIST_ID, 'Inbox');
+  });
+
+  // Act
+  await act(async () => {
+    await result.current.deleteList(DEFAULT_LIST_ID);
+  });
+
+  // Assert — the rule follows the id, not the title
+  await waitFor(() => {
+    expect(result.current.lists.map((list) => list.title)).toEqual(['Inbox', 'Groceries']);
+  });
+  expect(result.current.canDeleteList(DEFAULT_LIST_ID)).toBe(false);
+  expect((await listSyncQueue()).some((entry) => entry.op === 'delete')).toBe(false);
+});
+```
+
+Add `components/web_client/src/services/__tests__/default-list.unit.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest';
+
+import { DEFAULT_LIST_ID, isDefaultList } from '../default-list';
+
+describe('isDefaultList', () => {
+  it('recognises the default list by its fixed id', () => {
+    expect(isDefaultList('00000000-0000-7000-8000-000000000001')).toBe(true);
+    expect(DEFAULT_LIST_ID).toBe('00000000-0000-7000-8000-000000000001');
+  });
+
+  it('does not treat any other list as the default', () => {
+    expect(isDefaultList('0199aaaa-0000-7000-8000-000000000001')).toBe(false);
+  });
+});
+```
+
+Run: `pnpm --filter @psykl/web-client exec vitest run src/hooks/__tests__/useLists.default-list.unit.test.ts src/services/__tests__/default-list.unit.test.ts`
+Expected: FAIL. `canDeleteList` is not a function, and `../default-list` cannot be resolved.
+
+- [ ] **Step 3: Implement.** Create `components/web_client/src/services/default-list.ts`:
+
+```ts
+/**
+ * The default list every account starts with (online-offline-modes DESIGN.md
+ * Decisions 15, 16). It has a fixed id, so every device and the server agree on
+ * it without a round trip, and it can never be deleted.
+ *
+ * MUST equal DEFAULT_LIST_ID in packages/shared-types/src/schemas/list.ts. The
+ * PWA does not import that package at runtime, because it would bundle Zod.
+ * Neither data path reads IndexedDB here, so both may import it.
+ */
+const DEFAULT_LIST_ID = '00000000-0000-7000-8000-000000000001';
+
+function isDefaultList(id: string): boolean {
+  return id === DEFAULT_LIST_ID;
+}
+
+export { DEFAULT_LIST_ID, isDefaultList };
+```
+
+In `components/web_client/src/hooks/useLists.default-list.ts`, delete the local `const DEFAULT_LIST_ID = …` line, keep its comment block, and add `import { DEFAULT_LIST_ID } from '../services/default-list';`. The existing `export { DEFAULT_LIST_ID, … }` stays.
+
+In `components/web_client/src/hooks/useLists.ts`, replace `canDelete: boolean;` in `UseListsResult` with:
+
+```ts
+  /** False for the default list (Decision 16) and for the last remaining list. */
+  canDeleteList(id: string): boolean;
+```
+
+In `components/web_client/src/hooks/useLists.sync.ts`, add `import { isDefaultList } from '../services/default-list';`. In `deleteList`, change the guard:
+
+```ts
+// The last remaining list and the default list can never be deleted
+// (UX.md § 10 decision 1; online-offline-modes Decision 16).
+if (lists.length <= 1 || isDefaultList(id)) {
+  return;
+}
+```
+
+Add a callback above the `return`, and return it in place of `canDelete`:
+
+```ts
+const canDeleteList = useCallback((id: string) => lists.length > 1 && !isDefaultList(id), [lists]);
+
+return { canDeleteList, createList, deleteList, lists, moveList, renameList };
+```
+
+In `components/web_client/src/hooks/useLists.api.ts`, replace `canDelete: false,` with `canDeleteList: () => false,`.
+
+In `components/web_client/src/App.tsx`, change `const { canDelete, lists, renameList } = useLists();` to `const { canDeleteList, lists, renameList } = useLists();`, and `canDelete={canDelete}` to `canDelete={activeList !== null && canDeleteList(activeList.id)}`. `activeList` is already declared above the header.
+
+Update the four `TaskList` unit tests that mock `useLists`: replace `canDelete: true` with `canDeleteList: () => true`. These are test files and not counted.
+
+Run: `pnpm --filter @psykl/web-client exec vitest run src/hooks/__tests__/useLists.default-list.unit.test.ts src/services/__tests__/default-list.unit.test.ts`
+Expected: PASS.
+
+Run: `pnpm -r typecheck && pnpm -r lint && pnpm --filter @psykl/web-client test:unit && pnpm --filter @psykl/web-client test:component`
+Expected: all PASS. `ListMenu` keeps its `canDelete` prop, so its story and unit test are untouched.
+
+- [ ] **Step 4: Activate the End-to-End test.** Change `test.skip(` to `test(` in the test from Step 1. Run `./scripts/e2e-up.sh && pnpm test:e2e -- list_deletion`, then `docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v`.
+      Expected: PASS, and the other `list_deletion` tests still pass.
+
+- [ ] **Step 5: Commit, and tick this DevTask's steps in this doc.**
+
+```bash
+git add components/web_client/src e2e/list_deletion.e2e.spec.ts docs/specs/online-offline-modes/20261113-Spec2-server-positions-default-list.md
+git commit -m "feat: never offer to delete the default Tasks list" -m "- Spec 2 doc: DevTask 5 steps checked"
+```
+
+Stop here for operator UX review of the PR, as in Spec 1. Do not begin DevTask 6 until DevTask 5 merges.
+
+### DevTask 6: The list API refuses to delete the default list and appends lists without a position
+
+**Files:** 3 production files: `packages/shared-types/src/schemas/list.ts`, `packages/shared-types/src/openapi/list-paths.ts` and `components/service-task/src/list/list.service.ts`. `components/service-task/package.json` also changes; it is config and not counted.
+**Branch:** `feat/online-offline-modes-s2-dt6-list-api-contract`
+**PR:** _tbd_
+
+**Interfaces:**
+
+- Produces:
+  - `DEFAULT_LIST_ID`, `DEFAULT_LIST_TITLE` from `@psykl/shared-types`.
+  - `ListInput.position?: string`.
+  - `ListService.deleteList(userId, DEFAULT_LIST_ID, …)` throws `ConflictException('The default list cannot be deleted')`.
+  - `ListService.createList(userId, input)` with no position returns `position = generateKeyBetween(<caller's max position, deleted included> ?? null, null)`.
+
+- [ ] **Step 1: Failing schema tests.** In `packages/shared-types/src/schemas/list.unit.test.ts`, change the import to `import { DEFAULT_LIST_ID, DEFAULT_LIST_TITLE, ListInputSchema } from './list';`. Then append inside `describe('ListInputSchema')`:
 
 ```ts
 it('accepts a list input without a position, for the server to assign', () => {
@@ -111,10 +294,27 @@ it('still rejects an empty position', () => {
 });
 ```
 
-Run: `pnpm --filter @psykl/shared-types test:unit -- list.unit`
-Expected: the first test FAILS (a Zod "Required" error on `position`). The second test passes.
+and at the end of the file:
 
-- [ ] **Step 2: Make `position` optional.** In `packages/shared-types/src/schemas/list.ts`, change `ListInputSchema`'s `position`:
+```ts
+describe('default list', () => {
+  it('has an id every create accepts, matching the PWA', () => {
+    const parsed = ListInputSchema.parse({
+      id: DEFAULT_LIST_ID,
+      title: DEFAULT_LIST_TITLE,
+      updated_at: valid.updated_at,
+    });
+    expect(parsed.id).toBe('00000000-0000-7000-8000-000000000001');
+  });
+});
+```
+
+Move `valid` to module scope if the new `describe` cannot see it.
+
+Run: `pnpm --filter @psykl/shared-types test:unit -- list.unit`
+Expected: FAIL. `DEFAULT_LIST_ID` is not exported, and `position` is required.
+
+- [ ] **Step 2: Schema and OpenAPI.** In `packages/shared-types/src/schemas/list.ts`, change `ListInputSchema`'s `position` to:
 
 ```ts
     position: z
@@ -122,16 +322,106 @@ Expected: the first test FAILS (a Zod "Required" error on `position`). The secon
       .min(1)
       .max(64)
       .optional()
-      .describe('Omit to have the server append the list after the caller\'s last one (deleted lists included)'),
+      .describe("Omit to have the server append the list after the caller's last one (deleted lists included)"),
+```
+
+Append to the same file:
+
+```ts
+/**
+ * The default list every account starts with (online-offline-modes Decisions
+ * 15, 16): fixed id, seeded by service-task, never deletable. MUST equal
+ * DEFAULT_LIST_ID in components/web_client/src/services/default-list.ts.
+ */
+export const DEFAULT_LIST_ID = '00000000-0000-7000-8000-000000000001';
+export const DEFAULT_LIST_TITLE = 'Tasks';
+```
+
+In `packages/shared-types/src/openapi/list-paths.ts`, in the `registerPath` for `method: 'delete'`, `path: '/lists/{id}'`, add to `responses`:
+
+```ts
+      409: { description: 'The default list (DEFAULT_LIST_ID) cannot be deleted' },
 ```
 
 Run: `pnpm --filter @psykl/shared-types test:unit && pnpm --filter @psykl/shared-types build`
-Expected: PASS. `ListInput['position']` is now `string | undefined`.
+Expected: PASS. `pnpm -r typecheck` now FAILS in `list.service.ts` (`position: string | undefined`). Step 4 fixes it, so Steps 1-4 are one commit.
 
-Run: `pnpm -r typecheck`
-Expected: FAIL in `components/service-task/src/list/list.service.ts`, because `position: input.position` is not assignable to `string`. Step 4 fixes it. Do not commit yet: the pre-commit typecheck blocks this state, so Steps 1-4 are one commit.
+- [ ] **Step 3: Failing service tests.** Run `pnpm --filter @psykl/service-task add fractional-indexing@^4.0.0`. That is the version `web_client` pins.
 
-- [ ] **Step 3: Failing integration tests.** Add `fractional-indexing` to `service-task` with `pnpm --filter @psykl/service-task add fractional-indexing@^4.0.0`, the version `web_client` pins. Then create `components/service-task/tests/integration/list-server-position.integration.test.ts`:
+Create `components/service-task/src/list/__tests__/list.controller.default-list.contract.test.ts`:
+
+```ts
+import { DEFAULT_LIST_ID } from '@psykl/shared-types';
+import { describe, expect, it } from 'vitest';
+
+import {
+  listControllerHarness,
+  listCreateBody,
+  listDeleteBody,
+  validListId,
+} from './list.controller.contract-support.js';
+
+/**
+ * Behavior enforced by:
+ * components/service-task/src/list/list.service.ts (deleteList, appendPosition)
+ */
+describe('DELETE /lists/{id}', () => {
+  const harness = listControllerHarness();
+
+  it('refuses to delete the default list', async () => {
+    // Given
+    await harness.createList({ body: listCreateBody({ id: DEFAULT_LIST_ID, title: 'Tasks' }) }).expect(201);
+
+    // When
+    const response = await harness.deleteList({ id: DEFAULT_LIST_ID, body: listDeleteBody() }).expect(409);
+
+    // Then
+    expect(response.body.message).toBe('The default list cannot be deleted');
+    const lists = await harness.getLists().expect(200);
+    expect(
+      (lists.body as Array<{ id: string; deleted_at: string | null }>).find((l) => l.id === DEFAULT_LIST_ID)
+        ?.deleted_at,
+    ).toBeNull();
+  });
+
+  it('still deletes any other list', async () => {
+    // Given
+    await harness.createList({ body: listCreateBody({ id: validListId('301') }) }).expect(201);
+
+    // When / Then
+    await harness.deleteList({ id: validListId('301'), body: listDeleteBody() }).expect(200);
+  });
+
+  it('answers 404, not 409, to a caller who does not own the default list', async () => {
+    // When / Then
+    await harness.deleteList({ id: DEFAULT_LIST_ID, userId: 'someone-else', body: listDeleteBody() }).expect(404);
+  });
+});
+
+describe('POST /lists', () => {
+  const harness = listControllerHarness();
+
+  it('creates a list without a position and returns the one the server chose', async () => {
+    // Given
+    const body = { id: validListId('401'), title: 'no position', updated_at: '2026-05-20T12:00:00.000Z' };
+
+    // When
+    const response = await harness.createList({ userId: 'position-contract-user', body }).expect(201);
+
+    // Then
+    expect(response.body).toMatchObject({ id: validListId('401'), title: 'no position', position: 'a0' });
+  });
+
+  it('still rejects an empty position', async () => {
+    // When / Then
+    await harness
+      .createList({ userId: 'position-contract-user', body: listCreateBody({ id: validListId('402'), position: '' }) })
+      .expect(400);
+  });
+});
+```
+
+Create `components/service-task/tests/integration/list-server-position.integration.test.ts`:
 
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -155,22 +445,22 @@ describe('server-assigned list position', () => {
   });
 
   it('gives the first list the first key', async () => {
-    // When the first list is created without a position
+    // When
     const response = await create('01').expect(201);
 
-    // Then it gets the key a device would have picked
+    // Then — the key a device would have picked
     expect(response.body.position).toBe('a0');
   });
 
   it('appends after the last list', async () => {
-    // Given two lists with client-chosen positions
+    // Given
     await create('01', { position: 'a0' }).expect(201);
     await create('02', { position: 'a1' }).expect(201);
 
-    // When a third is created without one
+    // When
     const response = await create('03').expect(201);
 
-    // Then it sorts after both
+    // Then
     expect(response.body.position > 'a1').toBe(true);
     const order = (await app.get('/lists').expect(200)).body.map((list: { id: string }) => list.id);
     expect(order).toEqual([id('01'), id('02'), id('03')]);
@@ -185,7 +475,7 @@ describe('server-assigned list position', () => {
       .send({ deleted_at: '2026-11-13T11:00:00.000Z' })
       .expect(200);
 
-    // When a list is created without a position
+    // When
     const response = await create('03').expect(201);
 
     // Then restoring the deleted one can never collide with it
@@ -193,50 +483,44 @@ describe('server-assigned list position', () => {
   });
 
   it("ignores another user's lists", async () => {
-    // Given someone else owns a list far down the order
+    // Given
     await app
       .post('/lists')
       .set('X-User-Id', 'someone-else')
-      .send({
-        id: id('09'),
-        title: 'theirs',
-        position: 'a9',
-        updated_at: '2026-11-13T10:00:00.000Z',
-      })
+      .send({ id: id('09'), title: 'theirs', position: 'a9', updated_at: '2026-11-13T10:00:00.000Z' })
       .expect(201);
 
-    // When this user creates their first list
+    // When
     const response = await create('01').expect(201);
 
-    // Then its position starts this user's own order
+    // Then
     expect(response.body.position).toBe('a0');
   });
 
   it('gives two simultaneous creates distinct positions', async () => {
-    // Given one existing list
+    // Given
     await create('01', { position: 'a0' }).expect(201);
 
-    // When two creates without a position arrive together
+    // When
     const [first, second] = await Promise.all([create('02'), create('03')]);
 
-    // Then both land after it, on different keys
-    expect(first.status).toBe(201);
-    expect(second.status).toBe(201);
-    const positions = [first.body.position, second.body.position];
+    // Then
+    expect([first.status, second.status]).toEqual([201, 201]);
+    const positions: string[] = [first.body.position, second.body.position];
     expect(new Set(positions).size).toBe(2);
-    expect(positions.every((position: string) => position > 'a0')).toBe(true);
+    expect(positions.every((position) => position > 'a0')).toBe(true);
   });
 
   it('keeps a position the client sent, verbatim', async () => {
-    // Given the sync path's provisional position
+    // When — the sync path's provisional position
     const response = await create('01', { position: 'a0V' }).expect(201);
 
-    // Then the server stores it unchanged
+    // Then
     expect(response.body.position).toBe('a0V');
   });
 
   it('returns the stored list when the same id is created again', async () => {
-    // Given a list the server positioned
+    // Given
     const created = await create('01').expect(201);
     await create('02', { position: 'b0' }).expect(201);
 
@@ -249,17 +533,40 @@ describe('server-assigned list position', () => {
 });
 ```
 
-Run: `pnpm --filter @psykl/service-task test:integration -- list-server-position`
-Expected: FAIL. The type error from Step 2 does not stop vitest. Every create without a position returns 500, a `not-null` violation on `lists.position`. "keeps a position the client sent, verbatim" passes.
+Run: `pnpm --filter @psykl/service-task test:component -- default-list && pnpm --filter @psykl/service-task test:integration -- list-server-position`
+Expected: FAIL:
 
-- [ ] **Step 4: Assign the position in a transaction.** In `components/service-task/src/list/list.service.ts`:
+- The default-list delete answers 200, not 409.
+- Every create without a position answers 500, a `not-null` violation on `lists.position`.
+- "keeps a position the client sent, verbatim", "still deletes any other list", the 404 test and the 400 test pass.
+
+- [ ] **Step 4: Implement.** In `components/service-task/src/list/list.service.ts`:
 
 ```ts
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { DEFAULT_LIST_ID } from '@psykl/shared-types';
+import type {
+  List as ListResponse,
+  ListDeleteInput,
+  ListInput,
+  ListPatchInput,
+  ListRestoreInput,
+} from '@psykl/shared-types';
 import { and, desc, eq, gte, isNotNull, isNull } from 'drizzle-orm';
 import { generateKeyBetween } from 'fractional-indexing';
 ```
 
-Replace `createList` and add `appendPosition`:
+In `deleteList`, right after `await this.requireList(userId, id);`:
+
+```ts
+// The default list is the home for a task whose list is gone; it lives as
+// long as its owner (online-offline-modes Decision 16).
+if (id === DEFAULT_LIST_ID) {
+  throw new ConflictException('The default list cannot be deleted');
+}
+```
+
+Replace `createList`, and add `appendPosition`:
 
 ```ts
   async createList(userId: string, input: ListInput): Promise<ListResponse> {
@@ -268,8 +575,8 @@ Replace `createList` and add `appendPosition`:
     return this.db.transaction(async (tx) => {
       const position = input.position ?? (await this.appendPosition(tx, userId));
       // onConflictDoNothing: two devices can race to create the same default-list
-      // id (see list-persistence.integration.test.ts for why). A replay keeps the
-      // stored row, including a position the server assigned earlier.
+      // id (see list-persistence.integration.test.ts). A replay keeps the stored
+      // row, including a position the server assigned earlier.
       const [inserted] = await tx
         .insert(schema.lists)
         .values({ id: input.id, userId, title: input.title, position, updatedAt: new Date(input.updated_at) })
@@ -304,118 +611,38 @@ Replace `createList` and add `appendPosition`:
   }
 ```
 
-The `NotFoundException` branch keeps today's behavior: a duplicate id owned by another user (#117) answers 404. `ORDER BY position DESC` uses the column's `COLLATE "C"`, so it agrees with JavaScript string order.
+`ORDER BY position DESC` uses the column's `COLLATE "C"`, so it agrees with JavaScript string order. If `tx` does not fit `Pick<Db, 'select'>`, type it as `Parameters<Parameters<Db['transaction']>[0]>[0]` and ledger the ruling.
 
-Run: `pnpm --filter @psykl/service-task test:integration -- list-server-position`
-Expected: PASS, 7/7.
-
-Run: `pnpm -r typecheck && pnpm --filter @psykl/service-task test:integration && pnpm --filter @psykl/service-task test:component && pnpm --filter @psykl/service-task test:unit`
+Run: `pnpm -r typecheck && pnpm -r lint && pnpm -r test:unit && pnpm --filter @psykl/service-task test:integration && pnpm --filter @psykl/service-task test:component`
 Expected: all PASS.
 
-If `tx`'s type does not fit `Pick<Db, 'select'>`, type it as `Parameters<Parameters<Db['transaction']>[0]>[0]` and ledger the ruling.
-
-- [ ] **Step 5: Contract test for the HTTP shape.** Create `components/service-task/src/list/__tests__/list.controller.create-position.contract.test.ts`:
-
-```ts
-import { describe, expect, it } from 'vitest';
-
-import { listControllerHarness, listCreateBody, validListId } from './list.controller.contract-support.js';
-
-/**
- * Behavior enforced by:
- * packages/shared-types/src/schemas/list.ts (ListInputSchema.position optional)
- * components/service-task/src/list/list.service.ts (appendPosition)
- */
-describe('POST /lists', () => {
-  const harness = listControllerHarness();
-
-  it('creates a list without a position and returns the one the server chose', async () => {
-    // Given
-    const body = { id: validListId('201'), title: 'no position', updated_at: '2026-05-20T12:00:00.000Z' };
-
-    // When
-    const response = await harness.createList({ userId: 'position-contract-user', body }).expect(201);
-
-    // Then
-    expect(response.body).toMatchObject({ id: validListId('201'), title: 'no position', position: 'a0' });
-  });
-
-  it('still rejects an empty position', async () => {
-    // Given
-    const body = listCreateBody({ id: validListId('202'), position: '' });
-
-    // When / Then
-    await harness.createList({ userId: 'position-contract-user', body }).expect(400);
-  });
-});
-```
-
-Run: `pnpm --filter @psykl/service-task test:component -- create-position`
-Expected: PASS, 2/2. The behavior already exists, so this pins the HTTP contract and does not drive it.
-
-- [ ] **Step 6: Commit and tick this DevTask in this doc.**
+- [ ] **Step 5: Commit, and tick this DevTask's steps in this doc.**
 
 ```bash
-git add packages/shared-types/src/schemas components/service-task pnpm-lock.yaml docs/specs/online-offline-modes/20261113-Spec2-server-positions-default-list.md
-git commit -m "feat: append a list after the caller's last one when no position is sent" -m "- Spec 2 doc: DevTask 5 steps checked"
+git add packages/shared-types/src components/service-task pnpm-lock.yaml docs/specs/online-offline-modes/20261113-Spec2-server-positions-default-list.md
+git commit -m "feat: refuse to delete the default list and append lists sent without a position" -m "- Spec 2 doc: DevTask 6 steps checked"
 ```
 
-### DevTask 6: Seed the default list on the server, and close out Spec 2
+### DevTask 7: The server keeps the default list, and Spec 2 closes out
 
-**Files:** 6 production files:
+**Files:** 4 production files:
 
-- `packages/shared-types/src/schemas/list.ts`
 - `components/service-task/src/list/default-list.seed.ts` (new)
 - `components/service-task/src/app.bootstrap.ts` (new)
 - `components/service-task/src/main.ts`
 - `components/service-task/src/testing/test-reset.controller.ts`
-- `components/web_client/src/hooks/useLists.default-list.ts` (comment only)
 
-**Branch:** `feat/online-offline-modes-s2-dt6-seeded-default-list`
+**Branch:** `feat/online-offline-modes-s2-dt7-seeded-default-list`
 **PR:** _tbd_
 
 **Interfaces:**
 
-- Produces: `DEFAULT_LIST_ID`, `DEFAULT_LIST_TITLE` exported from `@psykl/shared-types`; `seedDefaultList(db: Db): Promise<void>` and `SINGLE_USER_ID = 'local'` from `src/list/default-list.seed.ts`; `prepareApp(app: INestApplication): Promise<void>` from `src/app.bootstrap.ts`.
-- If DevTask 5 has merged first, `fractional-indexing` is already a dependency. Otherwise add it as in DevTask 5 Step 3.
+- Consumes: `DEFAULT_LIST_ID`, `DEFAULT_LIST_TITLE` from DevTask 6.
+- Produces:
+  - From `src/list/default-list.seed.ts`: `seedDefaultList(db: Db): Promise<void>` and `SINGLE_USER_ID = 'local'`.
+  - From `src/app.bootstrap.ts`: `prepareApp(app: INestApplication): Promise<void>`.
 
-- [ ] **Step 1: Failing constant test.** Append to `packages/shared-types/src/schemas/list.unit.test.ts`, changing its import to `import { DEFAULT_LIST_ID, DEFAULT_LIST_TITLE, ListInputSchema } from './list';`:
-
-```ts
-describe('default list', () => {
-  it('has an id every create accepts', () => {
-    expect(
-      ListInputSchema.parse({
-        id: DEFAULT_LIST_ID,
-        title: DEFAULT_LIST_TITLE,
-        position: 'a0',
-        updated_at: '2026-11-13T10:00:00.000Z',
-      }).id,
-    ).toBe('00000000-0000-7000-8000-000000000001');
-  });
-});
-```
-
-Run: `pnpm --filter @psykl/shared-types test:unit -- list.unit`
-Expected: FAIL, because `DEFAULT_LIST_ID` is not exported.
-
-- [ ] **Step 2: Export the constants.** At the end of `packages/shared-types/src/schemas/list.ts`:
-
-```ts
-/**
- * The default list every account starts with. A fixed id so every device and
- * the server agree on it without a round trip. MUST equal DEFAULT_LIST_ID in
- * components/web_client/src/hooks/useLists.default-list.ts (the PWA does not
- * import this package at runtime; e2e/lists.e2e.spec.ts catches drift).
- */
-export const DEFAULT_LIST_ID = '00000000-0000-7000-8000-000000000001';
-export const DEFAULT_LIST_TITLE = 'Tasks';
-```
-
-Run: `pnpm --filter @psykl/shared-types test:unit && pnpm --filter @psykl/shared-types build`
-Expected: PASS.
-
-- [ ] **Step 3: Failing seed integration tests.** Create `components/service-task/tests/integration/default-list-seed.integration.test.ts`:
+- [ ] **Step 1: Failing seed integration tests.** Create `components/service-task/tests/integration/default-list-seed.integration.test.ts`:
 
 ```ts
 import { DEFAULT_LIST_ID } from '@psykl/shared-types';
@@ -429,11 +656,12 @@ import { createIntegrationDb } from './task.integration-support.js';
 
 /**
  * Behavior enforced by:
- * components/service-task/src/list/default-list.seed.ts (Decision 15)
+ * components/service-task/src/list/default-list.seed.ts (Decisions 15, 16)
  */
 describe('default list seed', () => {
   let db: Db;
-  const rowsFor = (userId: string) => db.select().from(schema.lists).where(eq(schema.lists.userId, userId));
+  const rowsFor = (userId: string) =>
+    db.select().from(schema.lists).where(eq(schema.lists.userId, userId)).orderBy(schema.lists.position);
 
   beforeEach(async () => {
     db = await createIntegrationDb();
@@ -459,8 +687,8 @@ describe('default list seed', () => {
     expect(await rowsFor(SINGLE_USER_ID)).toHaveLength(1);
   });
 
-  it('leaves a deleted default list deleted', async () => {
-    // Given the user deleted the default list
+  it('restores a default list deleted before Decision 16', async () => {
+    // Given
     await seedDefaultList(db);
     await db
       .update(schema.lists)
@@ -470,26 +698,35 @@ describe('default list seed', () => {
     // When the service restarts
     await seedDefaultList(db);
 
-    // Then it is still in Recently Deleted
-    const rows = await rowsFor(SINGLE_USER_ID);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.deletedAt).not.toBeNull();
+    // Then it is back, with an edit time newer than the old delete
+    const [row] = await rowsFor(SINGLE_USER_ID);
+    expect(row).toMatchObject({ id: DEFAULT_LIST_ID, deletedAt: null });
+    expect(row!.updatedAt.getTime()).toBeGreaterThan(new Date('2026-11-01T00:00:00.000Z').getTime());
   });
 
-  it('does not seed a user who already has lists', async () => {
-    // Given the default list was purged but other lists remain
+  it("recreates a purged default list ahead of the user's lists", async () => {
+    // Given the default list was purged and another list holds a0
     await insertList(db, { title: 'Groceries', position: 'a0', updatedAt: new Date('2026-11-01T00:00:00.000Z') });
 
     // When
     await seedDefaultList(db);
 
-    // Then no second list appears at position a0
+    // Then the default list is first, on its own key
     const rows = await rowsFor(SINGLE_USER_ID);
-    expect(rows.map((row) => row.title)).toEqual(['Groceries']);
+    expect(rows.map((row) => row.title)).toEqual(['Tasks', 'Groceries']);
+    expect(rows[0]!.position < 'a0').toBe(true);
+  });
+
+  it('seeds nothing for any other user', async () => {
+    // When
+    await seedDefaultList(db);
+
+    // Then
+    expect(await rowsFor('someone-else')).toHaveLength(0);
   });
 
   it("lets a device's own edit of the default list win", async () => {
-    // Given the seeded list
+    // Given
     await seedDefaultList(db);
 
     // When a device renames it (any real timestamp is newer than the seed)
@@ -498,12 +735,12 @@ describe('default list seed', () => {
       updated_at: '2026-11-13T10:00:00.000Z',
     });
 
-    // Then the rename lands
+    // Then
     expect(renamed.title).toBe('Inbox');
   });
 
   it("answers a device's own create of the default list with the seeded row", async () => {
-    // Given the seeded list
+    // Given
     await seedDefaultList(db);
 
     // When a device that bootstrapped offline syncs its create
@@ -514,7 +751,7 @@ describe('default list seed', () => {
       updated_at: '2026-11-13T09:00:00.000Z',
     });
 
-    // Then it gets the one shared row back, not a second list
+    // Then the one shared row, not a second list
     expect(response.id).toBe(DEFAULT_LIST_ID);
     expect(await rowsFor(SINGLE_USER_ID)).toHaveLength(1);
   });
@@ -524,7 +761,7 @@ describe('default list seed', () => {
 Run: `pnpm --filter @psykl/service-task test:integration -- default-list-seed`
 Expected: FAIL, because `default-list.seed.js` cannot be resolved.
 
-- [ ] **Step 4: Write the seed.** Create `components/service-task/src/list/default-list.seed.ts`:
+- [ ] **Step 2: Write the seed.** Create `components/service-task/src/list/default-list.seed.ts`:
 
 ```ts
 import { DEFAULT_LIST_ID, DEFAULT_LIST_TITLE } from '@psykl/shared-types';
@@ -539,23 +776,32 @@ import { type Db, schema } from '../db/index.js';
  */
 const SINGLE_USER_ID = 'local';
 
-/** Epoch, so any edit a device makes to the default list wins Last-Write-Wins. */
+/** Epoch, so any edit a device makes to a newly created default list wins Last-Write-Wins. */
 const SEEDED_UPDATED_AT = new Date(0);
 
 /**
- * Ensures the default list exists (DESIGN.md Decisions 10, 15). It seeds only
- * when the user owns no list rows at all, deleted ones included, so a default
- * list the user deleted stays deleted. A purged one does not return either,
- * while other lists remain.
+ * Keeps the default list in place (online-offline-modes Decisions 15, 16):
+ * - created, ahead of every other list, when it is missing (a fresh database,
+ *   or a database that purged it before Decision 16);
+ * - restored when a device deleted it before Decision 16, with a fresh edit
+ *   time so the restore wins over the old tombstone.
  */
 async function seedDefaultList(db: Db): Promise<void> {
   await db.transaction(async (tx) => {
-    const [any] = await tx
-      .select({ id: schema.lists.id })
+    const rows = await tx
+      .select({ id: schema.lists.id, position: schema.lists.position, deletedAt: schema.lists.deletedAt })
       .from(schema.lists)
       .where(eq(schema.lists.userId, SINGLE_USER_ID))
-      .limit(1);
-    if (any) {
+      .orderBy(schema.lists.position);
+    const existing = rows.find((row) => row.id === DEFAULT_LIST_ID);
+    if (existing) {
+      if (existing.deletedAt !== null) {
+        const now = new Date();
+        await tx
+          .update(schema.lists)
+          .set({ deletedAt: null, updatedAt: now, serverUpdatedAt: now })
+          .where(eq(schema.lists.id, DEFAULT_LIST_ID));
+      }
       return;
     }
     await tx
@@ -564,7 +810,7 @@ async function seedDefaultList(db: Db): Promise<void> {
         id: DEFAULT_LIST_ID,
         userId: SINGLE_USER_ID,
         title: DEFAULT_LIST_TITLE,
-        position: generateKeyBetween(null, null),
+        position: generateKeyBetween(null, rows[0]?.position ?? null),
         updatedAt: SEEDED_UPDATED_AT,
       })
       // lists.id is a global primary key (#117): never fail start-up over it.
@@ -576,11 +822,9 @@ export { seedDefaultList, SINGLE_USER_ID };
 ```
 
 Run: `pnpm --filter @psykl/service-task test:integration -- default-list-seed`
-Expected: PASS, 6/6.
+Expected: PASS, 7/7.
 
-- [ ] **Step 5: Failing contract tests for start-up and reset.**
-
-Create `components/service-task/src/__tests__/app.bootstrap.contract.test.ts`:
+- [ ] **Step 3: Failing contract tests for start-up and reset.** Create `components/service-task/src/__tests__/app.bootstrap.contract.test.ts`:
 
 ```ts
 import type { INestApplication } from '@nestjs/common';
@@ -630,7 +874,7 @@ Append to `components/service-task/src/testing/__tests__/test-reset.contract.tes
 
 ```ts
 it('puts the default list back after wiping the server', async () => {
-  // Given a reset service
+  // Given
   process.env[TEST_RESET_FLAG] = 'enabled';
   await seedList(app, 'local', validId('004'));
 
@@ -646,7 +890,7 @@ it('puts the default list back after wiping the server', async () => {
 Run: `pnpm --filter @psykl/service-task test:component -- app.bootstrap test-reset`
 Expected: FAIL. `app.bootstrap.js` does not exist yet, and the reset leaves `[]`.
 
-- [ ] **Step 6: Wire start-up and reset, then run everything.** Create `components/service-task/src/app.bootstrap.ts`:
+- [ ] **Step 4: Wire start-up and reset, then run everything.** Create `components/service-task/src/app.bootstrap.ts`:
 
 ```ts
 import type { INestApplication } from '@nestjs/common';
@@ -670,7 +914,7 @@ async function prepareApp(app: INestApplication): Promise<void> {
 export { prepareApp };
 ```
 
-Replace the body of `bootstrap()` in `components/service-task/src/main.ts`:
+Replace `components/service-task/src/main.ts` with:
 
 ```ts
 import 'reflect-metadata';
@@ -692,7 +936,7 @@ async function bootstrap() {
 void bootstrap();
 ```
 
-In `components/service-task/src/testing/test-reset.controller.ts`, import `seedDefaultList` from `'../list/default-list.seed.js'` and re-seed after the truncate:
+In `components/service-task/src/testing/test-reset.controller.ts`, import `seedDefaultList` from `'../list/default-list.seed.js'`, and re-seed after the truncate:
 
 ```ts
 await this.db.execute(sql`truncate table tasks, lists, idempotency restart identity`);
@@ -701,38 +945,30 @@ await seedDefaultList(this.db);
 return { reset: true };
 ```
 
-In `components/web_client/src/hooks/useLists.default-list.ts`, after the existing `DEFAULT_LIST_ID` comment block, add one line above the constant:
-
-```ts
-// MUST equal DEFAULT_LIST_ID in packages/shared-types/src/schemas/list.ts — the server seeds it (Decision 15).
-```
-
 Run: `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check && pnpm -r test:unit && pnpm -r test:integration && pnpm -r test:component`
 Expected: all PASS.
 
-Run the End-to-End suite against Compose: `./scripts/e2e-up.sh && pnpm test:e2e`, then `docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v`.
-Expected: the same pass count as `main` (89 passed, 3 skipped). If `lists.e2e.spec.ts` shows two "Tasks" lists, the client and server ids have drifted (Review Focus 5).
+Run the End-to-End suite: `./scripts/e2e-up.sh && pnpm test:e2e`, then `docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v`.
+Expected: DevTask 5's count (90 passed, 3 skipped). If `e2e/lists.e2e.spec.ts:58` sees two "Tasks" lists, the client and server ids have drifted.
 
-- [ ] **Step 7: Commit the seed.**
+- [ ] **Step 5: Commit the seed.**
 
 ```bash
-git add packages/shared-types/src components/service-task components/web_client/src/hooks/useLists.default-list.ts pnpm-lock.yaml
-git commit -m "feat: seed the default list on the server at start-up and after a test reset"
+git add components/service-task
+git commit -m "feat: keep the default list on the server, seeded at start-up and after a test reset"
 ```
 
-- [ ] **Step 8: Close out Spec 2.** This is the final DevTask, so it lands in the same PR:
-  - Create the feature doc `docs/features/[{YYYYMMDD}]GH144_server-positions-default-list.md` from `docs/templates/FEATURE.md`, using the close-out date. It has no Visual Record, because no surface changed. Carry over the "Decisions made during spec drafting" below as S2-1 to S2-4.
-  - Add **ADR-OOM-003: The Server Assigns List Positions and Seeds the Default List** to `docs/ARCHITECTURE.md`, after ADR-OOM-002. It should cite Decisions 10 and 15 and S2-1 to S2-4.
-  - Add a `CHANGELOG.md` Unreleased entry: `POST /lists` takes an optional `position`, and the server seeds "Tasks".
+- [ ] **Step 6: Close out Spec 2.** This is the final DevTask, so it lands in the same PR.
+  - Create the feature doc `docs/features/[{YYYYMMDD}]GH144_server-positions-default-list.md` from `docs/templates/FEATURE.md`, dated on the close-out day. Its `## Visual Record` is the visual artifact, updated to what was built. Carry over the "Decisions made during spec drafting" below as S2-1 to S2-4.
+  - Add **ADR-OOM-003: The Server Assigns List Positions and Keeps an Undeletable Default List** to `docs/ARCHITECTURE.md`, after ADR-OOM-002. It cites Decisions 10, 15, 16 and S2-1 to S2-4.
+  - Add a `CHANGELOG.md` Unreleased entry covering three things: "Tasks" can no longer be deleted, `POST /lists` takes an optional `position`, and the server keeps the default list.
   - Update `docs/PROJECT_STATUS.md`: Spec 2 is the last completed spec, and Spec 3 `online-only-lists-tasks` is next.
   - Update `docs/initiatives/online-offline-modes/MILESTONE.md` to "Spec 2 done; Spec 3 next".
-  - Delete this spec doc.
+  - Delete this spec doc and its visual artifact with `git rm`.
 
 ```bash
-git commit -am "feat: close out server-assigned positions and the seeded default list" -m "- Feature doc, ADR-OOM-003, CHANGELOG, PROJECT_STATUS, MILESTONE; Spec 2 doc deleted"
+git add docs CHANGELOG.md && git commit -m "feat: close out server-kept default list and server-assigned positions" -m "- Feature doc, ADR-OOM-003, CHANGELOG, PROJECT_STATUS, MILESTONE; Spec 2 docs deleted"
 ```
-
-(Use `git add` for the new feature doc and `git rm` for this doc before the commit.)
 
 ---
 
@@ -741,22 +977,28 @@ git commit -am "feat: close out server-assigned positions and the seeded default
 1. `pnpm install && docker compose up --build`
 2. `curl -s localhost:3000/lists -H 'X-User-Id: local'` returns one list: `Tasks`, `a0`.
 3. `curl -s -X POST localhost:3000/lists -H 'X-User-Id: local' -H 'Content-Type: application/json' -d '{"id":"0199bbbb-0000-7000-8000-000000000001","title":"Reading","updated_at":"2026-11-13T10:00:00.000Z"}'` returns `"position":"a1"`.
-4. The PWA at `http://localhost:5173` shows one "Tasks" list, not two.
+4. `curl -s -o /dev/null -w '%{http_code}' -X DELETE localhost:3000/lists/00000000-0000-7000-8000-000000000001 -H 'X-User-Id: local' -H 'Content-Type: application/json' -d '{"deleted_at":"2026-11-13T10:00:00.000Z"}'` prints `409`.
+5. In the PWA at `http://localhost:5173`, check List options on both lists:
+   - On "Tasks", it shows no Delete List.
+   - On "Reading", it still offers Delete List.
 
 ## Decisions made during spec drafting
 
-- **S2-1 — Seed only when the user has no list rows at all.** Decision 10 says the server "ensures the default list exists". This narrows it, so that a default list the user deleted, or one purged after 30 days, is not brought back while other lists remain. It is also never seeded at a position another list already holds. Cost if wrong: Spec 3's online path meets a user with zero active lists and must handle it, which it has to do anyway once the user deletes everything.
+- **S2-1 — The seed creates the default list if it's missing and restores it if it's deleted.** Under Decision 16 the list is never deleted, so the seed only repairs data from before the rule. A recreated list goes ahead of the user's first list, because the PWA treats the earliest list as the default (`getDefaultListId`).
 - **S2-2 — Seed from start-up (`prepareApp`) and the test reset, not from `createDb()`.** This keeps every existing test's empty database empty; about ten test files use the `local` user. `prepareApp` also moves CORS and the guard out of `main.ts`, so a contract test can run the real start-up.
-- **S2-3 — The seeded `updated_at` is the epoch.** A device's rename, reorder or delete always wins Last-Write-Wins against the seed.
+- **S2-3 — A newly created seed has the epoch as `updated_at`; a restore uses `now()`.** A device's edit wins over a fresh seed, and a restore wins over the stale tombstone.
 - **S2-4 — Appended positions count deleted lists.** A restored list cannot land on the same key as one created while it was deleted.
-- **DevTask numbering** continues from Spec 1 (DevTasks 1-4), so this Spec has DevTasks 5 and 6.
+- **No new client code for a refused delete.** A queued delete of the default list from before the rule gets `409`, lands in Failed (`sync/replay.ts:129`), and start-up restores the list.
+- **Numbering.** DevTasks continue from Spec 1 (DevTasks 1-4), so this Spec has DevTasks 5-7. They run in UI-first order: DevTask 5 is client only, and DevTasks 6-7 are server.
 
 ## Open Questions / Risks
 
-- **A stored position that `fractional-indexing` cannot parse** makes `appendPosition` throw, and the create answers 500. Every writer today uses the library, so no such key exists. Validating keys at the schema would change the sync path's contract, which is out of scope (DESIGN.md → Out of Scope). Recorded for Spec 3.
-- **Homelab upgrade.** The deployed database already holds the user's lists, so S2-1 seeds nothing there. That is the intended behavior.
+- **`getDefaultListId` (sync path) still means "the earliest list", not `DEFAULT_LIST_ID`.** If a user moves another list above "Tasks", tasks with no list are shown under that list instead. This was true before Decision 16 and is unchanged here. Spec 5, which moves the bootstrap behind the Sync Client, should make it return `DEFAULT_LIST_ID`.
+- **A device holding a local tombstone of "Tasks" from before the rule** shows it as deleted until the next pull brings back the restored row. It then also shows one Failed entry, the refused delete.
+- **A stored position that `fractional-indexing` cannot parse** makes `appendPosition` throw, and the create answers 500. Every writer today uses the library, so no such key exists. Validating keys at the schema would change the sync path's contract, which is out of scope.
+- **"Unless its owner is deleted"** waits for `multi-tenant-auth` (#117). No users exist yet.
 
 ## Affected by / Depends on
 
 - Spec 1 (`data-mode-seam`) is merged to `main` (#149).
-- Spec 3 (`online-only-lists-tasks`) depends on this Spec's contract.
+- Spec 3 (`online-only-lists-tasks`) depends on this Spec's contract and on the default list always existing.
