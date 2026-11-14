@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import type { DeleteListMode } from '../components/DeleteListDialog';
+import { isDefaultList } from '../services/default-list';
 import { useActiveListId } from './useActiveList';
 import { useLists } from './useLists';
 import { useTasks } from './useTasks';
@@ -56,10 +57,12 @@ function useListDeletion(): ListDeletion {
         return;
       }
 
-      // `lists` is position-ordered, so the first list that is not this one is
-      // the default list. A list with nowhere to send its items still deletes:
-      // the service's orphan sweep is the backstop.
-      const destination = lists.find((list) => list.id !== listId);
+      // The items go to the default list, found by its fixed id (Decision 16).
+      // `lists` is position-ordered, so the first other list is the fallback.
+      // A list with nowhere to send its items still deletes: the service's
+      // orphan sweep is the backstop.
+      const others = lists.filter((list) => list.id !== listId);
+      const destination = others.find((list) => isDefaultList(list.id)) ?? others[0];
       if (destination) {
         await Promise.allSettled(
           tasks.map((task) =>

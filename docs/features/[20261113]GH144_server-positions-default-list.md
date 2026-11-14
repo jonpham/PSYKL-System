@@ -9,7 +9,7 @@ branches:
 prs:
   - https://github.com/jonpham/PSYKL-System/pull/151
   - https://github.com/jonpham/PSYKL-System/pull/152
-  - _tbd_ # DevTask 7
+  - https://github.com/jonpham/PSYKL-System/pull/153
 completed_at: # set when the Spec integration PR merges to main
 created_at: 2026-11-13
 initiative: online-offline-modes
@@ -34,7 +34,7 @@ As a PSYKL user, I always have my "Tasks" list, so that a task whose list is gon
 1. [#144](https://github.com/jonpham/PSYKL-System/issues/144): **the PWA never offers to delete the default list** (Decision 16).
    - List options on "Tasks" shows no Delete List, even after the list is renamed. Every other list still offers it.
    - `useLists()` returns `canDeleteList(id)` in place of the single `canDelete` flag. The sync path refuses to delete the default list as well as the last remaining list.
-   - The default list follows its fixed id (S2-5). Moving another list above "Tasks" no longer moves tasks without a list there.
+   - The default list follows its fixed id (S2-5). Moving another list above "Tasks" no longer moves tasks without a list there, nor the items of a list deleted with "Delete Just the List".
 2. **The list API refuses to delete the default list** (Decision 16). `DELETE /lists/{DEFAULT_LIST_ID}` answers `409` "The default list cannot be deleted". A caller who doesn't own it still gets `404`. A delete a device queued before the rule lands in Failed, like any refused write.
 3. **`POST /lists` takes an optional `position`** (Decision 10). Without one, the server appends the list after the caller's highest position, deleted lists included (S2-4). One transaction per create keeps two simultaneous creates on distinct keys. A position the client sends is stored as sent.
 4. **The server keeps the default list** (Decision 15). At start-up and after a test reset, `service-task` creates the default list if it's missing and restores it if a device deleted it before Decision 16 (S2-1, S2-2).
@@ -88,6 +88,7 @@ _Expectation_ — the server starts with the default list, appends lists sent wi
 - `components/web_client`:
   - `src/services/default-list.ts` (new): `DEFAULT_LIST_ID`, `isDefaultList`
   - `src/hooks/useLists.ts`, `useLists.sync.ts`, `useLists.api.ts`, `useLists.default-list.ts`
+  - `src/hooks/useListDeletion.ts`: "Delete Just the List" sends the items to the default list by id
   - `src/App.tsx`
 - `packages/shared-types`:
   - `src/schemas/list.ts`: optional `ListInput.position`; `DEFAULT_LIST_ID`, `DEFAULT_LIST_TITLE`
@@ -96,6 +97,7 @@ _Expectation_ — the server starts with the default list, appends lists sent wi
   - `src/list/list.service.ts`: the `409`, `appendPosition`
   - `src/list/default-list.seed.ts` (new), `src/app.bootstrap.ts` (new), `src/main.ts`
   - `src/testing/test-reset.controller.ts`: re-seeds after the truncate
+  - `src/task/task-orphan-sweep.ts`: re-homes an orphaned task to the default list by id, the earliest list as fallback
   - New dependency: `fractional-indexing@^4.0.0`, the version `web_client` pins
 
 ## Design Decisions
@@ -106,6 +108,7 @@ _Expectation_ — the server starts with the default list, appends lists sent wi
 - **S2-4 — Appended positions count deleted lists.** A restored list cannot land on the same key as one created while it was deleted.
 - **S2-5 — `getDefaultListId` follows `DEFAULT_LIST_ID`** (operator, 2026-11-13). The earliest list stays as a fallback for a device that doesn't hold "Tasks" locally yet.
 - **No new client code for a refused delete.** A queued delete of the default list from before the rule gets `409`, lands in Failed (`sync/replay.ts`), and start-up restores the list.
+- **Final review fix:** "Delete Just the List" and the server's orphan sweep still sent items to the top list. Both now prefer `DEFAULT_LIST_ID`, as `getDefaultListId` does.
 - **Process deviation:** DevTask PRs were stacked as drafts (DevTask 6 on 5, 7 on 6) at the operator's request, though DevTasks 6 and 7 do not depend on DevTask 5's code.
 - **Known gaps:**
   - A device holding a local tombstone of "Tasks" from before the rule shows it as deleted until the next pull brings back the restored row, and then shows one Failed entry, the refused delete.
@@ -123,4 +126,4 @@ _Expectation_ — the server starts with the default list, appends lists sent wi
 | ---------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | 2026-11-13 | [#151](https://github.com/jonpham/PSYKL-System/pull/151) | DevTask 5: the PWA never offers to delete the default list                              |
 | 2026-11-13 | [#152](https://github.com/jonpham/PSYKL-System/pull/152) | DevTask 6: the list API refuses it with `409` and appends lists sent without a position |
-| 2026-11-13 | _tbd_                                                    | DevTask 7: the server seeds or restores the default list; Spec close-out                |
+| 2026-11-13 | [#153](https://github.com/jonpham/PSYKL-System/pull/153) | DevTask 7: the server seeds or restores the default list; Spec close-out                |
