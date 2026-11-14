@@ -2,14 +2,12 @@ import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
 
+import { prepareApp } from './app.bootstrap.js';
 import { AppModule } from './app.module.js';
-import { UserIdGuard } from './auth/user-id.guard.js';
-import { corsOptions } from './http/cors.options.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors(corsOptions());
-  app.useGlobalGuards(new UserIdGuard());
+  await prepareApp(app);
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, '0.0.0.0');

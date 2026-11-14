@@ -1,3 +1,4 @@
+import { DEFAULT_LIST_ID } from '@psykl/shared-types';
 import { v7 as uuidv7 } from 'uuid';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -51,6 +52,39 @@ describe('TaskService orphan sweep', () => {
     // And — the fix is persisted, not just shaped in the response
     const [secondRead] = await service.listTasks(userId);
     expect(secondRead).toMatchObject({ id: taskId, list_id: defaultListId });
+  });
+
+  it('reassigns an orphaned Task to the Tasks list even when another list sits above it', async () => {
+    // The default list belongs to the single user `local` (#117).
+    const userId = 'local';
+    await insertList(db, {
+      userId,
+      title: 'Errands',
+      position: 'a0',
+      updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+    });
+    await insertList(db, {
+      id: DEFAULT_LIST_ID,
+      userId,
+      title: 'Tasks',
+      position: 'a1',
+      updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+    });
+    const taskId = await insertTask(db, {
+      userId,
+      title: 'orphaned',
+      updatedAt: new Date('2026-05-20T10:00:00.000Z'),
+      listId: uuidv7(),
+    });
+
+    // Given
+    const service = taskService(db);
+
+    // When
+    const [read] = await service.listTasks(userId);
+
+    // Then — the default list follows its fixed id, not the top position (Decision 16)
+    expect(read).toMatchObject({ id: taskId, list_id: DEFAULT_LIST_ID });
   });
 
   it('reassigns a Task pointing at a list id the server has never seen', async () => {

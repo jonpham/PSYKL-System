@@ -1,14 +1,15 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { DEFAULT_LIST_ID } from '@psykl/shared-types';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { type Db, schema } from '../db/index.js';
 
 /**
  * A Task whose list_id matches no live List (deleted, or never synced because
- * task.list_id carries no foreign key) is reassigned to the earliest-position
- * live List for this user, and the fix is persisted so it heals without a
- * background job. "Default list" here matches the client's own definition in
- * web_client/src/hooks/useLists.default-list.ts: the earliest-position active
- * list, not a hardcoded well-known id.
+ * task.list_id carries no foreign key) is reassigned to this user's default
+ * list, and the fix is persisted so it heals without a background job. The
+ * default list is the live list with DEFAULT_LIST_ID (online-offline-modes
+ * Decision 16); the earliest-position live list is only a fallback, matching
+ * web_client/src/hooks/useLists.default-list.ts.
  *
  * Used by TaskService.listTasks — split into its own file to keep
  * task.service.ts under the project's max-lines lint rule.
@@ -39,7 +40,7 @@ export async function healOrphanedListReferences(
     .select({ id: schema.lists.id })
     .from(schema.lists)
     .where(and(eq(schema.lists.userId, userId), isNull(schema.lists.deletedAt)))
-    .orderBy(schema.lists.position)
+    .orderBy(sql`${schema.lists.id} = ${DEFAULT_LIST_ID} desc`, schema.lists.position)
     .limit(1);
   if (!defaultList) {
     return rows;
