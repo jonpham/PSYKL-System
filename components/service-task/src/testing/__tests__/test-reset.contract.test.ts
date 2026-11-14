@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { DEFAULT_LIST_ID } from '@psykl/shared-types';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
@@ -70,6 +71,19 @@ describe('POST /test/reset', () => {
     // a row that the reset removed
     const response = await request(app.getHttpServer()).get('/tasks').set('X-User-Id', 'third-user').expect(200);
     expect(response.body).toHaveLength(1);
+  });
+
+  it('puts the default list back after wiping the server', async () => {
+    // Given
+    process.env[TEST_RESET_FLAG] = 'enabled';
+    await seedList(app, 'local', validId('004'));
+
+    // When the suite resets between tests
+    await request(app.getHttpServer()).post('/test/reset').set('X-User-Id', caller).expect(200);
+
+    // Then the next test starts the way a fresh service does (Decision 15)
+    const lists = await request(app.getHttpServer()).get('/lists').set('X-User-Id', 'local').expect(200);
+    expect((lists.body as Array<{ id: string }>).map((list) => list.id)).toEqual([DEFAULT_LIST_ID]);
   });
 });
 
