@@ -67,7 +67,7 @@ test.describe('list deletion', () => {
     await expect(page.getByRole('button', { name: title, exact: true })).toHaveCount(0);
   });
 
-  test.skip('a user is never offered to delete their Tasks list, even after renaming it', async ({ page }) => {
+  test('a user is never offered to delete their Tasks list, even after renaming it', async ({ page }) => {
     await createList(page, `Errands ${Date.now()}`);
     await openList(page, 'Tasks');
     await enterSelectionMode(page);

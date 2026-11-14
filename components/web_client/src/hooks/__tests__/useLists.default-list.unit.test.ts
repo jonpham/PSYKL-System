@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { listSyncQueue } from '../../db/idb';
 import { resetUseListsForTest, useLists } from '../useLists';
-import { DEFAULT_LIST_ID } from '../useLists.default-list';
+import { DEFAULT_LIST_ID, ensureDefaultList, getDefaultListId } from '../useLists.default-list';
 
 // See useLists.unit.test.ts — deleteList now calls enqueueWithReplay, which
 // fires a detached background replay() that must not race real network/IDB
@@ -58,15 +58,80 @@ describe('useLists default list and deletion guard', () => {
     expect(result.current.lists[0]?.id).toBe(DEFAULT_LIST_ID);
   });
 
-  it('does not offer to delete the only remaining (default) list', async () => {
+  it('does not offer to delete the default list', async () => {
     // Arrange
     const { result } = renderHook(() => useLists());
-
-    // Act / Assert
     await waitFor(() => {
       expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
     });
-    expect(result.current.canDelete).toBe(false);
+
+    // Act
+    await act(async () => {
+      await result.current.createList('Groceries');
+    });
+
+    // Assert — another list exists, and the default list is still protected
+    await waitFor(() => {
+      expect(result.current.lists).toHaveLength(2);
+    });
+    expect(result.current.canDeleteList(DEFAULT_LIST_ID)).toBe(false);
+  });
+
+  it('still protects the default list after it is renamed', async () => {
+    // Arrange
+    const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
+    await act(async () => {
+      await result.current.createList('Groceries');
+    });
+    await waitFor(() => {
+      expect(result.current.lists).toHaveLength(2);
+    });
+    await act(async () => {
+      await result.current.renameList(DEFAULT_LIST_ID, 'Inbox');
+    });
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Inbox', 'Groceries']);
+    });
+
+    // Act
+    await act(async () => {
+      await result.current.deleteList(DEFAULT_LIST_ID);
+    });
+
+    // Assert — the rule follows the id, not the title
+    expect(result.current.lists.map((list) => list.title)).toEqual(['Inbox', 'Groceries']);
+    expect(result.current.canDeleteList(DEFAULT_LIST_ID)).toBe(false);
+    expect((await listSyncQueue()).some((entry) => entry.op === 'delete')).toBe(false);
+  });
+
+  it('keeps the Tasks list as the default after another list is moved above it', async () => {
+    // Arrange
+    const { result } = renderHook(() => useLists());
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+    });
+    await act(async () => {
+      await result.current.createList('Groceries');
+    });
+    await waitFor(() => {
+      expect(result.current.lists).toHaveLength(2);
+    });
+    const [tasks, groceries] = result.current.lists;
+    await act(async () => {
+      await result.current.moveList(groceries!.id, null, tasks!);
+    });
+    await waitFor(() => {
+      expect(result.current.lists.map((list) => list.title)).toEqual(['Groceries', 'Tasks']);
+    });
+
+    // Act
+    await ensureDefaultList();
+
+    // Assert — the default follows the fixed id, not the top position
+    expect(getDefaultListId()).toBe(DEFAULT_LIST_ID);
   });
 
   it('deletes a list and queues the delete for sync when more than one list remains', async () => {
@@ -85,6 +150,7 @@ describe('useLists default list and deletion guard', () => {
     if (!groceriesId) {
       throw new Error('expected a Groceries list to exist after createList');
     }
+    expect(result.current.canDeleteList(groceriesId)).toBe(true);
 
     // Act
     await act(async () => {

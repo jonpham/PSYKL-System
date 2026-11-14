@@ -20,7 +20,7 @@ import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
 import { useSyncRecords } from './hooks/useSyncRecords';
 
 export default function App() {
-  const { canDelete, lists, renameList } = useLists();
+  const { canDeleteList, lists, renameList } = useLists();
   const { activeListItemCount, deleteActiveList } = useListDeletion();
   const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
@@ -83,7 +83,7 @@ export default function App() {
         />
         {destination === 'list' ? (
           <ListMenu
-            canDelete={canDelete}
+            canDelete={activeList !== null && canDeleteList(activeList.id)}
             completedCount={completedCount}
             onRequestDeleteList={() => setDeletingList(true)}
             onSelectItems={() => setSelecting(true)}
