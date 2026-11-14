@@ -3,6 +3,7 @@ import { v7 as uuidv7 } from 'uuid';
 
 import { openPsyklDb } from '../db/idb';
 import type { ListRecord, SyncQueueEntry } from '../db/idb.types';
+import { DEFAULT_LIST_ID } from '../services/default-list';
 
 // Known smell — sync path only. The default list is bootstrapped on-device in
 // one IndexedDB transaction that also writes the sync queue, bypassing the
@@ -25,11 +26,11 @@ const defaultListTitle = 'Tasks';
 // device's local list id. A shared constant makes every device agree
 // without a network round trip. list.service.ts's createList treats a
 // duplicate-id create as an idempotent success for the same reason.
-const DEFAULT_LIST_ID = '00000000-0000-7000-8000-000000000001';
+// DEFAULT_LIST_ID itself lives in services/default-list.ts.
 
-// The earliest-position active list is the default list — either the one
-// just created below, or (on later runs / other devices) the "Tasks" list
-// created the first time. `useTasks` reads this to decide which list a
+// The list with DEFAULT_LIST_ID is the default list, wherever it sits
+// (Decision 16). The earliest-position active list is only a fallback, for a
+// device whose "Tasks" list isn't present locally yet. `useTasks` reads this to decide which list a
 // pre-migration task (`list_id: null`) belongs to, per UX.md § 10 decision 1
 // ("Migration puts every pre-existing task there").
 let defaultListId: string | null = null;
@@ -67,11 +68,15 @@ async function ensureDefaultList(): Promise<void> {
         await metaStore.put({ key: defaultListFlagKey, value: true });
       }
 
+      // The fixed id defines the default list (Decision 16). The earliest list is
+      // only a fallback, for a device whose "Tasks" list isn't present locally yet.
       defaultListId =
+        activeLists.find((list) => list.id === DEFAULT_LIST_ID)?.id ??
         activeLists.reduce<ListRecord | null>(
           (earliest, list) => (earliest === null || list.position < earliest.position ? list : earliest),
           null,
-        )?.id ?? defaultListId;
+        )?.id ??
+        defaultListId;
 
       await tx.done;
     } catch (error) {

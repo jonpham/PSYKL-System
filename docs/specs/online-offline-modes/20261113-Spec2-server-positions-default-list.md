@@ -112,7 +112,7 @@ OpenAPI: `zod-to-openapi` drops `position` from `ListInput.required`, and `list-
 - `useLists.default-list.ts` keeps re-exporting `DEFAULT_LIST_ID`, so its existing importers are untouched.
 - `getDefaultListId()` keeps its signature. It now returns `DEFAULT_LIST_ID` whenever that list is active, and falls back to the earliest list only when it isn't. `useTasks.sync.ts` reads it unchanged.
 
-- [ ] **Step 1: Skipped End-to-End test first.** Append to `e2e/list_deletion.e2e.spec.ts`, inside `test.describe('list deletion')`:
+- [x] **Step 1: Skipped End-to-End test first.** Append to `e2e/list_deletion.e2e.spec.ts`, inside `test.describe('list deletion')`:
 
 ```ts
 test.skip('a user is never offered to delete their Tasks list, even after renaming it', async ({ page }) => {
@@ -127,7 +127,7 @@ test.skip('a user is never offered to delete their Tasks list, even after renami
 
 Commit: `git commit -am "test: describe the Tasks list as undeletable end to end"`. The pre-commit typecheck passes, because the test is skipped and adds no types.
 
-- [ ] **Step 2: Failing unit tests.** In `components/web_client/src/hooks/__tests__/useLists.default-list.unit.test.ts`, replace the test `'does not offer to delete the only remaining (default) list'` with the tests below. Then add the same `canDeleteList` checks to the test that creates "Groceries": `expect(result.current.canDeleteList(groceriesId)).toBe(true)`, placed before `// Act`.
+- [x] **Step 2: Failing unit tests.** In `components/web_client/src/hooks/__tests__/useLists.default-list.unit.test.ts`, replace the test `'does not offer to delete the only remaining (default) list'` with the tests below. Then add the same `canDeleteList` checks to the test that creates "Groceries": `expect(result.current.canDeleteList(groceriesId)).toBe(true)`, placed before `// Act`.
 
 ```ts
 it('does not offer to delete the default list', async () => {
@@ -225,7 +225,7 @@ describe('isDefaultList', () => {
 Run: `pnpm --filter @psykl/web-client exec vitest run src/hooks/__tests__/useLists.default-list.unit.test.ts src/services/__tests__/default-list.unit.test.ts`
 Expected: FAIL. `canDeleteList` is not a function, `../default-list` cannot be resolved, and `getDefaultListId()` returns Groceries' id.
 
-- [ ] **Step 3: Implement.** Create `components/web_client/src/services/default-list.ts`:
+- [x] **Step 3: Implement.** Create `components/web_client/src/services/default-list.ts`:
 
 ```ts
 /**
@@ -299,10 +299,10 @@ Expected: PASS.
 Run: `pnpm -r typecheck && pnpm -r lint && pnpm --filter @psykl/web-client test:unit && pnpm --filter @psykl/web-client test:component`
 Expected: all PASS. `ListMenu` keeps its `canDelete` prop, so its story and unit test are untouched.
 
-- [ ] **Step 4: Activate the End-to-End test.** Change `test.skip(` to `test(` in the test from Step 1. Run `./scripts/e2e-up.sh && pnpm test:e2e -- list_deletion`, then `docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v`.
+- [x] **Step 4: Activate the End-to-End test.** Change `test.skip(` to `test(` in the test from Step 1. Run `./scripts/e2e-up.sh && pnpm test:e2e -- list_deletion`, then `docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v`.
       Expected: PASS, and the other `list_deletion` tests still pass.
 
-- [ ] **Step 5: Commit, and tick this DevTask's steps in this doc.**
+- [x] **Step 5: Commit, and tick this DevTask's steps in this doc.**
 
 ```bash
 git add components/web_client/src e2e/list_deletion.e2e.spec.ts docs/specs/online-offline-modes/20261113-Spec2-server-positions-default-list.md
