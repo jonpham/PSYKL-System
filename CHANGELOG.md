@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **The "Tasks" list can no longer be deleted**, from the app or the API ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #151](https://github.com/jonpham/PSYKL-System/pull/151), [PR #152](https://github.com/jonpham/PSYKL-System/pull/152); [feature doc](docs/features/%5B20261113%5DGH144_server-positions-default-list.md)). Completes `online-offline-modes` Spec 2.
+- **The "Tasks" list can no longer be deleted**, from the app or the API ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #151](https://github.com/jonpham/PSYKL-System/pull/151), [PR #152](https://github.com/jonpham/PSYKL-System/pull/152), [PR #153](https://github.com/jonpham/PSYKL-System/pull/153); Spec integration [PR #150](https://github.com/jonpham/PSYKL-System/pull/150); [feature doc](docs/features/%5B20261113%5DGH144_server-positions-default-list.md)). Completes `online-offline-modes` Spec 2.
   - **In the app.** List options on "Tasks" no longer shows Delete List, even after the list is renamed. Every other list still offers it. Moving another list above "Tasks" no longer moves tasks without a list there.
   - **In the API.** `DELETE /lists/{id}` on the default list answers `409`. `POST /lists` now takes an optional `position`; without one, the server appends the list after the caller's last one.
   - **On the server.** `service-task` keeps the default list: it creates it at start-up when missing, and restores it if a device deleted it earlier ([ADR-OOM-003](docs/ARCHITECTURE.md)).

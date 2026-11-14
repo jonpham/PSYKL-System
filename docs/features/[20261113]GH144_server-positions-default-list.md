@@ -7,10 +7,11 @@ branches:
   - feat/online-offline-modes-s2-dt6-list-api-contract
   - feat/online-offline-modes-s2-dt7-seeded-default-list
 prs:
+  - https://github.com/jonpham/PSYKL-System/pull/150 # Spec integration PR
   - https://github.com/jonpham/PSYKL-System/pull/151
   - https://github.com/jonpham/PSYKL-System/pull/152
   - https://github.com/jonpham/PSYKL-System/pull/153
-completed_at: # set when the Spec integration PR merges to main
+completed_at: 2026-11-14
 created_at: 2026-11-13
 initiative: online-offline-modes
 spec: docs/specs/online-offline-modes/20261113-Spec2-server-positions-default-list.md (deleted at close-out; this doc is the record)
@@ -127,3 +128,4 @@ _Expectation_ — the server starts with the default list, appends lists sent wi
 | 2026-11-13 | [#151](https://github.com/jonpham/PSYKL-System/pull/151) | DevTask 5: the PWA never offers to delete the default list                              |
 | 2026-11-13 | [#152](https://github.com/jonpham/PSYKL-System/pull/152) | DevTask 6: the list API refuses it with `409` and appends lists sent without a position |
 | 2026-11-13 | [#153](https://github.com/jonpham/PSYKL-System/pull/153) | DevTask 7: the server seeds or restores the default list; Spec close-out                |
+| 2026-11-14 | [#150](https://github.com/jonpham/PSYKL-System/pull/150) | Spec 2 integration into `main`                                                          |
