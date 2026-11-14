@@ -1,5 +1,5 @@
 import { expect, test } from './helpers/isolated-test';
-import { createList, createTask, openList } from './helpers/selection';
+import { createList, createTask, enterSelectionMode, openList } from './helpers/selection';
 import { expectListDeletedOnServer } from './helpers/task-api';
 
 test.describe('list deletion', () => {
@@ -65,5 +65,23 @@ test.describe('list deletion', () => {
     await expect(page.getByRole('listitem', { name: kept })).toBeVisible();
     await page.goto('/lists');
     await expect(page.getByRole('button', { name: title, exact: true })).toHaveCount(0);
+  });
+
+  test.skip('a user is never offered to delete their Tasks list, even after renaming it', async ({ page }) => {
+    await createList(page, `Errands ${Date.now()}`);
+    await openList(page, 'Tasks');
+    await enterSelectionMode(page);
+    await page.getByRole('button', { name: 'Rename Tasks' }).click();
+    const field = page.getByRole('textbox', { name: 'List name' });
+    const renamed = `Inbox ${Date.now()}`;
+    await field.fill(renamed);
+    await field.press('Enter');
+    await expect(page.getByRole('button', { name: `Rename ${renamed}` })).toBeVisible();
+
+    await page.reload();
+    await openList(page, renamed);
+    await page.getByRole('button', { name: 'List options' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Select Items' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Delete List' })).toHaveCount(0);
   });
 });
