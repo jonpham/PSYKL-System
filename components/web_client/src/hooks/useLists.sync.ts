@@ -3,6 +3,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 import { v7 as uuidv7 } from 'uuid';
 
 import type { ListRecord } from '../db/idb.types';
+import { isDefaultList } from '../services/default-list';
 import { createListServiceClient, resetListServiceClientForTest } from '../services/list-service-client';
 import { enqueueWithReplay } from '../sync/page-triggers';
 import { replay } from '../sync/replay';
@@ -69,8 +70,9 @@ function useListsSyncClient(): UseListsResult {
 
   const deleteList = useCallback(
     async (id: string, deletedAt?: string): Promise<void> => {
-      // The last remaining list can never be deleted (UX.md § 10 decision 1).
-      if (lists.length <= 1) {
+      // The last remaining list and the default list can never be deleted
+      // (UX.md § 10 decision 1; online-offline-modes Decision 16).
+      if (lists.length <= 1 || isDefaultList(id)) {
         return;
       }
       const existing = lists.find((list) => list.id === id);
@@ -121,7 +123,9 @@ function useListsSyncClient(): UseListsResult {
     [lists],
   );
 
-  return { canDelete: lists.length > 1, createList, deleteList, lists, moveList, renameList };
+  const canDeleteList = useCallback((id: string) => lists.length > 1 && !isDefaultList(id), [lists]);
+
+  return { canDeleteList, createList, deleteList, lists, moveList, renameList };
 }
 
 function mutateList<T>(enqueue: () => Promise<T>): Promise<T> {

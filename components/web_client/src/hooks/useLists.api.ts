@@ -14,7 +14,7 @@ const NO_LISTS: UseListsResult['lists'] = [];
  */
 function useListsApiClient(): UseListsResult {
   return {
-    canDelete: false,
+    canDeleteList: () => false,
     createList: () => notImplementedOnline('createList'),
     deleteList: () => notImplementedOnline('deleteList'),
     lists: NO_LISTS,

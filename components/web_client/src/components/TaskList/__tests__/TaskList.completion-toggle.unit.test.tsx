@@ -44,7 +44,7 @@ describe('TaskList batch completion (Unit)', () => {
   beforeEach(() => {
     patchTask.mockReset().mockResolvedValue(undefined);
     deleteTask.mockReset().mockResolvedValue(undefined);
-    mockUseLists.mockReturnValue({ canDelete: true, lists: [{ id: 'list-groceries', title: 'Groceries' }] });
+    mockUseLists.mockReturnValue({ canDeleteList: () => true, lists: [{ id: 'list-groceries', title: 'Groceries' }] });
   });
 
   async function selectRows(...titles: string[]): Promise<void> {

@@ -2,6 +2,7 @@ import { Controller, HttpCode, Inject, NotFoundException, Post } from '@nestjs/c
 import { sql } from 'drizzle-orm';
 
 import type { Db } from '../db/index.js';
+import { seedDefaultList } from '../list/default-list.seed.js';
 import { DB_TOKEN } from '../task/task.service.js';
 
 /**
@@ -40,6 +41,8 @@ export class TestResetController {
     // Idempotency records go too: a replayed key must not return a cached
     // response describing a row the reset removed.
     await this.db.execute(sql`truncate table tasks, lists, idempotency restart identity`);
+    // Leave the service as a fresh start would (Decision 15): the default list is back.
+    await seedDefaultList(this.db);
     return { reset: true };
   }
 }

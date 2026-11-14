@@ -31,7 +31,12 @@ export const ListInputSchema = z
   .object({
     id: UuidV7Schema,
     title: z.string().min(1).max(100),
-    position: z.string().min(1).max(64),
+    position: z
+      .string()
+      .min(1)
+      .max(64)
+      .optional()
+      .describe("Omit to have the server append the list after the caller's last one (deleted lists included)"),
     updated_at: TimestampSchema,
   })
   .strict();
@@ -70,3 +75,11 @@ export type ListRestoreInput = z.infer<typeof ListRestoreInputSchema>;
 export const DeletedResponseSchema = z.object({ lists: z.array(ListSchema), tasks: z.array(TaskSchema) }).strict();
 
 export type DeletedResponse = z.infer<typeof DeletedResponseSchema>;
+
+/**
+ * The default list every account starts with (online-offline-modes Decisions
+ * 15, 16): fixed id, seeded by service-task, never deletable. MUST equal
+ * DEFAULT_LIST_ID in components/web_client/src/services/default-list.ts.
+ */
+export const DEFAULT_LIST_ID = '00000000-0000-7000-8000-000000000001';
+export const DEFAULT_LIST_TITLE = 'Tasks';
