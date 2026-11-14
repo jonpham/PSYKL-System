@@ -110,6 +110,7 @@ OpenAPI: `zod-to-openapi` drops `position` from `ListInput.required`, and `list-
 
 - Produces: `DEFAULT_LIST_ID` and `isDefaultList(id: string): boolean` from `src/services/default-list.ts`. `UseListsResult.canDeleteList(id: string): boolean` replaces `canDelete: boolean`.
 - `useLists.default-list.ts` keeps re-exporting `DEFAULT_LIST_ID`, so its existing importers are untouched.
+- `getDefaultListId()` keeps its signature. It now returns `DEFAULT_LIST_ID` whenever that list is active, and falls back to the earliest list only when it isn't. `useTasks.sync.ts` reads it unchanged.
 
 - [ ] **Step 1: Skipped End-to-End test first.** Append to `e2e/list_deletion.e2e.spec.ts`, inside `test.describe('list deletion')`:
 
@@ -171,7 +172,36 @@ it('still protects the default list after it is renamed', async () => {
   expect(result.current.canDeleteList(DEFAULT_LIST_ID)).toBe(false);
   expect((await listSyncQueue()).some((entry) => entry.op === 'delete')).toBe(false);
 });
+
+it('keeps the Tasks list as the default after another list is moved above it', async () => {
+  // Arrange
+  const { result } = renderHook(() => useLists());
+  await waitFor(() => {
+    expect(result.current.lists.map((list) => list.title)).toEqual(['Tasks']);
+  });
+  await act(async () => {
+    await result.current.createList('Groceries');
+  });
+  await waitFor(() => {
+    expect(result.current.lists).toHaveLength(2);
+  });
+  const [tasks, groceries] = result.current.lists;
+  await act(async () => {
+    await result.current.moveList(groceries!.id, null, tasks!);
+  });
+  await waitFor(() => {
+    expect(result.current.lists.map((list) => list.title)).toEqual(['Groceries', 'Tasks']);
+  });
+
+  // Act
+  await ensureDefaultList();
+
+  // Assert — the default follows the fixed id, not the top position
+  expect(getDefaultListId()).toBe(DEFAULT_LIST_ID);
+});
 ```
+
+Change this file's import of `../useLists.default-list` to `import { DEFAULT_LIST_ID, ensureDefaultList, getDefaultListId } from '../useLists.default-list';`.
 
 Add `components/web_client/src/services/__tests__/default-list.unit.test.ts`:
 
@@ -193,7 +223,7 @@ describe('isDefaultList', () => {
 ```
 
 Run: `pnpm --filter @psykl/web-client exec vitest run src/hooks/__tests__/useLists.default-list.unit.test.ts src/services/__tests__/default-list.unit.test.ts`
-Expected: FAIL. `canDeleteList` is not a function, and `../default-list` cannot be resolved.
+Expected: FAIL. `canDeleteList` is not a function, `../default-list` cannot be resolved, and `getDefaultListId()` returns Groceries' id.
 
 - [ ] **Step 3: Implement.** Create `components/web_client/src/services/default-list.ts`:
 
@@ -216,7 +246,21 @@ function isDefaultList(id: string): boolean {
 export { DEFAULT_LIST_ID, isDefaultList };
 ```
 
-In `components/web_client/src/hooks/useLists.default-list.ts`, delete the local `const DEFAULT_LIST_ID = …` line, keep its comment block, and add `import { DEFAULT_LIST_ID } from '../services/default-list';`. The existing `export { DEFAULT_LIST_ID, … }` stays.
+In `components/web_client/src/hooks/useLists.default-list.ts`, delete the local `const DEFAULT_LIST_ID = …` line, keep its comment block, and add `import { DEFAULT_LIST_ID } from '../services/default-list';`. The existing `export { DEFAULT_LIST_ID, … }` stays. In `ensureDefaultList`, replace the `defaultListId = activeLists.reduce(…)?.id ?? defaultListId;` assignment with:
+
+```ts
+// The fixed id defines the default list (Decision 16). The earliest list is
+// only a fallback, for a device whose "Tasks" list isn't present locally yet.
+defaultListId =
+  activeLists.find((list) => list.id === DEFAULT_LIST_ID)?.id ??
+  activeLists.reduce<ListRecord | null>(
+    (earliest, list) => (earliest === null || list.position < earliest.position ? list : earliest),
+    null,
+  )?.id ??
+  defaultListId;
+```
+
+Update the comment above `let defaultListId` to say the same: the list with `DEFAULT_LIST_ID` is the default, and the earliest active list is the fallback.
 
 In `components/web_client/src/hooks/useLists.ts`, replace `canDelete: boolean;` in `UseListsResult` with:
 
@@ -984,16 +1028,16 @@ git add docs CHANGELOG.md && git commit -m "feat: close out server-kept default 
 
 ## Decisions made during spec drafting
 
-- **S2-1 — The seed creates the default list if it's missing and restores it if it's deleted.** Under Decision 16 the list is never deleted, so the seed only repairs data from before the rule. A recreated list goes ahead of the user's first list, because the PWA treats the earliest list as the default (`getDefaultListId`).
+- **S2-1 — The seed creates the default list if it's missing and restores it if it's deleted.** Under Decision 16 the list is never deleted, so the seed only repairs data from before the rule. A recreated list goes ahead of the user's first list, where a new user finds it. DevTask 5 makes `getDefaultListId` follow the fixed id, so the position no longer decides which list is the default.
 - **S2-2 — Seed from start-up (`prepareApp`) and the test reset, not from `createDb()`.** This keeps every existing test's empty database empty; about ten test files use the `local` user. `prepareApp` also moves CORS and the guard out of `main.ts`, so a contract test can run the real start-up.
 - **S2-3 — A newly created seed has the epoch as `updated_at`; a restore uses `now()`.** A device's edit wins over a fresh seed, and a restore wins over the stale tombstone.
 - **S2-4 — Appended positions count deleted lists.** A restored list cannot land on the same key as one created while it was deleted.
+- **S2-5 — `getDefaultListId` follows `DEFAULT_LIST_ID`, folded into DevTask 5 (operator, 2026-11-13).** It used to return the earliest list, so moving another list above "Tasks" moved tasks with no list there too. The earliest list stays as a fallback for a device that doesn't hold "Tasks" locally yet.
 - **No new client code for a refused delete.** A queued delete of the default list from before the rule gets `409`, lands in Failed (`sync/replay.ts:129`), and start-up restores the list.
 - **Numbering.** DevTasks continue from Spec 1 (DevTasks 1-4), so this Spec has DevTasks 5-7. They run in UI-first order: DevTask 5 is client only, and DevTasks 6-7 are server.
 
 ## Open Questions / Risks
 
-- **`getDefaultListId` (sync path) still means "the earliest list", not `DEFAULT_LIST_ID`.** If a user moves another list above "Tasks", tasks with no list are shown under that list instead. This was true before Decision 16 and is unchanged here. Spec 5, which moves the bootstrap behind the Sync Client, should make it return `DEFAULT_LIST_ID`.
 - **A device holding a local tombstone of "Tasks" from before the rule** shows it as deleted until the next pull brings back the restored row. It then also shows one Failed entry, the refused delete.
 - **A stored position that `fractional-indexing` cannot parse** makes `appendPosition` throw, and the create answers 500. Every writer today uses the library, so no such key exists. Validating keys at the schema would change the sync path's contract, which is out of scope.
 - **"Unless its owner is deleted"** waits for `multi-tenant-auth` (#117). No users exist yet.
