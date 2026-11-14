@@ -325,7 +325,7 @@ Stop here for operator UX review of the PR, as in Spec 1. Do not begin DevTask 6
   - `ListService.deleteList(userId, DEFAULT_LIST_ID, …)` throws `ConflictException('The default list cannot be deleted')`.
   - `ListService.createList(userId, input)` with no position returns `position = generateKeyBetween(<caller's max position, deleted included> ?? null, null)`.
 
-- [ ] **Step 1: Failing schema tests.** In `packages/shared-types/src/schemas/list.unit.test.ts`, change the import to `import { DEFAULT_LIST_ID, DEFAULT_LIST_TITLE, ListInputSchema } from './list';`. Then append inside `describe('ListInputSchema')`:
+- [x] **Step 1: Failing schema tests.** In `packages/shared-types/src/schemas/list.unit.test.ts`, change the import to `import { DEFAULT_LIST_ID, DEFAULT_LIST_TITLE, ListInputSchema } from './list';`. Then append inside `describe('ListInputSchema')`:
 
 ```ts
 it('accepts a list input without a position, for the server to assign', () => {
@@ -358,7 +358,7 @@ Move `valid` to module scope if the new `describe` cannot see it.
 Run: `pnpm --filter @psykl/shared-types test:unit -- list.unit`
 Expected: FAIL. `DEFAULT_LIST_ID` is not exported, and `position` is required.
 
-- [ ] **Step 2: Schema and OpenAPI.** In `packages/shared-types/src/schemas/list.ts`, change `ListInputSchema`'s `position` to:
+- [x] **Step 2: Schema and OpenAPI.** In `packages/shared-types/src/schemas/list.ts`, change `ListInputSchema`'s `position` to:
 
 ```ts
     position: z
@@ -390,7 +390,7 @@ In `packages/shared-types/src/openapi/list-paths.ts`, in the `registerPath` for 
 Run: `pnpm --filter @psykl/shared-types test:unit && pnpm --filter @psykl/shared-types build`
 Expected: PASS. `pnpm -r typecheck` now FAILS in `list.service.ts` (`position: string | undefined`). Step 4 fixes it, so Steps 1-4 are one commit.
 
-- [ ] **Step 3: Failing service tests.** Run `pnpm --filter @psykl/service-task add fractional-indexing@^4.0.0`. That is the version `web_client` pins.
+- [x] **Step 3: Failing service tests.** Run `pnpm --filter @psykl/service-task add fractional-indexing@^4.0.0`. That is the version `web_client` pins.
 
 Create `components/service-task/src/list/__tests__/list.controller.default-list.contract.test.ts`:
 
@@ -566,12 +566,12 @@ describe('server-assigned list position', () => {
   it('returns the stored list when the same id is created again', async () => {
     // Given
     const created = await create('01').expect(201);
-    await create('02', { position: 'b0' }).expect(201);
+    await create('02', { position: 'a5' }).expect(201);
 
     // When a device re-sends the first create, still without a position
     const replay = await create('01').expect(201);
 
-    // Then the stored row comes back, not a new position after b0
+    // Then the stored row comes back, not a new position after a5
     expect(replay.body.position).toBe(created.body.position);
   });
 });
@@ -584,7 +584,7 @@ Expected: FAIL:
 - Every create without a position answers 500, a `not-null` violation on `lists.position`.
 - "keeps a position the client sent, verbatim", "still deletes any other list", the 404 test and the 400 test pass.
 
-- [ ] **Step 4: Implement.** In `components/service-task/src/list/list.service.ts`:
+- [x] **Step 4: Implement.** In `components/service-task/src/list/list.service.ts`:
 
 ```ts
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
@@ -660,7 +660,7 @@ Replace `createList`, and add `appendPosition`:
 Run: `pnpm -r typecheck && pnpm -r lint && pnpm -r test:unit && pnpm --filter @psykl/service-task test:integration && pnpm --filter @psykl/service-task test:component`
 Expected: all PASS.
 
-- [ ] **Step 5: Commit, and tick this DevTask's steps in this doc.**
+- [x] **Step 5: Commit, and tick this DevTask's steps in this doc.**
 
 ```bash
 git add packages/shared-types/src components/service-task pnpm-lock.yaml docs/specs/online-offline-modes/20261113-Spec2-server-positions-default-list.md
