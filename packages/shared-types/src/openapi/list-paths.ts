@@ -91,7 +91,10 @@ export function registerListPaths(registry: OpenAPIRegistry): void {
       401: { description: 'Missing X-User-Id header' },
       403: { description: 'Malformed X-User-Id header' },
       404: { description: 'List not found for current user' },
-      409: { description: 'Same Idempotency-Key was used with a different request body' },
+      409: {
+        description:
+          'The default list (DEFAULT_LIST_ID) cannot be deleted, or the same Idempotency-Key was used with a different request body',
+      },
     },
   });
 

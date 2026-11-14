@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   List as ListResponse,
   ListDeleteInput,
@@ -6,7 +6,9 @@ import type {
   ListPatchInput,
   ListRestoreInput,
 } from '@psykl/shared-types';
-import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';
+import { DEFAULT_LIST_ID } from '@psykl/shared-types';
+import { and, desc, eq, gte, isNotNull, isNull } from 'drizzle-orm';
+import { generateKeyBetween } from 'fractional-indexing';
 
 import { clampFutureTimestamp } from '../db/clamp-future-timestamp.js';
 import { type Db, schema } from '../db/index.js';
@@ -21,23 +23,30 @@ export class ListService {
   constructor(@Inject(DB_TOKEN) private readonly db: Db) {}
 
   async createList(userId: string, input: ListInput): Promise<ListResponse> {
-    // onConflictDoNothing: two devices can race to create the same default-list
-    // id (see list-persistence.integration.test.ts for why).
-    const [inserted] = await this.db
-      .insert(schema.lists)
-      .values({
-        id: input.id,
-        userId,
-        title: input.title,
-        position: input.position,
-        updatedAt: new Date(input.updated_at),
-      })
-      .onConflictDoNothing({ target: schema.lists.id })
-      .returning();
-    if (inserted) {
-      return this.toResponse(inserted);
-    }
-    return this.toResponse(await this.requireList(userId, input.id));
+    // One transaction (PGlite runs transactions exclusively), so two creates
+    // without a position cannot both read the same last key (Decision 10).
+    return this.db.transaction(async (tx) => {
+      const position = input.position ?? (await this.appendPosition(tx, userId));
+      // onConflictDoNothing: two devices can race to create the same default-list
+      // id (see list-persistence.integration.test.ts). A replay keeps the stored
+      // row, including a position the server assigned earlier.
+      const [inserted] = await tx
+        .insert(schema.lists)
+        .values({ id: input.id, userId, title: input.title, position, updatedAt: new Date(input.updated_at) })
+        .onConflictDoNothing({ target: schema.lists.id })
+        .returning();
+      if (inserted) {
+        return this.toResponse(inserted);
+      }
+      const [stored] = await tx
+        .select()
+        .from(schema.lists)
+        .where(and(eq(schema.lists.id, input.id), eq(schema.lists.userId, userId)));
+      if (!stored) {
+        throw new NotFoundException('List not found');
+      }
+      return this.toResponse(stored);
+    });
   }
 
   async listLists(userId: string): Promise<ListResponse[]> {
@@ -75,6 +84,11 @@ export class ListService {
 
   async deleteList(userId: string, id: string, input: ListDeleteInput): Promise<ListResponse> {
     await this.requireList(userId, id);
+    // The default list is the home for a task whose list is gone; it lives as
+    // long as its owner (online-offline-modes Decision 16).
+    if (id === DEFAULT_LIST_ID) {
+      throw new ConflictException('The default list cannot be deleted');
+    }
     const [row] = await this.db
       .update(schema.lists)
       .set({ deletedAt: new Date(input.deleted_at), serverUpdatedAt: new Date() })
@@ -113,6 +127,20 @@ export class ListService {
       )
       .orderBy(schema.lists.position);
     return rows.map((row) => this.toResponse(row));
+  }
+
+  /**
+   * The key after the caller's highest position. Deleted lists count, so a
+   * restore can never collide with a list created while it was deleted.
+   */
+  private async appendPosition(tx: Pick<Db, 'select'>, userId: string): Promise<string> {
+    const [last] = await tx
+      .select({ position: schema.lists.position })
+      .from(schema.lists)
+      .where(eq(schema.lists.userId, userId))
+      .orderBy(desc(schema.lists.position))
+      .limit(1);
+    return generateKeyBetween(last?.position ?? null, null);
   }
 
   private async requireList(userId: string, id: string) {
