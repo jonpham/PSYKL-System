@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **The "Tasks" list can no longer be deleted**, from the app or the API ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #151](https://github.com/jonpham/PSYKL-System/pull/151), [PR #152](https://github.com/jonpham/PSYKL-System/pull/152); [feature doc](docs/features/%5B20261113%5DGH144_server-positions-default-list.md)). Completes `online-offline-modes` Spec 2.
+  - **In the app.** List options on "Tasks" no longer shows Delete List, even after the list is renamed. Every other list still offers it. Moving another list above "Tasks" no longer moves tasks without a list there.
+  - **In the API.** `DELETE /lists/{id}` on the default list answers `409`. `POST /lists` now takes an optional `position`; without one, the server appends the list after the caller's last one.
+  - **On the server.** `service-task` keeps the default list: it creates it at start-up when missing, and restores it if a device deleted it earlier ([ADR-OOM-003](docs/ARCHITECTURE.md)).
+
 - Settings has an **Offline Mode** switch, the first step towards letting the app work straight against the server ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #145](https://github.com/jonpham/PSYKL-System/pull/145), [PR #146](https://github.com/jonpham/PSYKL-System/pull/146); [feature doc](docs/features/%5B20261111%5DGH144_data-mode-seam.md)). Completes `online-offline-modes` Spec 1.
   - **The switch.** It sits in a new **Data** section and is on by default, which keeps today's behaviour: a copy on this device, synced when online. The choice is stored on the device and survives a reload.
   - **Not working yet.** The online-only path is a stub until Spec 3, so the switch is drawn in a muted grey rather than the accent color. Turning it off shows empty lists and refuses writes with a named error, rather than dropping them silently.
