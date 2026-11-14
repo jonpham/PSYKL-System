@@ -54,7 +54,7 @@ describe('TaskList selection mode (Unit)', () => {
       tasks: [oat, bread, beans],
     });
     mockUseLists.mockReturnValue({
-      canDelete: true,
+      canDeleteList: () => true,
       lists: [
         { id: 'list-groceries', title: 'Groceries' },
         { id: 'list-errands', title: 'Errands' },

@@ -4,7 +4,8 @@ import { useListsSyncClient } from './useLists.sync';
 import { useUserSettings } from './useUserSettings';
 
 interface UseListsResult {
-  canDelete: boolean;
+  /** False for the default list (Decision 16) and for the last remaining list. */
+  canDeleteList(id: string): boolean;
   createList(title: string): Promise<ListRecord>;
   deleteList(id: string, deletedAt?: string): Promise<void>;
   lists: ListRecord[];
