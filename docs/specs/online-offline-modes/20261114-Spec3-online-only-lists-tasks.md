@@ -114,7 +114,7 @@ Three DevTasks, numbered globally (Spec 1 = 1-4, Spec 2 = 5-7). Each depends on 
   - `useListsApiClient(): UseListsResult`, fully implemented. Query key `['lists']`.
   - `fetchServerLists(userId: string): Promise<Array<{ id: string; title: string; position: string }>>` in `e2e/helpers/task-api.ts`.
 
-- [ ] **Step 1: Add the dependency and regenerate API types**
+- [x] **Step 1: Add the dependency and regenerate API types**
 
 ```bash
 pnpm --filter @psykl/web-client add @tanstack/react-query@^5.107.1
@@ -124,7 +124,7 @@ grep -n "ListInput: {" -A6 components/web_client/src/api/types.ts
 
 Expected: `position?: string;` in `ListInput`.
 
-- [ ] **Step 2: Commit the inactive E2E scenario**
+- [x] **Step 2: Commit the inactive E2E scenario**
 
 Create `e2e/online_mode.e2e.spec.ts`:
 
@@ -196,7 +196,7 @@ Expected: no errors.
 
 Commit: `test: describe lists with Offline Mode off as inactive end-to-end scenarios`
 
-- [ ] **Step 3: Write the test wrapper and the failing hook tests**
+- [x] **Step 3: Write the test wrapper and the failing hook tests**
 
 Create `components/web_client/src/test/api-path-wrapper.tsx`:
 
@@ -406,7 +406,7 @@ Delete the `renameList` case from `src/hooks/__tests__/online-path.stub.unit.tes
 Run: `pnpm --filter @psykl/web-client exec vitest run src/hooks/__tests__/useLists.api.unit.test.tsx`
 Expected: FAIL, every case: no lists ever load (the stub returns `[]`), or writes reject with "is not available with Offline Mode off yet".
 
-- [ ] **Step 4: Implement `useListsApiClient`**
+- [x] **Step 4: Implement `useListsApiClient`**
 
 Replace `components/web_client/src/hooks/useLists.api.ts`:
 
@@ -532,7 +532,7 @@ Expected: PASS, 8/8.
 
 Commit: `feat: show and change lists straight on the server with Offline Mode off`
 
-- [ ] **Step 5: Write the failing provider tests**
+- [x] **Step 5: Write the failing provider tests**
 
 Add to `components/web_client/src/components/SettingsProvider/__tests__/SettingsProvider.unit.test.tsx` (keep its existing imports and `afterEach`; add the ones below):
 
@@ -614,7 +614,7 @@ Switching back on mounts the sync path, which opens IndexedDB, so the file needs
 Run: `pnpm --filter @psykl/web-client exec vitest run src/components/SettingsProvider`
 Expected: FAIL: "No QueryClient set, use QueryClientProvider to set one".
 
-- [ ] **Step 6: Mount a query cache per Offline Mode off session**
+- [x] **Step 6: Mount a query cache per Offline Mode off session**
 
 In `components/web_client/src/components/SettingsProvider/SettingsProvider.tsx`, add the import and replace the keyed fragment:
 
@@ -644,7 +644,7 @@ Expected: PASS.
 
 Commit: `feat: give each Offline Mode off session its own query cache`
 
-- [ ] **Step 7: Activate the E2E scenarios**
+- [x] **Step 7: Activate the E2E scenarios**
 
 Remove both `.skip`s in `e2e/online_mode.e2e.spec.ts`.
 
@@ -653,7 +653,7 @@ Expected: 2 passed.
 
 Commit: `test: activate lists with Offline Mode off end-to-end scenarios`
 
-- [ ] **Step 8: Full verification and spec checkbox**
+- [x] **Step 8: Full verification and spec checkbox**
 
 Run: `pnpm -r lint && pnpm -r typecheck && pnpm -r format:check && pnpm -r test:unit && pnpm -r test:integration && pnpm -r test:component`
 Expected: all green. Tick DevTask 8 in this doc in the same commit as any fix, or alone as `docs:`.
