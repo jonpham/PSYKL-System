@@ -3,7 +3,6 @@ import './settings-view.css';
 import { useEffect, useRef } from 'react';
 
 import { ExperimentsIndex } from '../../experiment';
-import { ONLINE_PATH_AVAILABLE } from '../../hooks/online-path.stub';
 import { useAppearance } from '../../hooks/useAppearance';
 import { useUserSettings } from '../../hooks/useUserSettings';
 import { type Appearance, APPEARANCE_CHOICES } from '../../preferences/appearance';
@@ -21,7 +20,7 @@ let refocusOfflineModeSwitch = false;
 
 export function SettingsView() {
   const { appearance, contrast, setAppearance, setContrast } = useAppearance();
-  const { offlineMode, setOfflineMode } = useUserSettings();
+  const { offlineMode, sendingChanges, setOfflineMode } = useUserSettings();
   const offlineModeSwitch = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -74,10 +73,11 @@ export function SettingsView() {
         <div className="psykl-settings__row">
           <span id="psykl-settings-offline-mode">Offline Mode</span>
           <button
-            aria-checked={offlineMode}
+            aria-busy={sendingChanges || undefined}
+            aria-checked={sendingChanges ? false : offlineMode}
             aria-labelledby="psykl-settings-offline-mode"
             className="psykl-settings__switch"
-            data-available={String(ONLINE_PATH_AVAILABLE)}
+            disabled={sendingChanges}
             onClick={() => {
               refocusOfflineModeSwitch = true;
               setOfflineMode(!offlineMode);
@@ -87,7 +87,9 @@ export function SettingsView() {
             type="button"
           />
         </div>
-        <p>Keep a copy on this device and sync when online.</p>
+        <p>
+          {sendingChanges ? 'Sending changes made on this device…' : 'Keep a copy on this device and sync when online.'}
+        </p>
       </section>
 
       <section aria-label="Experiments" className="psykl-settings__section">
