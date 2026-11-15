@@ -15,7 +15,7 @@ test.describe('with Offline Mode off', () => {
     await turnOfflineModeOffBeforeLoading(page);
   });
 
-  test.skip('a user adds a list, finds it saved on the server, and still sees it after reloading', async ({ page }) => {
+  test('a user adds a list, finds it saved on the server, and still sees it after reloading', async ({ page }) => {
     await page.goto('/');
     await createList(page, 'Groceries');
 
@@ -26,7 +26,7 @@ test.describe('with Offline Mode off', () => {
     await expect(page.getByRole('button', { name: 'Groceries', exact: true })).toBeVisible();
   });
 
-  test.skip('a user can delete a list they made, but is never offered to delete Tasks', async ({ page }) => {
+  test('a user can delete a list they made, but is never offered to delete Tasks', async ({ page }) => {
     await page.goto('/');
     await createList(page, 'Errands');
 
