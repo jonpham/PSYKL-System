@@ -98,6 +98,13 @@
 | List switcher UI        | `ListSwitcher` + `ListRow` under `components/ListSwitcher/`; create, rename, delete (guarded — last list undeletable), and switch active list                                                           |
 | Active list persistence | Device-local `sync_meta` key (`useActiveList.ts`) — not synced, matches theme-preference precedent                                                                                                      |
 
+## online-offline-modes Spec 3 (shipped)
+
+| Layer                 | Choice                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Online-only data path | `@tanstack/react-query` 5 behind `useListsApiClient` / `useTasksApiClient` when Offline Mode is off; one `QueryClient` per off session, no optimistic writes |
+| Switch-off flush      | `services/flush-sync-queue.ts` runs `replay({ ignoreBackoff: true })`, capped at 5 seconds, before Offline Mode turns off                                    |
+
 ## Pending (planned, not shipped)
 
 | Layer                | Choice                                                       | Lands in |
