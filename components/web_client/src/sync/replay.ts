@@ -23,6 +23,8 @@ type EnqueueInput = {
 type ReplayOptions = {
   db?: PsyklDb;
   heartbeatIntervalMs?: number;
+  /** Every queued entry is due, retry delays aside (the Offline Mode off flush). */
+  ignoreBackoff?: boolean;
   now?: () => Date;
   owner?: string;
   transport?: ReplayTransport;
@@ -107,7 +109,7 @@ function startReplayHeartbeat(options: ReplayOptions & { owner: string }): () =>
 async function dueEntries(options: ReplayOptions): Promise<SyncQueueEntry[]> {
   const now = options.now?.() ?? new Date();
   const queue = await listSyncQueue(options.db);
-  return queue.filter((entry) => Date.parse(entry.next_attempt_at) <= now.getTime());
+  return options.ignoreBackoff ? queue : queue.filter((entry) => Date.parse(entry.next_attempt_at) <= now.getTime());
 }
 
 async function replayEntry(
