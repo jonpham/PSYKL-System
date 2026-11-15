@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 
 import { expect, test } from './helpers/isolated-test';
-import { createList, openList } from './helpers/selection';
+import { expectServerTaskVisible } from './helpers/multi-device';
+import { createList, createTask, openList } from './helpers/selection';
 import { fetchServerLists } from './helpers/task-api';
 
 async function turnOfflineModeOffBeforeLoading(page: Page): Promise<void> {
@@ -42,5 +43,29 @@ test.describe('with Offline Mode off', () => {
     await page.getByRole('dialog', { name: 'Delete "Errands"?' }).getByRole('button', { name: 'Delete List' }).click();
 
     await expect.poll(async () => (await fetchServerLists('local')).map((list) => list.title)).toEqual(['Tasks']);
+  });
+
+  test.skip('a user adds a task, finds it saved on the server, and still sees it after reloading', async ({ page }) => {
+    const title = `call the dentist ${Date.now()}`;
+    await page.goto('/');
+    await createTask(page, title);
+
+    await expectServerTaskVisible('local', title);
+    await page.reload();
+    await expect(page.getByRole('listitem', { name: title })).toBeVisible();
+  });
+
+  test.skip('a task added to another list stays in that list', async ({ page }) => {
+    const title = `oat milk ${Date.now()}`;
+    await page.goto('/');
+    await createList(page, 'Groceries');
+    await openList(page, 'Groceries');
+    await createTask(page, title);
+
+    const groceries = (await fetchServerLists('local')).find((list) => list.title === 'Groceries');
+    const task = await expectServerTaskVisible('local', title);
+    expect(task.list_id).toBe(groceries?.id);
+    await openList(page, 'Tasks');
+    await expect(page.getByRole('listitem', { name: title })).toHaveCount(0);
   });
 });
