@@ -57,3 +57,11 @@ export async function deleteServerTask(userId: string, title: string): Promise<v
   });
   expect(response.ok, `DELETE /tasks/${task!.id}: ${response.status} ${await response.text()}`).toBe(true);
 }
+
+export async function fetchServerLists(
+  userId: string,
+): Promise<Array<{ id: string; title: string; position: string }>> {
+  const response = await fetch(new URL('/lists', apiBaseUrl), { headers: { 'X-User-Id': userId } });
+  expect(response.ok).toBe(true);
+  return (await response.json()) as Array<{ id: string; title: string; position: string }>;
+}
