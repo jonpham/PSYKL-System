@@ -120,12 +120,16 @@ _Expectation_ — with Offline Mode off the app shows and changes only what the 
 - **S3-5 — Decision 11's flush-failure behaviour is confirmed, with a 5-second cap.** Turning off runs `replay({ ignoreBackoff: true })`, because a write that failed recently would otherwise wait out its retry delay and be skipped.
 - **S3-6 — While sending, the switch shows its new position, is disabled and `aria-busy`.** Turning on sends nothing.
 - **S3-7 — `notImplementedOnline` stays** for Recently Deleted's restore, which Spec 4 owns.
+- **Final review fix:** a flush made repeated passes over the queue. A change reaching its last attempt counted as progress, so each pass retried every other waiting change straight away. One switch-off during an outage could push the whole queue into Failed. A flush now makes exactly one pass, so each waiting change spends at most one attempt per switch-off.
 - **Process:** DevTask PRs stacked as drafts (DevTask 9 on 8, 10 on 9), each depending on the one before.
 - **Known gaps (Spec 4):**
   - Page sync triggers still wake `replay()` with Offline Mode off, so a write left queued by a failed flush may still be sent while off.
   - The active list still lives in IDB `sync_meta`, so Offline Mode off needs a browser with IDB.
   - Recently Deleted's restore still refuses with Offline Mode off.
   - Other tabs and devices show on the API path when the window regains focus, not instantly.
+  - A refused rename, complete or delete says nothing with Offline Mode off: the change just does not appear. Only capture tells the user. A message belongs with Spec 4's API-path surfaces.
+  - Each switch-off during a server outage spends one retry attempt on every waiting change, so many off/on toggles while the server is down can move changes into Failed.
+  - Two lists with the same position cannot be re-ordered between each other with Offline Mode off. The move rejects and is logged, because this path does not respace.
 
 ## Architecture Decisions (ADR)
 
