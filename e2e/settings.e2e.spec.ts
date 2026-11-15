@@ -16,7 +16,7 @@ test.describe('settings', () => {
     await expect(page.getByText('Keep a copy on this device and sync when online.')).toBeVisible();
   });
 
-  test.skip('a change that could not be sent yet reaches the server when the user turns Offline Mode off', async ({
+  test('a change that could not be sent yet reaches the server when the user turns Offline Mode off', async ({
     page,
   }) => {
     const title = `sent on switching off ${Date.now()}`;
