@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 describe('App with Offline Mode off', () => {
-  it('renders the shell and an empty list instead of crashing on the stubbed path', async () => {
+  it('renders the shell and the server’s empty list', async () => {
     // Arrange
     writeOfflineMode(false);
 
