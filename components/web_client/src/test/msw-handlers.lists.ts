@@ -1,3 +1,4 @@
+import { generateKeyBetween } from 'fractional-indexing';
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '../api/types';
@@ -34,16 +35,19 @@ export const listHandlers = [
     }
 
     const body = (await request.json()) as { id?: string; title?: string; position?: string; updated_at?: string };
-    if (!body.id || !body.title || !body.position || !body.updated_at) {
+    if (!body.id || !body.title || !body.updated_at) {
       return new HttpResponse(null, { status: 400 });
     }
+    // Like the server: no position means append after the last list.
+    const last = [...listStore].sort((a, b) => (a.position < b.position ? -1 : 1)).at(-1);
+    const position = body.position ?? generateKeyBetween(last?.position ?? null, null);
 
     const now = new Date().toISOString();
     const list: List = {
       id: body.id,
       user_id: 'local',
       title: body.title,
-      position: body.position,
+      position,
       created_at: now,
       updated_at: body.updated_at,
       server_updated_at: now,
