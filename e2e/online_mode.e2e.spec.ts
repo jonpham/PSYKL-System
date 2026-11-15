@@ -45,7 +45,7 @@ test.describe('with Offline Mode off', () => {
     await expect.poll(async () => (await fetchServerLists('local')).map((list) => list.title)).toEqual(['Tasks']);
   });
 
-  test.skip('a user adds a task, finds it saved on the server, and still sees it after reloading', async ({ page }) => {
+  test('a user adds a task, finds it saved on the server, and still sees it after reloading', async ({ page }) => {
     const title = `call the dentist ${Date.now()}`;
     await page.goto('/');
     await createTask(page, title);
@@ -55,7 +55,7 @@ test.describe('with Offline Mode off', () => {
     await expect(page.getByRole('listitem', { name: title })).toBeVisible();
   });
 
-  test.skip('a task added to another list stays in that list', async ({ page }) => {
+  test('a task added to another list stays in that list', async ({ page }) => {
     const title = `oat milk ${Date.now()}`;
     await page.goto('/');
     await createList(page, 'Groceries');
