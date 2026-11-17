@@ -95,7 +95,7 @@ test.describe('with Offline Mode off, in a browser without IndexedDB', () => {
     });
   });
 
-  test.skip('a user picks Dark and opens a list, and both are kept after reloading', async ({ page }) => {
+  test('a user picks Dark and opens a list, and both are kept after reloading', async ({ page }) => {
     await page.goto('/settings');
     await page.getByRole('radio', { name: 'Dark' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
