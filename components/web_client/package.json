@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@psykl/shared-types": "workspace:*",
+    "@tanstack/react-query": "^5.107.1",
     "fractional-indexing": "^4.0.0",
     "idb": "^8.0.3",
     "openapi-fetch": "^0.13.0",

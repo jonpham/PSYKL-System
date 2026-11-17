@@ -2,16 +2,36 @@ import type { Page } from '@playwright/test';
 
 import { listLocalMeta } from './helpers/idb-storage';
 import { expect, test } from './helpers/isolated-test';
+import { expectServerTaskVisible } from './helpers/multi-device';
+import { createTask } from './helpers/selection';
 
 test.describe('settings', () => {
   test.use({ viewport: { height: 844, width: 390 } });
 
-  test('a user sees Offline Mode on by default and marked not yet available', async ({ page }) => {
+  test('a user sees Offline Mode on by default', async ({ page }) => {
     await page.goto('/settings');
     const offlineMode = page.getByRole('switch', { name: 'Offline Mode' });
     await expect(offlineMode).toHaveAttribute('aria-checked', 'true');
-    await expect(offlineMode).toHaveAttribute('data-available', 'false');
+    await expect(offlineMode).not.toHaveAttribute('data-available');
     await expect(page.getByText('Keep a copy on this device and sync when online.')).toBeVisible();
+  });
+
+  test('a change that could not be sent yet reaches the server when the user turns Offline Mode off', async ({
+    page,
+  }) => {
+    const title = `sent on switching off ${Date.now()}`;
+    await page.goto('/');
+    await page.route('**/tasks', (route) => (route.request().method() === 'POST' ? route.abort() : route.fallback()));
+    await createTask(page, title);
+    await page.unroute('**/tasks');
+
+    // Navigate inside the app: a page load would wake a replay of its own.
+    await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
+    await page.getByRole('navigation', { name: 'PSYKL navigation' }).getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('switch', { name: 'Offline Mode' }).click();
+
+    await expect(page.getByRole('switch', { name: 'Offline Mode' })).toHaveAttribute('aria-checked', 'false');
+    await expectServerTaskVisible('local', title);
   });
 
   test('a user who turns Offline Mode off keeps that choice after reloading', async ({ page }) => {

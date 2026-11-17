@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -13,6 +13,7 @@ vi.mock('../../services/list-service-client', () => ({
 vi.mock('../../services/task-service-client', () => ({
   createTaskServiceClient: (offlineCapable: boolean) => ({ entity: 'task', offlineCapable }),
 }));
+vi.mock('../../services/flush-sync-queue', () => ({ flushSyncQueue: () => Promise.resolve() }));
 
 function wrapper({ children }: { children: ReactNode }) {
   return <SettingsProvider>{children}</SettingsProvider>;
@@ -44,13 +45,14 @@ describe('useServiceClients', () => {
     expect(result.current.tasks).toEqual({ entity: 'task', offlineCapable: false });
   });
 
-  it('hands out shims for the new mode after a switch, never the old ones', () => {
+  it('hands out shims for the new mode after a switch, never the old ones', async () => {
     // Arrange
     const { result } = renderHook(() => ({ clients: useServiceClients(), settings: useUserSettings() }), { wrapper });
     const before = result.current.clients.lists;
 
-    // Act
-    act(() => result.current.settings.setOfflineMode(false));
+    // Act — turning off waits on the (mocked) flush first
+    await act(async () => result.current.settings.setOfflineMode(false));
+    await waitFor(() => expect(result.current.settings.offlineMode).toBe(false));
 
     // Assert
     expect(result.current.clients.lists).not.toBe(before);
