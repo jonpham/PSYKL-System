@@ -16,10 +16,12 @@ interface AppShellProps {
   /** Present only where the title is the user's to change, which today means
    * a list in selection mode; otherwise the title is a plain heading. */
   onRenameTitle?: (title: string) => void;
+  /** Offer the Sync destination; only the sync path has one. */
+  showSync?: boolean;
   title: string;
 }
 
-function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProps) {
+function AppShell({ children, headerAction, onRenameTitle, showSync = true, title }: AppShellProps) {
   const { destination, goTo } = useDestination();
   const { lists } = useLists();
   const activeListId = useActiveListId();
@@ -71,6 +73,7 @@ function AppShell({ children, headerAction, onRenameTitle, title }: AppShellProp
               goTo('list');
               closeSidebar();
             }}
+            showSync={showSync}
           />
         </aside>
         {sidebarOpen ? (

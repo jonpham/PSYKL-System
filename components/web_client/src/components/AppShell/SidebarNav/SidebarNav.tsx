@@ -20,6 +20,7 @@ interface SidebarNavProps {
   onClose: () => void;
   onSelectDestination: (destination: Exclude<Destination, 'list'>) => void;
   onSelectList: (listId: string) => void;
+  showSync?: boolean;
   syncNeedsAttention?: boolean;
 }
 
@@ -31,6 +32,7 @@ function SidebarNav({
   onClose,
   onSelectDestination,
   onSelectList,
+  showSync = true,
   syncNeedsAttention = false,
 }: SidebarNavProps) {
   const [listsExpanded, setListsExpanded] = useState(true);
@@ -102,18 +104,22 @@ function SidebarNav({
             <DestinationGlyph name="recently-deleted" /> Recently Deleted
           </button>
         </li>
-        <li className="psykl-sidebar-nav__divider">
-          <button
-            aria-current={destination === 'sync' ? 'page' : undefined}
-            className="psykl-sidebar-nav__item"
-            data-status={syncNeedsAttention ? 'attention' : 'clear'}
-            onClick={() => onSelectDestination('sync')}
-            type="button"
-          >
-            <DestinationGlyph name="sync" /> Sync
-          </button>
-        </li>
-        <li>
+        {showSync ? (
+          <li className="psykl-sidebar-nav__divider">
+            <button
+              aria-current={destination === 'sync' ? 'page' : undefined}
+              className="psykl-sidebar-nav__item"
+              data-status={syncNeedsAttention ? 'attention' : 'clear'}
+              onClick={() => onSelectDestination('sync')}
+              type="button"
+            >
+              <DestinationGlyph name="sync" /> Sync
+            </button>
+          </li>
+        ) : null}
+        {/* The divider separates the app's own destinations from the data
+         * ones; without Sync, Settings is the first below it. */}
+        <li className={showSync ? undefined : 'psykl-sidebar-nav__divider'}>
           <button
             aria-current={destination === 'settings' ? 'page' : undefined}
             className="psykl-sidebar-nav__item"
