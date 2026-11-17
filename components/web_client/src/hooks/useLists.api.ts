@@ -5,7 +5,7 @@ import { v7 as uuidv7 } from 'uuid';
 
 import type { ListRecord } from '../db/idb.types';
 import { isDefaultList } from '../services/default-list';
-import { LISTS_QUERY_KEY } from './query-keys';
+import { LISTS_QUERY_KEY, RECENTLY_DELETED_QUERY_KEY } from './query-keys';
 import type { UseListsResult } from './useLists';
 import { useServiceClients } from './useServiceClients';
 
@@ -70,8 +70,9 @@ function useListsApiClient(): UseListsResult {
       const deleted: ListRecord = { ...existing, deleted_at, updated_at: deleted_at };
       await listServiceClient.delete(id, { deleted_at }, deleted);
       store(deleted);
+      void queryClient.invalidateQueries({ queryKey: RECENTLY_DELETED_QUERY_KEY });
     },
-    [canDeleteList, listServiceClient, lists, store],
+    [canDeleteList, listServiceClient, lists, queryClient, store],
   );
 
   const moveList = useCallback(
