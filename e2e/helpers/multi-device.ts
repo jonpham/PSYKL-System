@@ -11,6 +11,7 @@ type TaskRow = {
   created_at: string;
   deleted_at: string | null;
   id: string;
+  list_id: string | null;
   server_updated_at: string;
   title: string;
   updated_at: string;

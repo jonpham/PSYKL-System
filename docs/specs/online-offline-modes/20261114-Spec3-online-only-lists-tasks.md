@@ -669,7 +669,7 @@ Expected: all green. Tick DevTask 8 in this doc in the same commit as any fix, o
 - Consumes: DevTask 8's `QueryClientProvider` in `SettingsProvider` and `createApiPathWrapper()`; `useServiceClients().tasks: TaskServiceClient`; `useActiveListId()`, `getActiveListId()`, `setActiveListId()` from `hooks/useActiveList.ts`; `DEFAULT_LIST_ID`.
 - Produces: `useTasksApiClient(): UseTasksResult`, fully implemented. Query key `['tasks']`. `loading` = the first fetch is pending; `error` = `'Failed to load tasks'` when it failed.
 
-- [ ] **Step 1: Commit the inactive E2E scenarios**
+- [x] **Step 1: Commit the inactive E2E scenarios**
 
 Append inside the `describe` of `e2e/online_mode.e2e.spec.ts` (add `createTask` to the `./helpers/selection` import and `import { expectServerTaskVisible } from './helpers/multi-device';`):
 
@@ -706,7 +706,7 @@ Expected: no errors.
 
 Commit: `test: describe tasks with Offline Mode off as inactive end-to-end scenarios`
 
-- [ ] **Step 2: Write the failing hook tests**
+- [x] **Step 2: Write the failing hook tests**
 
 Create `components/web_client/src/hooks/__tests__/useTasks.api.unit.test.tsx`:
 
@@ -916,7 +916,7 @@ describe('notImplementedOnline', () => {
 Run: `pnpm --filter @psykl/web-client exec vitest run src/hooks/__tests__/useTasks.api.unit.test.tsx`
 Expected: FAIL: tasks are always `[]` and captures reject with "createTask is not available with Offline Mode off yet".
 
-- [ ] **Step 3: Implement `useTasksApiClient`**
+- [x] **Step 3: Implement `useTasksApiClient`**
 
 Replace `components/web_client/src/hooks/useTasks.api.ts`:
 
@@ -1036,7 +1036,7 @@ Retitle the one case in `src/__tests__/App.offline-mode.unit.test.tsx` to `'rend
 
 Commit: `feat: show and change tasks straight on the server with Offline Mode off`
 
-- [ ] **Step 4: Activate the E2E scenarios**
+- [x] **Step 4: Activate the E2E scenarios**
 
 Remove the two new `.skip`s.
 
@@ -1045,7 +1045,7 @@ Expected: 4 passed.
 
 Commit: `test: activate tasks with Offline Mode off end-to-end scenarios`
 
-- [ ] **Step 5: Full verification and spec checkbox**
+- [x] **Step 5: Full verification and spec checkbox**
 
 As DevTask 8 Step 8.
 
