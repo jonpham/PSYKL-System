@@ -29,6 +29,17 @@ describe('SidebarNav', () => {
     }
   });
 
+  it('leaves Sync out when sync is not offered', () => {
+    // Arrange
+    render(<SidebarNav {...props} showSync={false} />);
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Sync' })).not.toBeInTheDocument();
+    for (const name of ['Lists', 'Recently Deleted', 'Settings']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+  });
+
   it('marks the open list as the current page', () => {
     // Arrange
     render(<SidebarNav {...props} activeListId="list-2" />);

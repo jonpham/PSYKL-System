@@ -4,31 +4,28 @@ import { AppShell } from './components/AppShell';
 import { DoneSelectingButton } from './components/AppShell/DoneSelectingButton';
 import { PlusGlyph } from './components/AppShell/Glyphs';
 import { DeleteListDialog } from './components/DeleteListDialog';
+import { HeaderSyncStatus } from './components/HeaderSyncStatus';
 import { ListMenu } from './components/ListMenu';
 import { ListsPage } from './components/ListsPage';
 import { RecentlyDeleted } from './components/RecentlyDeleted';
 import { SettingsView } from './components/SettingsView';
-import { SyncStatus, useFailedSyncCount } from './components/SyncStatus';
-import { SyncView } from './components/SyncView';
+import { SyncDestination } from './components/SyncDestination';
 import { TaskList } from './components/TaskList';
 import { setActiveListId, useActiveListId } from './hooks/useActiveList';
 import { useCompletedVisibility } from './hooks/useCompletedVisibility';
 import { useDestination } from './hooks/useDestination';
 import { useListDeletion } from './hooks/useListDeletion';
 import { useLists } from './hooks/useLists';
-import { useSyncDiscrepancy } from './hooks/useSyncDiscrepancy';
-import { useSyncRecords } from './hooks/useSyncRecords';
+import { useUserSettings } from './hooks/useUserSettings';
 
 export default function App() {
   const { canDeleteList, lists, renameList } = useLists();
   const { activeListItemCount, deleteActiveList } = useListDeletion();
   const { destination, goTo } = useDestination();
   const activeListId = useActiveListId();
-  const { count: queuedCount } = useSyncDiscrepancy();
-  const failedCount = useFailedSyncCount();
+  const { offlineMode } = useUserSettings();
   const { setShowCompleted, showCompleted } = useCompletedVisibility();
   const [completedCount, setCompletedCount] = useState(0);
-  const syncRecords = useSyncRecords();
   const [creatingList, setCreatingList] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [deletingList, setDeletingList] = useState(false);
@@ -41,6 +38,14 @@ export default function App() {
       setDeletingList(false);
     }
   }, [destination]);
+
+  // Sync is the sync path's destination. With Offline Mode off there is
+  // nothing waiting on this device to show, so a link to it opens the list.
+  useEffect(() => {
+    if (!offlineMode && destination === 'sync') {
+      goTo('list');
+    }
+  }, [destination, goTo, offlineMode]);
 
   // Defaults to the first list once one exists (the "Tasks" default list on
   // first run, per UX.md § 10 decision 1) if no active list has been chosen
@@ -75,12 +80,7 @@ export default function App() {
       <DoneSelectingButton onClick={() => setSelecting(false)} />
     ) : destination === 'list' || destination === 'sync' ? (
       <>
-        <SyncStatus
-          active={destination === 'sync'}
-          failedCount={failedCount}
-          onOpen={() => goTo('sync')}
-          queuedCount={queuedCount}
-        />
+        {offlineMode ? <HeaderSyncStatus active={destination === 'sync'} onOpen={() => goTo('sync')} /> : null}
         {destination === 'list' ? (
           <ListMenu
             canDelete={activeList !== null && canDeleteList(activeList.id)}
@@ -106,6 +106,7 @@ export default function App() {
   return (
     <AppShell
       headerAction={headerAction}
+      showSync={offlineMode}
       onRenameTitle={
         destination === 'list' && selecting && activeList ? (next) => void renameList(activeList.id, next) : undefined
       }
@@ -113,14 +114,7 @@ export default function App() {
     >
       <RecentlyDeleted open={destination === 'recently-deleted'} />
       {destination === 'settings' ? <SettingsView /> : null}
-      {destination === 'sync' ? (
-        <SyncView
-          failed={syncRecords.failed}
-          onDismissReplacedEdit={syncRecords.dismissReplacedEdit}
-          queued={syncRecords.queued}
-          replacedEdits={syncRecords.replacedEdits}
-        />
-      ) : null}
+      {offlineMode ? <SyncDestination open={destination === 'sync'} /> : null}
       {destination === 'lists' ? (
         <ListsPage
           creating={creatingList}
