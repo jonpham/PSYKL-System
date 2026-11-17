@@ -10,7 +10,8 @@ prs:
   - https://github.com/jonpham/PSYKL-System/pull/154 # Spec integration PR
   - https://github.com/jonpham/PSYKL-System/pull/155
   - https://github.com/jonpham/PSYKL-System/pull/156
-completed_at: # set when the Spec integration PR merges to main
+  - https://github.com/jonpham/PSYKL-System/pull/157
+completed_at: 2026-11-16
 created_at: 2026-11-14
 initiative: online-offline-modes
 spec: docs/specs/online-offline-modes/20261114-Spec3-online-only-lists-tasks.md (deleted at close-out; this doc is the record)
@@ -141,4 +142,4 @@ _Expectation_ — with Offline Mode off the app shows and changes only what the 
 | ---------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | 2026-11-14 | [#155](https://github.com/jonpham/PSYKL-System/pull/155) | DevTask 8: lists work with Offline Mode off                                                   |
 | 2026-11-14 | [#156](https://github.com/jonpham/PSYKL-System/pull/156) | DevTask 9: tasks work with Offline Mode off                                                   |
-| 2026-11-14 | DevTask 10                                               | Turning Offline Mode off sends waiting changes; the switch shows as available; Spec close-out |
+| 2026-11-14 | [#157](https://github.com/jonpham/PSYKL-System/pull/157) | Turning Offline Mode off sends waiting changes; the switch shows as available; Spec close-out |
