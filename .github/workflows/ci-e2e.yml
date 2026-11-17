@@ -8,7 +8,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Playwright has no Chromium build for ubuntu-26.04 yet
     timeout-minutes: 25
 
     steps:
