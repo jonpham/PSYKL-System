@@ -69,4 +69,22 @@ describe('App with Offline Mode off', () => {
     await waitFor(() => expect(window.location.pathname).toBe('/'));
     expect(await screen.findByText(/nothing to do yet/i)).toBeInTheDocument();
   });
+
+  it('replaces a visit to Sync, so going back leaves the app instead of returning to it', async () => {
+    // Arrange
+    writeOfflineMode(false);
+    window.history.pushState({}, '', '/sync');
+    const entries = window.history.length;
+
+    // Act
+    render(
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>,
+    );
+
+    // Assert
+    await waitFor(() => expect(window.location.pathname).toBe('/'));
+    expect(window.history.length).toBe(entries);
+  });
 });

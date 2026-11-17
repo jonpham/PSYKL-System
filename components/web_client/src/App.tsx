@@ -40,10 +40,11 @@ export default function App() {
   }, [destination]);
 
   // Sync is the sync path's destination. With Offline Mode off there is
-  // nothing waiting on this device to show, so a link to it opens the list.
+  // nothing waiting on this device to show, so a link to it opens the list,
+  // in place of the visit, so going back does not return to it.
   useEffect(() => {
     if (!offlineMode && destination === 'sync') {
-      goTo('list');
+      goTo('list', { replace: true });
     }
   }, [destination, goTo, offlineMode]);
 
