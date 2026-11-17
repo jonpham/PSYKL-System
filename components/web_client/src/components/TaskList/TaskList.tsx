@@ -5,6 +5,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useCompletedVisibility } from '../../hooks/useCompletedVisibility';
 import { useSyncDiscrepancy } from '../../hooks/useSyncDiscrepancy';
 import { useTasks } from '../../hooks/useTasks';
+import { useUserSettings } from '../../hooks/useUserSettings';
 import { PlusGlyph } from '../AppShell/Glyphs';
 import { CaptureRow } from './CaptureRow';
 import { EmptyState } from './EmptyState';
@@ -34,8 +35,11 @@ export function TaskList({ onCompletedCountChange, onExitSelection, selecting = 
   const { createTask, error, loading, tasks } = useTasks();
   const [capturing, setCapturing] = useState(false);
   // Past the offline write ceiling the device stops accepting new work rather
-  // than piling up changes it may never be able to send.
-  const atCeiling = useSyncDiscrepancy().level === 'ceiling';
+  // than piling up changes it may never be able to send. With Offline Mode off
+  // nothing queues, so the queue is neither read nor a reason to refuse
+  // (Premise 3). The branch is safe: switching mode remounts the tree.
+  const { offlineMode } = useUserSettings();
+  const atCeiling = offlineMode ? useSyncDiscrepancy().level === 'ceiling' : false;
   const { showCompleted } = useCompletedVisibility();
   const listRef = useRef<HTMLUListElement>(null);
   const { draggingId, handOrder, reorder, startDrag } = useHandOrder(listRef);
