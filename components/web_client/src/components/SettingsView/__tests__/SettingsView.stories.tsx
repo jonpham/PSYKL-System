@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from '@storybook/test';
 
+import { UserSettingsContext } from '../../../hooks/useUserSettings';
 import { SettingsProvider } from '../../SettingsProvider';
 import { SettingsView } from '../SettingsView';
 
@@ -71,8 +72,8 @@ export const EveryContrastCombination: Story = {
   },
 };
 
-/** Offline Mode is on by default and visibly not yet functional (Decision 12). */
-export const OfflineModeNotYetAvailable: Story = {
+/** Offline Mode is on by default and available (Spec 3). */
+export const OfflineModeAvailable: Story = {
   decorators: [
     (StoryComponent) => {
       localStorage.removeItem('psykl:offline-mode');
@@ -88,7 +89,7 @@ export const OfflineModeNotYetAvailable: Story = {
     const canvas = within(canvasElement);
     const offlineMode = canvas.getByRole('switch', { name: 'Offline Mode' });
     await expect(offlineMode).toHaveAttribute('aria-checked', 'true');
-    await expect(offlineMode).toHaveAttribute('data-available', 'false');
+    await expect(offlineMode).not.toHaveAttribute('data-available');
 
     // Act
     await userEvent.click(offlineMode);
@@ -100,5 +101,24 @@ export const OfflineModeNotYetAvailable: Story = {
 
     // Leave the page as it was found.
     localStorage.removeItem('psykl:offline-mode');
+  },
+};
+
+/** While turning Offline Mode off waits on changes still being sent. */
+export const SendingChanges: Story = {
+  decorators: [
+    (StoryComponent) => (
+      <UserSettingsContext.Provider value={{ offlineMode: true, sendingChanges: true, setOfflineMode: () => {} }}>
+        <StoryComponent />
+      </UserSettingsContext.Provider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    // Assert
+    const canvas = within(canvasElement);
+    const offlineMode = canvas.getByRole('switch', { name: 'Offline Mode' });
+    await expect(offlineMode).toBeDisabled();
+    await expect(offlineMode).toHaveAttribute('aria-busy', 'true');
+    await expect(canvas.getByText('Sending changes made on this device…')).toBeVisible();
   },
 };

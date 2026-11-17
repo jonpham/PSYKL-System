@@ -4,6 +4,7 @@ import { Fragment, type ReactNode, useCallback, useMemo, useState } from 'react'
 import { createServiceClients, ServiceClientsContext } from '../../hooks/useServiceClients';
 import { type UserSettings, UserSettingsContext } from '../../hooks/useUserSettings';
 import { readOfflineMode, writeOfflineMode } from '../../preferences/offlineMode';
+import { flushSyncQueue } from '../../services/flush-sync-queue';
 
 /**
  * Supplies user settings and owns the data-path switch. Children are keyed on
@@ -17,12 +18,26 @@ import { readOfflineMode, writeOfflineMode } from '../../preferences/offlineMode
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [offlineMode, setOfflineModeState] = useState(readOfflineMode);
 
+  const [sendingChanges, setSendingChanges] = useState(false);
+
   const setOfflineMode = useCallback((next: boolean) => {
-    writeOfflineMode(next);
-    setOfflineModeState(next);
+    void (async () => {
+      // Turning off: send what this device still owes the server first, for
+      // at most 5 seconds. The switch proceeds either way (Decision 11).
+      if (!next) {
+        setSendingChanges(true);
+        await flushSyncQueue();
+        setSendingChanges(false);
+      }
+      writeOfflineMode(next);
+      setOfflineModeState(next);
+    })();
   }, []);
 
-  const settings = useMemo<UserSettings>(() => ({ offlineMode, setOfflineMode }), [offlineMode, setOfflineMode]);
+  const settings = useMemo<UserSettings>(
+    () => ({ offlineMode, sendingChanges, setOfflineMode }),
+    [offlineMode, sendingChanges, setOfflineMode],
+  );
 
   const clients = useMemo(() => createServiceClients(offlineMode), [offlineMode]);
 

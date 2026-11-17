@@ -13,6 +13,9 @@ import { DEFAULT_LIST_ID } from '../../../services/default-list';
 import { server } from '../../../test/setup';
 import { SettingsProvider } from '../SettingsProvider';
 
+const { mockFlushSyncQueue } = vi.hoisted(() => ({ mockFlushSyncQueue: vi.fn(() => Promise.resolve()) }));
+vi.mock('../../../services/flush-sync-queue', () => ({ flushSyncQueue: mockFlushSyncQueue }));
+
 const onMount = vi.fn();
 let setOfflineMode: (offlineMode: boolean) => void = () => {};
 
@@ -28,6 +31,7 @@ function Probe() {
 afterEach(async () => {
   localStorage.clear();
   onMount.mockClear();
+  mockFlushSyncQueue.mockClear();
   resetUseListsForTest();
   await deleteDB('psykl');
 });
@@ -91,7 +95,7 @@ describe('SettingsProvider — Offline Mode off', () => {
     act(() => settings!.setOfflineMode(true));
     await waitFor(() => expect(reads).toBeGreaterThan(1));
     const readsBeforeSecondSession = reads;
-    act(() => settings!.setOfflineMode(false));
+    await act(async () => settings!.setOfflineMode(false));
 
     // Assert — the new session asked the server again instead of reusing a cache
     await waitFor(() => expect(reads).toBe(readsBeforeSecondSession + 1));
@@ -127,7 +131,7 @@ describe('SettingsProvider', () => {
     expect(screen.getByText('offline-mode-off')).toBeInTheDocument();
   });
 
-  it('persists a change and remounts its children so every hook picks the new path', () => {
+  it('persists a change and remounts its children so every hook picks the new path', async () => {
     // Arrange
     render(
       <SettingsProvider>
@@ -137,11 +141,33 @@ describe('SettingsProvider', () => {
     expect(onMount).toHaveBeenCalledTimes(1);
 
     // Act
-    act(() => setOfflineMode(false));
+    await act(async () => setOfflineMode(false));
 
     // Assert
-    expect(screen.getByText('offline-mode-off')).toBeInTheDocument();
+    expect(await screen.findByText('offline-mode-off')).toBeInTheDocument();
     expect(readOfflineMode()).toBe(false);
     expect(onMount).toHaveBeenCalledTimes(2);
+  });
+
+  it('switches off even when the flush fails', async () => {
+    // Arrange — flushSyncQueue never rejects, so a failed flush resolves
+    mockFlushSyncQueue.mockResolvedValueOnce(undefined);
+    let settings: UserSettings | undefined;
+    function Capture() {
+      settings = useUserSettings();
+      return null;
+    }
+    render(
+      <SettingsProvider>
+        <Capture />
+      </SettingsProvider>,
+    );
+
+    // Act
+    act(() => settings!.setOfflineMode(false));
+
+    // Assert
+    await waitFor(() => expect(settings!.offlineMode).toBe(false));
+    expect(mockFlushSyncQueue).toHaveBeenCalledTimes(1);
   });
 });

@@ -2,6 +2,8 @@ import { createContext, useContext } from 'react';
 
 interface UserSettings {
   offlineMode: boolean;
+  /** True while turning Offline Mode off waits for this device's unsent changes (Decision 11). */
+  sendingChanges: boolean;
   setOfflineMode(offlineMode: boolean): void;
 }
 
@@ -10,6 +12,7 @@ interface UserSettings {
  * the sync path, the app's default. */
 const UserSettingsContext = createContext<UserSettings>({
   offlineMode: true,
+  sendingChanges: false,
   setOfflineMode: () => {},
 });
 

@@ -490,6 +490,16 @@ Exception (Spec 1 decision S1-1): the module-level sync snapshot stores in `useL
 
 Source: `online-offline-modes` DESIGN.md Decision 6; Spec 1 ([feature doc](features/%5B20261111%5DGH144_data-mode-seam.md)).
 
+### ADR-OOM-004: The Online Path Reads Through TanStack Query and Writes Without Optimism
+
+With Offline Mode off, `useListsApiClient` and `useTasksApiClient` read the server through `@tanstack/react-query` (Decision 2) and write through the direct (`offlineCapable: false`) Service Client shims (ADR-OOM-002). Three choices shape it:
+
+- **One `QueryClient` per Offline Mode off session.** `SettingsProvider` creates it inside its keyed subtree, so the remount on a mode change (ADR-OOM-001) drops it, and turning the mode off again always starts from the server (S3-1).
+- **No optimistic writes.** Each write waits for the server, then puts the server's answer in the cache with `setQueryData`. A change the server refused never appears. The API path exists to show what the server holds, so a change the user sees has been saved. The cost is one round trip before each change shows (S3-2).
+- **Switching off flushes first.** `SettingsProvider` runs `flushSyncQueue()` before changing the mode: `replay({ ignoreBackoff: true })`, raced against 5 seconds, never rejecting. `ignoreBackoff` makes every queued write due, since one that failed recently would otherwise sit out its retry delay. Whatever isn't sent stays queued until Offline Mode is on again (Decision 11, S3-5). The flush lives in `services/`, so Settings never imports `sync/`.
+
+Source: `online-offline-modes` DESIGN.md Decisions 2, 3, 6, 11; Spec 3 ([feature doc](features/%5B20261114%5DGH144_online-only-lists-tasks.md)).
+
 ### ADR-OOM-003: The Server Assigns List Positions and Keeps an Undeletable Default List
 
 ADR-TE-002 gave the default list a fixed id, `DEFAULT_LIST_ID`, so every device agrees on it without a round trip. Until now the server only stored whatever a device created. Now:

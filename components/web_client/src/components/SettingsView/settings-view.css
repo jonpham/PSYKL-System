@@ -89,11 +89,8 @@
   transform: translateX(20px);
 }
 
-/* Not yet functional: the online path is stubbed until Spec 3, and color is
-   the only signal (online-offline-modes DESIGN.md Decision 12). */
-.psykl-settings__switch[data-available='false'],
-.psykl-settings__switch[data-available='false'][aria-checked='true'] {
-  background: var(--text-tertiary);
+.psykl-settings__switch:disabled {
+  opacity: 0.6;
 }
 
 .psykl-settings__switch:focus-visible {

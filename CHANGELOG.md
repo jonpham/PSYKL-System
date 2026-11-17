@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Offline Mode can be turned off**, and the app then works straight against the server ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #155](https://github.com/jonpham/PSYKL-System/pull/155), [PR #156](https://github.com/jonpham/PSYKL-System/pull/156); Spec integration [PR #154](https://github.com/jonpham/PSYKL-System/pull/154); [feature doc](docs/features/%5B20261114%5DGH144_online-only-lists-tasks.md)). Completes `online-offline-modes` Spec 3.
+  - **Lists and tasks.** With Offline Mode off they are the server's. Adding, renaming, re-ordering and deleting lists, and adding, completing and deleting tasks, all work. Each change shows once the server has saved it.
+  - **Switching off.** The app first sends any changes still waiting on this device, for up to 5 seconds, showing "Sending changes made on this device…". Anything not sent stays queued until Offline Mode is on again.
+  - **The switch** is no longer marked as not yet available.
+  - **Under the hood.** The online path uses `@tanstack/react-query`, with a fresh cache each time Offline Mode is turned off ([ADR-OOM-004](docs/ARCHITECTURE.md)).
+
 - **The "Tasks" list can no longer be deleted**, from the app or the API ([#144](https://github.com/jonpham/PSYKL-System/issues/144); [PR #151](https://github.com/jonpham/PSYKL-System/pull/151), [PR #152](https://github.com/jonpham/PSYKL-System/pull/152), [PR #153](https://github.com/jonpham/PSYKL-System/pull/153); Spec integration [PR #150](https://github.com/jonpham/PSYKL-System/pull/150); [feature doc](docs/features/%5B20261113%5DGH144_server-positions-default-list.md)). Completes `online-offline-modes` Spec 2.
   - **In the app.** List options on "Tasks" no longer shows Delete List, even after the list is renamed. Every other list still offers it. Moving another list above "Tasks" no longer moves tasks without a list there.
   - **In the API.** `DELETE /lists/{id}` on the default list answers `409`. `POST /lists` now takes an optional `position`; without one, the server appends the list after the caller's last one.
