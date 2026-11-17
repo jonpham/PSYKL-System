@@ -142,10 +142,10 @@ _Expectation_ — with Offline Mode off, no screen shows sync-only controls or d
 - **Final review fixes** (a separate reviewer read the whole branch: one Important finding, re-grading raised one more):
   - `TaskList` still read the sync queue with Offline Mode off. A device that switched off with 100 changes queued could not add a task, and a browser without IndexedDB logged errors. `TaskList` now reads the queue only with Offline Mode on.
   - The `/sync` redirect added a history entry, so Back returned to `/sync` and was sent to the list again. It now replaces the entry (`goTo(…, { replace: true })`).
+- **A change the server does not take stays silent on the API path** (operator, 2026-11-17). A rename, complete, delete or restore that fails, or that loses to a newer write elsewhere (Last-Write-Wins), shows no message: the screen settles on what the server holds, and the user tries again. Messages for every transient failure would be noise. Capture keeps its "could not be saved" line, since a lost capture loses typed text.
 - **Known gaps:**
   - Restoring a list stops at the first of its tasks the server refuses; the rest must be restored one by one. The screen still matches the server.
-  - A refused restore says nothing, on either path, and a double tap sends two restores.
-  - A refused rename, complete or delete still says nothing with Offline Mode off; only capture tells the user.
+  - A double tap on Restore sends two restores.
   - Turning Offline Mode on in a browser without IndexedDB breaks the sync path. The switch is not disabled there.
   - A background sync the service worker registered before switching off may still send queued changes while off.
   - Reloading while the switch still reads "Sending changes made on this device…" keeps Offline Mode on: the choice is saved only once sending finishes (Spec 3 behaviour; its E2E test now waits for it).
