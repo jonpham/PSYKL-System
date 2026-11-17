@@ -1,0 +1,1 @@
+export { SyncDestination } from './SyncDestination';
