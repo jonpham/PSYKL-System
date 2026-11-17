@@ -177,7 +177,9 @@ describe('useTasksApiClient', () => {
     const result = await renderTasks();
 
     // Act / Assert
-    await expect(result.current.createTask('pasta')).rejects.toThrow('create failed');
+    await expect(result.current.createTask('pasta')).rejects.toMatchObject({
+      message: expect.stringContaining('create failed'),
+    });
     expect(result.current.tasks).toEqual([]);
   });
 });

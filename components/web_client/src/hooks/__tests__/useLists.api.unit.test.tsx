@@ -161,7 +161,9 @@ describe('useListsApiClient', () => {
     const result = await renderLists();
 
     // Act / Assert
-    await expect(result.current.createList('Reading')).rejects.toThrow('create failed');
+    await expect(result.current.createList('Reading')).rejects.toMatchObject({
+      message: expect.stringContaining('create failed'),
+    });
     expect(result.current.lists.map((item) => item.title)).toEqual(['Tasks']);
   });
 });
