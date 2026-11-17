@@ -69,7 +69,7 @@ test.describe('with Offline Mode off', () => {
     await expect(page.getByRole('listitem', { name: title })).toHaveCount(0);
   });
 
-  test.skip('a user sees no Sync controls, and a link to Sync opens their list instead', async ({ page }) => {
+  test('a user sees no Sync controls, and a link to Sync opens their list instead', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Sync (clear|needs attention)$/ })).toHaveCount(0);
