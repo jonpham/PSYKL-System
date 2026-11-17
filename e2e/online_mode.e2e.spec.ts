@@ -68,4 +68,19 @@ test.describe('with Offline Mode off', () => {
     await openList(page, 'Tasks');
     await expect(page.getByRole('listitem', { name: title })).toHaveCount(0);
   });
+
+  test.skip('a user sees no Sync controls, and a link to Sync opens their list instead', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Sync (clear|needs attention)$/ })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
+    const navigation = page.getByRole('navigation', { name: 'PSYKL navigation' });
+    await expect(navigation.getByRole('button', { name: 'Settings' })).toBeVisible();
+    await expect(navigation.getByRole('button', { name: 'Sync', exact: true })).toHaveCount(0);
+
+    await page.goto('/sync');
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
+  });
 });
