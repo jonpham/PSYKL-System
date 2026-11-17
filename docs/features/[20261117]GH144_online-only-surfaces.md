@@ -115,7 +115,9 @@ _Expectation_ — with Offline Mode off, no screen shows sync-only controls or d
 ## Affected Components
 
 - `components/web_client`:
-  - `src/App.tsx`: gates the sync control and the Sync destination on Offline Mode; sends `/sync` to the list when off
+  - `src/App.tsx`: gates the sync control and the Sync destination on Offline Mode; replaces `/sync` with the list when off
+  - `src/hooks/usePathname.ts`, `src/hooks/useDestination.ts`: `navigate` and `goTo` take `{ replace }`
+  - `src/components/TaskList/TaskList.tsx`: reads the write ceiling only with Offline Mode on
   - `src/components/HeaderSyncStatus/` (new), `src/components/SyncDestination/` (new): own the IndexedDB-reading sync hooks, mounted only with Offline Mode on
   - `src/components/AppShell/AppShell.tsx`, `SidebarNav/SidebarNav.tsx`: `showSync`
   - `src/sync/page-triggers.ts`: `isOfflineMode`, read when each event fires
@@ -137,7 +139,12 @@ _Expectation_ — with Offline Mode off, no screen shows sync-only controls or d
 - **S4-6 — IndexedDB first, `localStorage` only when IndexedDB cannot be opened,** per call, under `psykl:{key}` as JSON. Nothing migrates between them.
 - **S4-7 — `online-path.stub.ts` is deleted:** restore was its last caller.
 - **Process:** DevTask PRs stacked as drafts (DevTask 12 on 11, 13 on 12).
+- **Final review fixes** (a separate reviewer read the whole branch: one Important finding, re-grading raised one more):
+  - `TaskList` still read the sync queue with Offline Mode off. A device that switched off with 100 changes queued could not add a task, and a browser without IndexedDB logged errors. `TaskList` now reads the queue only with Offline Mode on.
+  - The `/sync` redirect added a history entry, so Back returned to `/sync` and was sent to the list again. It now replaces the entry (`goTo(…, { replace: true })`).
 - **Known gaps:**
+  - Restoring a list stops at the first of its tasks the server refuses; the rest must be restored one by one. The screen still matches the server.
+  - A refused restore says nothing, on either path, and a double tap sends two restores.
   - A refused rename, complete or delete still says nothing with Offline Mode off; only capture tells the user.
   - Turning Offline Mode on in a browser without IndexedDB breaks the sync path. The switch is not disabled there.
   - A background sync the service worker registered before switching off may still send queued changes while off.
