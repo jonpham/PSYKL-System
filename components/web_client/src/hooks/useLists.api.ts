@@ -5,10 +5,10 @@ import { v7 as uuidv7 } from 'uuid';
 
 import type { ListRecord } from '../db/idb.types';
 import { isDefaultList } from '../services/default-list';
+import { LISTS_QUERY_KEY } from './query-keys';
 import type { UseListsResult } from './useLists';
 import { useServiceClients } from './useServiceClients';
 
-const LISTS_QUERY_KEY = ['lists'] as const;
 const NO_LISTS: ListRecord[] = [];
 
 /**

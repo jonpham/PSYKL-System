@@ -4,11 +4,11 @@ import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
 import { DEFAULT_LIST_ID } from '../services/default-list';
+import { TASKS_QUERY_KEY } from './query-keys';
 import { getActiveListId, useActiveListId } from './useActiveList';
 import { useServiceClients } from './useServiceClients';
 import type { UseTasksResult } from './useTasks';
 
-const TASKS_QUERY_KEY = ['tasks'] as const;
 const NO_TASKS: Task[] = [];
 
 /**
