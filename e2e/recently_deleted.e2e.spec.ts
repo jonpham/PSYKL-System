@@ -2,7 +2,9 @@ import type { Page } from '@playwright/test';
 
 import { listLocalSyncQueue } from './helpers/idb-storage';
 import { expect, test } from './helpers/isolated-test';
-import { deleteServerTask, expectListDeletedOnServer } from './helpers/task-api';
+import { expectServerTaskVisible } from './helpers/multi-device';
+import { createList, createTask, enterSelectionMode, openList, select } from './helpers/selection';
+import { deleteServerTask, expectListDeletedOnServer, fetchServerLists } from './helpers/task-api';
 
 test.describe('recently deleted', () => {
   test.use({ viewport: { height: 844, width: 390 } });
@@ -64,6 +66,54 @@ test.describe('recently deleted', () => {
     await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
     await page.getByRole('button', { name: 'Groceries', exact: true }).click();
     await expect(page.getByText('Milk')).toBeVisible();
+  });
+});
+
+test.describe('recently deleted with Offline Mode off', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('psykl:offline-mode', 'false'));
+  });
+
+  test('a user deletes a task, finds it in Recently Deleted, and restores it', async ({ page }) => {
+    await page.goto('/');
+    await createTask(page, 'Milk');
+    await enterSelectionMode(page);
+    await select(page, 'Milk');
+    await page.getByRole('button', { name: 'Delete selected tasks' }).click();
+    await page.getByRole('button', { name: 'Confirm deleting 1 task' }).click();
+    await expect(page.getByRole('listitem', { name: 'Milk' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
+    await page.getByRole('button', { name: 'Recently Deleted' }).click();
+    await page.getByRole('button', { name: 'Restore Milk' }).click();
+    await expect(page.getByText('Nothing deleted in the last 30 days.')).toBeVisible();
+
+    await expectServerTaskVisible('local', 'Milk');
+    await page.goBack();
+    await expect(page.getByRole('listitem', { name: 'Milk' })).toBeVisible();
+  });
+
+  test('a user restores a deleted list and its tasks come back', async ({ page }) => {
+    await createList(page, 'Groceries');
+    await openList(page, 'Groceries');
+    await createTask(page, 'Milk');
+
+    await page.getByRole('button', { name: 'List options' }).click();
+    await page.getByRole('menuitem', { name: 'Delete List' }).click();
+    await page.getByRole('button', { name: 'Delete With Items' }).click();
+
+    await page.getByRole('button', { name: 'Open PSYKL navigation' }).click();
+    await page.getByRole('button', { name: 'Recently Deleted' }).click();
+    await expect(page.getByText('list · 1 item')).toBeVisible();
+    await page.getByRole('button', { name: 'Restore Groceries' }).click();
+
+    await expect
+      .poll(async () => (await fetchServerLists('local')).map((list) => list.title))
+      .toEqual(['Tasks', 'Groceries']);
+    await openList(page, 'Groceries');
+    await expect(page.getByRole('listitem', { name: 'Milk' })).toBeVisible();
   });
 });
 

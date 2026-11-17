@@ -38,6 +38,9 @@ test.describe('settings', () => {
     await page.goto('/settings');
     await page.getByRole('switch', { name: 'Offline Mode' }).click();
     await expect(page.getByRole('switch', { name: 'Offline Mode' })).toHaveAttribute('aria-checked', 'false');
+    // The switch shows its new position while it sends this device's changes;
+    // the choice is kept once sending has finished.
+    await expect(page.getByRole('switch', { name: 'Offline Mode' })).not.toHaveAttribute('aria-busy');
 
     await page.reload();
 

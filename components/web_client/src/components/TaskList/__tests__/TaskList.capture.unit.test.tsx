@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { UserSettingsContext } from '../../../hooks/useUserSettings';
 import { TaskList } from '../TaskList';
 
 const mockUseTasks = vi.hoisted(() => vi.fn());
@@ -41,5 +42,21 @@ describe('TaskList capture (Unit)', () => {
     // Assert — the control says why rather than failing silently on press
     const add = screen.getByRole('button', { name: 'Reconnect to keep adding.' });
     expect(add).toBeDisabled();
+  });
+
+  it('keeps capture open with Offline Mode off, however many changes wait in the sync queue', () => {
+    // Arrange — changes left queued from before switching off; this path never queues
+    mockUseSyncDiscrepancy.mockClear().mockReturnValue({ count: 100, level: 'ceiling' });
+
+    // Act
+    render(
+      <UserSettingsContext.Provider value={{ offlineMode: false, sendingChanges: false, setOfflineMode: () => {} }}>
+        <TaskList />
+      </UserSettingsContext.Provider>,
+    );
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'New Task' })).toBeEnabled();
+    expect(mockUseSyncDiscrepancy).not.toHaveBeenCalled();
   });
 });

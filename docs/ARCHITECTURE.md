@@ -490,6 +490,16 @@ Exception (Spec 1 decision S1-1): the module-level sync snapshot stores in `useL
 
 Source: `online-offline-modes` DESIGN.md Decision 6; Spec 1 ([feature doc](features/%5B20261111%5DGH144_data-mode-seam.md)).
 
+### ADR-OOM-005: Device-Local Values Fall Back to `localStorage`
+
+Every device-local value goes through `preferences/deviceStore.ts`: appearance, contrast, "show completed" per list, and the open list. `readDeviceValue` and `writeDeviceValue` try IndexedDB's `sync_meta` first, and use `localStorage` under `psykl:{key}`, as JSON, only when IndexedDB cannot be opened. Neither call rejects. Three choices shape it:
+
+- **The fallback covers every value the API path reads,** not only appearance and contrast. Without "show completed" and the open list, Offline Mode off would still need IndexedDB (Decision 13, S4-5).
+- **IndexedDB first, per call, with no migration.** A value written to the fallback is read back only while IndexedDB stays unavailable. Copying between the stores would mean deciding which copy wins, for a case that only arises in a browser that cannot hold the sync path anyway (S4-6).
+- **Sync-only state stays in IndexedDB.** The sync queue, failed operations and stale-write records belong to the sync path, which the app never uses with Offline Mode off. The components that read them, `HeaderSyncStatus` and `SyncDestination`, mount only with Offline Mode on (Premise 3, S4-3).
+
+Source: `online-offline-modes` DESIGN.md Decision 13, Premise 3; Spec 4 ([feature doc](features/%5B20261117%5DGH144_online-only-surfaces.md)).
+
 ### ADR-OOM-004: The Online Path Reads Through TanStack Query and Writes Without Optimism
 
 With Offline Mode off, `useListsApiClient` and `useTasksApiClient` read the server through `@tanstack/react-query` (Decision 2) and write through the direct (`offlineCapable: false`) Service Client shims (ADR-OOM-002). Three choices shape it:

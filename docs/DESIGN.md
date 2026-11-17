@@ -113,7 +113,7 @@ Three distinct, orthogonal choices:
 
 `System` stamps nothing and lets `prefers-color-scheme` decide; `Light` and `Dark` stamp `data-theme` on the root and win in both directions. `Increased` stamps `data-contrast="increased"` and composes with all three appearances.
 
-All three are **device-local preferences, never synced** — how you like to look at one device is not a property of your data. They live in the `sync_meta` IndexedDB store, which is never enqueued (`todo-experience/DESIGN.md` → Data-model decisions locked here).
+All three are **device-local preferences, never synced** — how you like to look at one device is not a property of your data. They live in the `sync_meta` IndexedDB store, which is never enqueued (`todo-experience/DESIGN.md` → Data-model decisions locked here). When IndexedDB cannot be opened, they fall back to `localStorage`, as do "show completed" per list and the open list, so the app still works with Offline Mode off in such a browser (`online-offline-modes/DESIGN.md` Decision 13; ADR-OOM-005).
 
 **A theme must define both contrast levels.** Standard is the theme as designed; Increased is the same design with the values that fall below WCAG AA raised until they clear it. A theme that ships only Standard is incomplete.
 

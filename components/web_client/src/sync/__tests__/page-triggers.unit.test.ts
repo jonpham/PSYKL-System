@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { writeOfflineMode } from '../../preferences/offlineMode';
 import { enqueueWithReplay, registerPageSyncTriggers } from '../page-triggers';
 
 describe('page sync triggers', () => {
+  afterEach(() => localStorage.clear());
+
   beforeEach(() => {
     Object.defineProperty(document, 'visibilityState', {
       configurable: true,
@@ -41,6 +44,19 @@ describe('page sync triggers', () => {
 
     registerPageSyncTriggers({ replay });
     document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(replay).not.toHaveBeenCalled();
+  });
+
+  it('stays idle with Offline Mode off', () => {
+    // A write queued before switching off waits for Offline Mode on (Decision 11).
+    const replay = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    writeOfflineMode(false);
+
+    const unregister = registerPageSyncTriggers({ replay });
+    window.dispatchEvent(new Event('online'));
+    document.dispatchEvent(new Event('visibilitychange'));
+    unregister();
 
     expect(replay).not.toHaveBeenCalled();
   });

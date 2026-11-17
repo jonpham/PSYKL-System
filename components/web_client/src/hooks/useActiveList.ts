@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
-import { getMeta, putMeta } from '../db/idb';
+import { readDeviceValue, writeDeviceValue } from '../preferences/deviceStore';
 
-// The active list id is device-local, not synced — same `sync_meta` store a
-// future theme preference will use. It scopes which tasks `useTasks` shows and
+// The active list id is device-local, not synced — kept in the device store with
+// the other device preferences (`preferences/deviceStore.ts`). It scopes which tasks `useTasks` shows and
 // which list new tasks are stamped with on create. `useTasks` registers a
 // listener below so changing the active list re-filters tasks without this
 // module importing `useTasks` back (which would be circular).
@@ -32,7 +32,7 @@ function getActiveListId(): string | null {
 async function setActiveListId(id: string): Promise<void> {
   activeListHydrated = true;
   activeListId = id;
-  await putMeta({ key: activeListMetaKey, value: id });
+  await writeDeviceValue(activeListMetaKey, id);
   notifyActiveListSubscribers();
   await onActiveListChanged?.();
 }
@@ -60,9 +60,9 @@ async function hydrateActiveListId(): Promise<void> {
   }
   activeListHydrated = true;
 
-  const meta = await getMeta(activeListMetaKey);
-  if (typeof meta?.value === 'string') {
-    activeListId = meta.value;
+  const value = await readDeviceValue(activeListMetaKey);
+  if (typeof value === 'string') {
+    activeListId = value;
     notifyActiveListSubscribers();
     await onActiveListChanged?.();
   }
