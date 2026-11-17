@@ -76,7 +76,7 @@ test.describe('recently deleted with Offline Mode off', () => {
     await page.addInitScript(() => localStorage.setItem('psykl:offline-mode', 'false'));
   });
 
-  test.skip('a user deletes a task, finds it in Recently Deleted, and restores it', async ({ page }) => {
+  test('a user deletes a task, finds it in Recently Deleted, and restores it', async ({ page }) => {
     await page.goto('/');
     await createTask(page, 'Milk');
     await enterSelectionMode(page);
@@ -95,7 +95,7 @@ test.describe('recently deleted with Offline Mode off', () => {
     await expect(page.getByRole('listitem', { name: 'Milk' })).toBeVisible();
   });
 
-  test.skip('a user restores a deleted list and its tasks come back', async ({ page }) => {
+  test('a user restores a deleted list and its tasks come back', async ({ page }) => {
     await createList(page, 'Groceries');
     await openList(page, 'Groceries');
     await createTask(page, 'Milk');
