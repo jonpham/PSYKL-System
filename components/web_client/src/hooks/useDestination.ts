@@ -21,11 +21,14 @@ function destinationForPath(pathname: string): Destination {
   return match ?? 'list';
 }
 
-function useDestination(): { destination: Destination; goTo: (next: Destination) => void } {
+function useDestination(): {
+  destination: Destination;
+  goTo: (next: Destination, options?: { replace?: boolean }) => void;
+} {
   const pathname = usePathname();
   return {
     destination: destinationForPath(pathname),
-    goTo: (next) => navigate(pathForDestination(next)),
+    goTo: (next, options) => navigate(pathForDestination(next), options),
   };
 }
 

@@ -84,3 +84,34 @@ test.describe('with Offline Mode off', () => {
     await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
   });
 });
+
+test.describe('with Offline Mode off, in a browser without IndexedDB', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('psykl:offline-mode', 'false');
+      Object.defineProperty(window, 'indexedDB', { configurable: true, value: undefined });
+    });
+  });
+
+  test('a user picks Dark and opens a list, and both are kept after reloading', async ({ page }) => {
+    await page.goto('/settings');
+    await page.getByRole('radio', { name: 'Dark' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('psykl:pref:appearance'))).toBe('"dark"');
+
+    await createList(page, 'Groceries');
+    await page.getByRole('button', { name: 'Groceries', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Groceries' })).toBeVisible();
+    // The app opened Tasks at start-up, so wait for Groceries specifically.
+    const groceries = (await fetchServerLists('local')).find((list) => list.title === 'Groceries');
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem('psykl:active_list_id')))
+      .toBe(JSON.stringify(groceries?.id));
+
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.getByRole('heading', { name: 'Groceries' })).toBeVisible();
+  });
+});

@@ -1,4 +1,4 @@
-import { getMeta, putMeta } from '../db/idb';
+import { readDeviceValue, writeDeviceValue } from './deviceStore';
 
 type Contrast = 'increased' | 'standard';
 
@@ -10,12 +10,12 @@ const KEY = 'pref:contrast';
  * alongside whatever `data-theme` the appearance stamps. Device-local, never
  * enqueued. */
 async function readContrast(): Promise<Contrast> {
-  const entry = await getMeta(KEY);
-  return CONTRAST_CHOICES.find((choice) => choice === entry?.value) ?? 'standard';
+  const value = await readDeviceValue(KEY);
+  return CONTRAST_CHOICES.find((choice) => choice === value) ?? 'standard';
 }
 
 async function writeContrast(choice: Contrast): Promise<void> {
-  await putMeta({ key: KEY, value: choice });
+  await writeDeviceValue(KEY, choice);
 }
 
 export { CONTRAST_CHOICES, readContrast, writeContrast };

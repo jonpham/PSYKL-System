@@ -16,9 +16,15 @@ function usePathname(): string {
 }
 
 /** `pushState` alone does not notify listeners, so the event is dispatched
- * explicitly to keep `usePathname` in sync with programmatic navigation. */
-function navigate(path: string): void {
-  window.history.pushState({}, '', path);
+ * explicitly to keep `usePathname` in sync with programmatic navigation.
+ * `replace` swaps the current entry instead, for a redirect the user should
+ * not land on again when going back. */
+function navigate(path: string, { replace = false }: { replace?: boolean } = {}): void {
+  if (replace) {
+    window.history.replaceState({}, '', path);
+  } else {
+    window.history.pushState({}, '', path);
+  }
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
