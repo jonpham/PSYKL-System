@@ -4,11 +4,11 @@ import { v7 as uuidv7 } from 'uuid';
 
 import type { Task, TaskDeleteInput, TaskPatchInput } from '../api/client';
 import { DEFAULT_LIST_ID } from '../services/default-list';
+import { RECENTLY_DELETED_QUERY_KEY, TASKS_QUERY_KEY } from './query-keys';
 import { getActiveListId, useActiveListId } from './useActiveList';
 import { useServiceClients } from './useServiceClients';
 import type { UseTasksResult } from './useTasks';
 
-const TASKS_QUERY_KEY = ['tasks'] as const;
 const NO_TASKS: Task[] = [];
 
 /**
@@ -80,8 +80,9 @@ function useTasksApiClient(): UseTasksResult {
     async (id: string, body: TaskDeleteInput, optimistic: Task): Promise<void> => {
       await taskServiceClient.delete(id, body, optimistic);
       store({ ...optimistic, deleted_at: body.deleted_at, updated_at: body.updated_at });
+      void queryClient.invalidateQueries({ queryKey: RECENTLY_DELETED_QUERY_KEY });
     },
-    [store, taskServiceClient],
+    [queryClient, store, taskServiceClient],
   );
 
   return {
